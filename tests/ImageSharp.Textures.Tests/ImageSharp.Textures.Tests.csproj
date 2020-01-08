@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netcoreapp3.1;net472</TargetFrameworks>
+
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <LangVersion>latest</LangVersion>
+    <DebugType Condition="$(codecov) != ''">full</DebugType>
+    <DebugType Condition="$(codecov) == ''">portable</DebugType>
+    <DebugSymbols>True</DebugSymbols>
+    <AssemblyName>SixLabors.ImageSharp.Textures.Tests</AssemblyName>
+    <Platforms>AnyCPU;x64;x86</Platforms>
+    <RootNamespace>SixLabors.ImageSharp.Textures.Tests</RootNamespace>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Magick.NET-Q16-AnyCPU" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="Pfim" />
+    <PackageReference Include="System.Drawing.Common" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\ImageSharp.Textures\ImageSharp.Textures.csproj" />
+  </ItemGroup>
+
+</Project>
