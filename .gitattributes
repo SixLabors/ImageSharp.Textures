@@ -88,11 +88,13 @@
 #   treat as binary
 ###############################################################################
 *.bmp               binary
+*.dds               binary
 *.dll               binary
 *.exe               binary
 *.gif               binary
 *.jpg               binary
 *.png               binary
+*.tga               binary
 *.ttf               binary
 *.snk               binary
 
