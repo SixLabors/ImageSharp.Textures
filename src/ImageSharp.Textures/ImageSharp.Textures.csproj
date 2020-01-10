@@ -15,7 +15,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <PackageId>SixLabors.ImageSharp.Textures</PackageId>
-    <PackageTags>Texture Surface DDS TGA</PackageTags>
+    <PackageTags>Texture Surface BASIS DDS KTX</PackageTags>
     <RootNamespace>SixLabors.ImageSharp.Textures</RootNamespace>
 
   </PropertyGroup>

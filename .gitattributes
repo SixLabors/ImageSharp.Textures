@@ -89,6 +89,7 @@
 ###############################################################################
 *.bmp               binary
 *.dds               binary
+*.basis             binary
 *.pbm               binary
 *.ktx               binary
 *.pvr               binary
