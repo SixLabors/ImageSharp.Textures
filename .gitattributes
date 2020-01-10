@@ -89,6 +89,9 @@
 ###############################################################################
 *.bmp               binary
 *.dds               binary
+*.pbm               binary
+*.ktx               binary
+*.pvr               binary
 *.dll               binary
 *.exe               binary
 *.gif               binary

@@ -36,12 +36,19 @@ function Flat-TexConv {
 
     Write-Output "`nFlat-TexConv - Processing Format $Format`n"
 
-    .(Join-Path $PSScriptRoot texconv.exe) -f $Format -o $SaveFolder -y -sx "-$Format" -ft dds -dx10 "flat-pot-alpha.png"
-    .(Join-Path $PSScriptRoot texconv.exe) -f $Format -o $SaveFolder -y -sx "-$Format" -ft dds -dx10 "flat-pot-no-alpha.png"
-    .(Join-Path $PSScriptRoot texconv.exe) -f $Format -o $SaveFolder -y -sx "-$Format" -ft dds -dx10 "flat-rect-alpha.png"
-    .(Join-Path $PSScriptRoot texconv.exe) -f $Format -o $SaveFolder -y -sx "-$Format" -ft dds -dx10 "flat-rect-no-alpha.png"
-    .(Join-Path $PSScriptRoot texconv.exe) -f $Format -o $SaveFolder -y -sx "-$Format" -ft dds -dx10 "flat-square-alpha.png"
-    .(Join-Path $PSScriptRoot texconv.exe) -f $Format -o $SaveFolder -y -sx "-$Format" -ft dds -dx10 "flat-square-no-alpha.png"
+    .(Join-Path $PSScriptRoot texconv.exe) -f $Format -o $SaveFolder -y -sx "-$Format" -ft dds "flat-pot-alpha.png"
+    .(Join-Path $PSScriptRoot texconv.exe) -f $Format -o $SaveFolder -y -sx "-$Format" -ft dds "flat- pot-no-alpha.png"
+    .(Join-Path $PSScriptRoot texconv.exe) -f $Format -o $SaveFolder -y -sx "-$Format" -ft dds "flat-rect-alpha.png"
+    .(Join-Path $PSScriptRoot texconv.exe) -f $Format -o $SaveFolder -y -sx "-$Format" -ft dds "flat-rect-no-alpha.png"
+    .(Join-Path $PSScriptRoot texconv.exe) -f $Format -o $SaveFolder -y -sx "-$Format" -ft dds "flat-square-alpha.png"
+    .(Join-Path $PSScriptRoot texconv.exe) -f $Format -o $SaveFolder -y -sx "-$Format" -ft dds "flat-square-no-alpha.png"
+
+    .(Join-Path $PSScriptRoot texconv.exe) -f $Format -o $SaveFolder -y -sx "-dx10-$Format" -ft dds -dx10 "flat-pot-alpha.png"
+    .(Join-Path $PSScriptRoot texconv.exe) -f $Format -o $SaveFolder -y -sx "-dx10-$Format" -ft dds -dx10 "flat-pot-no-alpha.png"
+    .(Join-Path $PSScriptRoot texconv.exe) -f $Format -o $SaveFolder -y -sx "-dx10-$Format" -ft dds -dx10 "flat-rect-alpha.png"
+    .(Join-Path $PSScriptRoot texconv.exe) -f $Format -o $SaveFolder -y -sx "-dx10-$Format" -ft dds -dx10 "flat-rect-no-alpha.png"
+    .(Join-Path $PSScriptRoot texconv.exe) -f $Format -o $SaveFolder -y -sx "-dx10-$Format" -ft dds -dx10 "flat-square-alpha.png"
+    .(Join-Path $PSScriptRoot texconv.exe) -f $Format -o $SaveFolder -y -sx "-dx10-$Format" -ft dds -dx10 "flat-square-no-alpha.png"
 
 }
 
