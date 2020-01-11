@@ -21,6 +21,6 @@ namespace SixLabors.ImageSharp.Textures
         /// <summary>
         /// Cubemap
         /// </summary>
-        Cubemap
+        Cubemap,
     }
 }

@@ -3,19 +3,21 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Reflection;
+using SixLabors.ImageSharp.Textures.Tests.TestUtilities.TextureProviders;
 using Xunit.Sdk;
 
-namespace SixLabors.ImageSharp.Textures.Tests
+namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.Attributes
 {
     public class WithFileAttribute : DataAttribute
     {
-        private readonly string fileName;
+        private readonly TextureType textureType;
+        private readonly string inputFile;
 
-        public WithFileAttribute(string fileName)
+        public WithFileAttribute(TextureType textureType, string inputFile)
         {
-            this.fileName = fileName;
+            this.textureType = textureType;
+            this.inputFile = inputFile;
         }
 
         /// <inheritDoc />
@@ -23,9 +25,8 @@ namespace SixLabors.ImageSharp.Textures.Tests
         {
             if (testMethod == null) { throw new ArgumentNullException(nameof(testMethod)); }
 
-            var path = new TestImageProvider(this.fileName, testMethod.Name, "");
-
-            yield return new object[] { path };
+            var testTextureProvider = new TestTextureProvider(testMethod.Name, this.textureType, this.inputFile);
+            yield return new object[] { testTextureProvider };
         }
     }
 }
