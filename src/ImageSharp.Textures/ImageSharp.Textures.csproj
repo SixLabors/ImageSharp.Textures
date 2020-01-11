@@ -20,36 +20,6 @@
 
   </PropertyGroup>
 
-  <!--
-    +===================+================+===================+==============================+
-    | Target Framework  | SUPPORTS_MATHF | SUPPORTS_HASHCODE | SUPPORTS_EXTENDED_INTRINSICS |
-    +===================+================+===================+==============================+
-    | netcoreapp3.1     |       Y        |         Y         |               Y              |
-    | netcoreapp2.1     |       Y        |         Y         |               Y              |
-    | netcoreapp2.0     |       Y        |         N         |               N              |
-    | netstandard2.1    |       Y        |         N         |               N              |
-    | netstandard2.0    |       N        |         N         |               N              |
-    | netstandard1.3    |       N        |         N         |               N              |
-    | net472            |       N        |         N         |               Y              |
-    +===================+================+===================+==============================+
-    -->
-  
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1'">
-    <DefineConstants>$(DefineConstants);SUPPORTS_MATHF;SUPPORTS_HASHCODE;SUPPORTS_EXTENDED_INTRINSICS</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.1'">
-    <DefineConstants>$(DefineConstants);SUPPORTS_MATHF;SUPPORTS_HASHCODE;SUPPORTS_EXTENDED_INTRINSICS</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.0'">
-    <DefineConstants>$(DefineConstants);SUPPORTS_MATHF;</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard2.1'">
-    <DefineConstants>$(DefineConstants);SUPPORTS_MATHF</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'net472'">
-    <DefineConstants>$(DefineConstants);SUPPORTS_EXTENDED_INTRINSICS</DefineConstants>
-  </PropertyGroup>
-  
   <ItemGroup>
     <Compile Include="..\..\shared-infrastructure\**\*.cs" />
   </ItemGroup>
@@ -57,7 +27,7 @@
   <ItemGroup>
     <PackageReference Include="StyleCop.Analyzers" PrivateAssets="All" />
     <PackageReference Include="SixLabors.ImageSharp" />
-    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.5.1.0" />
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" />
   </ItemGroup>
 
 </Project>
