@@ -59,7 +59,6 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities
             Path.Combine(SolutionDirectoryFullPath, relativePath)
             .Replace('\\', Path.DirectorySeparatorChar);
 
-
         /// <summary>
         /// Gets the correct full path to the Input Images directory.
         /// </summary>
