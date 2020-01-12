@@ -9,7 +9,6 @@
     <Import_RootNamespace>SixLabors.ImageSharp.Textures.Tests</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <None Include="$(MSBuildThisFileDirectory)Input/**" />
     <None Include="**/*.*" Exclude="**/*.cs" />
     <None Remove="Images.shproj" />
     <None Remove="Images.shproj.user" />
