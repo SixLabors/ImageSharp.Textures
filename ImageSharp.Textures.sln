@@ -31,7 +31,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ImageSharp.Textures.Tests",
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ImageSharp.Textures.Benchmarks", "tests\ImageSharp.Textures.Benchmarks\ImageSharp.Textures.Benchmarks.csproj", "{18BE79B6-6B95-4ED7-A963-AD75F6CB9F3C}"
 EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Images", "tests\Images\Images.shproj", "{68A8CC40-6AED-4E96-B524-31B1158FDEEA}"
+EndProject
 Global
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		tests\Images\Images.projitems*{68a8cc40-6aed-4e96-b524-31b1158fdeea}*SharedItemsImports = 13
+	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
@@ -57,6 +62,7 @@ Global
 		{1588F6C4-2186-4A35-9693-E9F296791393} = {5E6840D2-9CBB-4FDE-8378-33086CF5A8D8}
 		{B159FFD1-E646-42D0-892C-4ABF69103712} = {6DF92068-B792-4038-8E3F-5FDF2E026BE7}
 		{18BE79B6-6B95-4ED7-A963-AD75F6CB9F3C} = {6DF92068-B792-4038-8E3F-5FDF2E026BE7}
+		{68A8CC40-6AED-4E96-B524-31B1158FDEEA} = {6DF92068-B792-4038-8E3F-5FDF2E026BE7}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F1762A0D-74C4-454A-BCB7-C010BB067E58}

@@ -28,9 +28,11 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
-  
+
   <ItemGroup>
     <ProjectReference Include="..\..\src\ImageSharp.Textures\ImageSharp.Textures.csproj" />
   </ItemGroup>
+
+  <Import Project="..\Images\Images.projitems" Label="Shared" />
 
 </Project>

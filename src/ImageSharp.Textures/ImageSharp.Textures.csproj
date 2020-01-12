@@ -20,10 +20,6 @@
 
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netcoreapp3.1|AnyCPU'">
-    <OutputPath></OutputPath>
-  </PropertyGroup>
-
   <ItemGroup>
     <Compile Include="..\..\shared-infrastructure\**\*.cs" />
   </ItemGroup>

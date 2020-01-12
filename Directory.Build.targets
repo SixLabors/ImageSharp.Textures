@@ -29,7 +29,7 @@
     <PackageReference Update="SixLabors.ImageSharp" Version="1.0.0-dev003209" />
     <PackageReference Update="StyleCop.Analyzers" Version="1.1.118" />
     <PackageReference Update="System.Drawing.Common" Version="4.7.0" />
-    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.5.2.0" />
+    <PackageReference Update="System.Runtime.CompilerServices.Unsafe" Version="4.5.2.0" />
     <PackageReference Update="xunit" Version="2.4.1" />
     <PackageReference Update="xunit.runner.console" Version="2.4.1" />
     <PackageReference Update="xunit.runner.visualstudio" Version="2.4.1" />
