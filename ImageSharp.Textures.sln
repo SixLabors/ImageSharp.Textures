@@ -16,12 +16,20 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{5E6840D2-9CBB-4FDE-8378-33086CF5A8D8}"
+	ProjectSection(SolutionItems) = preProject
+		src\Directory.Build.props = src\Directory.Build.props
+		src\Directory.Build.targets = src\Directory.Build.targets
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{6DF92068-B792-4038-8E3F-5FDF2E026BE7}"
+	ProjectSection(SolutionItems) = preProject
+		tests\Directory.Build.props = tests\Directory.Build.props
+		tests\Directory.Build.targets = tests\Directory.Build.targets
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ImageSharp.Textures.Tests", "tests\ImageSharp.Textures.Tests\ImageSharp.Textures.Tests.csproj", "{B159FFD1-E646-42D0-892C-4ABF69103712}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImageSharp.Textures.Benchmarks", "tests\ImageSharp.Textures.Benchmarks\ImageSharp.Textures.Benchmarks.csproj", "{18BE79B6-6B95-4ED7-A963-AD75F6CB9F3C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ImageSharp.Textures.Benchmarks", "tests\ImageSharp.Textures.Benchmarks\ImageSharp.Textures.Benchmarks.csproj", "{18BE79B6-6B95-4ED7-A963-AD75F6CB9F3C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

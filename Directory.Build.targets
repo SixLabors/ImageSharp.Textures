@@ -27,7 +27,7 @@
     <PackageReference Update="Microsoft.Net.Compilers.Toolset" Version="3.3.1" />
     <PackageReference Update="Microsoft.NET.Test.Sdk" Version="16.2.0" />
     <PackageReference Update="Pfim" Version="0.9.1" />
-    <PackageReference Update="SixLabors.ImageSharp" Version="1.0.0-dev003192" />
+    <PackageReference Update="SixLabors.ImageSharp" Version="1.0.0-dev003209" />
     <PackageReference Update="StyleCop.Analyzers" Version="1.1.118" />
     <PackageReference Update="System.Drawing.Common" Version="4.7.0" />
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.5.2.0" />

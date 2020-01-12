@@ -14,9 +14,21 @@
   <PropertyGroup>
     <BaseArtifactsPath>$(MSBuildThisFileDirectory)artifacts/</BaseArtifactsPath>
     <BaseArtifactsPathSuffix>$(ImageSharpProjectCategory)/$(MSBuildProjectName)</BaseArtifactsPathSuffix>
-    <RepositoryUrl>https://github.com/SixLabors/ImageSharp/</RepositoryUrl>
+    <RepositoryUrl>https://github.com/SixLabors/ImageSharp.Textures/</RepositoryUrl>
   </PropertyGroup>
 
+  <!-- Default settings that explicitly differ from the Sdk.props defaults  -->
+  <PropertyGroup>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <BaseIntermediateOutputPath>$(BaseArtifactsPath)obj/$(BaseArtifactsPathSuffix)/</BaseIntermediateOutputPath>
+    <DebugType>portable</DebugType>
+    <DebugType Condition="'$(codecov)' != ''">full</DebugType>
+    <NullableContextOptions>disable</NullableContextOptions>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <SignAssembly>false</SignAssembly>
+    <SuppressNETCoreSdkPreviewMessage>true</SuppressNETCoreSdkPreviewMessage>
+  </PropertyGroup>
+  
   <!--
     https://apisof.net/
     +===================+================+===================+==============================+======================+==========================+
@@ -48,18 +60,6 @@
   <PropertyGroup Condition=" '$(TargetFramework)' == 'net472'">
     <DefineConstants>$(DefineConstants);SUPPORTS_EXTENDED_INTRINSICS</DefineConstants>
   </PropertyGroup>
-  
-  <!-- Default settings that explicitly differ from the Sdk.props defaults  -->
-  <PropertyGroup>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <BaseIntermediateOutputPath>$(BaseArtifactsPath)obj/$(BaseArtifactsPathSuffix)/</BaseIntermediateOutputPath>
-    <DebugType>portable</DebugType>
-    <DebugType Condition="'$(codecov)' != ''">full</DebugType>
-    <NullableContextOptions>disable</NullableContextOptions>
-    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-    <SignAssembly>false</SignAssembly>
-    <SuppressNETCoreSdkPreviewMessage>true</SuppressNETCoreSdkPreviewMessage>
-  </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
@@ -76,7 +76,7 @@
     <BaseOutputPath>$(BaseArtifactsPath)bin/$(BaseArtifactsPathSuffix)/</BaseOutputPath>
     <Company>Six Labors</Company>
     <PackageOutputPath>$(BaseArtifactsPath)pkg/$(BaseArtifactsPathSuffix)/$(Configuration)/</PackageOutputPath>
-    <Product>SixLabors.ImageSharp</Product>
+    <Product>SixLabors.ImageSharp.Textures</Product>
     <VersionPrefix>0.0.1</VersionPrefix>
     <VersionPrefix Condition="'$(packageversion)' != ''">$(PackageVersion)</VersionPrefix>
     <VersionSuffix></VersionSuffix>

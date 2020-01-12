@@ -16,12 +16,13 @@
 
   <ItemGroup>
     <PackageReference Include="Magick.NET-Q16-AnyCPU" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="System.Drawing.Common" />
-    <PackageReference Include="xunit" />
-    <PackageReference Include="xunit.runner.visualstudio" />
   </ItemGroup>
 
+  <ItemGroup>
+    <DotNetCliToolReference Include="dotnet-xunit" />
+  </ItemGroup>
+  
   <ItemGroup>
     <ProjectReference Include="..\..\src\ImageSharp.Textures\ImageSharp.Textures.csproj" />
   </ItemGroup>

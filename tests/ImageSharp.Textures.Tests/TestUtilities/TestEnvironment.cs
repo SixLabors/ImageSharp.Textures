@@ -1,9 +1,10 @@
+// Copyright (c) Six Labors and contributors.
+// Licensed under the Apache License, Version 2.0.
+
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 
 namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities
 {
@@ -18,11 +19,7 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities
         private static readonly Lazy<string> SolutionDirectoryFullPathLazy = new Lazy<string>(GetSolutionDirectoryFullPathImpl);
 
         private static readonly Lazy<bool> RunsOnCiLazy = new Lazy<bool>(
-            () =>
-            {
-                bool isCi;
-                return bool.TryParse(Environment.GetEnvironmentVariable("CI"), out isCi) && isCi;
-            });
+            () => bool.TryParse(Environment.GetEnvironmentVariable("CI"), out bool isCi) && isCi);
 
         internal static bool RunsOnCI => RunsOnCiLazy.Value;
 
