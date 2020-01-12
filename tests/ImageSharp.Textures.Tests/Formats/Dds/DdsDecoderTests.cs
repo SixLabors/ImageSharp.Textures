@@ -45,13 +45,13 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.Dds
             {
                 return;
             }
-            for (int i = 0; i < texture.Images.Length; i++)
-            {
-                for (int j = 0; j < texture.Images[i].Length; j++)
-                {
-                    texture.Images[i][j].Save($"d:\\{Path.GetFileNameWithoutExtension(inputName)}-depth{i}-mip{j}.png");
-                }
-            }
+            //for (int i = 0; i < texture.Images.Length; i++)
+            //{
+            //    for (int j = 0; j < texture.Images[i].Length; j++)
+            //    {
+            //        texture.Images[i][j].Save($"d:\\{Path.GetFileNameWithoutExtension(inputName)}-depth{i}-mip{j}.png");
+            //    }
+            //}
         }
     }
 }

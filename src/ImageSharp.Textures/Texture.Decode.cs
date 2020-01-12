@@ -13,16 +13,16 @@ namespace SixLabors.ImageSharp.Textures
     /// <content>
     /// Adds static methods allowing the decoding of new images.
     /// </content>
-    public partial class Texture
+    public abstract partial class Texture
     {
         /// <summary>
         /// </summary>
         /// <param name="textureType"><see cref="TextureType" /></param>
         /// <returns>The result <see cref="Texture"/></returns>
-        internal static Texture CreateUninitialized(TextureType textureType)
-        {
-            return new Texture(textureType);
-        }
+        //internal static Texture CreateUninitialized(TextureType textureType)
+        //{
+        //    return new Texture(textureType);
+        //}
 
         /// <summary>
         /// By reading the header on the provided stream this calculates the images format.

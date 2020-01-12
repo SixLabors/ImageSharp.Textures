@@ -7,6 +7,8 @@ using SixLabors.ImageSharp.Textures.Formats.Dds.Emums;
 using SixLabors.ImageSharp.Textures.Formats.Dds.Extensions;
 using SixLabors.ImageSharp.Textures.Formats.Dds.Processing;
 using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Textures.TextureFormats;
+using SixLabors.ImageSharp.Textures;
 
 namespace Pfim
 {
@@ -53,7 +55,7 @@ namespace Pfim
             }
         }
 
-        protected override Image[] Decode(Stream stream)
+        protected override MipMap[] Decode(Stream stream)
         {
             var imageInfo = ImageInfo();
             _format = imageInfo.Format;
@@ -116,7 +118,7 @@ namespace Pfim
                 }
             }
 
-            var images = new List<Image>();
+            var mipMapList = new List<MipMap>();
             foreach (MipMapOffset mipmap in this.mipMaps)
             {
                 Span<byte> mipdata = data.AsSpan().Slice(mipmap.DataOffset, mipmap.DataLen);
@@ -128,38 +130,38 @@ namespace Pfim
                         mipdata[i] |= 128;
                     }
 
-                    images.Add(Image.LoadPixelData<Bgra5551>(mipdata, mipmap.Width, mipmap.Height));
+                    mipMapList.Add(new MipMap(Image.LoadPixelData<Bgra5551>(mipdata, mipmap.Width, mipmap.Height)));
                 }
                 else if (this.Format == ImageFormat.R5g5b5a1)
                 {
-                    images.Add(Image.LoadPixelData<Bgra5551>(mipdata, mipmap.Width, mipmap.Height));
+                    mipMapList.Add(new MipMap(Image.LoadPixelData<Bgra5551>(mipdata, mipmap.Width, mipmap.Height)));
                 }
                 else if (this.Format == ImageFormat.R5g6b5)
                 {
-                    images.Add(Image.LoadPixelData<Bgr565>(mipdata, mipmap.Width, mipmap.Height));
+                    mipMapList.Add(new MipMap(Image.LoadPixelData<Bgr565>(mipdata, mipmap.Width, mipmap.Height)));
                 }
                 else if (this.Format == ImageFormat.Rgb24)
                 {
-                    images.Add(Image.LoadPixelData<Bgr24>(mipdata, mipmap.Width, mipmap.Height));
+                    mipMapList.Add(new MipMap(Image.LoadPixelData<Bgr24>(mipdata, mipmap.Width, mipmap.Height)));
                 }
                 else if (this.Format == ImageFormat.Rgb8)
                 {
-                    images.Add(Image.LoadPixelData<Bgra32>(mipdata, mipmap.Width, mipmap.Height));
+                    mipMapList.Add(new MipMap(Image.LoadPixelData<Bgra32>(mipdata, mipmap.Width, mipmap.Height)));
                 }
                 else if (this.Format == ImageFormat.Rgba16)
                 {
-                    images.Add(Image.LoadPixelData<Bgra4444>(mipdata, mipmap.Width, mipmap.Height));
+                    mipMapList.Add(new MipMap(Image.LoadPixelData<Bgra4444>(mipdata, mipmap.Width, mipmap.Height)));
                 }
                 else if (this.Format == ImageFormat.Rgba32)
                 {
-                    images.Add(Image.LoadPixelData<Bgra4444>(mipdata, mipmap.Width, mipmap.Height));
+                    mipMapList.Add(new MipMap(Image.LoadPixelData<Bgra4444>(mipdata, mipmap.Width, mipmap.Height)));
                 }
                 else
                 {
                     throw new NotImplementedException($"Unrecognized format: ${this.Format}");
                 }
             }
-            return images.ToArray();
+            return mipMapList.ToArray();
         }
 
         /// <summary>Determine image info from header</summary>

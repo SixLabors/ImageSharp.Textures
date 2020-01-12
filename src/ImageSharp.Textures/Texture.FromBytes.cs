@@ -10,7 +10,7 @@ namespace SixLabors.ImageSharp.Textures
     /// <content>
     /// Adds static methods allowing the creation of new image from a byte array.
     /// </content>
-    public partial class Texture
+    public abstract partial class Texture
     {
         /// <summary>
         /// By reading the header on the provided byte array this calculates the images format.

@@ -5,6 +5,7 @@ using Pfim.dds;
 using SixLabors.ImageSharp.Textures.Formats.Dds;
 using SixLabors.ImageSharp.Textures.Formats.Dds.Emums;
 using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Textures.TextureFormats;
 
 namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
 {
@@ -27,7 +28,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
 
         public abstract MipMapOffset[] MipMaps { get; }
 
-        protected abstract Image[] Decode(Stream stream);
+        protected abstract MipMap[] Decode(Stream stream);
 
         public Dds(DdsHeader ddsHeader, DdsHeaderDxt10 ddsHeaderDxt10)
         {
@@ -75,7 +76,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
             }
         }
 
-        public static Image[] DecodeDds(Stream stream, DdsHeader ddsHeader, DdsHeaderDxt10 ddsHeaderDxt10)
+        public static MipMap[] DecodeDds(Stream stream, DdsHeader ddsHeader, DdsHeaderDxt10 ddsHeaderDxt10)
         {
             Dds dds;
             switch (ddsHeader.PixelFormat.FourCC)

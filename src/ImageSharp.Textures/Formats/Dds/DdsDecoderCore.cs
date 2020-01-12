@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.IO;
 using SixLabors.ImageSharp.Textures.Formats.Dds.Emums;
 using SixLabors.ImageSharp.Textures.Formats.Dds.Extensions;
+using SixLabors.ImageSharp.Textures.TextureFormats;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.Memory;
 
@@ -80,14 +81,13 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds
                 {
                     var depths = ddsHeader.ComputeDepth();
 
-                    var texture = new Texture(TextureType.VolumeTexture)
-                    {
-                        Images = new Image[depths][]
-                    };
-
+                    var texture = new Texture<Volume>();
                     for (int depth = 0; depth < depths; depth++)
                     {
-                        texture.Images[depth] = Processing.Dds.DecodeDds(stream, this.ddsHeader, this.ddsDxt10header);
+                        var mipMaps = Processing.Dds.DecodeDds(stream, this.ddsHeader, this.ddsDxt10header);
+                        var surface = default(Surface);
+                        surface.MipMaps.AddRange(mipMaps);
+                        texture.Value.Slices.Add(surface);
                     }
 
                     return texture;
@@ -95,27 +95,44 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds
                 else if (this.ddsHeader.IsCubemap())
                 {
                     DdsSurfaceType[] faces = this.ddsHeader.GetExistingCubemapFaces();
-                    var texture = new Texture(TextureType.VolumeTexture)
-                    {
-                        Images = new Image[faces.Length][]
-                    };
-
+               
+                    var texture = new Texture<Cubemap>();
                     for (int face = 0; face < faces.Length; face++)
                     {
-                        texture.Images[face] = Processing.Dds.DecodeDds(stream, this.ddsHeader, this.ddsDxt10header);
+                        var mipMaps = Processing.Dds.DecodeDds(stream, this.ddsHeader, this.ddsDxt10header);
+                        if (faces[face] == DdsSurfaceType.CubemapPositiveX)
+                        {
+                            texture.Value.PositiveX.MipMaps.AddRange(mipMaps);
+                        }
+                        if (faces[face] == DdsSurfaceType.CubemapNegativeX)
+                        {
+                            texture.Value.NegativeX.MipMaps.AddRange(mipMaps);
+                        }
+                        if (faces[face] == DdsSurfaceType.CubemapPositiveY)
+                        {
+                            texture.Value.PositiveY.MipMaps.AddRange(mipMaps);
+                        }
+                        if (faces[face] == DdsSurfaceType.CubemapNegativeY)
+                        {
+                            texture.Value.NegativeY.MipMaps.AddRange(mipMaps);
+                        }
+                        if (faces[face] == DdsSurfaceType.CubemapPositiveZ)
+                        {
+                            texture.Value.PositiveZ.MipMaps.AddRange(mipMaps);
+                        }
+                        if (faces[face] == DdsSurfaceType.CubemapNegativeZ)
+                        {
+                            texture.Value.NegativeZ.MipMaps.AddRange(mipMaps);
+                        }
                     }
 
                     return texture;
                 }
                 else
                 {
-                    var texture = new Texture(TextureType.VolumeTexture)
-                    {
-                        Images = new Image[1][]
-                    };
-
-                    texture.Images[0] = Processing.Dds.DecodeDds(stream, this.ddsHeader, this.ddsDxt10header);
-
+                    var texture = new Texture<Surface>();
+                    var mipMaps = Processing.Dds.DecodeDds(stream, this.ddsHeader, this.ddsDxt10header);
+                    texture.Value.MipMaps.AddRange(mipMaps);
                     return texture;
                 }
             }
