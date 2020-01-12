@@ -1,15 +1,9 @@
 namespace SixLabors.ImageSharp.Textures
 {
-    public interface ITexture<TSelf> : ITexture
-        where TSelf : struct, ITexture<TSelf>
-    {
-    }
+    using System;
 
-    public interface ITexture
+    public interface ITexture : IDisposable
     {
-        /// <summary>
-        /// Disposes the object and frees resources for the Garbage Collector.
-        /// </summary>
-        void Dispose();
+
     }
 }
