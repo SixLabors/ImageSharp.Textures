@@ -1,6 +1,8 @@
 namespace SixLabors.ImageSharp.Textures.TextureFormats
 {
-    public struct Cubemap : ITexture<Cubemap>
+    using System;
+
+    public class Cubemap : Texture
     {
         private bool isDisposed;
 
@@ -16,22 +18,44 @@ namespace SixLabors.ImageSharp.Textures.TextureFormats
 
         public Surface NegativeZ { get; }
 
+        public Cubemap()
+        {
+            PositiveX = new Surface();
+            NegativeX = new Surface();
+            PositiveY = new Surface();
+            NegativeY = new Surface();
+            PositiveZ = new Surface();
+            NegativeZ = new Surface();
+        }
+
         /// <inheritdoc/>
-        public void Dispose()
+        protected override void Dispose(bool disposing)
         {
             if (this.isDisposed)
             {
                 return;
             }
 
-            this.PositiveX.Dispose();
-            this.NegativeX.Dispose();
-            this.PositiveY.Dispose();
-            this.NegativeY.Dispose();
-            this.PositiveZ.Dispose();
-            this.NegativeZ.Dispose();
+            if (disposing)
+            {
+                this.PositiveX.Dispose();
+                this.NegativeX.Dispose();
+                this.PositiveY.Dispose();
+                this.NegativeY.Dispose();
+                this.PositiveZ.Dispose();
+                this.NegativeZ.Dispose();
+            }
 
             this.isDisposed = true;
+        }
+
+        /// <inheritdoc/>
+        internal override void EnsureNotDisposed()
+        {
+            if (this.isDisposed)
+            {
+                throw new ObjectDisposedException("Trying to execute an operation on a disposed image.");
+            }
         }
     }
 }

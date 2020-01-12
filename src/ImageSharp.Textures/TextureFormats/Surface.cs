@@ -1,38 +1,45 @@
 namespace SixLabors.ImageSharp.Textures.TextureFormats
 {
+    using System;
     using System.Collections.Generic;
 
-    public struct Surface : ITexture<Surface>
+    public class Surface : Texture
     {
         private bool isDisposed;
-        private List<MipMap> mipMaps;
 
-        public List<MipMap> MipMaps
+        public List<MipMap> MipMaps { get; }
+
+        public Surface()
         {
-            get
-            {
-                if (mipMaps == null)
-                {
-                    mipMaps = new List<MipMap>();
-                }
-                return mipMaps;
-            }
+            MipMaps = new List<MipMap>();
         }
 
         /// <inheritdoc/>
-        public void Dispose()
+        protected override void Dispose(bool disposing)
         {
             if (this.isDisposed)
             {
                 return;
             }
 
-            foreach (MipMap mipMap in this.MipMaps)
+            if (disposing)
             {
-                mipMap.Dispose();
+                foreach (MipMap mipMap in this.MipMaps)
+                {
+                    mipMap.Dispose();
+                }
             }
 
             this.isDisposed = true;
+        }
+
+        /// <inheritdoc/>
+        internal override void EnsureNotDisposed()
+        {
+            if (this.isDisposed)
+            {
+                throw new ObjectDisposedException("Trying to execute an operation on a disposed image.");
+            }
         }
     }
 }
