@@ -1,12 +1,11 @@
 // Copyright (c) Six Labors and contributors.
 // Licensed under the Apache License, Version 2.0.
 
-using System;
-
-using SixLabors.Primitives;
-
 namespace SixLabors.ImageSharp.Textures.Memory
 {
+    using System;
+    using SixLabors.Primitives;
+
     /// <summary>
     /// Represents an interval of rows in a <see cref="Rectangle"/> and/or <see cref="Buffer2D{T}"/>
     /// </summary>

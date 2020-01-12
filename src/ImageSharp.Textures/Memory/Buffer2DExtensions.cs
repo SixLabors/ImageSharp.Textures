@@ -1,15 +1,14 @@
 // Copyright (c) Six Labors and contributors.
 // Licensed under the Apache License, Version 2.0.
 
-using System;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-
-using SixLabors.Primitives;
-
 namespace SixLabors.ImageSharp.Textures.Memory
 {
+    using System;
+    using System.Diagnostics;
+    using System.Runtime.CompilerServices;
+    using System.Runtime.InteropServices;
+    using SixLabors.Primitives;
+
     /// <summary>
     /// Defines extension methods for <see cref="Buffer2D{T}"/>.
     /// </summary>

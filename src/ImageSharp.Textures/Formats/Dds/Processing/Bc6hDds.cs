@@ -1,14 +1,14 @@
-using SixLabors.ImageSharp.Textures.Formats.Dds;
-using SixLabors.ImageSharp.Textures.Formats.Dds.Emums;
-using SixLabors.ImageSharp.Textures.Formats.Dds.Processing;
-using SixLabors.ImageSharp.Textures.Formats.Dds.Processing.Bc6hBc7;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Text;
+// Copyright (c) Six Labors and contributors.
+// Licensed under the Apache License, Version 2.0.
 
-namespace Pfim.dds
+namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
 {
+    using System;
+    using System.Diagnostics;
+    using SixLabors.ImageSharp.Textures.Formats.Dds;
+    using SixLabors.ImageSharp.Textures.Formats.Dds.Emums;
+    using SixLabors.ImageSharp.Textures.Formats.Dds.Processing.Bc6hBc7;
+
     internal class Bc6hDds : CompressedDds
     { // Code based on commit 138efff1b9c53fd9a5dd34b8c865e8f5ae798030 2019/10/24 in DirectXTex C++ library
         private enum EField : byte

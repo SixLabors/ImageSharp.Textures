@@ -1,11 +1,11 @@
 // Copyright (c) Six Labors and contributors.
 // Licensed under the Apache License, Version 2.0.
 
-using System;
-using System.Buffers.Binary;
-
 namespace SixLabors.ImageSharp.Textures.Formats.Dds
 {
+    using System;
+    using System.Buffers.Binary;
+
     /// <summary>
     /// Detects png file headers
     /// </summary>

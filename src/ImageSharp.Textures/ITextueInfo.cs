@@ -1,10 +1,10 @@
 // Copyright (c) Six Labors and contributors.
 // Licensed under the Apache License, Version 2.0.
 
-using SixLabors.ImageSharp.Textures.Formats;
-
 namespace SixLabors.ImageSharp.Textures
 {
+    using SixLabors.ImageSharp.Textures.Formats;
+
     /// <summary>
     /// Encapsulates properties that describe basic image information including dimensions, pixel type information
     /// and additional metadata.

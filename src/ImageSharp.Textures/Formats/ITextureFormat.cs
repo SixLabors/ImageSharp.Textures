@@ -1,10 +1,10 @@
 // Copyright (c) Six Labors and contributors.
 // Licensed under the Apache License, Version 2.0.
 
-using System.Collections.Generic;
-
 namespace SixLabors.ImageSharp.Textures.Formats
 {
+    using System.Collections.Generic;
+
     /// <summary>
     /// Defines the contract for an image format.
     /// </summary>

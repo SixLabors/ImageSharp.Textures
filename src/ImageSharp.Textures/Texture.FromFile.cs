@@ -1,12 +1,12 @@
 // Copyright (c) Six Labors and contributors.
 // Licensed under the Apache License, Version 2.0.
 
-using System;
-using System.IO;
-using SixLabors.ImageSharp.Textures.Formats;
-
 namespace SixLabors.ImageSharp.Textures
 {
+    using System;
+    using System.IO;
+    using SixLabors.ImageSharp.Textures.Formats;
+
     /// <content>
     /// Adds static methods allowing the creation of new image from a given file.
     /// </content>

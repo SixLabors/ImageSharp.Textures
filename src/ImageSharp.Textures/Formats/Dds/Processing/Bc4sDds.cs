@@ -1,15 +1,15 @@
-using System;
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
-using System.Text;
-using SixLabors.ImageSharp.Textures.Formats.Dds;
-using SixLabors.ImageSharp.Textures.Formats.Dds.Processing;
+// Copyright (c) Six Labors and contributors.
+// Licensed under the Apache License, Version 2.0.
 
-namespace Pfim.dds
+namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
 {
+    using System;
+    using System.Runtime.CompilerServices;
+    using SixLabors.ImageSharp.Textures.Formats.Dds;
+
     internal class Bc4sDds : CompressedDds
     {
-        private const float Multiplier = (255.0f / 254.0f);
+        private const float Multiplier = 255.0f / 254.0f;
 
         public Bc4sDds(DdsHeader ddsHeader, DdsHeaderDxt10 ddsHeaderDxt10)
             : base(ddsHeader, ddsHeaderDxt10)
@@ -26,24 +26,24 @@ namespace Pfim.dds
         {
             sbyte red0 = (sbyte)stream[streamIndex++];
             sbyte red1 = (sbyte)stream[streamIndex++];
-            red0 = (red0 == -128) ? (sbyte)-127 : red0;
-            red1 = (red1 == -128) ? (sbyte)-127 : red1;
+            red0 = red0 == -128 ? (sbyte)-127 : red0;
+            red1 = red1 == -128 ? (sbyte)-127 : red1;
 
             ulong rIndex = stream[streamIndex++];
-            rIndex |= ((ulong)stream[streamIndex++] << 8);
-            rIndex |= ((ulong)stream[streamIndex++] << 16);
-            rIndex |= ((ulong)stream[streamIndex++] << 24);
-            rIndex |= ((ulong)stream[streamIndex++] << 32);
-            rIndex |= ((ulong)stream[streamIndex++] << 40);
+            rIndex |= (ulong)stream[streamIndex++] << 8;
+            rIndex |= (ulong)stream[streamIndex++] << 16;
+            rIndex |= (ulong)stream[streamIndex++] << 24;
+            rIndex |= (ulong)stream[streamIndex++] << 32;
+            rIndex |= (ulong)stream[streamIndex++] << 40;
 
             for (int i = 0; i < 16; ++i)
             {
-                uint index = (byte)((uint)(rIndex >> (3 * i)) & 0x07);
+                uint index = (byte)((uint)(rIndex >> 3 * i) & 0x07);
 
                 data[dataIndex++] = InterpolateColor((byte)index, red0, red1);
 
                 // Is mult 4?
-                if (((i + 1) & 0x3) == 0)
+                if ((i + 1 & 0x3) == 0)
                 {
                     dataIndex += PixelDepthBytes * (stride - DivSize);
                 }
@@ -88,7 +88,7 @@ namespace Pfim.dds
                     }
                 }
             }
-            return (byte)(((red + 127) * Multiplier) + 0.5f);
+            return (byte)((red + 127) * Multiplier + 0.5f);
         }
     }
 }

@@ -1,10 +1,10 @@
 // Copyright (c) Six Labors and contributors.
 // Licensed under the Apache License, Version 2.0.
 
-using System.IO;
-
 namespace SixLabors.ImageSharp.Textires.IO
 {
+    using System.IO;
+
     /// <summary>
     /// A simple interface representing the filesystem.
     /// </summary>

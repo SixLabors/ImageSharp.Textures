@@ -1,14 +1,13 @@
-using System;
-using System.IO;
-using Pfim;
-using Pfim.dds;
-using SixLabors.ImageSharp.Textures.Formats.Dds;
-using SixLabors.ImageSharp.Textures.Formats.Dds.Emums;
-using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Textures.TextureFormats;
+// Copyright (c) Six Labors and contributors.
+// Licensed under the Apache License, Version 2.0.
 
 namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
 {
+    using System;
+    using System.IO;
+    using SixLabors.ImageSharp.Textures.Formats.Dds;
+    using SixLabors.ImageSharp.Textures.Formats.Dds.Emums;
+
     /// <summary>
     /// Class that represents direct draw surfaces
     /// </summary>

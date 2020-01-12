@@ -1,13 +1,13 @@
 // Copyright (c) Six Labors and contributors.
 // Licensed under the Apache License, Version 2.0.
 
-using System;
-using System.Buffers.Binary;
-using System.Runtime.InteropServices;
-using SixLabors.ImageSharp.Textures.Formats.Dds.Emums;
-
 namespace SixLabors.ImageSharp.Textures.Formats.Dds
 {
+    using System;
+    using System.Buffers.Binary;
+    using System.Runtime.InteropServices;
+    using SixLabors.ImageSharp.Textures.Formats.Dds.Emums;
+
     /// <summary>
     /// Describes a DDS file header.
     /// </summary>

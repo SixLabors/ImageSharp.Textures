@@ -1,15 +1,15 @@
 // Copyright (c) Six Labors and contributors.
 // Licensed under the Apache License, Version 2.0.
 
-using System;
-using System.IO;
-using System.Linq;
-using SixLabors.ImageSharp.Textures.Formats;
-using SixLabors.ImageSharp.Textures.Memory;
-using SixLabors.Memory;
-
 namespace SixLabors.ImageSharp.Textures
 {
+    using System;
+    using System.IO;
+    using System.Linq;
+    using SixLabors.ImageSharp.Textures.Formats;
+    using SixLabors.ImageSharp.Textures.Memory;
+    using SixLabors.Memory;
+
     /// <content>
     /// Adds static methods allowing the decoding of new images.
     /// </content>

@@ -1,12 +1,11 @@
 // Copyright (c) Six Labors and contributors.
 // Licensed under the Apache License, Version 2.0.
 
-using System;
-using SixLabors.ImageSharp.Textures.Formats.Dds;
-using SixLabors.ImageSharp.Textures.Formats.Dds.Emums;
-
 namespace SixLabors.ImageSharp.Textures.Formats.Dds.Extensions
 {
+    using SixLabors.ImageSharp.Textures.Formats.Dds;
+    using SixLabors.ImageSharp.Textures.Formats.Dds.Emums;
+
     internal static class DdsHeaderExtensions
     {
         /// <summary>

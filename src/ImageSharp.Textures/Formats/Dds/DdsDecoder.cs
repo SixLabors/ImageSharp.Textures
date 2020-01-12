@@ -1,18 +1,18 @@
 // Copyright (c) Six Labors and contributors.
 // Licensed under the Apache License, Version 2.0.
 
-/* Notes:
+namespace SixLabors.ImageSharp.Textures.Formats.Dds
+{
+    /* Notes:
 https://github.com/toji/texture
 https://docs.microsoft.com/en-us/windows/win32/direct3ddds/dx-graphics-dds-pguide
 https://docs.microsoft.com/en-us/windows/uwp/gaming/complete-code-for-ddstextureloader
 */
 
-using System;
-using System.IO;
-using SixLabors.ImageSharp.PixelFormats;
+    using System;
+    using System.IO;
+    using SixLabors.ImageSharp.PixelFormats;
 
-namespace SixLabors.ImageSharp.Textures.Formats.Dds
-{
     /// <summary>
     /// Image decoder for DDS images.
     /// </summary>

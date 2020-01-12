@@ -1,13 +1,12 @@
 // Copyright (c) Six Labors and contributors.
 // Licensed under the Apache License, Version 2.0.
 
-using System;
-using System.Runtime.CompilerServices;
-
-using SixLabors.Primitives;
-
 namespace SixLabors.ImageSharp.Textures.Memory
 {
+    using System;
+    using System.Runtime.CompilerServices;
+    using SixLabors.Primitives;
+
     /// <summary>
     /// Represents a buffer of value type objects
     /// interpreted as a 2D region of <see cref="Width"/> x <see cref="Height"/> elements.

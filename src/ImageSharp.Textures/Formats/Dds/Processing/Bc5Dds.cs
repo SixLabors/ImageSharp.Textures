@@ -1,9 +1,11 @@
-using System;
-using SixLabors.ImageSharp.Textures.Formats.Dds;
-using SixLabors.ImageSharp.Textures.Formats.Dds.Processing;
+// Copyright (c) Six Labors and contributors.
+// Licensed under the Apache License, Version 2.0.
 
-namespace Pfim.dds
+namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
 {
+    using System;
+    using SixLabors.ImageSharp.Textures.Formats.Dds;
+
     internal class Bc5Dds : CompressedDds
     {
         private readonly byte[] _firstGradient = new byte[8];
@@ -24,27 +26,27 @@ namespace Pfim.dds
         {
             streamIndex = ExtractGradient(_firstGradient, stream, streamIndex);
             ulong firstCodes = stream[streamIndex++];
-            firstCodes |= ((ulong)stream[streamIndex++] << 8);
-            firstCodes |= ((ulong)stream[streamIndex++] << 16);
-            firstCodes |= ((ulong)stream[streamIndex++] << 24);
-            firstCodes |= ((ulong)stream[streamIndex++] << 32);
-            firstCodes |= ((ulong)stream[streamIndex++] << 40);
+            firstCodes |= (ulong)stream[streamIndex++] << 8;
+            firstCodes |= (ulong)stream[streamIndex++] << 16;
+            firstCodes |= (ulong)stream[streamIndex++] << 24;
+            firstCodes |= (ulong)stream[streamIndex++] << 32;
+            firstCodes |= (ulong)stream[streamIndex++] << 40;
 
             streamIndex = ExtractGradient(_secondGradient, stream, streamIndex);
             ulong secondCodes = stream[streamIndex++];
-            secondCodes |= ((ulong)stream[streamIndex++] << 8);
-            secondCodes |= ((ulong)stream[streamIndex++] << 16);
-            secondCodes |= ((ulong)stream[streamIndex++] << 24);
-            secondCodes |= ((ulong)stream[streamIndex++] << 32);
-            secondCodes |= ((ulong)stream[streamIndex++] << 40);
+            secondCodes |= (ulong)stream[streamIndex++] << 8;
+            secondCodes |= (ulong)stream[streamIndex++] << 16;
+            secondCodes |= (ulong)stream[streamIndex++] << 24;
+            secondCodes |= (ulong)stream[streamIndex++] << 32;
+            secondCodes |= (ulong)stream[streamIndex++] << 40;
 
             for (int alphaShift = 0; alphaShift < 48; alphaShift += 12)
             {
                 for (int j = 0; j < 4; j++)
                 {
                     // 3 bits determine alpha index to use
-                    byte firstIndex = (byte)((firstCodes >> (alphaShift + 3 * j)) & 0x07);
-                    byte secondIndex = (byte)((secondCodes >> (alphaShift + 3 * j)) & 0x07);
+                    byte firstIndex = (byte)(firstCodes >> alphaShift + 3 * j & 0x07);
+                    byte secondIndex = (byte)(secondCodes >> alphaShift + 3 * j & 0x07);
                     data[dataIndex++] = 0; // skip blue
                     data[dataIndex++] = _secondGradient[secondIndex];
                     data[dataIndex++] = _firstGradient[firstIndex];

@@ -1,17 +1,18 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Textures.Formats.Dds;
-using SixLabors.ImageSharp.Textures.Formats.Dds.Emums;
-using SixLabors.ImageSharp.Textures.Formats.Dds.Extensions;
-using SixLabors.ImageSharp.Textures.Formats.Dds.Processing;
-using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Textures.TextureFormats;
-using SixLabors.ImageSharp.Textures;
+// Copyright (c) Six Labors and contributors.
+// Licensed under the Apache License, Version 2.0.
 
-namespace Pfim
+namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
 {
+    using System;
+    using System.Collections.Generic;
+    using System.IO;
+    using SixLabors.ImageSharp;
+    using SixLabors.ImageSharp.PixelFormats;
+    using SixLabors.ImageSharp.Textures;
+    using SixLabors.ImageSharp.Textures.Formats.Dds;
+    using SixLabors.ImageSharp.Textures.Formats.Dds.Emums;
+    using SixLabors.ImageSharp.Textures.Formats.Dds.Extensions;
+
     /// <summary>
     /// A DirectDraw Surface that is not compressed.  
     /// Thus what is in the input stream gets directly translated to the image buffer.

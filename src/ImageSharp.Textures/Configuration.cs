@@ -1,15 +1,15 @@
 // Copyright (c) Six Labors and contributors.
 // Licensed under the Apache License, Version 2.0.
 
-using System;
-using System.Collections.Generic;
-using SixLabors.ImageSharp.Textires.IO;
-using SixLabors.ImageSharp.Textures.Formats;
-using SixLabors.ImageSharp.Textures.Formats.Dds;
-using SixLabors.Memory;
-
 namespace SixLabors.ImageSharp.Textures
 {
+    using System;
+    using System.Collections.Generic;
+    using SixLabors.ImageSharp.Textires.IO;
+    using SixLabors.ImageSharp.Textures.Formats;
+    using SixLabors.ImageSharp.Textures.Formats.Dds;
+    using SixLabors.Memory;
+
     /// <summary>
     /// Provides configuration code which allows altering default behaviour or extending the library.
     /// </summary>

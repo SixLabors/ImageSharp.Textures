@@ -1,9 +1,11 @@
-using System;
-using SixLabors.ImageSharp.Textures.Formats.Dds;
-using SixLabors.ImageSharp.Textures.Formats.Dds.Processing;
+// Copyright (c) Six Labors and contributors.
+// Licensed under the Apache License, Version 2.0.
 
-namespace Pfim
+namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
 {
+    using System;
+    using SixLabors.ImageSharp.Textures.Formats.Dds;
+
     internal class Dxt3Dds : CompressedDds
     {
         private const byte PIXEL_DEPTH = 4;

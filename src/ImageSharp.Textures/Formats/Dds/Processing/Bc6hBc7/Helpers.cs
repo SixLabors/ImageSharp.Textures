@@ -1,8 +1,11 @@
-using System;
-using System.Diagnostics;
+// Copyright (c) Six Labors and contributors.
+// Licensed under the Apache License, Version 2.0.
 
 namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.Bc6hBc7
 {
+    using System;
+    using System.Diagnostics;
+
     internal static class Helpers
     {
         public static bool IsFixUpOffset(byte uPartitions, byte uShape, int uOffset)

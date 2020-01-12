@@ -1,15 +1,14 @@
 // Copyright (c) Six Labors and contributors.
 // Licensed under the Apache License, Version 2.0.
 
-using System;
-using System.Buffers;
-using System.IO;
-
-using SixLabors.ImageSharp.Textures.Memory;
-using SixLabors.Memory;
-
 namespace SixLabors.ImageSharp.Textures
 {
+    using System;
+    using System.Buffers;
+    using System.IO;
+    using SixLabors.ImageSharp.Textures.Memory;
+    using SixLabors.Memory;
+
     /// <summary>
     /// Extension methods for the <see cref="Stream"/> type.
     /// </summary>

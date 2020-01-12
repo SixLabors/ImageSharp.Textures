@@ -1,13 +1,13 @@
 // Copyright (c) Six Labors and contributors.
 // Licensed under the Apache License, Version 2.0.
 
-using System;
-using System.Buffers;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-
 namespace SixLabors.ImageSharp.Textures.Memory
 {
+    using System;
+    using System.Buffers;
+    using System.Runtime.CompilerServices;
+    using System.Runtime.InteropServices;
+
     /// <summary>
     /// Extension methods for <see cref="IMemoryOwner{T}"/>
     /// </summary>

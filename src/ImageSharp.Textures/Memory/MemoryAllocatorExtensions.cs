@@ -1,13 +1,12 @@
 // Copyright (c) Six Labors and contributors.
 // Licensed under the Apache License, Version 2.0.
 
-using System.Buffers;
-
-using SixLabors.Memory;
-using SixLabors.Primitives;
-
 namespace SixLabors.ImageSharp.Textures.Memory
 {
+    using System.Buffers;
+    using SixLabors.Memory;
+    using SixLabors.Primitives;
+
     /// <summary>
     /// Extension methods for <see cref="MemoryAllocator"/>.
     /// </summary>

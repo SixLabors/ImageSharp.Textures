@@ -1,13 +1,12 @@
 // Copyright (c) Six Labors and contributors.
 // Licensed under the Apache License, Version 2.0.
 
-using System;
-using System.Buffers;
-
-using SixLabors.Memory;
-
 namespace SixLabors.ImageSharp.Textures.Memory
 {
+    using System;
+    using System.Buffers;
+    using SixLabors.Memory;
+
     /// <summary>
     /// Holds a <see cref="System.Memory{T}"/> that is either OWNED or CONSUMED.
     /// When the memory is being owned, the <see cref="IMemoryOwner{T}"/> instance is also known.

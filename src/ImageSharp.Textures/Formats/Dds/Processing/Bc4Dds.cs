@@ -1,11 +1,11 @@
-using System;
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
-using System.Text;
-using Pfim;
+// Copyright (c) Six Labors and contributors.
+// Licensed under the Apache License, Version 2.0.
 
 namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
 {
+    using System;
+    using System.Runtime.CompilerServices;
+
     internal class Bc4Dds : CompressedDds
     {
         public Bc4Dds(DdsHeader ddsHeader, DdsHeaderDxt10 ddsHeaderDxt10)

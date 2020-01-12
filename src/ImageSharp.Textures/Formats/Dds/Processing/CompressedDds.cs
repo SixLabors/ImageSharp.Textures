@@ -1,13 +1,14 @@
-using System;
-using System.Collections.Generic;
-using Pfim;
-using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Textures.Formats.Dds.Extensions;
-using System.IO;
-using SixLabors.ImageSharp.Textures.TextureFormats;
+// Copyright (c) Six Labors and contributors.
+// Licensed under the Apache License, Version 2.0.
 
 namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
 {
+    using System;
+    using System.Collections.Generic;
+    using System.IO;
+    using SixLabors.ImageSharp.PixelFormats;
+    using SixLabors.ImageSharp.Textures.Formats.Dds.Extensions;
+
     /// <summary>
     /// Class representing decoding compressed direct draw surfaces
     /// </summary>
