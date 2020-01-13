@@ -1,16 +1,17 @@
 // Copyright (c) Six Labors and contributors.
 // Licensed under the Apache License, Version 2.0.
 
-namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.Bc6hBc7
+namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.PixelFormats
 {
+    using System;
     using System.Diagnostics;
 
-    internal class LDRColorA
+    internal class LdrColorA
     {
         public byte r, g, b, a;
 
-        public LDRColorA() { }
-        public LDRColorA(byte _r, byte _g, byte _b, byte _a)
+        public LdrColorA() { }
+        public LdrColorA(byte _r, byte _g, byte _b, byte _a)
         {
             r = _r;
             g = _g;
@@ -28,12 +29,12 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.Bc6hBc7
                     case 1: return ref g;
                     case 2: return ref b;
                     case 3: return ref a;
-                    default: Debug.Assert(false); return ref r;
+                    default: throw new IndexOutOfRangeException();
                 }
             }
         }
 
-        public static void InterpolateRGB(LDRColorA c0, LDRColorA c1, int wc, int wcprec, LDRColorA outt)
+        public static void InterpolateRGB(LdrColorA c0, LdrColorA c1, int wc, int wcprec, LdrColorA outt)
         {
             int[] aWeights = null;
             switch (wcprec)
@@ -48,7 +49,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.Bc6hBc7
             outt.b = (byte)(c0.b * (uint)(Constants.BC67_WEIGHT_MAX - aWeights[wc]) + c1.b * (uint)aWeights[wc] + Constants.BC67_WEIGHT_ROUND >> Constants.BC67_WEIGHT_SHIFT);
         }
 
-        public static void InterpolateA(LDRColorA c0, LDRColorA c1, int wa, int waprec, LDRColorA outt)
+        public static void InterpolateA(LdrColorA c0, LdrColorA c1, int wa, int waprec, LdrColorA outt)
         {
             int[] aWeights = null;
             switch (waprec)
@@ -61,7 +62,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.Bc6hBc7
             outt.a = (byte)(c0.a * (uint)(Constants.BC67_WEIGHT_MAX - aWeights[wa]) + c1.a * (uint)aWeights[wa] + Constants.BC67_WEIGHT_ROUND >> Constants.BC67_WEIGHT_SHIFT);
         }
 
-        public static void Interpolate(LDRColorA c0, LDRColorA c1, int wc, int wa, int wcprec, int waprec, LDRColorA outt)
+        public static void Interpolate(LdrColorA c0, LdrColorA c1, int wc, int wa, int wcprec, int waprec, LdrColorA outt)
         {
             InterpolateRGB(c0, c1, wc, wcprec, outt);
             InterpolateA(c0, c1, wa, waprec, outt);

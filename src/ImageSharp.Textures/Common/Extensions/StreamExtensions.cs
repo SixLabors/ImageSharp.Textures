@@ -6,7 +6,6 @@ namespace SixLabors.ImageSharp.Textures
     using System;
     using System.Buffers;
     using System.IO;
-    using SixLabors.ImageSharp.Textures.Memory;
     using SixLabors.Memory;
 
     /// <summary>
@@ -75,12 +74,12 @@ namespace SixLabors.ImageSharp.Textures
 
         public static void Read(this Stream stream, IManagedByteBuffer buffer)
         {
-            stream.Read(buffer.Array, 0, buffer.Length());
+            stream.Read(buffer.Array, 0, buffer.Memory.Length);
         }
 
         public static void Write(this Stream stream, IManagedByteBuffer buffer)
         {
-            stream.Write(buffer.Array, 0, buffer.Length());
+            stream.Write(buffer.Array, 0, buffer.Memory.Length);
         }
 
 #if NET472 || NETSTANDARD1_3 || NETSTANDARD2_0

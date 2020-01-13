@@ -6,9 +6,9 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
     using System;
     using System.Diagnostics;
     using SixLabors.ImageSharp.Textures.Formats.Dds;
-    using SixLabors.ImageSharp.Textures.Formats.Dds.Processing.Bc6hBc7;
+    using SixLabors.ImageSharp.Textures.Formats.Dds.Processing.PixelFormats;
 
-    internal class Bc7Dds : CompressedDds
+    internal class DdsBc7 : DdsCompressed
     { // Code based on commit 138efff1b9c53fd9a5dd34b8c865e8f5ae798030 2019/10/24 in DirectXTex C++ library
         private struct ModeInfo
         {
@@ -19,10 +19,10 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
             public byte uIndexModeBits;
             public byte uIndexPrec;
             public byte uIndexPrec2;
-            public LDRColorA RGBAPrec;
-            public LDRColorA RGBAPrecWithP;
+            public LdrColorA RGBAPrec;
+            public LdrColorA RGBAPrecWithP;
 
-            public ModeInfo(byte uParts, byte uPartBits, byte upBits, byte uRotBits, byte uIndModeBits, byte uIndPrec, byte uIndPrec2, LDRColorA rgbaPrec, LDRColorA rgbaPrecWithP)
+            public ModeInfo(byte uParts, byte uPartBits, byte upBits, byte uRotBits, byte uIndModeBits, byte uIndPrec, byte uIndPrec2, LdrColorA rgbaPrec, LdrColorA rgbaPrecWithP)
             {
                 uPartitions = uParts;
                 uPartitionBits = uPartBits;
@@ -38,27 +38,27 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
 
         private static readonly ModeInfo[] ms_aInfo = new ModeInfo[]
         {
-            new ModeInfo(2, 4, 6, 0, 0, 3, 0, new LDRColorA(4,4,4,0), new LDRColorA(5,5,5,0)),
+            new ModeInfo(2, 4, 6, 0, 0, 3, 0, new LdrColorA(4,4,4,0), new LdrColorA(5,5,5,0)),
                 // Mode 0: Color only, 3 Subsets, RGBP 4441 (unique P-bit), 3-bit indecies, 16 partitions
-            new ModeInfo(1, 6, 2, 0, 0, 3, 0, new LDRColorA(6,6,6,0), new LDRColorA(7,7,7,0)),
+            new ModeInfo(1, 6, 2, 0, 0, 3, 0, new LdrColorA(6,6,6,0), new LdrColorA(7,7,7,0)),
                 // Mode 1: Color only, 2 Subsets, RGBP 6661 (shared P-bit), 3-bit indecies, 64 partitions
-            new ModeInfo(2, 6, 0, 0, 0, 2, 0, new LDRColorA(5,5,5,0), new LDRColorA(5,5,5,0)),
+            new ModeInfo(2, 6, 0, 0, 0, 2, 0, new LdrColorA(5,5,5,0), new LdrColorA(5,5,5,0)),
                 // Mode 2: Color only, 3 Subsets, RGB 555, 2-bit indecies, 64 partitions
-            new ModeInfo(1, 6, 4, 0, 0, 2, 0, new LDRColorA(7,7,7,0), new LDRColorA(8,8,8,0)),
+            new ModeInfo(1, 6, 4, 0, 0, 2, 0, new LdrColorA(7,7,7,0), new LdrColorA(8,8,8,0)),
                 // Mode 3: Color only, 2 Subsets, RGBP 7771 (unique P-bit), 2-bits indecies, 64 partitions
-            new ModeInfo(0, 0, 0, 2, 1, 2, 3, new LDRColorA(5,5,5,6), new LDRColorA(5,5,5,6)),
+            new ModeInfo(0, 0, 0, 2, 1, 2, 3, new LdrColorA(5,5,5,6), new LdrColorA(5,5,5,6)),
                 // Mode 4: Color w/ Separate Alpha, 1 Subset, RGB 555, A6, 16x2/16x3-bit indices, 2-bit rotation, 1-bit index selector
-            new ModeInfo(0, 0, 0, 2, 0, 2, 2, new LDRColorA(7,7,7,8), new LDRColorA(7,7,7,8)),
+            new ModeInfo(0, 0, 0, 2, 0, 2, 2, new LdrColorA(7,7,7,8), new LdrColorA(7,7,7,8)),
                 // Mode 5: Color w/ Separate Alpha, 1 Subset, RGB 777, A8, 16x2/16x2-bit indices, 2-bit rotation
-            new ModeInfo(0, 0, 2, 0, 0, 4, 0, new LDRColorA(7,7,7,7), new LDRColorA(8,8,8,8)),
+            new ModeInfo(0, 0, 2, 0, 0, 4, 0, new LdrColorA(7,7,7,7), new LdrColorA(8,8,8,8)),
                 // Mode 6: Color+Alpha, 1 Subset, RGBAP 77771 (unique P-bit), 16x4-bit indecies
-            new ModeInfo(1, 6, 4, 0, 0, 2, 0, new LDRColorA(5,5,5,5), new LDRColorA(6,6,6,6))
+            new ModeInfo(1, 6, 4, 0, 0, 2, 0, new LdrColorA(5,5,5,5), new LdrColorA(6,6,6,6))
                 // Mode 7: Color+Alpha, 2 Subsets, RGBAP 55551 (unique P-bit), 2-bit indices, 64 partitions
         };
 
         private readonly byte[] currentBlock;
 
-        public Bc7Dds(DdsHeader ddsHeader, DdsHeaderDxt10 ddsHeaderDxt10)
+        public DdsBc7(DdsHeader ddsHeader, DdsHeaderDxt10 ddsHeaderDxt10)
             : base(ddsHeader, ddsHeaderDxt10)
         {
             currentBlock = new byte[CompressedBytesPerBlock];
@@ -101,10 +101,10 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 byte uIndexMode = GetBits(ref uStartBit, ms_aInfo[uMode].uIndexModeBits);
                 Debug.Assert(uIndexMode < 2);
 
-                LDRColorA[] c = new LDRColorA[Constants.BC7_MAX_REGIONS << 1];
-                for (i = 0; i < c.Length; ++i) c[i] = new LDRColorA();
-                LDRColorA RGBAPrec = ms_aInfo[uMode].RGBAPrec;
-                LDRColorA RGBAPrecWithP = ms_aInfo[uMode].RGBAPrecWithP;
+                LdrColorA[] c = new LdrColorA[Constants.BC7_MAX_REGIONS << 1];
+                for (i = 0; i < c.Length; ++i) c[i] = new LdrColorA();
+                LdrColorA RGBAPrec = ms_aInfo[uMode].RGBAPrec;
+                LdrColorA RGBAPrecWithP = ms_aInfo[uMode].RGBAPrecWithP;
 
                 Debug.Assert(uNumEndPts <= (Constants.BC7_MAX_REGIONS << 1));
 
@@ -228,20 +228,20 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 for (i = 0; i < Constants.NUM_PIXELS_PER_BLOCK; ++i)
                 {
                     byte uRegion = Constants.g_aPartitionTable[uPartitions][uShape][i];
-                    LDRColorA outPixel = new LDRColorA();
+                    LdrColorA outPixel = new LdrColorA();
                     if (uIndexPrec2 == 0)
                     {
-                        LDRColorA.Interpolate(c[uRegion << 1], c[(uRegion << 1) + 1], w1[i], w1[i], uIndexPrec, uIndexPrec, outPixel);
+                        LdrColorA.Interpolate(c[uRegion << 1], c[(uRegion << 1) + 1], w1[i], w1[i], uIndexPrec, uIndexPrec, outPixel);
                     }
                     else
                     {
                         if (uIndexMode == 0)
                         {
-                            LDRColorA.Interpolate(c[uRegion << 1], c[(uRegion << 1) + 1], w1[i], w2[i], uIndexPrec, uIndexPrec2, outPixel);
+                            LdrColorA.Interpolate(c[uRegion << 1], c[(uRegion << 1) + 1], w1[i], w2[i], uIndexPrec, uIndexPrec2, outPixel);
                         }
                         else
                         {
-                            LDRColorA.Interpolate(c[uRegion << 1], c[(uRegion << 1) + 1], w2[i], w1[i], uIndexPrec2, uIndexPrec, outPixel);
+                            LdrColorA.Interpolate(c[uRegion << 1], c[(uRegion << 1) + 1], w2[i], w1[i], uIndexPrec2, uIndexPrec, outPixel);
                         }
                     }
 
@@ -321,9 +321,9 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
             comp = (byte)(comp << (int)(8u - uPrec));
             return (byte)(comp | (comp >> (int)uPrec));
         }
-        private static LDRColorA Unquantize(LDRColorA c, LDRColorA RGBAPrec)
+        private static LdrColorA Unquantize(LdrColorA c, LdrColorA RGBAPrec)
         {
-            LDRColorA q = new LDRColorA();
+            LdrColorA q = new LdrColorA();
             q.r = Unquantize(c.r, RGBAPrec.r);
             q.g = Unquantize(c.g, RGBAPrec.g);
             q.b = Unquantize(c.b, RGBAPrec.b);

@@ -1,7 +1,7 @@
 // Copyright (c) Six Labors and contributors.
 // Licensed under the Apache License, Version 2.0.
 
-namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.Bc6hBc7
+namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.PixelFormats
 {
     internal static class Constants
     {

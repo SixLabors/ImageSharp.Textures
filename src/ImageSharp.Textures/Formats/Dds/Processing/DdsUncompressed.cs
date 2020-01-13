@@ -17,21 +17,21 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
     /// A DirectDraw Surface that is not compressed.  
     /// Thus what is in the input stream gets directly translated to the image buffer.
     /// </summary>
-    internal class UncompressedDds : Dds
+    internal class DdsUncompressed : DdsProcessor
     {
         private readonly uint? _bitsPerPixel;
         private readonly bool? _rgbSwapped;
         private ImageFormat _format;
         private MipMapOffset[] mipMaps = new MipMapOffset[0];
 
-        internal UncompressedDds(DdsHeader ddsHeader, DdsHeaderDxt10 ddsHeaderDxt10, uint bitsPerPixel, bool rgbSwapped)
+        internal DdsUncompressed(DdsHeader ddsHeader, DdsHeaderDxt10 ddsHeaderDxt10, uint bitsPerPixel, bool rgbSwapped)
             : base(ddsHeader, ddsHeaderDxt10)
         {
             _bitsPerPixel = bitsPerPixel;
             _rgbSwapped = rgbSwapped;
         }
 
-        internal UncompressedDds(DdsHeader ddsHeader, DdsHeaderDxt10 ddsHeaderDxt10)
+        internal DdsUncompressed(DdsHeader ddsHeader, DdsHeaderDxt10 ddsHeaderDxt10)
             : base(ddsHeader, ddsHeaderDxt10)
         {
         }
@@ -147,7 +147,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 }
                 else if (this.Format == ImageFormat.Rgb8)
                 {
-                    mipMapList.Add(new MipMap(Image.LoadPixelData<Bgra32>(mipdata, mipmap.Width, mipmap.Height)));
+                    mipMapList.Add(new MipMap(Image.LoadPixelData<L8>(mipdata, mipmap.Width, mipmap.Height)));
                 }
                 else if (this.Format == ImageFormat.Rgba16)
                 {

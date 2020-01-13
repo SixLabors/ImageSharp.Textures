@@ -6,9 +6,9 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
     using System;
     using SixLabors.ImageSharp.Textures.Formats.Dds;
 
-    internal class Bc5sDds : CompressedDds
+    internal class DdsBc5s : DdsCompressed
     {
-        public Bc5sDds(DdsHeader ddsHeader, DdsHeaderDxt10 ddsHeaderDxt10)
+        public DdsBc5s(DdsHeader ddsHeader, DdsHeaderDxt10 ddsHeaderDxt10)
             : base(ddsHeader, ddsHeaderDxt10)
         {
         }
@@ -45,17 +45,17 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
 
             for (int i = 0; i < 16; ++i)
             {
-                byte rSel = (byte)((uint)(rIndex >> 3 * i) & 0x07);
-                byte gSel = (byte)((uint)(gIndex >> 3 * i) & 0x07);
+                byte rSel = (byte)((uint)(rIndex >> (3 * i)) & 0x07);
+                byte gSel = (byte)((uint)(gIndex >> (3 * i)) & 0x07);
 
                 data[dataIndex++] = 0; // skip blue
-                data[dataIndex++] = Bc4sDds.InterpolateColor(gSel, green0, green1);
-                data[dataIndex++] = Bc4sDds.InterpolateColor(rSel, red0, red1);
+                data[dataIndex++] = DdsBc4s.InterpolateColor(gSel, green0, green1);
+                data[dataIndex++] = DdsBc4s.InterpolateColor(rSel, red0, red1);
 
                 // Is mult 4?
                 if ((i + 1 & 0x3) == 0)
                 {
-                    dataIndex += PixelDepthBytes * (stride - DivSize);
+                    dataIndex += this.PixelDepthBytes * (stride - this.DivSize);
                 }
             }
 

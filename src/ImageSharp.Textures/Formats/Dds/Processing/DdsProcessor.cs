@@ -11,7 +11,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
     /// <summary>
     /// Class that represents direct draw surfaces
     /// </summary>
-    internal abstract class Dds
+    internal abstract class DdsProcessor
     {
         public abstract int BitsPerPixel { get; }
 
@@ -29,7 +29,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
 
         protected abstract MipMap[] Decode(Stream stream);
 
-        public Dds(DdsHeader ddsHeader, DdsHeaderDxt10 ddsHeaderDxt10)
+        public DdsProcessor(DdsHeader ddsHeader, DdsHeaderDxt10 ddsHeaderDxt10)
         {
             DdsHeader = ddsHeader;
             DdsHeaderDxt10 = ddsHeaderDxt10;
@@ -77,40 +77,40 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
 
         public static MipMap[] DecodeDds(Stream stream, DdsHeader ddsHeader, DdsHeaderDxt10 ddsHeaderDxt10)
         {
-            Dds dds;
+            DdsProcessor dds;
             switch (ddsHeader.PixelFormat.FourCC)
             {
                 case DdsFourCC.DXT1:
-                    dds = new Dxt1Dds(ddsHeader, ddsHeaderDxt10);
+                    dds = new DdsDxt1(ddsHeader, ddsHeaderDxt10);
                     break;
                 case DdsFourCC.DXT2:
                 case DdsFourCC.DXT4:
                     throw new ArgumentException("Cannot support DXT2 or DXT4");
                 case DdsFourCC.DXT3:
-                    dds = new Dxt3Dds(ddsHeader, ddsHeaderDxt10);
+                    dds = new DdsDxt3(ddsHeader, ddsHeaderDxt10);
                     break;
                 case DdsFourCC.DXT5:
-                    dds = new Dxt5Dds(ddsHeader, ddsHeaderDxt10);
+                    dds = new DdsDxt5(ddsHeader, ddsHeaderDxt10);
                     break;
                 case DdsFourCC.None:
-                    dds = new UncompressedDds(ddsHeader, ddsHeaderDxt10);
+                    dds = new DdsUncompressed(ddsHeader, ddsHeaderDxt10);
                     break;
                 case DdsFourCC.DX10:
                     dds = GetDx10Dds(ddsHeader, ddsHeaderDxt10);
                     break;
                 case DdsFourCC.ATI1:
                 case DdsFourCC.BC4U:
-                    dds = new Bc4Dds(ddsHeader, ddsHeaderDxt10);
+                    dds = new DdsBc4(ddsHeader, ddsHeaderDxt10);
                     break;
                 case DdsFourCC.BC4S:
-                    dds = new Bc4sDds(ddsHeader, ddsHeaderDxt10);
+                    dds = new DdsBc4s(ddsHeader, ddsHeaderDxt10);
                     break;
                 case DdsFourCC.ATI2:
                 case DdsFourCC.BC5U:
-                    dds = new Bc5Dds(ddsHeader, ddsHeaderDxt10);
+                    dds = new DdsBc5(ddsHeader, ddsHeaderDxt10);
                     break;
                 case DdsFourCC.BC5S:
-                    dds = new Bc5sDds(ddsHeader, ddsHeaderDxt10);
+                    dds = new DdsBc5s(ddsHeader, ddsHeaderDxt10);
                     break;
                 default:
                     throw new ArgumentException($"FourCC: {ddsHeader.PixelFormat.FourCC} not supported.");
@@ -119,49 +119,49 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
             return dds.Decode(stream);
         }
 
-        private static Dds GetDx10Dds(DdsHeader ddsHeader, DdsHeaderDxt10 ddsHeaderDxt10)
+        private static DdsProcessor GetDx10Dds(DdsHeader ddsHeader, DdsHeaderDxt10 ddsHeaderDxt10)
         {
-            Dds dds;
+            DdsProcessor dds;
             switch (ddsHeaderDxt10.DxgiFormat)
             {
                 case DxgiFormat.BC1_Typeless:
                 case DxgiFormat.BC1_UNorm_SRGB:
                 case DxgiFormat.BC1_UNorm:
-                    dds = new Dxt1Dds(ddsHeader, ddsHeaderDxt10);
+                    dds = new DdsDxt1(ddsHeader, ddsHeaderDxt10);
                     break;
                 case DxgiFormat.BC2_Typeless:
                 case DxgiFormat.BC2_UNorm:
                 case DxgiFormat.BC2_UNorm_SRGB:
-                    dds = new Dxt3Dds(ddsHeader, ddsHeaderDxt10);
+                    dds = new DdsDxt3(ddsHeader, ddsHeaderDxt10);
                     break;
                 case DxgiFormat.BC3_Typeless:
                 case DxgiFormat.BC3_UNorm:
                 case DxgiFormat.BC3_UNorm_SRGB:
-                    dds = new Dxt5Dds(ddsHeader, ddsHeaderDxt10);
+                    dds = new DdsDxt5(ddsHeader, ddsHeaderDxt10);
                     break;
                 case DxgiFormat.BC4_Typeless:
                 case DxgiFormat.BC4_UNorm:
-                    dds = new Bc4Dds(ddsHeader, ddsHeaderDxt10);
+                    dds = new DdsBc4(ddsHeader, ddsHeaderDxt10);
                     break;
                 case DxgiFormat.BC4_SNorm:
-                    dds = new Bc4sDds(ddsHeader, ddsHeaderDxt10);
+                    dds = new DdsBc4s(ddsHeader, ddsHeaderDxt10);
                     break;
                 case DxgiFormat.BC5_Typeless:
                 case DxgiFormat.BC5_UNorm:
-                    dds = new Bc5Dds(ddsHeader, ddsHeaderDxt10);
+                    dds = new DdsBc5(ddsHeader, ddsHeaderDxt10);
                     break;
                 case DxgiFormat.BC5_SNorm:
-                    dds = new Bc5sDds(ddsHeader, ddsHeaderDxt10);
+                    dds = new DdsBc5s(ddsHeader, ddsHeaderDxt10);
                     break;
                 case DxgiFormat.BC6H_Typeless:
                 case DxgiFormat.BC6H_UF16:
                 case DxgiFormat.BC6H_SF16:
-                    dds = new Bc6hDds(ddsHeader, ddsHeaderDxt10);
+                    dds = new DdsBc6h(ddsHeader, ddsHeaderDxt10);
                     break;
                 case DxgiFormat.BC7_Typeless:
                 case DxgiFormat.BC7_UNorm:
                 case DxgiFormat.BC7_UNorm_SRGB:
-                    dds = new Bc7Dds(ddsHeader, ddsHeaderDxt10);
+                    dds = new DdsBc7(ddsHeader, ddsHeaderDxt10);
                     break;
                 case DxgiFormat.R8G8B8A8_Typeless:
                 case DxgiFormat.R8G8B8A8_UNorm:
@@ -169,12 +169,12 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 case DxgiFormat.R8G8B8A8_UInt:
                 case DxgiFormat.R8G8B8A8_SNorm:
                 case DxgiFormat.R8G8B8A8_SInt:
-                    dds = new UncompressedDds(ddsHeader, ddsHeaderDxt10, 32, true);
+                    dds = new DdsUncompressed(ddsHeader, ddsHeaderDxt10, 32, true);
                     break;
                 case DxgiFormat.B8G8R8A8_Typeless:
                 case DxgiFormat.B8G8R8A8_UNorm:
                 case DxgiFormat.B8G8R8A8_UNorm_SRGB:
-                    dds = new UncompressedDds(ddsHeader, ddsHeaderDxt10, 32, false);
+                    dds = new DdsUncompressed(ddsHeader, ddsHeaderDxt10, 32, false);
                     break;
                 case DxgiFormat.Unknown:
                 case DxgiFormat.R32G32B32A32_Typeless:

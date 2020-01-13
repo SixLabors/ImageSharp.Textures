@@ -1,7 +1,7 @@
 // Copyright (c) Six Labors and contributors.
 // Licensed under the Apache License, Version 2.0.
 
-namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.Bc6hBc7
+namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.PixelFormats
 {
     using System;
     using System.Diagnostics;
@@ -21,9 +21,9 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.Bc6hBc7
             return false;
         }
 
-        public static void TransformInverse(INTEndPntPair[] aEndPts, LDRColorA Prec, bool bSigned)
+        public static void TransformInverse(IntEndPntPair[] aEndPts, LdrColorA Prec, bool bSigned)
         {
-            var WrapMask = new INTColor((1 << Prec.r) - 1, (1 << Prec.g) - 1, (1 << Prec.b) - 1);
+            var WrapMask = new IntColor((1 << Prec.r) - 1, (1 << Prec.g) - 1, (1 << Prec.b) - 1);
             aEndPts[0].B += aEndPts[0].A; aEndPts[0].B &= WrapMask;
             aEndPts[1].A += aEndPts[0].A; aEndPts[1].A &= WrapMask;
             aEndPts[1].B += aEndPts[0].A; aEndPts[1].B &= WrapMask;
@@ -38,7 +38,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.Bc6hBc7
         public static int DivRem(int a, int b, out int result)
         {
             int div = a / b;
-            result = a - (div * b);
+            result = a - div * b;
             return div;
         }
 

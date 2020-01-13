@@ -7,7 +7,6 @@ namespace SixLabors.ImageSharp.Textures
     using System.IO;
     using System.Linq;
     using SixLabors.ImageSharp.Textures.Formats;
-    using SixLabors.ImageSharp.Textures.Memory;
     using SixLabors.Memory;
 
     /// <content>
@@ -51,7 +50,7 @@ namespace SixLabors.ImageSharp.Textures
                 // Individual formats should still check since they are public.
                 return config.ImageFormatsManager.FormatDetectors
                     .Where(x => x.HeaderSize <= headerSize)
-                    .Select(x => x.DetectFormat(buffer.GetSpan())).LastOrDefault(x => x != null);
+                    .Select(x => x.DetectFormat(buffer.Memory.Span)).LastOrDefault(x => x != null);
             }
         }
 

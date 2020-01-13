@@ -7,9 +7,9 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
     using System.Diagnostics;
     using SixLabors.ImageSharp.Textures.Formats.Dds;
     using SixLabors.ImageSharp.Textures.Formats.Dds.Emums;
-    using SixLabors.ImageSharp.Textures.Formats.Dds.Processing.Bc6hBc7;
+    using SixLabors.ImageSharp.Textures.Formats.Dds.Processing.PixelFormats;
 
-    internal class Bc6hDds : CompressedDds
+    internal class DdsBc6h : DdsCompressed
     { // Code based on commit 138efff1b9c53fd9a5dd34b8c865e8f5ae798030 2019/10/24 in DirectXTex C++ library
         private enum EField : byte
         {
@@ -48,9 +48,9 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
             public byte uPartitions;
             public bool bTransformed;
             public byte uIndexPrec;
-            public readonly LDRColorA[][] RGBAPrec;//[Constants.BC6H_MAX_REGIONS][2];
+            public readonly LdrColorA[][] RGBAPrec;//[Constants.BC6H_MAX_REGIONS][2];
 
-            public ModeInfo(byte uM, byte uP, bool bT, byte uI, LDRColorA[][] prec)
+            public ModeInfo(byte uM, byte uP, bool bT, byte uI, LdrColorA[][] prec)
             {
                 uMode = uM;
                 uPartitions = uP;
@@ -233,20 +233,20 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
 
         private static readonly ModeInfo[] ms_aInfo =
         {
-            new ModeInfo(0x00, 1, true,  3, new LDRColorA[][] { new LDRColorA[] { new LDRColorA(10,10,10,0), new LDRColorA( 5, 5, 5,0) }, new LDRColorA[] { new LDRColorA(5,5,5,0), new LDRColorA(5,5,5,0) } } ), // Mode 1
-            new ModeInfo(0x01, 1, true,  3, new LDRColorA[][] { new LDRColorA[] { new LDRColorA( 7, 7, 7,0), new LDRColorA( 6, 6, 6,0) }, new LDRColorA[] { new LDRColorA(6,6,6,0), new LDRColorA(6,6,6,0) } } ), // Mode 2
-            new ModeInfo(0x02, 1, true,  3, new LDRColorA[][] { new LDRColorA[] { new LDRColorA(11,11,11,0), new LDRColorA( 5, 4, 4,0) }, new LDRColorA[] { new LDRColorA(5,4,4,0), new LDRColorA(5,4,4,0) } } ), // Mode 3
-            new ModeInfo(0x06, 1, true,  3, new LDRColorA[][] { new LDRColorA[] { new LDRColorA(11,11,11,0), new LDRColorA( 4, 5, 4,0) }, new LDRColorA[] { new LDRColorA(4,5,4,0), new LDRColorA(4,5,4,0) } } ), // Mode 4
-            new ModeInfo(0x0a, 1, true,  3, new LDRColorA[][] { new LDRColorA[] { new LDRColorA(11,11,11,0), new LDRColorA( 4, 4, 5,0) }, new LDRColorA[] { new LDRColorA(4,4,5,0), new LDRColorA(4,4,5,0) } } ), // Mode 5
-            new ModeInfo(0x0e, 1, true,  3, new LDRColorA[][] { new LDRColorA[] { new LDRColorA( 9, 9, 9,0), new LDRColorA( 5, 5, 5,0) }, new LDRColorA[] { new LDRColorA(5,5,5,0), new LDRColorA(5,5,5,0) } } ), // Mode 6
-            new ModeInfo(0x12, 1, true,  3, new LDRColorA[][] { new LDRColorA[] { new LDRColorA( 8, 8, 8,0), new LDRColorA( 6, 5, 5,0) }, new LDRColorA[] { new LDRColorA(6,5,5,0), new LDRColorA(6,5,5,0) } } ), // Mode 7
-            new ModeInfo(0x16, 1, true,  3, new LDRColorA[][] { new LDRColorA[] { new LDRColorA( 8, 8, 8,0), new LDRColorA( 5, 6, 5,0) }, new LDRColorA[] { new LDRColorA(5,6,5,0), new LDRColorA(5,6,5,0) } } ), // Mode 8
-            new ModeInfo(0x1a, 1, true,  3, new LDRColorA[][] { new LDRColorA[] { new LDRColorA( 8, 8, 8,0), new LDRColorA( 5, 5, 6,0) }, new LDRColorA[] { new LDRColorA(5,5,6,0), new LDRColorA(5,5,6,0) } } ), // Mode 9
-            new ModeInfo(0x1e, 1, false, 3, new LDRColorA[][] { new LDRColorA[] { new LDRColorA( 6, 6, 6,0), new LDRColorA( 6, 6, 6,0) }, new LDRColorA[] { new LDRColorA(6,6,6,0), new LDRColorA(6,6,6,0) } } ), // Mode 10
-            new ModeInfo(0x03, 0, false, 4, new LDRColorA[][] { new LDRColorA[] { new LDRColorA(10,10,10,0), new LDRColorA(10,10,10,0) }, new LDRColorA[] { new LDRColorA(0,0,0,0), new LDRColorA(0,0,0,0) } } ), // Mode 11
-            new ModeInfo(0x07, 0, true,  4, new LDRColorA[][] { new LDRColorA[] { new LDRColorA(11,11,11,0), new LDRColorA( 9, 9, 9,0) }, new LDRColorA[] { new LDRColorA(0,0,0,0), new LDRColorA(0,0,0,0) } } ), // Mode 12
-            new ModeInfo(0x0b, 0, true,  4, new LDRColorA[][] { new LDRColorA[] { new LDRColorA(12,12,12,0), new LDRColorA( 8, 8, 8,0) }, new LDRColorA[] { new LDRColorA(0,0,0,0), new LDRColorA(0,0,0,0) } } ), // Mode 13
-            new ModeInfo(0x0f, 0, true,  4, new LDRColorA[][] { new LDRColorA[] { new LDRColorA(16,16,16,0), new LDRColorA( 4, 4, 4,0) }, new LDRColorA[] { new LDRColorA(0,0,0,0), new LDRColorA(0,0,0,0) } } ), // Mode 14
+            new ModeInfo(0x00, 1, true,  3, new LdrColorA[][] { new LdrColorA[] { new LdrColorA(10,10,10,0), new LdrColorA( 5, 5, 5,0) }, new LdrColorA[] { new LdrColorA(5,5,5,0), new LdrColorA(5,5,5,0) } } ), // Mode 1
+            new ModeInfo(0x01, 1, true,  3, new LdrColorA[][] { new LdrColorA[] { new LdrColorA( 7, 7, 7,0), new LdrColorA( 6, 6, 6,0) }, new LdrColorA[] { new LdrColorA(6,6,6,0), new LdrColorA(6,6,6,0) } } ), // Mode 2
+            new ModeInfo(0x02, 1, true,  3, new LdrColorA[][] { new LdrColorA[] { new LdrColorA(11,11,11,0), new LdrColorA( 5, 4, 4,0) }, new LdrColorA[] { new LdrColorA(5,4,4,0), new LdrColorA(5,4,4,0) } } ), // Mode 3
+            new ModeInfo(0x06, 1, true,  3, new LdrColorA[][] { new LdrColorA[] { new LdrColorA(11,11,11,0), new LdrColorA( 4, 5, 4,0) }, new LdrColorA[] { new LdrColorA(4,5,4,0), new LdrColorA(4,5,4,0) } } ), // Mode 4
+            new ModeInfo(0x0a, 1, true,  3, new LdrColorA[][] { new LdrColorA[] { new LdrColorA(11,11,11,0), new LdrColorA( 4, 4, 5,0) }, new LdrColorA[] { new LdrColorA(4,4,5,0), new LdrColorA(4,4,5,0) } } ), // Mode 5
+            new ModeInfo(0x0e, 1, true,  3, new LdrColorA[][] { new LdrColorA[] { new LdrColorA( 9, 9, 9,0), new LdrColorA( 5, 5, 5,0) }, new LdrColorA[] { new LdrColorA(5,5,5,0), new LdrColorA(5,5,5,0) } } ), // Mode 6
+            new ModeInfo(0x12, 1, true,  3, new LdrColorA[][] { new LdrColorA[] { new LdrColorA( 8, 8, 8,0), new LdrColorA( 6, 5, 5,0) }, new LdrColorA[] { new LdrColorA(6,5,5,0), new LdrColorA(6,5,5,0) } } ), // Mode 7
+            new ModeInfo(0x16, 1, true,  3, new LdrColorA[][] { new LdrColorA[] { new LdrColorA( 8, 8, 8,0), new LdrColorA( 5, 6, 5,0) }, new LdrColorA[] { new LdrColorA(5,6,5,0), new LdrColorA(5,6,5,0) } } ), // Mode 8
+            new ModeInfo(0x1a, 1, true,  3, new LdrColorA[][] { new LdrColorA[] { new LdrColorA( 8, 8, 8,0), new LdrColorA( 5, 5, 6,0) }, new LdrColorA[] { new LdrColorA(5,5,6,0), new LdrColorA(5,5,6,0) } } ), // Mode 9
+            new ModeInfo(0x1e, 1, false, 3, new LdrColorA[][] { new LdrColorA[] { new LdrColorA( 6, 6, 6,0), new LdrColorA( 6, 6, 6,0) }, new LdrColorA[] { new LdrColorA(6,6,6,0), new LdrColorA(6,6,6,0) } } ), // Mode 10
+            new ModeInfo(0x03, 0, false, 4, new LdrColorA[][] { new LdrColorA[] { new LdrColorA(10,10,10,0), new LdrColorA(10,10,10,0) }, new LdrColorA[] { new LdrColorA(0,0,0,0), new LdrColorA(0,0,0,0) } } ), // Mode 11
+            new ModeInfo(0x07, 0, true,  4, new LdrColorA[][] { new LdrColorA[] { new LdrColorA(11,11,11,0), new LdrColorA( 9, 9, 9,0) }, new LdrColorA[] { new LdrColorA(0,0,0,0), new LdrColorA(0,0,0,0) } } ), // Mode 12
+            new ModeInfo(0x0b, 0, true,  4, new LdrColorA[][] { new LdrColorA[] { new LdrColorA(12,12,12,0), new LdrColorA( 8, 8, 8,0) }, new LdrColorA[] { new LdrColorA(0,0,0,0), new LdrColorA(0,0,0,0) } } ), // Mode 13
+            new ModeInfo(0x0f, 0, true,  4, new LdrColorA[][] { new LdrColorA[] { new LdrColorA(16,16,16,0), new LdrColorA( 4, 4, 4,0) }, new LdrColorA[] { new LdrColorA(0,0,0,0), new LdrColorA(0,0,0,0) } } ), // Mode 14
         };
 
         private static readonly int[] ms_aModeToInfo =
@@ -287,7 +287,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
 
         private readonly byte[] currentBlock;
 
-        public Bc6hDds(DdsHeader ddsHeader, DdsHeaderDxt10 ddsHeaderDxt10)
+        public DdsBc6h(DdsHeader ddsHeader, DdsHeaderDxt10 ddsHeaderDxt10)
             : base(ddsHeader, ddsHeaderDxt10)
         {
             currentBlock = new byte[CompressedBytesPerBlock];
@@ -325,10 +325,10 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 Debug.Assert(ms_aModeToInfo[uMode] < ms_aDesc.Length);
                 ref ModeInfo info = ref ms_aInfo[ms_aModeToInfo[uMode]];
 
-                INTEndPntPair[] aEndPts = new INTEndPntPair[Constants.BC6H_MAX_REGIONS];
+                IntEndPntPair[] aEndPts = new IntEndPntPair[Constants.BC6H_MAX_REGIONS];
                 for (int i = 0; i < aEndPts.Length; ++i)
                 {
-                    aEndPts[i] = new INTEndPntPair(new INTColor(), new INTColor());
+                    aEndPts[i] = new IntEndPntPair(new IntColor(), new IntColor());
                 }
                 uint uShape = 0;
 
@@ -420,7 +420,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                     int g2 = Unquantize(aEndPts[uRegion].B.g, info.RGBAPrec[0][0].g, bSigned);
                     int b2 = Unquantize(aEndPts[uRegion].B.b, info.RGBAPrec[0][0].b, bSigned);
                     int[] aWeights = info.uPartitions > 0 ? Constants.g_aWeights3 : Constants.g_aWeights4;
-                    INTColor fc = new INTColor();
+                    IntColor fc = new IntColor();
                     fc.r = FinishUnquantize((r1 * (Constants.BC67_WEIGHT_MAX - aWeights[uIndex]) + r2 * aWeights[uIndex] + Constants.BC67_WEIGHT_ROUND) >> Constants.BC67_WEIGHT_SHIFT, bSigned);
                     fc.g = FinishUnquantize((g1 * (Constants.BC67_WEIGHT_MAX - aWeights[uIndex]) + g2 * aWeights[uIndex] + Constants.BC67_WEIGHT_ROUND) >> Constants.BC67_WEIGHT_SHIFT, bSigned);
                     fc.b = FinishUnquantize((b1 * (Constants.BC67_WEIGHT_MAX - aWeights[uIndex]) + b2 * aWeights[uIndex] + Constants.BC67_WEIGHT_ROUND) >> Constants.BC67_WEIGHT_SHIFT, bSigned);

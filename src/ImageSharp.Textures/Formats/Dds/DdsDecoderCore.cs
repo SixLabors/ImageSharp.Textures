@@ -83,7 +83,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds
                     var texture = new Volume();
                     for (int depth = 0; depth < depths; depth++)
                     {
-                        var mipMaps = Processing.Dds.DecodeDds(stream, this.ddsHeader, this.ddsDxt10header);
+                        var mipMaps = Processing.DdsProcessor.DecodeDds(stream, this.ddsHeader, this.ddsDxt10header);
                         var surface = new Surface();
                         surface.MipMaps.AddRange(mipMaps);
                         texture.Slices.Add(surface);
@@ -98,7 +98,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds
                     var texture = new Cubemap();
                     for (int face = 0; face < faces.Length; face++)
                     {
-                        var mipMaps = Processing.Dds.DecodeDds(stream, this.ddsHeader, this.ddsDxt10header);
+                        var mipMaps = Processing.DdsProcessor.DecodeDds(stream, this.ddsHeader, this.ddsDxt10header);
                         if (faces[face] == DdsSurfaceType.CubemapPositiveX)
                         {
                             texture.PositiveX.MipMaps.AddRange(mipMaps);
@@ -130,7 +130,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds
                 else
                 {
                     var texture = new Surface();
-                    var mipMaps = Processing.Dds.DecodeDds(stream, this.ddsHeader, this.ddsDxt10header);
+                    var mipMaps = Processing.DdsProcessor.DecodeDds(stream, this.ddsHeader, this.ddsDxt10header);
                     texture.MipMaps.AddRange(mipMaps);
                     return texture;
                 }

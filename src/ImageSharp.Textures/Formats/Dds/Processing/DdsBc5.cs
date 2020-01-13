@@ -6,12 +6,12 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
     using System;
     using SixLabors.ImageSharp.Textures.Formats.Dds;
 
-    internal class Bc5Dds : CompressedDds
+    internal class DdsBc5 : DdsCompressed
     {
         private readonly byte[] _firstGradient = new byte[8];
         private readonly byte[] _secondGradient = new byte[8];
 
-        public Bc5Dds(DdsHeader ddsHeader, DdsHeaderDxt10 ddsHeaderDxt10)
+        public DdsBc5(DdsHeader ddsHeader, DdsHeaderDxt10 ddsHeaderDxt10)
             : base(ddsHeader, ddsHeaderDxt10)
         {
         }

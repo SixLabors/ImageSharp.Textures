@@ -12,16 +12,16 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
     /// <summary>
     /// Class representing decoding compressed direct draw surfaces
     /// </summary>
-    internal abstract class CompressedDds : Dds
+    internal abstract class DdsCompressed : DdsProcessor
     {
         private MipMapOffset[] mipMaps = new MipMapOffset[0];
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="CompressedDds"/> class.
+        /// Initializes a new instance of the <see cref="DdsCompressed"/> class.
         /// </summary>
         /// <param name="ddsHeader"><see cref="DdsHeader" /></param>
         /// <param name="ddsHeaderDxt10"><see cref="DdsHeaderDxt10" /></param>
-        protected CompressedDds(DdsHeader ddsHeader, DdsHeaderDxt10 ddsHeaderDxt10)
+        protected DdsCompressed(DdsHeader ddsHeader, DdsHeaderDxt10 ddsHeaderDxt10)
          : base(ddsHeader, ddsHeaderDxt10)
         {
         }
@@ -229,7 +229,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 }
                 else if (this.Format == ImageFormat.Rgb8)
                 {
-                    mipMapList.Add(new MipMap(Image.LoadPixelData<Bgra32>(mipdata, mipmap.Width, mipmap.Height)));
+                    mipMapList.Add(new MipMap(Image.LoadPixelData<L8>(mipdata, mipmap.Width, mipmap.Height)));
                 }
                 else if (this.Format == ImageFormat.Rgba16)
                 {

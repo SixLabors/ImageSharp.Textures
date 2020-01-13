@@ -23,7 +23,5 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
         public int DataOffset { get; }
 
         public int DataLen { get; }
-
-     
     }
 }

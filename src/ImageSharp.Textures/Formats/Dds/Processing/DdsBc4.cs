@@ -5,13 +5,10 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
 {
     using System;
     using System.Runtime.CompilerServices;
-    using SixLabors.ImageSharp.Textures.Formats.Dds;
 
-    internal class Bc4sDds : CompressedDds
+    internal class DdsBc4 : DdsCompressed
     {
-        private const float Multiplier = 255.0f / 254.0f;
-
-        public Bc4sDds(DdsHeader ddsHeader, DdsHeaderDxt10 ddsHeaderDxt10)
+        public DdsBc4(DdsHeader ddsHeader, DdsHeaderDxt10 ddsHeaderDxt10)
             : base(ddsHeader, ddsHeaderDxt10)
         {
         }
@@ -24,11 +21,8 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
 
         protected override int Decode(Span<byte> stream, Span<byte> data, int streamIndex, int dataIndex, int stride)
         {
-            sbyte red0 = (sbyte)stream[streamIndex++];
-            sbyte red1 = (sbyte)stream[streamIndex++];
-            red0 = red0 == -128 ? (sbyte)-127 : red0;
-            red1 = red1 == -128 ? (sbyte)-127 : red1;
-
+            byte red0 = stream[streamIndex++];
+            byte red1 = stream[streamIndex++];
             ulong rIndex = stream[streamIndex++];
             rIndex |= (ulong)stream[streamIndex++] << 8;
             rIndex |= (ulong)stream[streamIndex++] << 16;
@@ -38,9 +32,9 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
 
             for (int i = 0; i < 16; ++i)
             {
-                uint index = (byte)((uint)(rIndex >> 3 * i) & 0x07);
+                byte index = (byte)((uint)(rIndex >> 3 * i) & 0x07);
 
-                data[dataIndex++] = InterpolateColor((byte)index, red0, red1);
+                data[dataIndex++] = InterpolateColor(index, red0, red1);
 
                 // Is mult 4?
                 if ((i + 1 & 0x3) == 0)
@@ -53,9 +47,9 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static byte InterpolateColor(byte index, sbyte red0, sbyte red1)
+        internal static byte InterpolateColor(byte index, byte red0, byte red1)
         {
-            float red;
+            byte red;
             if (index == 0)
             {
                 red = red0;
@@ -69,26 +63,26 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 if (red0 > red1)
                 {
                     index -= 1;
-                    red = (red0 * (7 - index) + red1 * index) / 7.0f;
+                    red = (byte)((red0 * (7 - index) + red1 * index) / 7.0f + 0.5f);
                 }
                 else
                 {
                     if (index == 6)
                     {
-                        red = -127.0f;
+                        red = 0;
                     }
                     else if (index == 7)
                     {
-                        red = 127.0f;
+                        red = 255;
                     }
                     else
                     {
                         index -= 1;
-                        red = (red0 * (5 - index) + red1 * index) / 5.0f;
+                        red = (byte)((red0 * (5 - index) + red1 * index) / 5.0f + 0.5f);
                     }
                 }
             }
-            return (byte)((red + 127) * Multiplier + 0.5f);
+            return red;
         }
     }
 }

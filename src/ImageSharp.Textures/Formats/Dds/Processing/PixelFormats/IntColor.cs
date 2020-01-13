@@ -1,32 +1,20 @@
 // Copyright (c) Six Labors and contributors.
 // Licensed under the Apache License, Version 2.0.
 
-namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.Bc6hBc7
+namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.PixelFormats
 {
     using System.Diagnostics;
 
-    internal struct INTEndPntPair
-    {
-        public INTColor A;
-        public INTColor B;
-
-        public INTEndPntPair(INTColor a, INTColor b)
-        {
-            A = a;
-            B = b;
-        }
-    };
-
-    internal class INTColor
+    internal class IntColor
     {
         public int r, g, b;
         public int pad;
 
-        public INTColor()
+        public IntColor()
         {
 
         }
-        public INTColor(int nr, int ng, int nb)
+        public IntColor(int nr, int ng, int nb)
         {
             r = nr;
             g = ng;
@@ -34,7 +22,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.Bc6hBc7
             pad = 0;
         }
 
-        public static INTColor operator +(INTColor a, INTColor c)
+        public static IntColor operator +(IntColor a, IntColor c)
         {
             a.r += c.r;
             a.g += c.g;
@@ -42,7 +30,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.Bc6hBc7
             return a;
         }
 
-        public static INTColor operator &(INTColor a, INTColor c)
+        public static IntColor operator &(IntColor a, IntColor c)
         {
             a.r &= c.r;
             a.g &= c.g;
@@ -50,7 +38,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.Bc6hBc7
             return a;
         }
 
-        public INTColor SignExtend(LDRColorA Prec)
+        public IntColor SignExtend(LdrColorA Prec)
         {
             r = SIGN_EXTEND(r, Prec.r);
             g = SIGN_EXTEND(g, Prec.g);
