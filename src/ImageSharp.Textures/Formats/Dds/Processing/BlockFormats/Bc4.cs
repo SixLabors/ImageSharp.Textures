@@ -40,7 +40,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
 
                 for (int i = 0; i < 16; ++i)
                 {
-                    byte index = (byte)((uint)(rIndex >> 3 * i) & 0x07);
+                    byte index = (byte)((uint)(rIndex >> (3 * i)) & 0x07);
 
                     data[dataIndex++] = InterpolateColor(index, red0, red1);
 
@@ -72,7 +72,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 if (red0 > red1)
                 {
                     index -= 1;
-                    red = (byte)((red0 * (7 - index) + red1 * index) / 7.0f + 0.5f);
+                    red = (byte)((((red0 * (7 - index)) + (red1 * index)) / 7.0f) + 0.5f);
                 }
                 else
                 {
@@ -87,10 +87,11 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                     else
                     {
                         index -= 1;
-                        red = (byte)((red0 * (5 - index) + red1 * index) / 5.0f + 0.5f);
+                        red = (byte)((((red0 * (5 - index)) + (red1 * index)) / 5.0f) + 0.5f);
                     }
                 }
             }
+
             return red;
         }
 

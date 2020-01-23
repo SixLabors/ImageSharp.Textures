@@ -7,13 +7,16 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.PixelFormats
 
     internal class IntColor
     {
-        public int r, g, b;
+        public int r;
+        public int g;
+        public int b;
         public int pad;
 
         public IntColor()
         {
 
         }
+
         public IntColor(int nr, int ng, int nb)
         {
             r = nr;
@@ -69,6 +72,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.PixelFormats
                     s = Constants.F16S_MASK;
                     input = -input;
                 }
+
                 res = (ushort)(s | input);
             }
             else

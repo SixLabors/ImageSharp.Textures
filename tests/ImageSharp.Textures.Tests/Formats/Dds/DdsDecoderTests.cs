@@ -21,7 +21,7 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.Dds
     public class DdsDecoderTests
     {
         [Theory]
-        [WithFile(TestTextureFormat.DDS, TestTextureType.Cubemap, "cubemap-mips.dds")]
+        [WithFile(TestTextureFormat.DDS, TestTextureType.Cubemap, "cubemap has-mips.dds")]
         public void DdsDecoder_CanDecode_Cubemap_With_Mips(TestTextureProvider provider)
         {
             using Texture texture = provider.GetTexture(new DdsDecoder());
@@ -30,7 +30,7 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.Dds
         }
 
         [Theory]
-        [WithFile(TestTextureFormat.DDS, TestTextureType.Cubemap, "cubemap-no-mips.dds")]
+        [WithFile(TestTextureFormat.DDS, TestTextureType.Cubemap, "cubemap no-mips.dds")]
         public void DdsDecoder_CanDecode_Cubemap_With_NoMips(TestTextureProvider provider)
         {
             using Texture texture = provider.GetTexture(new DdsDecoder());
@@ -39,7 +39,7 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.Dds
         }
 
         [Theory]
-        [WithFile(TestTextureFormat.DDS, TestTextureType.Flat, "flat-pot-no-alpha-DXT5.DDS")]
+        [WithFile(TestTextureFormat.DDS, TestTextureType.Flat, "flat-pot-no-alpha DXT5.dds")]
         public void DdsDecoder_CanDecode_Flat_DXT5(TestTextureProvider provider)
         {
             using Texture texture = provider.GetTexture(new DdsDecoder());
@@ -48,7 +48,7 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.Dds
         }
 
         [Theory]
-        [WithFile(TestTextureFormat.DDS, TestTextureType.Volume, "volume-mips.dds")]
+        [WithFile(TestTextureFormat.DDS, TestTextureType.Volume, "volume has-mips.dds")]
         public void DdsDecoder_CanDecode_Volume_With_Mips(TestTextureProvider provider)
         {
             using Texture texture = provider.GetTexture(new DdsDecoder());
@@ -57,7 +57,7 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.Dds
         }
 
         [Theory]
-        [WithFile(TestTextureFormat.DDS, TestTextureType.Volume, "volume-no-mips.dds")]
+        [WithFile(TestTextureFormat.DDS, TestTextureType.Volume, "volume no-mips.dds")]
         public void DdsDecoder_CanDecode_Volume_With_No_Mips(TestTextureProvider provider)
         {
             using Texture texture = provider.GetTexture(new DdsDecoder());
@@ -67,11 +67,21 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.Dds
 
         private void CompareMipMaps(MipMap[] mipMaps, TestTextureProvider testTextureProvider, string name)
         {
-            string filename = testTextureProvider.TextureType.ToString().ToLower();
-            if (!string.IsNullOrEmpty(name))
+            string filename = string.Empty;
+            if (testTextureProvider.TextureType == TestTextureType.Flat)
             {
-                filename = $"{filename}-{name}";
+                string[] fileParts = testTextureProvider.InputFile.Split(' ');
+                filename = fileParts[0];
             }
+            else
+            {
+                filename = testTextureProvider.TextureType.ToString().ToLower();
+                if (!string.IsNullOrEmpty(name))
+                {
+                    filename = $"{filename}-{name}";
+                }
+            }
+
             filename = $"{filename}.png";
 
             string baselinePath = Path.Combine(TestEnvironment.BaselineDirectoryFullPath, testTextureProvider.TextureType.ToString(), filename);
