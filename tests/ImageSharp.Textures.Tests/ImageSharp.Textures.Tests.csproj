@@ -20,6 +20,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="..\..\shared-infrastructure\**\*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <DotNetCliToolReference Include="dotnet-xunit" />
   </ItemGroup>
 

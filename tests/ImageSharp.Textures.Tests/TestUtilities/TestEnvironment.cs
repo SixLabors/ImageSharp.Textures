@@ -14,6 +14,8 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities
 
         private const string InputImagesRelativePath = @"tests\Images\Input";
 
+        private const string BaselineDirectoryRelativePath = @"tests\Images\Baseline";
+
         private const string ActualOutputDirectoryRelativePath = @"tests\Images\ActualOutput";
 
         private static readonly Lazy<string> SolutionDirectoryFullPathLazy = new Lazy<string>(GetSolutionDirectoryFullPathImpl);
@@ -63,6 +65,11 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities
         /// Gets the correct full path to the Input Images directory.
         /// </summary>
         internal static string InputImagesDirectoryFullPath => GetFullPath(InputImagesRelativePath);
+
+        /// <summary>
+        /// Gets the correct full path to the Baseline directory.
+        /// </summary>
+        internal static string BaselineDirectoryFullPath => GetFullPath(BaselineDirectoryRelativePath);
 
         /// <summary>
         /// Gets the correct full path to the Actual Output directory. (To be written to by the test cases.)
