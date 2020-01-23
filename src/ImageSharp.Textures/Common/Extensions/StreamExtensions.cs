@@ -58,7 +58,7 @@ namespace SixLabors.ImageSharp.Textures
             }
             else
             {
-                var foo = new byte[count];
+                byte[] foo = new byte[count];
                 while (count > 0)
                 {
                     int bytesRead = stream.Read(foo, 0, count);

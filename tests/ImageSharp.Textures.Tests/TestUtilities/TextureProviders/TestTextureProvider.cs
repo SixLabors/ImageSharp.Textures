@@ -4,6 +4,7 @@
 using System;
 using System.IO;
 using SixLabors.ImageSharp.Textures.Formats;
+using SixLabors.ImageSharp.Textures.Tests.Enums;
 
 namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.TextureProviders
 {
@@ -11,13 +12,13 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.TextureProviders
     public class TestTextureProvider : ITestTextureProvider
     {
         public string MethodName { get; private set; }
-        public TextureType TextureType { get; private set; }
+        public TestTextureFormat TextureFormat { get; private set; }
+        public TestTextureType TextureType { get; private set; }
         public string InputFile { get; private set; }
 
         public virtual Texture GetTexture(ITextureDecoder decoder)
         {
-            string extension = Path.GetExtension(this.InputFile).Substring(1);
-            string inputPath = Path.Combine(TestEnvironment.InputImagesDirectoryFullPath, extension, this.TextureType.ToString(), this.InputFile);
+            string inputPath = Path.Combine(TestEnvironment.InputImagesDirectoryFullPath, this.TextureFormat.ToString(), this.TextureType.ToString(), this.InputFile);
             using (FileStream fileStream = File.OpenRead(inputPath))
             {
                 return decoder.DecodeTexture(Configuration.Default, fileStream);
@@ -26,10 +27,12 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.TextureProviders
 
         public TestTextureProvider(
             string methodName,
-            TextureType textureType,
+            TestTextureFormat textureFormat,
+            TestTextureType textureType,
             string inputFile)
         {
             this.MethodName = methodName;
+            this.TextureFormat = textureFormat;
             this.TextureType = textureType;
             this.InputFile = inputFile;
         }

@@ -7,9 +7,10 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
     using System.Diagnostics;
     using SixLabors.ImageSharp.Textures.Formats.Dds;
     using SixLabors.ImageSharp.Textures.Formats.Dds.Emums;
+    using SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats;
     using SixLabors.ImageSharp.Textures.Formats.Dds.Processing.PixelFormats;
 
-    internal class DdsBc6h : DdsCompressed
+    public struct Bc6h : IBlock<Bc6h>
     { // Code based on commit 138efff1b9c53fd9a5dd34b8c865e8f5ae798030 2019/10/24 in DirectXTex C++ library
         private enum EField : byte
         {
@@ -285,192 +286,197 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
             -1, // Resreved - 0x1f
         };
 
-        private readonly byte[] currentBlock;
+        public int BitsPerPixel => 32;
 
-        public DdsBc6h(DdsHeader ddsHeader, DdsHeaderDxt10 ddsHeaderDxt10)
-            : base(ddsHeader, ddsHeaderDxt10)
+        public ImageFormat Format => ImageFormat.Rgba32;
+
+        public byte PixelDepthBytes => 4;
+
+        public byte DivSize => 4;
+
+        public byte CompressedBytesPerBlock => 16;
+
+        public bool Compressed => true;
+
+        public byte[] Decompress(byte[] blockData, int width, int height)
         {
-            currentBlock = new byte[CompressedBytesPerBlock];
-        }
+            IBlock self = this;
+            var currentBlock = new byte[this.CompressedBytesPerBlock];
 
-        public override int BitsPerPixel => PixelDepthBytes * 8;
-        public override ImageFormat Format => ImageFormat.Rgba32;
-        protected override byte PixelDepthBytes => 4;
-        protected override byte DivSize => 4;
-        protected override byte CompressedBytesPerBlock => 16;
-
-        protected override int Decode(Span<byte> stream, Span<byte> data, int streamIndex, int dataIndex, int stride)
-        {
-            // I would prefer to use Span, but not sure if I should reference System.Memory in this project
-            // copy data instead
-            Buffer.BlockCopy(stream.ToArray(), streamIndex, currentBlock, 0, currentBlock.Length);
-            streamIndex += currentBlock.Length;
-
-            uint uStartBit = 0;
-            byte uMode = GetBits(ref uStartBit, 2u);
-            if (uMode != 0x00 && uMode != 0x01)
+            return Helper.InMemoryDecode<Bc6h>(blockData, width, height, (byte[] stream, byte[] data, int streamIndex, int dataIndex, int stride) =>
             {
-                uMode = (byte)((GetBits(ref uStartBit, 3) << 2) | uMode);
-            }
 
-            Debug.Assert(uMode < 32);
+                // I would prefer to use Span, but not sure if I should reference System.Memory in this project
+                // copy data instead
+                Buffer.BlockCopy(blockData, (int)streamIndex, currentBlock, 0, currentBlock.Length);
+                streamIndex += (int)currentBlock.Length;
 
-            if (ms_aModeToInfo[uMode] >= 0)
-            {
-                bool bSigned = DdsHeaderDxt10.DxgiFormat == DxgiFormat.BC6H_SF16;
-
-                Debug.Assert(ms_aModeToInfo[uMode] < ms_aInfo.Length);
-                ModeDescriptor[] desc = ms_aDesc[ms_aModeToInfo[uMode]];
-
-                Debug.Assert(ms_aModeToInfo[uMode] < ms_aDesc.Length);
-                ref ModeInfo info = ref ms_aInfo[ms_aModeToInfo[uMode]];
-
-                IntEndPntPair[] aEndPts = new IntEndPntPair[Constants.BC6H_MAX_REGIONS];
-                for (int i = 0; i < aEndPts.Length; ++i)
+                uint uStartBit = 0;
+                byte uMode = GetBits(currentBlock, ref uStartBit, 2u);
+                if (uMode != 0x00 && uMode != 0x01)
                 {
-                    aEndPts[i] = new IntEndPntPair(new IntColor(), new IntColor());
+                    uMode = (byte)((GetBits(currentBlock, ref uStartBit, 3) << 2) | uMode);
                 }
-                uint uShape = 0;
 
-                // Read header
-                uint uHeaderBits = info.uPartitions > 0 ? 82u : 65u;
-                while (uStartBit < uHeaderBits)
+                Debug.Assert(uMode < 32);
+
+                if (ms_aModeToInfo[uMode] >= 0)
                 {
-                    uint uCurBit = uStartBit;
-                    if (GetBit(ref uStartBit) != 0)
+                    bool bSigned = false;
+
+                    Debug.Assert(ms_aModeToInfo[uMode] < ms_aInfo.Length);
+                    ModeDescriptor[] desc = ms_aDesc[ms_aModeToInfo[uMode]];
+
+                    Debug.Assert(ms_aModeToInfo[uMode] < ms_aDesc.Length);
+                    ref ModeInfo info = ref ms_aInfo[ms_aModeToInfo[uMode]];
+
+                    IntEndPntPair[] aEndPts = new IntEndPntPair[Constants.BC6H_MAX_REGIONS];
+                    for (int i = 0; i < aEndPts.Length; ++i)
                     {
-                        switch (desc[uCurBit].m_eField)
+                        aEndPts[i] = new IntEndPntPair(new IntColor(), new IntColor());
+                    }
+                    uint uShape = 0;
+
+                    // Read header
+                    uint uHeaderBits = info.uPartitions > 0 ? 82u : 65u;
+                    while (uStartBit < uHeaderBits)
+                    {
+                        uint uCurBit = uStartBit;
+                        if (GetBit(currentBlock, ref uStartBit) != 0)
                         {
-                            case EField.D: uShape |= 1u << (desc[uCurBit].m_uBit); break;
-                            case EField.RW: aEndPts[0].A.r |= 1 << (desc[uCurBit].m_uBit); break;
-                            case EField.RX: aEndPts[0].B.r |= 1 << (desc[uCurBit].m_uBit); break;
-                            case EField.RY: aEndPts[1].A.r |= 1 << (desc[uCurBit].m_uBit); break;
-                            case EField.RZ: aEndPts[1].B.r |= 1 << (desc[uCurBit].m_uBit); break;
-                            case EField.GW: aEndPts[0].A.g |= 1 << (desc[uCurBit].m_uBit); break;
-                            case EField.GX: aEndPts[0].B.g |= 1 << (desc[uCurBit].m_uBit); break;
-                            case EField.GY: aEndPts[1].A.g |= 1 << (desc[uCurBit].m_uBit); break;
-                            case EField.GZ: aEndPts[1].B.g |= 1 << (desc[uCurBit].m_uBit); break;
-                            case EField.BW: aEndPts[0].A.b |= 1 << (desc[uCurBit].m_uBit); break;
-                            case EField.BX: aEndPts[0].B.b |= 1 << (desc[uCurBit].m_uBit); break;
-                            case EField.BY: aEndPts[1].A.b |= 1 << (desc[uCurBit].m_uBit); break;
-                            case EField.BZ: aEndPts[1].B.b |= 1 << (desc[uCurBit].m_uBit); break;
-                            default:
+                            switch (desc[uCurBit].m_eField)
+                            {
+                                case EField.D: uShape |= 1u << (desc[uCurBit].m_uBit); break;
+                                case EField.RW: aEndPts[0].A.r |= 1 << (desc[uCurBit].m_uBit); break;
+                                case EField.RX: aEndPts[0].B.r |= 1 << (desc[uCurBit].m_uBit); break;
+                                case EField.RY: aEndPts[1].A.r |= 1 << (desc[uCurBit].m_uBit); break;
+                                case EField.RZ: aEndPts[1].B.r |= 1 << (desc[uCurBit].m_uBit); break;
+                                case EField.GW: aEndPts[0].A.g |= 1 << (desc[uCurBit].m_uBit); break;
+                                case EField.GX: aEndPts[0].B.g |= 1 << (desc[uCurBit].m_uBit); break;
+                                case EField.GY: aEndPts[1].A.g |= 1 << (desc[uCurBit].m_uBit); break;
+                                case EField.GZ: aEndPts[1].B.g |= 1 << (desc[uCurBit].m_uBit); break;
+                                case EField.BW: aEndPts[0].A.b |= 1 << (desc[uCurBit].m_uBit); break;
+                                case EField.BX: aEndPts[0].B.b |= 1 << (desc[uCurBit].m_uBit); break;
+                                case EField.BY: aEndPts[1].A.b |= 1 << (desc[uCurBit].m_uBit); break;
+                                case EField.BZ: aEndPts[1].B.b |= 1 << (desc[uCurBit].m_uBit); break;
+                                default:
                                 {
                                     Debug.WriteLine("BC6H: Invalid header bits encountered during decoding");
-                                    Helpers.FillWithErrorColors(data, ref dataIndex, Constants.NUM_PIXELS_PER_BLOCK, DivSize, stride);
-                                    return streamIndex;
+                                    Helpers.FillWithErrorColors(data, ref dataIndex, Constants.NUM_PIXELS_PER_BLOCK, self.DivSize, stride);
+                                    return dataIndex;
                                 }
+                            }
                         }
                     }
-                }
 
-                Debug.Assert(uShape < 64);
+                    Debug.Assert(uShape < 64);
 
-                // Sign extend necessary end points
-                if (bSigned)
-                {
-                    aEndPts[0].A.SignExtend(info.RGBAPrec[0][0]);
-                }
-                if (bSigned || info.bTransformed)
-                {
-                    Debug.Assert(info.uPartitions < Constants.BC6H_MAX_REGIONS);
-                    for (int p = 0; p <= info.uPartitions; ++p)
+                    // Sign extend necessary end points
+                    if (bSigned)
                     {
-                        if (p != 0)
+                        aEndPts[0].A.SignExtend(info.RGBAPrec[0][0]);
+                    }
+                    if (bSigned || info.bTransformed)
+                    {
+                        Debug.Assert(info.uPartitions < Constants.BC6H_MAX_REGIONS);
+                        for (int p = 0; p <= info.uPartitions; ++p)
                         {
-                            aEndPts[p].A.SignExtend(info.RGBAPrec[p][0]);
+                            if (p != 0)
+                            {
+                                aEndPts[p].A.SignExtend(info.RGBAPrec[p][0]);
+                            }
+                            aEndPts[p].B.SignExtend(info.RGBAPrec[p][1]);
                         }
-                        aEndPts[p].B.SignExtend(info.RGBAPrec[p][1]);
                     }
-                }
 
-                // Inverse transform the end points
-                if (info.bTransformed)
-                {
-                    Helpers.TransformInverse(aEndPts, info.RGBAPrec[0][0], bSigned);
-                }
-
-                // Read indices
-                for (int i = 0; i < Constants.NUM_PIXELS_PER_BLOCK; ++i)
-                {
-                    uint uNumBits = Helpers.IsFixUpOffset(info.uPartitions, (byte)uShape, i) ? info.uIndexPrec - 1u : info.uIndexPrec;
-                    if (uStartBit + uNumBits > 128)
+                    // Inverse transform the end points
+                    if (info.bTransformed)
                     {
-                        Debug.WriteLine("BC6H: Invalid block encountered during decoding");
-                        Helpers.FillWithErrorColors(data, ref dataIndex, Constants.NUM_PIXELS_PER_BLOCK, DivSize, stride);
-                        return streamIndex;
+                        Helpers.TransformInverse(aEndPts, info.RGBAPrec[0][0], bSigned);
                     }
-                    uint uIndex = GetBits(ref uStartBit, uNumBits);
 
-                    if (uIndex >= ((info.uPartitions > 0) ? 8 : 16))
+                    // Read indices
+                    for (int i = 0; i < Constants.NUM_PIXELS_PER_BLOCK; ++i)
                     {
-                        Debug.WriteLine("BC6H: Invalid index encountered during decoding");
-                        Helpers.FillWithErrorColors(data, ref dataIndex, Constants.NUM_PIXELS_PER_BLOCK, DivSize, stride);
-                        return streamIndex;
+                        uint uNumBits = Helpers.IsFixUpOffset(info.uPartitions, (byte)uShape, i) ? info.uIndexPrec - 1u : info.uIndexPrec;
+                        if (uStartBit + uNumBits > 128)
+                        {
+                            Debug.WriteLine("BC6H: Invalid block encountered during decoding");
+                            Helpers.FillWithErrorColors(data, ref dataIndex, Constants.NUM_PIXELS_PER_BLOCK, self.DivSize, stride);
+                            return dataIndex;
+                        }
+                        uint uIndex = GetBits(currentBlock, ref uStartBit, uNumBits);
+
+                        if (uIndex >= ((info.uPartitions > 0) ? 8 : 16))
+                        {
+                            Debug.WriteLine("BC6H: Invalid index encountered during decoding");
+                            Helpers.FillWithErrorColors(data, ref dataIndex, Constants.NUM_PIXELS_PER_BLOCK, self.DivSize, stride);
+                            return dataIndex;
+                        }
+
+                        uint uRegion = Constants.g_aPartitionTable[info.uPartitions][uShape][i];
+                        Debug.Assert(uRegion < Constants.BC6H_MAX_REGIONS);
+
+                        // Unquantize endpoints and interpolate
+                        int r1 = Unquantize(aEndPts[uRegion].A.r, info.RGBAPrec[0][0].r, bSigned);
+                        int g1 = Unquantize(aEndPts[uRegion].A.g, info.RGBAPrec[0][0].g, bSigned);
+                        int b1 = Unquantize(aEndPts[uRegion].A.b, info.RGBAPrec[0][0].b, bSigned);
+                        int r2 = Unquantize(aEndPts[uRegion].B.r, info.RGBAPrec[0][0].r, bSigned);
+                        int g2 = Unquantize(aEndPts[uRegion].B.g, info.RGBAPrec[0][0].g, bSigned);
+                        int b2 = Unquantize(aEndPts[uRegion].B.b, info.RGBAPrec[0][0].b, bSigned);
+                        int[] aWeights = info.uPartitions > 0 ? Constants.g_aWeights3 : Constants.g_aWeights4;
+                        IntColor fc = new IntColor();
+                        fc.r = FinishUnquantize((r1 * (Constants.BC67_WEIGHT_MAX - aWeights[uIndex]) + r2 * aWeights[uIndex] + Constants.BC67_WEIGHT_ROUND) >> Constants.BC67_WEIGHT_SHIFT, bSigned);
+                        fc.g = FinishUnquantize((g1 * (Constants.BC67_WEIGHT_MAX - aWeights[uIndex]) + g2 * aWeights[uIndex] + Constants.BC67_WEIGHT_ROUND) >> Constants.BC67_WEIGHT_SHIFT, bSigned);
+                        fc.b = FinishUnquantize((b1 * (Constants.BC67_WEIGHT_MAX - aWeights[uIndex]) + b2 * aWeights[uIndex] + Constants.BC67_WEIGHT_ROUND) >> Constants.BC67_WEIGHT_SHIFT, bSigned);
+
+                        ushort[] rgb = new ushort[3];
+                        fc.ToF16(rgb, bSigned);
+
+                        // Clamp 0..1, and convert to byte (we're losing high dynamic range)
+                        data[dataIndex++] = (byte)((Math.Max(0.0f, Math.Min(1.0f, ConvertHalfToFloat(rgb[2]))) * 255.0f) + 0.5f); // blue
+                        data[dataIndex++] = (byte)((Math.Max(0.0f, Math.Min(1.0f, ConvertHalfToFloat(rgb[1]))) * 255.0f) + 0.5f); // green
+                        data[dataIndex++] = (byte)((Math.Max(0.0f, Math.Min(1.0f, ConvertHalfToFloat(rgb[0]))) * 255.0f) + 0.5f); // red
+                        data[dataIndex++] = 255;
+
+                        // Is mult 4?
+                        if (((i + 1) & 0x3) == 0)
+                            dataIndex += self.PixelDepthBytes * (stride - self.DivSize);
                     }
-
-                    uint uRegion = Constants.g_aPartitionTable[info.uPartitions][uShape][i];
-                    Debug.Assert(uRegion < Constants.BC6H_MAX_REGIONS);
-
-                    // Unquantize endpoints and interpolate
-                    int r1 = Unquantize(aEndPts[uRegion].A.r, info.RGBAPrec[0][0].r, bSigned);
-                    int g1 = Unquantize(aEndPts[uRegion].A.g, info.RGBAPrec[0][0].g, bSigned);
-                    int b1 = Unquantize(aEndPts[uRegion].A.b, info.RGBAPrec[0][0].b, bSigned);
-                    int r2 = Unquantize(aEndPts[uRegion].B.r, info.RGBAPrec[0][0].r, bSigned);
-                    int g2 = Unquantize(aEndPts[uRegion].B.g, info.RGBAPrec[0][0].g, bSigned);
-                    int b2 = Unquantize(aEndPts[uRegion].B.b, info.RGBAPrec[0][0].b, bSigned);
-                    int[] aWeights = info.uPartitions > 0 ? Constants.g_aWeights3 : Constants.g_aWeights4;
-                    IntColor fc = new IntColor();
-                    fc.r = FinishUnquantize((r1 * (Constants.BC67_WEIGHT_MAX - aWeights[uIndex]) + r2 * aWeights[uIndex] + Constants.BC67_WEIGHT_ROUND) >> Constants.BC67_WEIGHT_SHIFT, bSigned);
-                    fc.g = FinishUnquantize((g1 * (Constants.BC67_WEIGHT_MAX - aWeights[uIndex]) + g2 * aWeights[uIndex] + Constants.BC67_WEIGHT_ROUND) >> Constants.BC67_WEIGHT_SHIFT, bSigned);
-                    fc.b = FinishUnquantize((b1 * (Constants.BC67_WEIGHT_MAX - aWeights[uIndex]) + b2 * aWeights[uIndex] + Constants.BC67_WEIGHT_ROUND) >> Constants.BC67_WEIGHT_SHIFT, bSigned);
-
-                    ushort[] rgb = new ushort[3];
-                    fc.ToF16(rgb, bSigned);
-
-                    // Clamp 0..1, and convert to byte (we're losing high dynamic range)
-                    data[dataIndex++] = (byte)((Math.Max(0.0f, Math.Min(1.0f, ConvertHalfToFloat(rgb[2]))) * 255.0f) + 0.5f); // blue
-                    data[dataIndex++] = (byte)((Math.Max(0.0f, Math.Min(1.0f, ConvertHalfToFloat(rgb[1]))) * 255.0f) + 0.5f); // green
-                    data[dataIndex++] = (byte)((Math.Max(0.0f, Math.Min(1.0f, ConvertHalfToFloat(rgb[0]))) * 255.0f) + 0.5f); // red
-                    data[dataIndex++] = 255;
-
-                    // Is mult 4?
-                    if (((i + 1) & 0x3) == 0)
-                        dataIndex += PixelDepthBytes * (stride - DivSize);
                 }
-            }
-            else
-            {
-                string warnstr = "BC6H: Invalid mode encountered during decoding";
-                switch (uMode)
+                else
                 {
-                    case 0x13: warnstr = "BC6H: Reserved mode 10011 encountered during decoding"; break;
-                    case 0x17: warnstr = "BC6H: Reserved mode 10111 encountered during decoding"; break;
-                    case 0x1B: warnstr = "BC6H: Reserved mode 11011 encountered during decoding"; break;
-                    case 0x1F: warnstr = "BC6H: Reserved mode 11111 encountered during decoding"; break;
-                }
-                Debug.WriteLine(warnstr);
-
-                // Per the BC6H format spec, we must return opaque black
-                for (int i = 0; i < Constants.NUM_PIXELS_PER_BLOCK; ++i)
-                {
-                    data[dataIndex++] = 0;
-                    data[dataIndex++] = 0;
-                    data[dataIndex++] = 0;
-                    data[dataIndex++] = 0;
-
-                    // Is mult 4?
-                    if (((i + 1) & 0x3) == 0)
+                    string warnstr = "BC6H: Invalid mode encountered during decoding";
+                    switch (uMode)
                     {
-                        dataIndex += this.PixelDepthBytes * (stride - this.DivSize);
+                        case 0x13: warnstr = "BC6H: Reserved mode 10011 encountered during decoding"; break;
+                        case 0x17: warnstr = "BC6H: Reserved mode 10111 encountered during decoding"; break;
+                        case 0x1B: warnstr = "BC6H: Reserved mode 11011 encountered during decoding"; break;
+                        case 0x1F: warnstr = "BC6H: Reserved mode 11111 encountered during decoding"; break;
+                    }
+                    Debug.WriteLine(warnstr);
+
+                    // Per the BC6H format spec, we must return opaque black
+                    for (int i = 0; i < Constants.NUM_PIXELS_PER_BLOCK; ++i)
+                    {
+                        data[dataIndex++] = 0;
+                        data[dataIndex++] = 0;
+                        data[dataIndex++] = 0;
+                        data[dataIndex++] = 0;
+
+                        // Is mult 4?
+                        if (((i + 1) & 0x3) == 0)
+                        {
+                            dataIndex += self.PixelDepthBytes * (stride - self.DivSize);
+                        }
                     }
                 }
-            }
 
-            return streamIndex;
+                return streamIndex;
+            });
         }
 
-        public byte GetBit(ref uint uStartBit)
+        public static byte GetBit(byte[] currentBlock, ref uint uStartBit)
         {
             Debug.Assert(uStartBit < 128);
             uint uIndex = uStartBit >> 3;
@@ -478,7 +484,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
             uStartBit++;
             return ret;
         }
-        public byte GetBits(ref uint uStartBit, uint uNumBits)
+        public static byte GetBits(byte[] currentBlock, ref uint uStartBit, uint uNumBits)
         {
             if (uNumBits == 0) return 0;
             Debug.Assert(uStartBit + uNumBits <= 128 && uNumBits <= 8);

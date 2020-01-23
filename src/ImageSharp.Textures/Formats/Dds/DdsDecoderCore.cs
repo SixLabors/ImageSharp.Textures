@@ -80,11 +80,12 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds
                 {
                     var depths = ddsHeader.ComputeDepth();
 
-                    var texture = new Volume();
+                    var texture = new VolumeTexture();
                     for (int depth = 0; depth < depths; depth++)
                     {
-                        var mipMaps = Processing.DdsProcessor.DecodeDds(stream, this.ddsHeader, this.ddsDxt10header);
-                        var surface = new Surface();
+                        var ddsProcessor = new DdsProcessor(this.ddsHeader, this.ddsDxt10header);
+                        var mipMaps = ddsProcessor.DecodeDds(stream);
+                        var surface = new FlatTexture();
                         surface.MipMaps.AddRange(mipMaps);
                         texture.Slices.Add(surface);
                     }
@@ -94,11 +95,12 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds
                 else if (this.ddsHeader.IsCubemap())
                 {
                     DdsSurfaceType[] faces = this.ddsHeader.GetExistingCubemapFaces();
-               
-                    var texture = new Cubemap();
+
+                    var texture = new CubemapTexture();
                     for (int face = 0; face < faces.Length; face++)
                     {
-                        var mipMaps = Processing.DdsProcessor.DecodeDds(stream, this.ddsHeader, this.ddsDxt10header);
+                        var ddsProcessor = new DdsProcessor(this.ddsHeader, this.ddsDxt10header);
+                        var mipMaps = ddsProcessor.DecodeDds(stream);
                         if (faces[face] == DdsSurfaceType.CubemapPositiveX)
                         {
                             texture.PositiveX.MipMaps.AddRange(mipMaps);
@@ -129,8 +131,9 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds
                 }
                 else
                 {
-                    var texture = new Surface();
-                    var mipMaps = Processing.DdsProcessor.DecodeDds(stream, this.ddsHeader, this.ddsDxt10header);
+                    var texture = new FlatTexture();
+                    var ddsProcessor = new DdsProcessor(this.ddsHeader, this.ddsDxt10header);
+                    var mipMaps = ddsProcessor.DecodeDds(stream);
                     texture.MipMaps.AddRange(mipMaps);
                     return texture;
                 }

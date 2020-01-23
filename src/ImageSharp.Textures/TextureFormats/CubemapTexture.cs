@@ -5,30 +5,30 @@ namespace SixLabors.ImageSharp.Textures.TextureFormats
 {
     using System;
 
-    public class Cubemap : Texture
+    public class CubemapTexture : Texture
     {
         private bool isDisposed;
 
-        public Surface PositiveX { get; }
+        public FlatTexture PositiveX { get; }
 
-        public Surface NegativeX { get; }
+        public FlatTexture NegativeX { get; }
 
-        public Surface PositiveY { get; }
+        public FlatTexture PositiveY { get; }
 
-        public Surface NegativeY { get; }
+        public FlatTexture NegativeY { get; }
 
-        public Surface PositiveZ { get; }
+        public FlatTexture PositiveZ { get; }
 
-        public Surface NegativeZ { get; }
+        public FlatTexture NegativeZ { get; }
 
-        public Cubemap()
+        public CubemapTexture()
         {
-            PositiveX = new Surface();
-            NegativeX = new Surface();
-            PositiveY = new Surface();
-            NegativeY = new Surface();
-            PositiveZ = new Surface();
-            NegativeZ = new Surface();
+            PositiveX = new FlatTexture();
+            NegativeX = new FlatTexture();
+            PositiveY = new FlatTexture();
+            NegativeY = new FlatTexture();
+            PositiveZ = new FlatTexture();
+            NegativeZ = new FlatTexture();
         }
 
         /// <inheritdoc/>

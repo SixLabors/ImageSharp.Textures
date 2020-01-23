@@ -17,229 +17,190 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
     /// A DirectDraw Surface that is not compressed.  
     /// Thus what is in the input stream gets directly translated to the image buffer.
     /// </summary>
-    internal class DdsUncompressed : DdsProcessor
+    internal class DdsUncompressed 
     {
-        private readonly uint? _bitsPerPixel;
-        private readonly bool? _rgbSwapped;
-        private ImageFormat _format;
-        private MipMapOffset[] mipMaps = new MipMapOffset[0];
+        private readonly bool _rgbSwapped;
+        private MipMap[] mipMaps = new MipMap[0];
 
-        internal DdsUncompressed(DdsHeader ddsHeader, DdsHeaderDxt10 ddsHeaderDxt10, uint bitsPerPixel, bool rgbSwapped)
-            : base(ddsHeader, ddsHeaderDxt10)
-        {
-            _bitsPerPixel = bitsPerPixel;
-            _rgbSwapped = rgbSwapped;
-        }
+        //internal DdsUncompressed(DdsHeader ddsHeader, DdsHeaderDxt10 ddsHeaderDxt10, uint bitsPerPixel, bool rgbSwapped)
+        //    : base(ddsHeader, ddsHeaderDxt10)
+        //{
+        //    _rgbSwapped = rgbSwapped;
 
-        internal DdsUncompressed(DdsHeader ddsHeader, DdsHeaderDxt10 ddsHeaderDxt10)
-            : base(ddsHeader, ddsHeaderDxt10)
-        {
-        }
+        //    BlockInfo = GetBlockInfo((int)bitsPerPixel);
+        //}
 
-        public override int BitsPerPixel => ImageInfo().Depth;
-        public override ImageFormat Format => _format;
-        public override MipMapOffset[] MipMaps => mipMaps;
+        //internal DdsUncompressed(DdsHeader ddsHeader, DdsHeaderDxt10 ddsHeaderDxt10)
+        //    : base(ddsHeader, ddsHeaderDxt10)
+        //{
+        //    _rgbSwapped = this.DdsHeader.PixelFormat.RBitMask < this.DdsHeader.PixelFormat.GBitMask;
 
-        private static void InnerFill(Stream str, byte[] buf, int dataLen, int bufSize = 0x8000, int offset = 0)
-        {
-            int bufPosition = offset;
-            for (int i = dataLen / bufSize; i > 0; i--)
-                bufPosition += str.Read(buf, bufPosition, bufSize);
-            str.Read(buf, bufPosition, dataLen % bufSize);
-        }
+        //    BlockInfo = GetBlockInfo((int)ddsHeader.PixelFormat.RGBBitCount);
+        //}
 
-        public static void InnerFillUnaligned(Stream str, byte[] buf, int bufLen, int width, int stride, int offset = 0)
-        {
-            for (int i = offset; i < bufLen + offset; i += stride)
-            {
-                str.Read(buf, i, width);
-            }
-        }
-
-        protected override MipMap[] Decode(Stream stream)
-        {
-            var imageInfo = ImageInfo();
-            _format = imageInfo.Format;
-
-            var DataLen = CalcSize(imageInfo);
-            var totalLen = AllocateMipMaps(imageInfo);
+        //public override MipMap[] MipMaps => mipMaps;
 
 
-            var data = new byte[totalLen];
+        //protected override void Decode(Stream stream)
+        //{
+        //    AllocateMipMaps(stream);
+        //}
 
-            var stride = CalcStride((int)this.DdsHeader.Width, BitsPerPixel);
-            var width = (int)this.DdsHeader.Width;
-            var len = DataLen;
+        //public ImageFormat GetImageFormat(int bitsPerPixel)
+        //{
 
-            if (width * BytesPerPixel == stride)
-            {
-                InnerFill(stream, data, len);
-            }
-            else
-            {
-                InnerFillUnaligned(stream, data, len, width * BytesPerPixel, stride);
-            }
+        //    switch (bitsPerPixel)
+        //    {
+        //        case 8:
+        //            return ImageFormat.Rgb8;
+        //        case 16:
+        //            return this.SixteenBitImageFormat();
+        //        case 24:
+        //            return ImageFormat.Rgb24;
+        //        case 32:
+        //            return ImageFormat.Rgba32;
+        //        default:
+        //            throw new Exception($"Unrecognized rgb bit count: {bitsPerPixel}");
+        //    }
+        //}
 
-            foreach (var mip in mipMaps)
-            {
-                if (mip.Width * BytesPerPixel == mip.Stride)
-                {
-                    InnerFill(stream, data, mip.DataLen, mip.DataOffset);
-                }
-                else
-                {
-                    InnerFillUnaligned(stream, data, mip.DataLen, mip.Width * BytesPerPixel, mip.Stride, mip.DataOffset);
-                }
-            }
+        //public BlockInfo GetBlockInfo(int bitsPerPixel)
+        //{
+        //    //div, block, depth
+        //    switch (bitsPerPixel)
+        //    {
+        //        //case 8:
+        //        //    return new BlockInfo
+        //        //    {
+        //        //        BlockFormat = BlockFormat.Uncompressed,
+        //        //        BitsPerPixel = 8,
+        //        //        Format = ImageFormat.Rgb8,
+        //        //        PixelDepthBytes = 1,
+        //        //        DivSize = 1,
+        //        //        CompressedBytesPerBlock = 8
+        //        //    };
+        //        //case 16:
+        //        //    ImageFormat format = this.SixteenBitImageFormat();
+        //        //    return new BlockInfo
+        //        //    {
+        //        //        BlockFormat = BlockFormat.Uncompressed,
+        //        //        BitsPerPixel = 16,
+        //        //        Format = format,
+        //        //        PixelDepthBytes = 2,
+        //        //        DivSize = 1,
+        //        //        CompressedBytesPerBlock = 16
+        //        //    };
+        //        //case 24:
+        //        //    return new BlockInfo
+        //        //    {
+        //        //        BlockFormat = BlockFormat.Uncompressed,
+        //        //        BitsPerPixel = 24,
+        //        //        Format = ImageFormat.Rgb24,
+        //        //        PixelDepthBytes = 3,
+        //        //        DivSize = 1,
+        //        //        CompressedBytesPerBlock = 24
+        //        //    };
+        //        //case 32:
+        //        //    return new BlockInfo
+        //        //    {
+        //        //        BlockFormat = BlockFormat.Uncompressed,
+        //        //        BitsPerPixel = 32,
+        //        //        Format = ImageFormat.Rgba32,
+        //        //        PixelDepthBytes = 4,
+        //        //        DivSize = 1,
+        //        //        CompressedBytesPerBlock = 32
+        //        //    };
+        //        default:
+        //            throw new Exception($"Unrecognized rgb bit count: {this.DdsHeader.PixelFormat.RGBBitCount}");
+        //    }
+        //}
 
-            // Swap the R and B channels
-            if (imageInfo.Swap)
-            {
-                switch (imageInfo.Format)
-                {
-                    case ImageFormat.Rgba32:
-                        for (int i = 0; i < totalLen; i += 4)
-                        {
-                            byte temp = data[i];
-                            data[i] = data[i + 2];
-                            data[i + 2] = temp;
-                        }
-                        break;
-                    case ImageFormat.Rgba16:
-                        for (int i = 0; i < totalLen; i += 2)
-                        {
-                            byte temp = (byte)(data[i] & 0xF);
-                            data[i] = (byte)((data[i] & 0xF0) + (data[i + 1] & 0XF));
-                            data[i + 1] = (byte)((data[i + 1] & 0xF0) + temp);
 
-                        }
-                        break;
-                    default:
-                        throw new Exception($"Do not know how to swap {imageInfo.Format}");
-                }
-            }
 
-            var mipMapList = new List<MipMap>();
-            foreach (MipMapOffset mipmap in this.mipMaps)
-            {
-                Span<byte> mipdata = data.AsSpan().Slice(mipmap.DataOffset, mipmap.DataLen);
-                if (this.Format == ImageFormat.R5g5b5)
-                {
-                    // Turn the alpha channel on
-                    for (int i = 1; i < mipdata.Length; i += 2)
-                    {
-                        mipdata[i] |= 128;
-                    }
+        //private ImageFormat SixteenBitImageFormat()
+        //{
+        //    var pf = this.DdsHeader.PixelFormat;
 
-                    mipMapList.Add(new MipMap(Image.LoadPixelData<Bgra5551>(mipdata, mipmap.Width, mipmap.Height)));
-                }
-                else if (this.Format == ImageFormat.R5g5b5a1)
-                {
-                    mipMapList.Add(new MipMap(Image.LoadPixelData<Bgra5551>(mipdata, mipmap.Width, mipmap.Height)));
-                }
-                else if (this.Format == ImageFormat.R5g6b5)
-                {
-                    mipMapList.Add(new MipMap(Image.LoadPixelData<Bgr565>(mipdata, mipmap.Width, mipmap.Height)));
-                }
-                else if (this.Format == ImageFormat.Rgb24)
-                {
-                    mipMapList.Add(new MipMap(Image.LoadPixelData<Bgr24>(mipdata, mipmap.Width, mipmap.Height)));
-                }
-                else if (this.Format == ImageFormat.Rgb8)
-                {
-                    mipMapList.Add(new MipMap(Image.LoadPixelData<L8>(mipdata, mipmap.Width, mipmap.Height)));
-                }
-                else if (this.Format == ImageFormat.Rgba16)
-                {
-                    mipMapList.Add(new MipMap(Image.LoadPixelData<Bgra4444>(mipdata, mipmap.Width, mipmap.Height)));
-                }
-                else if (this.Format == ImageFormat.Rgba32)
-                {
-                    mipMapList.Add(new MipMap(Image.LoadPixelData<Bgra4444>(mipdata, mipmap.Width, mipmap.Height)));
-                }
-                else
-                {
-                    throw new NotImplementedException($"Unrecognized format: ${this.Format}");
-                }
-            }
-            return mipMapList.ToArray();
-        }
+        //    if (pf.ABitMask == 0xF000 && pf.RBitMask == 0xF00 && pf.GBitMask == 0xF0 && pf.BBitMask == 0xF)
+        //    {
+        //        return ImageFormat.Rgba16;
+        //    }
 
-        /// <summary>Determine image info from header</summary>
-        public DdsLoadInfo ImageInfo()
-        {
-            bool rgbSwapped = _rgbSwapped ?? this.DdsHeader.PixelFormat.RBitMask < this.DdsHeader.PixelFormat.GBitMask;
+        //    if (pf.Flags.HasFlag(DdsPixelFormatFlags.AlphaPixels))
+        //    {
+        //        return ImageFormat.R5g5b5a1;
+        //    }
 
-            switch (_bitsPerPixel ?? this.DdsHeader.PixelFormat.RGBBitCount)
-            {
-                case 8:
-                    return new DdsLoadInfo(false, rgbSwapped, true, 1, 1, 8, ImageFormat.Rgb8);
-                case 16:
-                    ImageFormat format = SixteenBitImageFormat();
-                    return new DdsLoadInfo(false, rgbSwapped, false, 1, 2, 16, format);
-                case 24:
-                    return new DdsLoadInfo(false, rgbSwapped, false, 1, 3, 24, ImageFormat.Rgb24);
-                case 32:
-                    return new DdsLoadInfo(false, rgbSwapped, false, 1, 4, 32, ImageFormat.Rgba32);
-                default:
-                    throw new Exception($"Unrecognized rgb bit count: {this.DdsHeader.PixelFormat.RGBBitCount}");
-            }
-        }
+        //    return pf.GBitMask == 0x7e0 ? ImageFormat.R5g6b5 : ImageFormat.R5g5b5;
+        //}
 
-        private ImageFormat SixteenBitImageFormat()
-        {
-            var pf = this.DdsHeader.PixelFormat;
+        //private void Swap(MipMap mipMap)
+        //{
+        //    // Swap the R and B channels
+        //    if (_rgbSwapped)
+        //    {
+        //        switch (BlockInfo.Format)
+        //        {
+        //            case ImageFormat.Rgba32:
+        //                for (int i = 0; i < mipMap.BlockData.Length; i += 4)
+        //                {
+        //                    byte temp = mipMap.BlockData[i];
+        //                    mipMap.BlockData[i] = mipMap.BlockData[i + 2];
+        //                    mipMap.BlockData[i + 2] = temp;
+        //                }
+        //                break;
+        //            case ImageFormat.Rgba16:
+        //                for (int i = 0; i < mipMap.BlockData.Length; i += 2)
+        //                {
+        //                    byte temp = (byte)(mipMap.BlockData[i] & 0xF);
+        //                    mipMap.BlockData[i] = (byte)((mipMap.BlockData[i] & 0xF0) + (mipMap.BlockData[i + 1] & 0XF));
+        //                    mipMap.BlockData[i + 1] = (byte)((mipMap.BlockData[i + 1] & 0xF0) + temp);
 
-            if (pf.ABitMask == 0xF000 && pf.RBitMask == 0xF00 && pf.GBitMask == 0xF0 && pf.BBitMask == 0xF)
-            {
-                return ImageFormat.Rgba16;
-            }
+        //                }
+        //                break;
+        //            default:
+        //                throw new Exception($"Do not know how to swap {BlockInfo.Format}");
+        //        }
+        //    }
+        //}
 
-            if (pf.Flags.HasFlag(DdsPixelFormatFlags.AlphaPixels))
-            {
-                return ImageFormat.R5g5b5a1;
-            }
+        //private void AllocateMipMaps(Stream stream)
+        //{
+        //    if (this.DdsHeader.TextureCount() <= 1)
+        //    {
+        //        int width = (int)Math.Max(BlockInfo.DivSize, (int)this.DdsHeader.Width);
+        //        int height = (int)Math.Max(BlockInfo.DivSize, this.DdsHeader.Height);
+        //        int bytesPerPixel = (BlockInfo.BitsPerPixel + 7) / 8;
+        //        int stride = CalcStride(width, BlockInfo.BitsPerPixel);
+        //        int len = stride * height;
 
-            return pf.GBitMask == 0x7e0 ? ImageFormat.R5g6b5 : ImageFormat.R5g5b5;
-        }
+        //        var mipData = new byte[len];
+        //        stream.Read(mipData, 0, len);
 
-        /// <summary>Calculates the number of bytes to hold image data</summary>
-        private int CalcSize(DdsLoadInfo info)
-        {
-            int height = (int)Math.Max(info.DivSize, this.DdsHeader.Height);
-            return Stride * height;
-        }
+        //        var mipMap = new MipMap(BlockInfo, mipData, false, width, height, stride / bytesPerPixel);
+        //        Swap(mipMap);
+        //        this.mipMaps = new[] { mipMap };
+        //        return;
+        //    }
 
-        private int AllocateMipMaps(DdsLoadInfo info)
-        {
-            var len = CalcSize(info);
+        //    mipMaps = new MipMap[this.DdsHeader.TextureCount() - 1];
 
-            if (this.DdsHeader.TextureCount() <= 1)
-            {
-                int width = (int)Math.Max(info.DivSize, (int)this.DdsHeader.Width);
-                int height = (int)Math.Max(info.DivSize, this.DdsHeader.Height);
-                int stride = CalcStride(width, BitsPerPixel);
-                len = stride * height;
+        //    for (int i = 0; i < this.DdsHeader.TextureCount() - 1; i++)
+        //    {
+        //        int width = (int)Math.Max(BlockInfo.DivSize, (int)(this.DdsHeader.Width / Math.Pow(2, i + 1)));
+        //        int height = (int)Math.Max(BlockInfo.DivSize, this.DdsHeader.Height / Math.Pow(2, i + 1));
 
-                this.mipMaps = new[] { new MipMapOffset(width, height, stride, 0, len) };
-                return len;
-            }
+        //        int bytesPerPixel = (BlockInfo.BitsPerPixel + 7) / 8;
+        //        int stride = CalcStride(width, BlockInfo.BitsPerPixel);
+        //        int len = stride * height;
 
-            mipMaps = new MipMapOffset[this.DdsHeader.TextureCount() - 1];
-            var totalLen = len;
+        //        var mipData = new byte[len];
+        //        stream.Read(mipData, 0, len);
 
-            for (int i = 0; i < this.DdsHeader.TextureCount() - 1; i++)
-            {
-                int width = (int)Math.Max(info.DivSize, (int)(this.DdsHeader.Width / Math.Pow(2, i + 1)));
-                int height = (int)Math.Max(info.DivSize, this.DdsHeader.Height / Math.Pow(2, i + 1));
-                int stride = CalcStride(width, BitsPerPixel);
-                len = stride * height;
-
-                mipMaps[i] = new MipMapOffset(width, height, stride, totalLen, len);
-                totalLen += len;
-            }
-
-            return totalLen;
-        }
+        //        var mipMap = new MipMap(BlockInfo, mipData, false, width, height, stride / bytesPerPixel);
+        //        Swap(mipMap);
+        //        mipMaps[i] = mipMap;
+        //    }
+        //}
     }
 }

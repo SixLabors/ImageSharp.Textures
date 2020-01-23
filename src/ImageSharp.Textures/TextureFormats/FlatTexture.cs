@@ -6,13 +6,13 @@ namespace SixLabors.ImageSharp.Textures.TextureFormats
     using System;
     using System.Collections.Generic;
 
-    public class Surface : Texture
+    public class FlatTexture : Texture
     {
         private bool isDisposed;
 
         public List<MipMap> MipMaps { get; }
 
-        public Surface()
+        public FlatTexture()
         {
             MipMaps = new List<MipMap>();
         }
@@ -29,7 +29,7 @@ namespace SixLabors.ImageSharp.Textures.TextureFormats
             {
                 foreach (MipMap mipMap in this.MipMaps)
                 {
-                    mipMap.Dispose();
+                    //mipMap.Dispose();
                 }
             }
 

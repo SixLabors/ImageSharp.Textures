@@ -6,27 +6,30 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
     using System;
     using SixLabors.ImageSharp.PixelFormats;
     using SixLabors.ImageSharp.Textures.Formats.Dds;
+    using SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats;
 
-    internal class DdsDxt3 : DdsCompressed
+    public struct Dxt3 : IBlock<Dxt3>
     {
-        private const byte PIXEL_DEPTH = 4;
-        private const byte DIV_SIZE = 4;
+        public int BitsPerPixel => 32;
 
-        protected override byte DivSize => DIV_SIZE;
-        protected override byte CompressedBytesPerBlock => 16;
-        protected override byte PixelDepthBytes => PIXEL_DEPTH;
-        public override int BitsPerPixel => PIXEL_DEPTH * 8;
-        public override ImageFormat Format => ImageFormat.Rgba32;
+        public ImageFormat Format => ImageFormat.Rgba32;
 
-        public DdsDxt3(DdsHeader ddsHeader, DdsHeaderDxt10 ddsHeaderDxt10)
-            : base(ddsHeader, ddsHeaderDxt10)
+        public byte PixelDepthBytes => 4;
+
+        public byte DivSize => 4;
+
+        public byte CompressedBytesPerBlock => 16;
+
+        public bool Compressed => true;
+
+        public byte[] Decompress(byte[] blockData, int width, int height)
         {
-        }
+            IBlock self = this;
+            var colors = new ImageSharp.PixelFormats.Rgb24[4];
 
-        private readonly Rgb24[] colors = new Rgb24[4];
+            return Helper.InMemoryDecode<Dxt3>(blockData, width, height, (byte[] stream, byte[] data, int streamIndex, int dataIndex, int stride) =>
+            {
 
-        protected override int Decode(Span<byte> stream, Span<byte> data, int streamIndex, int dataIndex, int stride)
-        {
             /* 
              * Strategy for decompression:
              * -We're going to decode both alpha and color at the same time 
@@ -41,11 +44,11 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
             streamIndex += 8;
 
             // Colors are stored in a pair of 16 bits
-            ushort color0 = stream[streamIndex++];
-            color0 |= (ushort)(stream[streamIndex++] << 8);
+            ushort color0 = blockData[streamIndex++];
+            color0 |= (ushort)(blockData[streamIndex++] << 8);
 
-            ushort color1 = (stream[streamIndex++]);
-            color1 |= (ushort)(stream[streamIndex++] << 8);
+            ushort color1 = (blockData[streamIndex++]);
+            color1 |= (ushort)(blockData[streamIndex++] << 8);
 
             // Extract R5G6B5 (in that order)
             colors[0].R = (byte)((color0 & 0x1f));
@@ -72,28 +75,31 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
             colors[3].G = (byte)((colors[0].G + 2 * colors[1].G) / 3);
             colors[3].B = (byte)((colors[0].B + 2 * colors[1].B) / 3);
 
-            for (int i = 0; i < 4; i++)
-            {
-                byte rowVal = stream[streamIndex++];
-
-                // Each row of rgb values have 4 alpha values that  are
-                // encoded in 4 bits
-                ushort rowAlpha = stream[alphaPtr++];
-                rowAlpha |= (ushort)(stream[alphaPtr++] << 8);
-
-                for (int j = 0; j < 8; j += 2)
+                for (int i = 0; i < 4; i++)
                 {
-                    byte currentAlpha = (byte)((rowAlpha >> (j * 2)) & 0x0f);
-                    currentAlpha |= (byte)(currentAlpha << 4);
-                    var col = colors[((rowVal >> j) & 0x03)];
-                    data[dataIndex++] = col.R;
-                    data[dataIndex++] = col.G;
-                    data[dataIndex++] = col.B;
-                    data[dataIndex++] = currentAlpha;
+                    byte rowVal = blockData[streamIndex++];
+
+                    // Each row of rgb values have 4 alpha values that  are
+                    // encoded in 4 bits
+                    ushort rowAlpha = blockData[alphaPtr++];
+                    rowAlpha |= (ushort)(blockData[alphaPtr++] << 8);
+
+                    for (int j = 0; j < 8; j += 2)
+                    {
+                        byte currentAlpha = (byte)((rowAlpha >> (j * 2)) & 0x0f);
+                        currentAlpha |= (byte)(currentAlpha << 4);
+                        var col = colors[((rowVal >> j) & 0x03)];
+                        data[dataIndex++] = col.R;
+                        data[dataIndex++] = col.G;
+                        data[dataIndex++] = col.B;
+                        data[dataIndex++] = currentAlpha;
+                    }
+                    dataIndex += self.PixelDepthBytes * (stride - self.DivSize);
                 }
-                dataIndex += PIXEL_DEPTH * (stride - DIV_SIZE);
-            }
-            return streamIndex;
+
+                return streamIndex;
+            });
+
         }
     }
 }

@@ -7,175 +7,135 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
     using System.IO;
     using SixLabors.ImageSharp.Textures.Formats.Dds;
     using SixLabors.ImageSharp.Textures.Formats.Dds.Emums;
+    using SixLabors.ImageSharp.Textures.Formats.Dds.Extensions;
+    using SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats;
+    using SixLabors.ImageSharp.Textures.TextureFormats;
 
     /// <summary>
     /// Class that represents direct draw surfaces
     /// </summary>
-    internal abstract class DdsProcessor
+    internal class DdsProcessor
     {
-        public abstract int BitsPerPixel { get; }
-
-        public int BytesPerPixel => BitsPerPixel / 8;
-
-        public virtual int Stride => CalcStride((int)DdsHeader.Width, BitsPerPixel);
-
         public DdsHeader DdsHeader { get; }
 
         public DdsHeaderDxt10 DdsHeaderDxt10 { get; }
 
-        public abstract ImageFormat Format { get; }
-
-        public abstract MipMapOffset[] MipMaps { get; }
-
-        protected abstract MipMap[] Decode(Stream stream);
-
         public DdsProcessor(DdsHeader ddsHeader, DdsHeaderDxt10 ddsHeaderDxt10)
         {
-            DdsHeader = ddsHeader;
-            DdsHeaderDxt10 = ddsHeaderDxt10;
+            this.DdsHeader = ddsHeader;
+            this.DdsHeaderDxt10 = ddsHeaderDxt10;
         }
 
-        public static int CalcStride(int width, int pixelDepth)
+        private MipMap[] AllocateMipMaps<TBlock>(Stream stream)
+            where TBlock : struct, IBlock<TBlock>
         {
-            if (width <= 0)
-            {
-                throw new ArgumentException("Width must be greater than zero", nameof(width));
-            }
-            else if (pixelDepth <= 0)
-            {
-                throw new ArgumentException("Pixel depth must be greater than zero", nameof(pixelDepth));
-            }
+            var blockFormat = default(TBlock);
+            int width = (int)this.DdsHeader.Width;
+            int height = (int)this.DdsHeader.Height;
 
-            int bytesPerPixel = (pixelDepth + 7) / 8;
+            var mipMaps = new MipMap<TBlock>[this.DdsHeader.TextureCount()];
 
-            // Windows GDI+ requires that the stride be a multiple of four.
-            // Even if not being used for Windows GDI+ there isn't a anything
-            // bad with having extra space.
-            return 4 * (((width * bytesPerPixel) + 3) / 4);
-        }
-
-        public static byte[] ConvertFileData(Span<byte> input, int width, int height, int stride, int bitsPerPixel)
-        {
-            // Since image sharp can't handle data with line padding in a stride
-            // we create an stripped down array if any padding is detected
-            var tightStride = width * bitsPerPixel / 8;
-            if (stride != tightStride)
+            for (int i = 0; i < this.DdsHeader.TextureCount(); i++)
             {
-                byte[] newData = new byte[height * tightStride];
-                for (int i = 0; i < height; i++)
+                int widthBlocks = Helper.CalcBlocks(width);
+                int heightBlocks = Helper.CalcBlocks(height);
+                int len = heightBlocks * widthBlocks * blockFormat.CompressedBytesPerBlock;
+
+                byte[] mipData = new byte[len];
+                int read = stream.Read(mipData, 0, len);
+                if (read != len)
                 {
-                    Buffer.BlockCopy(input.ToArray(), i * stride, newData, i * tightStride, tightStride);
+                    throw new InvalidDataException();
                 }
 
-                return newData;
+                mipMaps[i] = new MipMap<TBlock>(blockFormat, mipData, width, height);
+
+                width >>= 1;
+                height >>= 1;
             }
-            else
-            {
-                return input.ToArray();
-            }
+
+            return mipMaps;
         }
 
-        public static MipMap[] DecodeDds(Stream stream, DdsHeader ddsHeader, DdsHeaderDxt10 ddsHeaderDxt10)
+        public MipMap[] DecodeDds(Stream stream)
         {
-            DdsProcessor dds;
-            switch (ddsHeader.PixelFormat.FourCC)
+            switch (this.DdsHeader.PixelFormat.FourCC)
             {
                 case DdsFourCC.DXT1:
-                    dds = new DdsDxt1(ddsHeader, ddsHeaderDxt10);
-                    break;
+                    return this.AllocateMipMaps<Dxt1>(stream);
                 case DdsFourCC.DXT2:
                 case DdsFourCC.DXT4:
                     throw new ArgumentException("Cannot support DXT2 or DXT4");
                 case DdsFourCC.DXT3:
-                    dds = new DdsDxt3(ddsHeader, ddsHeaderDxt10);
-                    break;
+                    return this.AllocateMipMaps<Dxt3>(stream);
                 case DdsFourCC.DXT5:
-                    dds = new DdsDxt5(ddsHeader, ddsHeaderDxt10);
-                    break;
+                    return this.AllocateMipMaps<Dxt5>(stream);
                 case DdsFourCC.None:
-                    dds = new DdsUncompressed(ddsHeader, ddsHeaderDxt10);
-                    break;
+                    //dds = new DdsUncompressed(ddsHeader, ddsHeaderDxt10)
+                    throw new ArgumentException($"FourCC: {this.DdsHeader.PixelFormat.FourCC} not supported.");
                 case DdsFourCC.DX10:
-                    dds = GetDx10Dds(ddsHeader, ddsHeaderDxt10);
-                    break;
+                    return this.GetDx10Dds(stream);
                 case DdsFourCC.ATI1:
                 case DdsFourCC.BC4U:
-                    dds = new DdsBc4(ddsHeader, ddsHeaderDxt10);
-                    break;
+                    return this.AllocateMipMaps<Bc4>(stream);
                 case DdsFourCC.BC4S:
-                    dds = new DdsBc4s(ddsHeader, ddsHeaderDxt10);
-                    break;
+                    return this.AllocateMipMaps<Bc4s>(stream);
                 case DdsFourCC.ATI2:
                 case DdsFourCC.BC5U:
-                    dds = new DdsBc5(ddsHeader, ddsHeaderDxt10);
-                    break;
+                    return this.AllocateMipMaps<Bc5>(stream);
                 case DdsFourCC.BC5S:
-                    dds = new DdsBc5s(ddsHeader, ddsHeaderDxt10);
-                    break;
+                    return this.AllocateMipMaps<Bc5s>(stream);
                 default:
-                    throw new ArgumentException($"FourCC: {ddsHeader.PixelFormat.FourCC} not supported.");
+                    throw new ArgumentException($"FourCC: {this.DdsHeader.PixelFormat.FourCC} not supported.");
             }
-
-            return dds.Decode(stream);
         }
 
-        private static DdsProcessor GetDx10Dds(DdsHeader ddsHeader, DdsHeaderDxt10 ddsHeaderDxt10)
+        private MipMap[] GetDx10Dds(Stream stream)
         {
-            DdsProcessor dds;
-            switch (ddsHeaderDxt10.DxgiFormat)
+            switch (this.DdsHeaderDxt10.DxgiFormat)
             {
                 case DxgiFormat.BC1_Typeless:
                 case DxgiFormat.BC1_UNorm_SRGB:
                 case DxgiFormat.BC1_UNorm:
-                    dds = new DdsDxt1(ddsHeader, ddsHeaderDxt10);
-                    break;
+                    return this.AllocateMipMaps<Dxt1>(stream);
                 case DxgiFormat.BC2_Typeless:
                 case DxgiFormat.BC2_UNorm:
                 case DxgiFormat.BC2_UNorm_SRGB:
-                    dds = new DdsDxt3(ddsHeader, ddsHeaderDxt10);
-                    break;
+                    return this.AllocateMipMaps<Dxt3>(stream);
                 case DxgiFormat.BC3_Typeless:
                 case DxgiFormat.BC3_UNorm:
                 case DxgiFormat.BC3_UNorm_SRGB:
-                    dds = new DdsDxt5(ddsHeader, ddsHeaderDxt10);
-                    break;
+                    return this.AllocateMipMaps<Dxt5>(stream);
                 case DxgiFormat.BC4_Typeless:
                 case DxgiFormat.BC4_UNorm:
-                    dds = new DdsBc4(ddsHeader, ddsHeaderDxt10);
-                    break;
+                    return this.AllocateMipMaps<Bc4>(stream);
                 case DxgiFormat.BC4_SNorm:
-                    dds = new DdsBc4s(ddsHeader, ddsHeaderDxt10);
-                    break;
+                    return this.AllocateMipMaps<Bc4s>(stream);
                 case DxgiFormat.BC5_Typeless:
                 case DxgiFormat.BC5_UNorm:
-                    dds = new DdsBc5(ddsHeader, ddsHeaderDxt10);
-                    break;
+                    return this.AllocateMipMaps<Bc5>(stream);
                 case DxgiFormat.BC5_SNorm:
-                    dds = new DdsBc5s(ddsHeader, ddsHeaderDxt10);
-                    break;
+                    return this.AllocateMipMaps<Bc5s>(stream);
                 case DxgiFormat.BC6H_Typeless:
                 case DxgiFormat.BC6H_UF16:
+                    return this.AllocateMipMaps<Bc6h>(stream);
                 case DxgiFormat.BC6H_SF16:
-                    dds = new DdsBc6h(ddsHeader, ddsHeaderDxt10);
-                    break;
+                    return this.AllocateMipMaps<Bc6hs>(stream);
                 case DxgiFormat.BC7_Typeless:
                 case DxgiFormat.BC7_UNorm:
                 case DxgiFormat.BC7_UNorm_SRGB:
-                    dds = new DdsBc7(ddsHeader, ddsHeaderDxt10);
-                    break;
+                    return this.AllocateMipMaps<Bc7>(stream);
                 case DxgiFormat.R8G8B8A8_Typeless:
                 case DxgiFormat.R8G8B8A8_UNorm:
                 case DxgiFormat.R8G8B8A8_UNorm_SRGB:
                 case DxgiFormat.R8G8B8A8_UInt:
                 case DxgiFormat.R8G8B8A8_SNorm:
                 case DxgiFormat.R8G8B8A8_SInt:
-                    dds = new DdsUncompressed(ddsHeader, ddsHeaderDxt10, 32, true);
-                    break;
+                    return this.AllocateMipMaps<Rgba>(stream);
                 case DxgiFormat.B8G8R8A8_Typeless:
                 case DxgiFormat.B8G8R8A8_UNorm:
                 case DxgiFormat.B8G8R8A8_UNorm_SRGB:
-                    dds = new DdsUncompressed(ddsHeader, ddsHeaderDxt10, 32, false);
-                    break;
+                    return this.AllocateMipMaps<Bgra32>(stream);
                 case DxgiFormat.Unknown:
                 case DxgiFormat.R32G32B32A32_Typeless:
                 case DxgiFormat.R32G32B32A32_Float:
@@ -263,8 +223,6 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 default:
                     throw new ArgumentOutOfRangeException();
             }
-
-            return dds;
         }
     }
 }

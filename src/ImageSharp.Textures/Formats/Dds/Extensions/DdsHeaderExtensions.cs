@@ -70,7 +70,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Extensions
         /// <returns></returns>
         public static int TextureCount(this DdsHeader ddsHeader)
         {
-            return ddsHeader.HasMipmaps() ? (int)ddsHeader.MipMapCount : 2;
+            return ddsHeader.HasMipmaps() ? (int)ddsHeader.MipMapCount : 1;
         }
 
         /// <summary>

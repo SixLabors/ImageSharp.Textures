@@ -48,10 +48,10 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.PixelFormats
             int rem;
             for (int i = 0; i < numPixels; ++i)
             {
-                pOut[index++] = 0;
-                pOut[index++] = 0;
-                pOut[index++] = 0;
-                pOut[index++] = 255;
+                pOut[(int)index++] = 0;
+                pOut[(int)index++] = 0;
+                pOut[(int)index++] = 0;
+                pOut[(int)index++] = 255;
                 DivRem(i + 1, divSize, out rem);
                 if (rem == 0)
                 {

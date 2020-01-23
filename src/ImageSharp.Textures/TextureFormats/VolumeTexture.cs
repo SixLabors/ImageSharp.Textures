@@ -6,15 +6,15 @@ namespace SixLabors.ImageSharp.Textures.TextureFormats
     using System;
     using System.Collections.Generic;
 
-    public class Volume : Texture
+    public class VolumeTexture : Texture
     {
         private bool isDisposed;
 
-        public List<Surface> Slices { get; }
+        public List<FlatTexture> Slices { get; }
 
-        public Volume()
+        public VolumeTexture()
         {
-            Slices = new List<Surface>();
+            Slices = new List<FlatTexture>();
         }
 
         /// <inheritdoc/>
@@ -27,7 +27,7 @@ namespace SixLabors.ImageSharp.Textures.TextureFormats
 
             if (disposing)
             {
-                foreach (Surface slice in this.Slices)
+                foreach (FlatTexture slice in this.Slices)
                 {
                     slice.Dispose();
                 }
