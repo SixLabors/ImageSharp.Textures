@@ -76,20 +76,42 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds
                     throw new UnknownTextureFormatException("Width or height cannot be 0");
                 }
 
+                var ddsProcessor = new DdsProcessor(this.ddsHeader, this.ddsDxt10header);
+
+                int width = (int)this.ddsHeader.Width;
+                int height = (int)this.ddsHeader.Height;
+                int count = this.ddsHeader.TextureCount();
+
                 if (this.ddsHeader.IsVolumeTexture())
                 {
-                    var depths = ddsHeader.ComputeDepth();
+                    var depths = this.ddsHeader.ComputeDepth();
+
 
                     var texture = new VolumeTexture();
-                    for (int depth = 0; depth < depths; depth++)
+
+
+                    var surfaces = new FlatTexture[depths];
+
+                    for (int i = 0; i < count; i++)
                     {
-                        var ddsProcessor = new DdsProcessor(this.ddsHeader, this.ddsDxt10header);
-                        var mipMaps = ddsProcessor.DecodeDds(stream);
-                        var surface = new FlatTexture();
-                        surface.MipMaps.AddRange(mipMaps);
-                        texture.Slices.Add(surface);
+                        for (int depth = 0; depth < depths; depth++)
+                        {
+                            if (i == 0)
+                            {
+                                surfaces[depth] = new FlatTexture();
+                            }
+
+                            var mipMaps = ddsProcessor.DecodeDds(stream, width, height, 1);
+                            surfaces[depth].MipMaps.AddRange(mipMaps);
+                     
+                        }
+
+                        depths >>= 1;
+                        width >>= 1;
+                        height >>= 1;
                     }
 
+                    texture.Slices.AddRange(surfaces);
                     return texture;
                 }
                 else if (this.ddsHeader.IsCubemap())
@@ -99,8 +121,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds
                     var texture = new CubemapTexture();
                     for (int face = 0; face < faces.Length; face++)
                     {
-                        var ddsProcessor = new DdsProcessor(this.ddsHeader, this.ddsDxt10header);
-                        var mipMaps = ddsProcessor.DecodeDds(stream);
+                        var mipMaps = ddsProcessor.DecodeDds(stream, width, height, count);
                         if (faces[face] == DdsSurfaceType.CubemapPositiveX)
                         {
                             texture.PositiveX.MipMaps.AddRange(mipMaps);
@@ -132,8 +153,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds
                 else
                 {
                     var texture = new FlatTexture();
-                    var ddsProcessor = new DdsProcessor(this.ddsHeader, this.ddsDxt10header);
-                    var mipMaps = ddsProcessor.DecodeDds(stream);
+                    var mipMaps = ddsProcessor.DecodeDds(stream, width, height, count);
                     texture.MipMaps.AddRange(mipMaps);
                     return texture;
                 }

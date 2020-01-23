@@ -5,6 +5,7 @@ using System;
 using System.IO;
 using SixLabors.ImageSharp.Textures.Formats;
 using SixLabors.ImageSharp.Textures.Tests.Enums;
+using Xunit;
 
 namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.TextureProviders
 {
@@ -19,10 +20,14 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.TextureProviders
         public virtual Texture GetTexture(ITextureDecoder decoder)
         {
             string inputPath = Path.Combine(TestEnvironment.InputImagesDirectoryFullPath, this.TextureFormat.ToString(), this.TextureType.ToString(), this.InputFile);
-            using (FileStream fileStream = File.OpenRead(inputPath))
-            {
-                return decoder.DecodeTexture(Configuration.Default, fileStream);
-            }
+
+            using FileStream fileStream = File.OpenRead(inputPath);
+
+            Texture result = decoder.DecodeTexture(Configuration.Default, fileStream);
+
+            Assert.Equal(fileStream.Length, fileStream.Position);
+
+            return result;
         }
 
         public TestTextureProvider(

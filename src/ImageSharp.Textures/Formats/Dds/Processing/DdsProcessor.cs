@@ -26,16 +26,14 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
             this.DdsHeaderDxt10 = ddsHeaderDxt10;
         }
 
-        private MipMap[] AllocateMipMaps<TBlock>(Stream stream)
+        private MipMap[] AllocateMipMaps<TBlock>(Stream stream, int width, int height, int count)
             where TBlock : struct, IBlock<TBlock>
         {
             var blockFormat = default(TBlock);
-            int width = (int)this.DdsHeader.Width;
-            int height = (int)this.DdsHeader.Height;
 
-            var mipMaps = new MipMap<TBlock>[this.DdsHeader.TextureCount()];
+            var mipMaps = new MipMap<TBlock>[count];
 
-            for (int i = 0; i < this.DdsHeader.TextureCount(); i++)
+            for (int i = 0; i < count; i++)
             {
                 int widthBlocks = Helper.CalcBlocks(width);
                 int heightBlocks = Helper.CalcBlocks(height);
@@ -57,85 +55,85 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
             return mipMaps;
         }
 
-        public MipMap[] DecodeDds(Stream stream)
+        public MipMap[] DecodeDds(Stream stream, int width, int height, int count)
         {
             switch (this.DdsHeader.PixelFormat.FourCC)
             {
                 case DdsFourCC.DXT1:
-                    return this.AllocateMipMaps<Dxt1>(stream);
+                    return this.AllocateMipMaps<Dxt1>(stream, width, height, count);
                 case DdsFourCC.DXT2:
                 case DdsFourCC.DXT4:
                     throw new ArgumentException("Cannot support DXT2 or DXT4");
                 case DdsFourCC.DXT3:
-                    return this.AllocateMipMaps<Dxt3>(stream);
+                    return this.AllocateMipMaps<Dxt3>(stream, width, height, count);
                 case DdsFourCC.DXT5:
-                    return this.AllocateMipMaps<Dxt5>(stream);
+                    return this.AllocateMipMaps<Dxt5>(stream, width, height, count);
                 case DdsFourCC.None:
                     //dds = new DdsUncompressed(ddsHeader, ddsHeaderDxt10)
                     throw new ArgumentException($"FourCC: {this.DdsHeader.PixelFormat.FourCC} not supported.");
                 case DdsFourCC.DX10:
-                    return this.GetDx10Dds(stream);
+                    return this.GetDx10Dds(stream, width, height, count);
                 case DdsFourCC.ATI1:
                 case DdsFourCC.BC4U:
-                    return this.AllocateMipMaps<Bc4>(stream);
+                    return this.AllocateMipMaps<Bc4>(stream, width, height, count);
                 case DdsFourCC.BC4S:
-                    return this.AllocateMipMaps<Bc4s>(stream);
+                    return this.AllocateMipMaps<Bc4s>(stream, width, height, count);
                 case DdsFourCC.ATI2:
                 case DdsFourCC.BC5U:
-                    return this.AllocateMipMaps<Bc5>(stream);
+                    return this.AllocateMipMaps<Bc5>(stream, width, height, count);
                 case DdsFourCC.BC5S:
-                    return this.AllocateMipMaps<Bc5s>(stream);
+                    return this.AllocateMipMaps<Bc5s>(stream, width, height, count);
                 default:
                     throw new ArgumentException($"FourCC: {this.DdsHeader.PixelFormat.FourCC} not supported.");
             }
         }
 
-        private MipMap[] GetDx10Dds(Stream stream)
+        private MipMap[] GetDx10Dds(Stream stream, int width, int height, int count)
         {
             switch (this.DdsHeaderDxt10.DxgiFormat)
             {
                 case DxgiFormat.BC1_Typeless:
                 case DxgiFormat.BC1_UNorm_SRGB:
                 case DxgiFormat.BC1_UNorm:
-                    return this.AllocateMipMaps<Dxt1>(stream);
+                    return this.AllocateMipMaps<Dxt1>(stream, width, height, count);
                 case DxgiFormat.BC2_Typeless:
                 case DxgiFormat.BC2_UNorm:
                 case DxgiFormat.BC2_UNorm_SRGB:
-                    return this.AllocateMipMaps<Dxt3>(stream);
+                    return this.AllocateMipMaps<Dxt3>(stream, width, height, count);
                 case DxgiFormat.BC3_Typeless:
                 case DxgiFormat.BC3_UNorm:
                 case DxgiFormat.BC3_UNorm_SRGB:
-                    return this.AllocateMipMaps<Dxt5>(stream);
+                    return this.AllocateMipMaps<Dxt5>(stream, width, height, count);
                 case DxgiFormat.BC4_Typeless:
                 case DxgiFormat.BC4_UNorm:
-                    return this.AllocateMipMaps<Bc4>(stream);
+                    return this.AllocateMipMaps<Bc4>(stream, width, height, count);
                 case DxgiFormat.BC4_SNorm:
-                    return this.AllocateMipMaps<Bc4s>(stream);
+                    return this.AllocateMipMaps<Bc4s>(stream, width, height, count);
                 case DxgiFormat.BC5_Typeless:
                 case DxgiFormat.BC5_UNorm:
-                    return this.AllocateMipMaps<Bc5>(stream);
+                    return this.AllocateMipMaps<Bc5>(stream, width, height, count);
                 case DxgiFormat.BC5_SNorm:
-                    return this.AllocateMipMaps<Bc5s>(stream);
+                    return this.AllocateMipMaps<Bc5s>(stream, width, height, count);
                 case DxgiFormat.BC6H_Typeless:
                 case DxgiFormat.BC6H_UF16:
-                    return this.AllocateMipMaps<Bc6h>(stream);
+                    return this.AllocateMipMaps<Bc6h>(stream, width, height, count);
                 case DxgiFormat.BC6H_SF16:
-                    return this.AllocateMipMaps<Bc6hs>(stream);
+                    return this.AllocateMipMaps<Bc6hs>(stream, width, height, count);
                 case DxgiFormat.BC7_Typeless:
                 case DxgiFormat.BC7_UNorm:
                 case DxgiFormat.BC7_UNorm_SRGB:
-                    return this.AllocateMipMaps<Bc7>(stream);
+                    return this.AllocateMipMaps<Bc7>(stream, width, height, count);
                 case DxgiFormat.R8G8B8A8_Typeless:
                 case DxgiFormat.R8G8B8A8_UNorm:
                 case DxgiFormat.R8G8B8A8_UNorm_SRGB:
                 case DxgiFormat.R8G8B8A8_UInt:
                 case DxgiFormat.R8G8B8A8_SNorm:
                 case DxgiFormat.R8G8B8A8_SInt:
-                    return this.AllocateMipMaps<Rgba>(stream);
+                    return this.AllocateMipMaps<Rgba>(stream, width, height, count);
                 case DxgiFormat.B8G8R8A8_Typeless:
                 case DxgiFormat.B8G8R8A8_UNorm:
                 case DxgiFormat.B8G8R8A8_UNorm_SRGB:
-                    return this.AllocateMipMaps<Bgra32>(stream);
+                    return this.AllocateMipMaps<Bgra32>(stream, width, height, count);
                 case DxgiFormat.Unknown:
                 case DxgiFormat.R32G32B32A32_Typeless:
                 case DxgiFormat.R32G32B32A32_Float:
