@@ -86,8 +86,8 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.ImageComparison
         where TPixelB : struct, IPixel<TPixelB>
     {
         public ImageSimilarityReport(
-            ImageFrame<TPixelA> expectedImage,
-            ImageFrame<TPixelB> actualImage,
+            Image<TPixelA> expectedImage,
+            Image<TPixelB> actualImage,
             IEnumerable<PixelDifference> differences,
             float? totalNormalizedDifference = null)
             : base(expectedImage, actualImage, differences, totalNormalizedDifference)
@@ -97,8 +97,8 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.ImageComparison
         public static ImageSimilarityReport<TPixelA, TPixelB> Empty =>
             new ImageSimilarityReport<TPixelA, TPixelB>(null, null, Enumerable.Empty<PixelDifference>(), 0f);
 
-        public new ImageFrame<TPixelA> ExpectedImage => (ImageFrame<TPixelA>)base.ExpectedImage;
+        public new Image<TPixelA> ExpectedImage => (Image<TPixelA>)base.ExpectedImage;
 
-        public new ImageFrame<TPixelB> ActualImage => (ImageFrame<TPixelB>)base.ActualImage;
+        public new Image<TPixelB> ActualImage => (Image<TPixelB>)base.ActualImage;
     }
 }

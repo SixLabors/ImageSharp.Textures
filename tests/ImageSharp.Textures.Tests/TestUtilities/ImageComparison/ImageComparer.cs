@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using SixLabors.ImageSharp.Advanced;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Textures.Tests.TestUtilities.ImageComparison.Exceptions;
 using SixLabors.Primitives;
@@ -31,48 +32,23 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.ImageComparison
         public static ImageComparer TolerantPercentage(float imageThresholdInPercents, int perPixelManhattanThreshold = 0)
             => Tolerant(imageThresholdInPercents / 100F, perPixelManhattanThreshold);
 
-        public abstract ImageSimilarityReport<TPixelA, TPixelB> CompareImagesOrFrames<TPixelA, TPixelB>(
-            ImageFrame<TPixelA> expected,
-            ImageFrame<TPixelB> actual)
+        public abstract ImageSimilarityReport<TPixelA, TPixelB> CompareImages<TPixelA, TPixelB>(
+            Image<TPixelA> expected,
+            Image<TPixelB> actual)
             where TPixelA : struct, IPixel<TPixelA>
             where TPixelB : struct, IPixel<TPixelB>;
     }
 
     public static class ImageComparerExtensions
     {
-        public static ImageSimilarityReport<TPixelA, TPixelB> CompareImagesOrFrames<TPixelA, TPixelB>(
+        public static ImageSimilarityReport<TPixelA, TPixelB> CompareImages<TPixelA, TPixelB>(
             this ImageComparer comparer,
             Image<TPixelA> expected,
             Image<TPixelB> actual)
             where TPixelA : struct, IPixel<TPixelA>
             where TPixelB : struct, IPixel<TPixelB>
         {
-            return comparer.CompareImagesOrFrames(expected.Frames.RootFrame, actual.Frames.RootFrame);
-        }
-
-        public static IEnumerable<ImageSimilarityReport<TPixelA, TPixelB>> CompareImages<TPixelA, TPixelB>(
-            this ImageComparer comparer,
-            Image<TPixelA> expected,
-            Image<TPixelB> actual)
-            where TPixelA : struct, IPixel<TPixelA>
-            where TPixelB : struct, IPixel<TPixelB>
-        {
-            var result = new List<ImageSimilarityReport<TPixelA, TPixelB>>();
-
-            if (expected.Frames.Count != actual.Frames.Count)
-            {
-                throw new Exception("Frame count does not match!");
-            }
-            for (int i = 0; i < expected.Frames.Count; i++)
-            {
-                ImageSimilarityReport<TPixelA, TPixelB> report = comparer.CompareImagesOrFrames(expected.Frames[i], actual.Frames[i]);
-                if (!report.IsEmpty)
-                {
-                    result.Add(report);
-                }
-            }
-
-            return result;
+            return comparer.CompareImages(expected, actual);
         }
 
         public static void VerifySimilarity<TPixelA, TPixelB>(
@@ -92,10 +68,10 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.ImageComparison
                 throw new ImagesSimilarityException("Image frame count does not match!");
             }
 
-            IEnumerable<ImageSimilarityReport> reports = comparer.CompareImages(expected, actual);
-            if (reports.Any())
+            ImageSimilarityReport report = comparer.CompareImages(expected, actual);
+            if ((report.TotalNormalizedDifference ?? 0F) != 0F)
             {
-                throw new ImageDifferenceIsOverThresholdException(reports);
+                throw new ImagesSimilarityException(report.ToString());
             }
         }
 
@@ -117,28 +93,21 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.ImageComparison
                 throw new ImagesSimilarityException("Image frame count does not match!");
             }
 
-            IEnumerable<ImageSimilarityReport<TPixelA, TPixelB>> reports = comparer.CompareImages(expected, actual);
-            if (reports.Any())
+            ImageSimilarityReport report = comparer.CompareImages(expected, actual);
+            if ((report.TotalNormalizedDifference ?? 0F) != 0F)
             {
-                var cleanedReports = new List<ImageSimilarityReport<TPixelA, TPixelB>>(reports.Count());
-                foreach (ImageSimilarityReport<TPixelA, TPixelB> r in reports)
-                {
-                    IEnumerable<PixelDifference> outsideChanges = r.Differences.Where(
-                        x =>
-                        !(ignoredRegion.X <= x.Position.X
-                        && x.Position.X <= ignoredRegion.Right
-                        && ignoredRegion.Y <= x.Position.Y
-                        && x.Position.Y <= ignoredRegion.Bottom));
 
-                    if (outsideChanges.Any())
-                    {
-                        cleanedReports.Add(new ImageSimilarityReport<TPixelA, TPixelB>(r.ExpectedImage, r.ActualImage, outsideChanges, null));
-                    }
-                }
+                IEnumerable<PixelDifference> outsideChanges = report.Differences.Where(
+                    x =>
+                    !(ignoredRegion.X <= x.Position.X
+                    && x.Position.X <= ignoredRegion.Right
+                    && ignoredRegion.Y <= x.Position.Y
+                    && x.Position.Y <= ignoredRegion.Bottom));
 
-                if (cleanedReports.Count > 0)
+                if (outsideChanges.Any())
                 {
-                    throw new ImageDifferenceIsOverThresholdException(cleanedReports);
+                    var cleanedReport = new ImageSimilarityReport<TPixelA, TPixelB>(expected, actual, outsideChanges, null);
+                    throw new ImagesSimilarityException(cleanedReport.ToString());
                 }
             }
         }

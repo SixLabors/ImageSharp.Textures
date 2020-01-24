@@ -11,9 +11,9 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.ImageComparison
     {
         public static ExactImageComparer Instance { get; } = new ExactImageComparer();
 
-        public override ImageSimilarityReport<TPixelA, TPixelB> CompareImagesOrFrames<TPixelA, TPixelB>(
-            ImageFrame<TPixelA> expected,
-            ImageFrame<TPixelB> actual)
+        public override ImageSimilarityReport<TPixelA, TPixelB> CompareImages<TPixelA, TPixelB>(
+            Image<TPixelA> expected,
+            Image<TPixelB> actual)
         {
             if (expected.Size() != actual.Size())
             {
@@ -28,7 +28,7 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.ImageComparison
             var bBuffer = new Vector4[width];
 
             var differences = new List<PixelDifference>();
-            var configuration = new ImageSharp.Configuration();
+            ImageSharp.Configuration configuration = expected.GetConfiguration();
 
             for (int y = 0; y < actual.Height; y++)
             {

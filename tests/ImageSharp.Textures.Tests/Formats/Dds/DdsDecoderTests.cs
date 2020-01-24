@@ -67,7 +67,8 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.Dds
 
         private void CompareMipMaps(MipMap[] mipMaps, TestTextureProvider testTextureProvider, string name)
         {
-            string filename = string.Empty;
+            string filename;
+
             if (testTextureProvider.TextureType == TestTextureType.Flat)
             {
                 string[] fileParts = testTextureProvider.InputFile.Split(' ');
