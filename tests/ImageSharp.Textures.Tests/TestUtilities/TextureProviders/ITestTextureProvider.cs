@@ -11,5 +11,6 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.TextureProviders
         TestTextureFormat TextureFormat { get; }
         TestTextureType TextureType { get; }
         string InputFile { get; }
+        bool IsRegex { get; }
     }
 }

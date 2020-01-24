@@ -65,13 +65,22 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.Dds
             this.SaveTextures(texture, provider);
         }
 
+        [Theory]
+        [WithFile(TestTextureFormat.DDS, TestTextureType.Flat, "flat-*.*")]
+        public void DdsDecoder_CanDecode_Flat_WildCard(TestTextureProvider provider)
+        {
+            using Texture texture = provider.GetTexture(new DdsDecoder());
+            this.CompareTextures(texture, provider);
+            this.SaveTextures(texture, provider);
+        }
+
         private void CompareMipMaps(MipMap[] mipMaps, TestTextureProvider testTextureProvider, string name)
         {
             string filename;
 
             if (testTextureProvider.TextureType == TestTextureType.Flat)
             {
-                string[] fileParts = testTextureProvider.InputFile.Split(' ');
+                string[] fileParts = Path.GetFileName(testTextureProvider.InputFile).Split(' ');
                 filename = fileParts[0];
             }
             else

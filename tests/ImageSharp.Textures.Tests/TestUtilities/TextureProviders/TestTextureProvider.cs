@@ -16,12 +16,11 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.TextureProviders
         public TestTextureFormat TextureFormat { get; private set; }
         public TestTextureType TextureType { get; private set; }
         public string InputFile { get; private set; }
+        public bool IsRegex { get; private set; }
 
         public virtual Texture GetTexture(ITextureDecoder decoder)
         {
-            string inputPath = Path.Combine(TestEnvironment.InputImagesDirectoryFullPath, this.TextureFormat.ToString(), this.TextureType.ToString(), this.InputFile);
-
-            using FileStream fileStream = File.OpenRead(inputPath);
+            using FileStream fileStream = File.OpenRead(this.InputFile);
 
             Texture result = decoder.DecodeTexture(Configuration.Default, fileStream);
 
@@ -34,12 +33,14 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.TextureProviders
             string methodName,
             TestTextureFormat textureFormat,
             TestTextureType textureType,
-            string inputFile)
+            string inputFile,
+            bool isRegex)
         {
             this.MethodName = methodName;
             this.TextureFormat = textureFormat;
             this.TextureType = textureType;
             this.InputFile = inputFile;
+            this.IsRegex = isRegex;
         }
     }
 }
