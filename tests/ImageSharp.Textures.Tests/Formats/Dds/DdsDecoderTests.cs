@@ -75,6 +75,15 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.Dds
             this.SaveTextures(texture, provider);
         }
 
+        [Theory]
+        [WithFile(TestTextureFormat.DDS, TestTextureType.Flat, "flat-pot-alpha A8_UNORM.dds")]
+        public void DdsDecoder_CanDecode_Uncompressed(TestTextureProvider provider)
+        {
+            using Texture texture = provider.GetTexture(new DdsDecoder());
+            this.CompareTextures(texture, provider);
+            this.SaveTextures(texture, provider);
+        }
+
         private void CompareMipMaps(MipMap[] mipMaps, TestTextureProvider testTextureProvider, string name)
         {
             string filename;
@@ -133,7 +142,7 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.Dds
 
         private void SaveMipMaps(MipMap[] mipMaps, TestTextureProvider testTextureProvider, string name)
         {
-            string path = Path.Combine(TestEnvironment.ActualOutputDirectoryFullPath, testTextureProvider.TextureFormat.ToString(), testTextureProvider.TextureType.ToString(), testTextureProvider.MethodName);
+            string path = Path.Combine(TestEnvironment.ActualOutputDirectoryFullPath, testTextureProvider.TextureFormat.ToString(), testTextureProvider.TextureType.ToString(), testTextureProvider.MethodName, Path.GetFileNameWithoutExtension(testTextureProvider.InputFile));
 
             Directory.CreateDirectory(path);
 

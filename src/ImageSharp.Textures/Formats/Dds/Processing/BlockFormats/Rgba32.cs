@@ -5,7 +5,7 @@ using SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats;
 
 namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
 { 
-    public struct Rgba : IBlock<Rgba>
+    public struct Rgba32 : IBlock<Rgba32>
     {
         public int BitsPerPixel => 32;
 

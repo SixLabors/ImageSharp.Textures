@@ -26,6 +26,47 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
             this.DdsHeaderDxt10 = ddsHeaderDxt10;
         }
 
+
+
+        //private void AllocateMipMaps(Stream stream)
+        //{
+        //    if (this.DdsHeader.TextureCount() <= 1)
+        //    {
+        //        int width = (int)Math.Max(BlockInfo.DivSize, (int)this.DdsHeader.Width);
+        //        int height = (int)Math.Max(BlockInfo.DivSize, this.DdsHeader.Height);
+        //        int bytesPerPixel = (BlockInfo.BitsPerPixel + 7) / 8;
+        //        int stride = CalcStride(width, BlockInfo.BitsPerPixel);
+        //        int len = stride * height;
+
+        //        var mipData = new byte[len];
+        //        stream.Read(mipData, 0, len);
+
+        //        var mipMap = new MipMap(BlockInfo, mipData, false, width, height, stride / bytesPerPixel);
+        //        Swap(mipMap);
+        //        this.mipMaps = new[] { mipMap };
+        //        return;
+        //    }
+
+        //    mipMaps = new MipMap[this.DdsHeader.TextureCount() - 1];
+
+        //    for (int i = 0; i < this.DdsHeader.TextureCount() - 1; i++)
+        //    {
+        //        int width = (int)Math.Max(BlockInfo.DivSize, (int)(this.DdsHeader.Width / Math.Pow(2, i + 1)));
+        //        int height = (int)Math.Max(BlockInfo.DivSize, this.DdsHeader.Height / Math.Pow(2, i + 1));
+
+        //        int bytesPerPixel = (BlockInfo.BitsPerPixel + 7) / 8;
+        //        int stride = CalcStride(width, BlockInfo.BitsPerPixel);
+        //        int len = stride * height;
+
+        //        var mipData = new byte[len];
+        //        stream.Read(mipData, 0, len);
+
+        //        var mipMap = new MipMap(BlockInfo, mipData, false, width, height, stride / bytesPerPixel);
+        //        Swap(mipMap);
+        //        mipMaps[i] = mipMap;
+        //    }
+        //}
+
         private MipMap[] AllocateMipMaps<TBlock>(Stream stream, int width, int height, int count)
             where TBlock : struct, IBlock<TBlock>
         {
@@ -35,8 +76,8 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
 
             for (int i = 0; i < count; i++)
             {
-                int widthBlocks = Helper.CalcBlocks(width);
-                int heightBlocks = Helper.CalcBlocks(height);
+                int widthBlocks = blockFormat.Compressed ? Helper.CalcBlocks(width) : width;
+                int heightBlocks = blockFormat.Compressed ? Helper.CalcBlocks(height) : height;
                 int len = heightBlocks * widthBlocks * blockFormat.CompressedBytesPerBlock;
 
                 byte[] mipData = new byte[len];
@@ -69,8 +110,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 case DdsFourCC.DXT5:
                     return this.AllocateMipMaps<Dxt5>(stream, width, height, count);
                 case DdsFourCC.None:
-                    //dds = new DdsUncompressed(ddsHeader, ddsHeaderDxt10)
-                    throw new ArgumentException($"FourCC: {this.DdsHeader.PixelFormat.FourCC} not supported.");
+                    return this.ProcessUncompressed(stream, width, height, count);
                 case DdsFourCC.DX10:
                     return this.GetDx10Dds(stream, width, height, count);
                 case DdsFourCC.ATI1:
@@ -86,6 +126,41 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 default:
                     throw new ArgumentException($"FourCC: {this.DdsHeader.PixelFormat.FourCC} not supported.");
             }
+        }
+
+        public MipMap[] ProcessUncompressed(Stream stream, int width, int height, int count)
+        {
+            var bitsPerPixel = this.DdsHeader.PixelFormat.RGBBitCount;
+            switch (bitsPerPixel)
+            {
+                case 8:
+                    return this.AllocateMipMaps<Rgb8>(stream, width, height, count); 
+                case 16:
+                    return this.SixteenBitImageFormat(stream, width, height, count);
+                case 24:
+                    return this.AllocateMipMaps<Rgb24>(stream, width, height, count);
+                case 32:
+                    return this.AllocateMipMaps<Rgba32>(stream, width, height, count);
+                default:
+                    throw new Exception($"Unrecognized rgb bit count: {this.DdsHeader.PixelFormat.RGBBitCount}");
+            }
+        }
+
+        private MipMap[] SixteenBitImageFormat(Stream stream, int width, int height, int count)
+        {
+            var pf = this.DdsHeader.PixelFormat;
+
+            if (pf.ABitMask == 0xF000 && pf.RBitMask == 0xF00 && pf.GBitMask == 0xF0 && pf.BBitMask == 0xF)
+            {
+                return this.AllocateMipMaps<Rgba16>(stream, width, height, count);
+            }
+
+            if (pf.Flags.HasFlag(DdsPixelFormatFlags.AlphaPixels))
+            {
+                return this.AllocateMipMaps<R5g5b5a1>(stream, width, height, count);
+            }
+
+            return pf.GBitMask == 0x7e0 ? this.AllocateMipMaps<R5g6b5>(stream, width, height, count) : this.AllocateMipMaps<R5g5b5>(stream, width, height, count);
         }
 
         private MipMap[] GetDx10Dds(Stream stream, int width, int height, int count)
@@ -129,7 +204,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 case DxgiFormat.R8G8B8A8_UInt:
                 case DxgiFormat.R8G8B8A8_SNorm:
                 case DxgiFormat.R8G8B8A8_SInt:
-                    return this.AllocateMipMaps<Rgba>(stream, width, height, count);
+                    return this.AllocateMipMaps<Rgba32>(stream, width, height, count);
                 case DxgiFormat.B8G8R8A8_Typeless:
                 case DxgiFormat.B8G8R8A8_UNorm:
                 case DxgiFormat.B8G8R8A8_UNorm_SRGB:

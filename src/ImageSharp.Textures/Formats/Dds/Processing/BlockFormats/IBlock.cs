@@ -18,6 +18,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
         byte PixelDepthBytes { get; }
         byte DivSize { get; }
         byte CompressedBytesPerBlock { get; }
+        bool Compressed { get; }
 
         byte[] Decompress(byte[] blockData, int width, int height);
     }

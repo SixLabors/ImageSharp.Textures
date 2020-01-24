@@ -5,7 +5,7 @@ using SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats;
 
 namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
 { 
-    public struct Rgb16 : IBlock<Rgb16>
+    public struct R5g5b5 : IBlock<R5g5b5>
     {
         public int BitsPerPixel => 16;
 
