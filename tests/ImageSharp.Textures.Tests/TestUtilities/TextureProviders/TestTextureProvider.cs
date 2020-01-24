@@ -3,6 +3,7 @@
 
 using System;
 using System.IO;
+using System.Text;
 using SixLabors.ImageSharp.Textures.Formats;
 using SixLabors.ImageSharp.Textures.Tests.Enums;
 using Xunit;
@@ -41,6 +42,18 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.TextureProviders
             this.TextureType = textureType;
             this.InputFile = inputFile;
             this.IsRegex = isRegex;
+        }
+
+        public override string ToString()
+        {
+            var stringBuilder = new StringBuilder();
+            stringBuilder.AppendLine();
+            stringBuilder.AppendLine($"Method Name: {this.MethodName}");
+            stringBuilder.AppendLine($"Texture Format: {this.TextureFormat}");
+            stringBuilder.AppendLine($"Texture Type: {this.TextureType}");
+            stringBuilder.AppendLine($"Input File: {this.InputFile}");
+            stringBuilder.AppendLine($"Is Regex: {this.IsRegex}");
+            return stringBuilder.ToString();
         }
     }
 }

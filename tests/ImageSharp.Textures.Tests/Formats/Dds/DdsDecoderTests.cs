@@ -1,6 +1,7 @@
 // Copyright (c) Six Labors and contributors.
 // Licensed under the Apache License, Version 2.0.
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -66,7 +67,7 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.Dds
         }
 
         [Theory]
-        [WithFile(TestTextureFormat.DDS, TestTextureType.Flat, "flat-*.*")]
+        [WithFile(TestTextureFormat.DDS, TestTextureType.Flat, "flat-*.*", true)]
         public void DdsDecoder_CanDecode_Flat_WildCard(TestTextureProvider provider)
         {
             using Texture texture = provider.GetTexture(new DdsDecoder());
