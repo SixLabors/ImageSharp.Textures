@@ -104,7 +104,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                     return this.AllocateMipMaps<Dxt1>(stream, width, height, count);
                 case DdsFourCC.DXT2:
                 case DdsFourCC.DXT4:
-                    throw new ArgumentException("Cannot support DXT2 or DXT4");
+                    throw new ArgumentException("Can not support DXT2 or DXT4 due to patents.");
                 case DdsFourCC.DXT3:
                     return this.AllocateMipMaps<Dxt3>(stream, width, height, count);
                 case DdsFourCC.DXT5:
@@ -130,7 +130,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
 
         public MipMap[] ProcessUncompressed(Stream stream, int width, int height, int count)
         {
-            var bitsPerPixel = this.DdsHeader.PixelFormat.RGBBitCount;
+            uint bitsPerPixel = this.DdsHeader.PixelFormat.RGBBitCount;
             switch (bitsPerPixel)
             {
                 case 8:
