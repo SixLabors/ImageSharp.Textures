@@ -1,7 +1,7 @@
 // Copyright (c) Six Labors and contributors.
 // Licensed under the Apache License, Version 2.0.
 
-namespace SixLabors.ImageSharp.Textires.IO
+namespace SixLabors.ImageSharp.Textures.IO
 {
     using System.IO;
 

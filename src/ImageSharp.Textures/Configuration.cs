@@ -5,9 +5,9 @@ namespace SixLabors.ImageSharp.Textures
 {
     using System;
     using System.Collections.Generic;
-    using SixLabors.ImageSharp.Textires.IO;
     using SixLabors.ImageSharp.Textures.Formats;
     using SixLabors.ImageSharp.Textures.Formats.Dds;
+    using SixLabors.ImageSharp.Textures.IO;
     using SixLabors.Memory;
 
     /// <summary>

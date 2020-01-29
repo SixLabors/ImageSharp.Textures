@@ -5,22 +5,22 @@ using SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats;
 
 namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
 { 
-    public struct Rgb24 : IBlock<Rgb24>
+    public struct Rg32 : IBlock<Rg32>
     {
-        public int BitsPerPixel => 24;
+        public int BitsPerPixel => 32;
 
-        public byte PixelDepthBytes => 3;
+        public byte PixelDepthBytes => 4;
 
         public byte DivSize => 1;
 
-        public byte CompressedBytesPerBlock => 3;
+        public byte CompressedBytesPerBlock => 4;
 
         public bool Compressed => false;
 
         public Image GetImage(byte[] blockData, int width, int height)
         {
             byte[] decompressedData = this.Decompress(blockData, width, height);
-            return Image.LoadPixelData<ImageSharp.PixelFormats.Rgb24>(decompressedData, width, height);
+            return Image.LoadPixelData<ImageSharp.PixelFormats.Rg32>(decompressedData, width, height);
         }
 
         public byte[] Decompress(byte[] blockData, int width, int height)

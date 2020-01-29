@@ -5,14 +5,14 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
 {
     using System;
     using System.Runtime.CompilerServices;
+    using SixLabors.ImageSharp;
+    using SixLabors.ImageSharp.PixelFormats;
     using SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats;
 
     public struct Bc4 : IBlock<Bc4>
     {
 
         public int BitsPerPixel => 8;
-
-        public ImageFormat Format => ImageFormat.Rgb8;
 
         public byte PixelDepthBytes => 1;
 
@@ -21,6 +21,12 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
         public byte CompressedBytesPerBlock => 8;
 
         public bool Compressed => true;
+
+        public Image GetImage(byte[] blockData, int width, int height)
+        {
+            byte[] decompressedData = this.Decompress(blockData, width, height);
+            return Image.LoadPixelData<ImageSharp.PixelFormats.L8>(decompressedData, width, height);
+        }
 
         public byte[] Decompress(byte[] blockData, int width, int height)
         {
@@ -94,6 +100,5 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
 
             return red;
         }
-
     }
 }

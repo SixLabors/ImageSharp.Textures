@@ -61,8 +61,6 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
 
         public int BitsPerPixel => 32;
 
-        public ImageFormat Format => ImageFormat.Rgba32;
-
         public byte PixelDepthBytes => 4;
 
         public byte DivSize => 4;
@@ -70,6 +68,12 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
         public byte CompressedBytesPerBlock => 16;
 
         public bool Compressed => true;
+
+        public Image GetImage(byte[] blockData, int width, int height)
+        {
+            byte[] decompressedData = this.Decompress(blockData, width, height);
+            return Image.LoadPixelData<ImageSharp.PixelFormats.Rgba32>(decompressedData, width, height);
+        }
 
         public byte[] Decompress(byte[] blockData, int width, int height)
         {

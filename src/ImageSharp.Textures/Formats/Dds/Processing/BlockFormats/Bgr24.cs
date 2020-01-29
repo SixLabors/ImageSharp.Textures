@@ -9,8 +9,6 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
     {
         public int BitsPerPixel => 24;
 
-        public ImageFormat Format => ImageFormat.Rgb24;
-
         public byte PixelDepthBytes => 3;
 
         public byte DivSize => 1;
@@ -19,14 +17,14 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
 
         public bool Compressed => false;
 
+        public Image GetImage(byte[] blockData, int width, int height)
+        {
+            byte[] decompressedData = this.Decompress(blockData, width, height);
+            return Image.LoadPixelData<ImageSharp.PixelFormats.Bgr24>(decompressedData, width, height);
+        }
+
         public byte[] Decompress(byte[] blockData, int width, int height)
         {
-            //for (int i = 0; i < blockData.Length; i += 4)
-            //{
-            //    byte temp = mipMap.BlockData[i];
-            //    mipMap.BlockData[i] = mipMap.BlockData[i + 2];
-            //    mipMap.BlockData[i + 2] = temp;
-            //}
             return blockData;
         }
     }

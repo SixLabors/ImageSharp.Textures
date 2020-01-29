@@ -5,11 +5,9 @@ using SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats;
 
 namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
 { 
-    public struct R5g6b5 : IBlock<R5g6b5>
+    public struct Bgr555 : IBlock<Bgr555>
     {
         public int BitsPerPixel => 16;
-
-        public ImageFormat Format => ImageFormat.R5g6b5;
 
         public byte PixelDepthBytes => 2;
 
@@ -19,15 +17,14 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
 
         public bool Compressed => false;
 
+        public Image GetImage(byte[] blockData, int width, int height)
+        {
+            byte[] decompressedData = this.Decompress(blockData, width, height);
+            return Image.LoadPixelData<ImageSharp.Textures.PixelFormats.Bgr555>(decompressedData, width, height);
+        }
+
         public byte[] Decompress(byte[] blockData, int width, int height)
         {
-            //for (int i = 0; i < mipMap.BlockData.Length; i += 2)
-            //{
-            //    byte temp = (byte)(mipMap.BlockData[i] & 0xF);
-            //    mipMap.BlockData[i] = (byte)((mipMap.BlockData[i] & 0xF0) + (mipMap.BlockData[i + 1] & 0XF));
-            //    mipMap.BlockData[i + 1] = (byte)((mipMap.BlockData[i + 1] & 0xF0) + temp);
-
-            //}
             return blockData;
         }
     }

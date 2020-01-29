@@ -134,33 +134,122 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
             switch (bitsPerPixel)
             {
                 case 8:
-                    return this.AllocateMipMaps<Rgb8>(stream, width, height, count); 
+                    return this.EightBitImageFormat(stream, width, height, count);
                 case 16:
                     return this.SixteenBitImageFormat(stream, width, height, count);
                 case 24:
-                    return this.AllocateMipMaps<Rgb24>(stream, width, height, count);
+                    return this.TwentyFourBitImageFormat(stream, width, height, count);
                 case 32:
-                    return this.AllocateMipMaps<Rgba32>(stream, width, height, count);
+                    return this.ThirtyTwoBitImageFormat(stream, width, height, count);
                 default:
                     throw new Exception($"Unrecognized rgb bit count: {this.DdsHeader.PixelFormat.RGBBitCount}");
             }
         }
 
+        private MipMap[] EightBitImageFormat(Stream stream, int width, int height, int count)
+        {
+            DdsPixelFormat pixelFormat = this.DdsHeader.PixelFormat;
+
+            bool hasAlpha = pixelFormat.Flags.HasFlag(DdsPixelFormatFlags.AlphaPixels);
+
+            if (hasAlpha && pixelFormat.RBitMask == 0x0 && pixelFormat.GBitMask == 0x00 && pixelFormat.BBitMask == 0x00)
+            {
+                return this.AllocateMipMaps<A8>(stream, width, height, count);
+            }
+
+            if (!hasAlpha && pixelFormat.RBitMask == 0xFF && pixelFormat.GBitMask == 0x00 && pixelFormat.BBitMask == 0x00)
+            {
+                return this.AllocateMipMaps<L8>(stream, width, height, count);
+            }
+
+            throw new Exception($"Unsupported 8 bit format");
+        }
+
         private MipMap[] SixteenBitImageFormat(Stream stream, int width, int height, int count)
         {
-            var pf = this.DdsHeader.PixelFormat;
+            DdsPixelFormat pixelFormat = this.DdsHeader.PixelFormat;
 
-            if (pf.ABitMask == 0xF000 && pf.RBitMask == 0xF00 && pf.GBitMask == 0xF0 && pf.BBitMask == 0xF)
+            bool hasAlpha = pixelFormat.Flags.HasFlag(DdsPixelFormatFlags.AlphaPixels);
+
+            if (hasAlpha && pixelFormat.RBitMask == 0xF00 && pixelFormat.GBitMask == 0xF0 && pixelFormat.BBitMask == 0xF)
             {
-                return this.AllocateMipMaps<Rgba16>(stream, width, height, count);
+                return this.AllocateMipMaps<Bgra16>(stream, width, height, count);
             }
 
-            if (pf.Flags.HasFlag(DdsPixelFormatFlags.AlphaPixels))
+            if (!hasAlpha && pixelFormat.RBitMask == 0x7C00 && pixelFormat.GBitMask == 0x3E0 && pixelFormat.BBitMask == 0x1F)
             {
-                return this.AllocateMipMaps<R5g5b5a1>(stream, width, height, count);
+                return this.AllocateMipMaps<Bgr555>(stream, width, height, count);
             }
 
-            return pf.GBitMask == 0x7e0 ? this.AllocateMipMaps<R5g6b5>(stream, width, height, count) : this.AllocateMipMaps<R5g5b5>(stream, width, height, count);
+            if (hasAlpha && pixelFormat.RBitMask == 0x7C00 && pixelFormat.GBitMask == 0x3E0 && pixelFormat.BBitMask == 0x1F)
+            {
+                return this.AllocateMipMaps<Bgra5551>(stream, width, height, count);
+            }
+
+            if (!hasAlpha && pixelFormat.RBitMask == 0xF800 && pixelFormat.GBitMask == 0x7E0 && pixelFormat.BBitMask == 0x1F)
+            {
+                return this.AllocateMipMaps<Bgr565>(stream, width, height, count);
+            }
+
+            if (hasAlpha && pixelFormat.RBitMask == 0xFF && pixelFormat.GBitMask == 0x0 && pixelFormat.BBitMask == 0x0)
+            {
+                return this.AllocateMipMaps<La16>(stream, width, height, count);
+            }
+
+            if (!hasAlpha && pixelFormat.RBitMask == 0xFF && pixelFormat.GBitMask == 0xFF00 && pixelFormat.BBitMask == 0x0)
+            {
+                return this.AllocateMipMaps<Rg16>(stream, width, height, count);
+            }
+
+            throw new Exception($"Unsupported 16 bit format");
+        }
+
+        private MipMap[] TwentyFourBitImageFormat(Stream stream, int width, int height, int count)
+        {
+            DdsPixelFormat pixelFormat = this.DdsHeader.PixelFormat;
+
+            bool hasAlpha = pixelFormat.Flags.HasFlag(DdsPixelFormatFlags.AlphaPixels);
+
+            if (!hasAlpha && pixelFormat.RBitMask == 0xFF0000 && pixelFormat.GBitMask == 0xFF00 && pixelFormat.BBitMask == 0xFF)
+            {
+                this.AllocateMipMaps<Rgb24>(stream, width, height, count);
+            }
+
+            throw new Exception($"Unsupported 24 bit format");
+        }
+
+        private MipMap[] ThirtyTwoBitImageFormat(Stream stream, int width, int height, int count)
+        {
+            DdsPixelFormat pixelFormat = this.DdsHeader.PixelFormat;
+
+            bool hasAlpha = pixelFormat.Flags.HasFlag(DdsPixelFormatFlags.AlphaPixels);
+
+            if (hasAlpha && pixelFormat.RBitMask == 0xFF0000 && pixelFormat.GBitMask == 0xFF00 && pixelFormat.BBitMask == 0xFF)
+            {
+                return this.AllocateMipMaps<Bgra32>(stream, width, height, count);
+            }
+
+            if (hasAlpha && pixelFormat.RBitMask == 0xFF && pixelFormat.GBitMask == 0xFF00 && pixelFormat.BBitMask == 0xFF0000)
+            {
+                return this.AllocateMipMaps<Rgba32>(stream, width, height, count);
+            }
+
+            if (hasAlpha && pixelFormat.RBitMask == 0xFF0000 && pixelFormat.GBitMask == 0xFF00 && pixelFormat.BBitMask == 0xFF)
+            {
+                return this.AllocateMipMaps<Bgr32>(stream, width, height, count);
+            }
+
+            if (!hasAlpha && pixelFormat.RBitMask == 0xFF && pixelFormat.GBitMask == 0xFF00 && pixelFormat.BBitMask == 0xFF0000)
+            {
+                return this.AllocateMipMaps<Rgb32>(stream, width, height, count);
+            }
+
+            if (!hasAlpha && pixelFormat.RBitMask == 0xFFFF && pixelFormat.GBitMask == 0xFFFF0000 && pixelFormat.BBitMask == 0x0)
+            {
+                return this.AllocateMipMaps<Rg32>(stream, width, height, count);
+            }
+
+            throw new Exception($"Unsupported 32 bit format");
         }
 
         private MipMap[] GetDx10Dds(Stream stream, int width, int height, int count)
@@ -209,67 +298,78 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 case DxgiFormat.B8G8R8A8_UNorm:
                 case DxgiFormat.B8G8R8A8_UNorm_SRGB:
                     return this.AllocateMipMaps<Bgra32>(stream, width, height, count);
-                case DxgiFormat.Unknown:
                 case DxgiFormat.R32G32B32A32_Typeless:
                 case DxgiFormat.R32G32B32A32_Float:
                 case DxgiFormat.R32G32B32A32_UInt:
                 case DxgiFormat.R32G32B32A32_SInt:
+                    throw new Exception("not implemented");
                 case DxgiFormat.R32G32B32_Typeless:
                 case DxgiFormat.R32G32B32_Float:
                 case DxgiFormat.R32G32B32_UInt:
                 case DxgiFormat.R32G32B32_SInt:
+                    throw new Exception("not implemented");
                 case DxgiFormat.R16G16B16A16_Typeless:
                 case DxgiFormat.R16G16B16A16_Float:
                 case DxgiFormat.R16G16B16A16_UNorm:
                 case DxgiFormat.R16G16B16A16_UInt:
                 case DxgiFormat.R16G16B16A16_SNorm:
                 case DxgiFormat.R16G16B16A16_SInt:
+                    throw new Exception("not implemented");
                 case DxgiFormat.R32G32_Typeless:
                 case DxgiFormat.R32G32_Float:
                 case DxgiFormat.R32G32_UInt:
                 case DxgiFormat.R32G32_SInt:
-                case DxgiFormat.R32G8X24_Typeless:
-                case DxgiFormat.D32_Float_S8X24_UInt:
-                case DxgiFormat.R32_Float_X8X24_Typeless:
-                case DxgiFormat.X32_Typeless_G8X24_UInt:
+                    throw new Exception("not implemented");
                 case DxgiFormat.R10G10B10A2_Typeless:
                 case DxgiFormat.R10G10B10A2_UNorm:
                 case DxgiFormat.R10G10B10A2_UInt:
-                case DxgiFormat.R11G11B10_Float:
+                    throw new Exception("not implemented");
                 case DxgiFormat.R16G16_Typeless:
                 case DxgiFormat.R16G16_Float:
                 case DxgiFormat.R16G16_UNorm:
                 case DxgiFormat.R16G16_UInt:
                 case DxgiFormat.R16G16_SNorm:
                 case DxgiFormat.R16G16_SInt:
+                    throw new Exception("not implemented");
                 case DxgiFormat.R32_Typeless:
-                case DxgiFormat.D32_Float:
                 case DxgiFormat.R32_Float:
                 case DxgiFormat.R32_UInt:
                 case DxgiFormat.R32_SInt:
-                case DxgiFormat.R24G8_Typeless:
-                case DxgiFormat.D24_UNorm_S8_UInt:
-                case DxgiFormat.R24_UNorm_X8_Typeless:
-                case DxgiFormat.X24_Typeless_G8_UInt:
+                    throw new Exception("not implemented");
                 case DxgiFormat.R8G8_Typeless:
                 case DxgiFormat.R8G8_UNorm:
                 case DxgiFormat.R8G8_UInt:
                 case DxgiFormat.R8G8_SNorm:
                 case DxgiFormat.R8G8_SInt:
+                    throw new Exception("not implemented");
                 case DxgiFormat.R16_Typeless:
                 case DxgiFormat.R16_Float:
-                case DxgiFormat.D16_UNorm:
                 case DxgiFormat.R16_UNorm:
                 case DxgiFormat.R16_UInt:
                 case DxgiFormat.R16_SNorm:
                 case DxgiFormat.R16_SInt:
+                    throw new Exception("not implemented");
                 case DxgiFormat.R8_Typeless:
                 case DxgiFormat.R8_UNorm:
                 case DxgiFormat.R8_UInt:
                 case DxgiFormat.R8_SNorm:
                 case DxgiFormat.R8_SInt:
+                    throw new Exception("not implemented");
                 case DxgiFormat.A8_UNorm:
+                    throw new Exception("not implemented");
                 case DxgiFormat.R1_UNorm:
+                    throw new Exception("not implemented");
+                case DxgiFormat.R32G8X24_Typeless:
+                case DxgiFormat.D32_Float_S8X24_UInt:
+                case DxgiFormat.R32_Float_X8X24_Typeless:
+                case DxgiFormat.X32_Typeless_G8X24_UInt:
+                case DxgiFormat.D32_Float:
+                case DxgiFormat.R11G11B10_Float:
+                case DxgiFormat.R24G8_Typeless:
+                case DxgiFormat.D24_UNorm_S8_UInt:
+                case DxgiFormat.R24_UNorm_X8_Typeless:
+                case DxgiFormat.X24_Typeless_G8_UInt:
+                case DxgiFormat.D16_UNorm:
                 case DxgiFormat.R9G9B9E5_SharedExp:
                 case DxgiFormat.R8G8_B8G8_UNorm:
                 case DxgiFormat.G8R8_G8B8_UNorm:
@@ -293,6 +393,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 case DxgiFormat.P208:
                 case DxgiFormat.V208:
                 case DxgiFormat.V408:
+                case DxgiFormat.Unknown:
                 default:
                     throw new ArgumentOutOfRangeException();
             }
