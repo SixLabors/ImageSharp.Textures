@@ -6,6 +6,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds
     using System;
     using System.Buffers.Binary;
     using System.Runtime.InteropServices;
+    using System.Text;
     using SixLabors.ImageSharp.Textures.Formats.Dds.Emums;
 
     /// <summary> Surface pixel format. </summary>

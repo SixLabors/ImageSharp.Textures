@@ -21,18 +21,23 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.PixelFormats
             return false;
         }
 
-        public static void TransformInverse(IntEndPntPair[] aEndPts, LdrColorA Prec, bool bSigned)
+        public static void TransformInverseSigned(IntEndPntPair[] aEndPts, LdrColorA Prec)
         {
             var WrapMask = new IntColor((1 << Prec.r) - 1, (1 << Prec.g) - 1, (1 << Prec.b) - 1);
             aEndPts[0].B += aEndPts[0].A; aEndPts[0].B &= WrapMask;
             aEndPts[1].A += aEndPts[0].A; aEndPts[1].A &= WrapMask;
             aEndPts[1].B += aEndPts[0].A; aEndPts[1].B &= WrapMask;
-            if (bSigned)
-            {
-                aEndPts[0].B.SignExtend(Prec);
-                aEndPts[1].A.SignExtend(Prec);
-                aEndPts[1].B.SignExtend(Prec);
-            }
+            aEndPts[0].B.SignExtend(Prec);
+            aEndPts[1].A.SignExtend(Prec);
+            aEndPts[1].B.SignExtend(Prec);
+        }
+
+        public static void TransformInverseUnsigned(IntEndPntPair[] aEndPts, LdrColorA Prec)
+        {
+            var WrapMask = new IntColor((1 << Prec.r) - 1, (1 << Prec.g) - 1, (1 << Prec.b) - 1);
+            aEndPts[0].B += aEndPts[0].A; aEndPts[0].B &= WrapMask;
+            aEndPts[1].A += aEndPts[0].A; aEndPts[1].A &= WrapMask;
+            aEndPts[1].B += aEndPts[0].A; aEndPts[1].B &= WrapMask;
         }
 
         public static int DivRem(int a, int b, out int result)

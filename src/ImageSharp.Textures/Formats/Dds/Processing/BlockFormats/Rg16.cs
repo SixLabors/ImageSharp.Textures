@@ -9,11 +9,11 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
     {
         public int BitsPerPixel => 16;
 
-        public byte PixelDepthBytes => 2;
+        public byte PixelDepthBytes => 4;
 
         public byte DivSize => 1;
 
-        public byte CompressedBytesPerBlock => 2;
+        public byte CompressedBytesPerBlock => 4;
 
         public bool Compressed => false;
 

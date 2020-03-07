@@ -38,7 +38,7 @@ https://docs.microsoft.com/en-us/windows/uwp/gaming/complete-code-for-ddstexture
 
             return new DdsDecoderCore(configuration, this).DecodeTexture(stream);
         }
-
+        
         /// <inheritdoc/>
         public ITextueInfo Identify(Configuration configuration, Stream stream)
         {

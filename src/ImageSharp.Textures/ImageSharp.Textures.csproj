@@ -30,4 +30,32 @@
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Templates\PixelGenerator.ignore">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>PixelGenerator.tt</DependentUpon>
+    </None>
+    <None Update="Templates\PixelGenerator.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>PixelGenerator.ignore</LastGenOutput>
+    </None>
+    <None Update="Templates\MultipleOutputHelper.ttinclude">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>MultipleOutputHelper.cs</LastGenOutput>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Templates\MultipleOutputHelper.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>MultipleOutputHelper.ttinclude</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
 </Project>

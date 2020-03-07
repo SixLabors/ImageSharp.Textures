@@ -1,0 +1,460 @@
+﻿<#@ assembly name="System.Core"
+#><#@ assembly name="System.Data.Linq"
+#><#@ assembly name="EnvDTE"
+#><#@ assembly name="System.Xml"
+#><#@ assembly name="System.Xml.Linq"
+#><#@ import namespace="System.Linq"
+#><#@ import namespace="System.Collections.Generic"
+#><#@ import namespace="System.IO"
+#><#@ import namespace="System.Text"
+#><#@ import namespace="Microsoft.VisualStudio.TextTemplating"
+#><#+
+
+public struct ChannelInfo
+{
+    public int Bits;
+    public string Channel;
+}
+
+public struct PixelInfo
+{
+    public string Name;
+    public bool Packed;
+    public string PackedType;
+    public bool IsFloat;
+    public ChannelInfo[] ChannelInfos;
+}
+
+class Helper 
+{
+
+    private static string[] vectorNames = new[] { "x", "y", "z", "w" };
+
+    private static string[] channelNames = new[] { "r", "g", "b", "a" };
+
+    public static string MapChannelNameToVectorName(string channelName)
+    {
+        for (var i = 0; i < channelNames.Length; i++)
+        {
+            if (channelNames[i].Equals(channelName))
+            {
+                return vectorNames[i];
+            }
+        }
+        throw new Exception("Channel name not found.");
+    }
+
+    public static string MapVectorNameToChannelName(string vectorName)
+    {
+        for (var i = 0; i < vectorNames.Length; i++)
+        {
+            if (vectorNames[i].Equals(vectorName))
+            {
+                return channelNames[i];
+            }
+        }
+        throw new Exception("Vector name not found.");
+    }
+
+    public static string CreateVectorString(PixelInfo pixelInfo, string format, string separator)
+    {
+        var names = vectorNames.Take(pixelInfo.ChannelInfos.Length).ToArray();
+
+        string result = string.Empty;
+        for (int i = 0; i < names.Length; i++)
+        {
+            if (i > 0)
+            {
+                result = $"{result}{separator}";
+            }
+
+            result = $"{result}{string.Format(format, names[i])}";
+        }
+
+        return result;
+    }
+
+    public static string CreateVectorFromString(PixelInfo pixelInfo)
+    {
+        string result = string.Empty;
+
+        for (int i = 0; i < pixelInfo.ChannelInfos.Length; i++)
+        {
+            if (i > 0)
+            {
+                result = $"{result}, ";
+            }
+
+            result = $"{result}0";
+        }
+
+        return result;
+    }
+
+    public static string CreateVectorToString(PixelInfo pixelInfo)
+    {
+        string result = string.Empty;
+
+        for (int i = 0; i < pixelInfo.ChannelInfos.Length; i++)
+        {
+            if (i > 0)
+            {
+                result = $"{result}, ";
+            }
+
+            result = $"{result}1";
+        }
+
+        return result;
+    }
+
+    private static string GetChannelName(string channel)
+    {
+        if (channel.Equals("r")) 
+        {
+            return "red";
+        }
+        else if (channel.Equals("g")) 
+        {
+            return "green";
+        }
+        else if (channel.Equals("b")) 
+        {
+            return "blue";
+        }
+        else if (channel.Equals("a")) 
+        { 
+            return "alpha";
+        }
+        throw new Exception("Unregognized channel.");
+    }
+
+    private static string GetChanneType(bool isFloat, int bits)
+    {
+        if (!isFloat && bits == 8) 
+        {
+            return "byte";
+        }
+        else if (bits == 16) 
+        {
+            return isFloat ? "float16" : "ushort";
+        }
+        else if (bits == 32) 
+        {
+            return isFloat ? "float" : "uint";
+        }
+        else if (bits == 64) 
+        { 
+            return isFloat ? "double" : "ulong";
+        }
+        throw new Exception("Unregognized bits.");
+    }
+
+    public static string CreatePixelChannels(PixelInfo pixelInfo, int indentCount)
+    {
+        var indentString = CreateIndentString(indentCount);
+        var stringBuilder = new StringBuilder();
+        for (var i = 0; i < pixelInfo.ChannelInfos.Length; i++)
+        {
+             stringBuilder.AppendLine($"{indentString}/// <summary>");
+             stringBuilder.AppendLine($"{indentString}/// Gets or sets the {GetChannelName(pixelInfo.ChannelInfos[i].Channel)} component.");
+             stringBuilder.AppendLine($"{indentString}/// </summary>");
+             stringBuilder.AppendLine($"{indentString}public {GetChanneType(pixelInfo.IsFloat, pixelInfo.ChannelInfos[i].Bits)} {pixelInfo.ChannelInfos[i].Channel.ToUpper()};");
+             if (i != pixelInfo.ChannelInfos.Length - 1)
+             {
+                 stringBuilder.AppendLine();
+             }
+        }
+        return stringBuilder.ToString();
+    }
+
+    public static string CreateDescriptionString(PixelInfo pixelInfo)
+    {
+        var allBitsSame = pixelInfo.ChannelInfos.Select(c => c.Bits).Max() == pixelInfo.ChannelInfos.Select(c => c.Bits).Min();
+
+        var stringBuilder = new StringBuilder();
+        stringBuilder.Append("The ");
+        for (int i = 0; i < pixelInfo.ChannelInfos.Length; i++)
+        {
+            if (i == pixelInfo.ChannelInfos.Length - 1)
+            {
+               stringBuilder.Append(" and ");
+            }
+            else if (i > 0)
+            {
+                stringBuilder.Append(", ");
+            }
+
+            stringBuilder.Append(vectorNames[i]);
+        }
+
+        stringBuilder.Append(" component");
+        if (pixelInfo.ChannelInfos.Length > 0)
+        {
+            stringBuilder.Append("s");
+        }
+
+        if (!allBitsSame)
+        {
+            stringBuilder.Append(" uses ");
+
+            for (int i = 0; i < pixelInfo.ChannelInfos.Length; i++)
+            {
+                if (i == pixelInfo.ChannelInfos.Length - 1)
+                {
+                   stringBuilder.Append(" and ");
+                }
+                else if (i > 0)
+                {
+                    stringBuilder.Append(", ");
+                }
+
+                stringBuilder.Append(pixelInfo.ChannelInfos[i].Bits);
+            }
+        }
+        else
+        {
+             stringBuilder.Append(" use ");
+             stringBuilder.Append(pixelInfo.ChannelInfos[0].Bits);
+        }
+
+        stringBuilder.Append(" bit");
+        if (!allBitsSame)
+        {
+              stringBuilder.Append("s respectively");
+        }
+        else if (pixelInfo.ChannelInfos[0].Bits > 1)
+        {
+             stringBuilder.Append("s");
+        }
+
+        stringBuilder.Append(".");
+        return stringBuilder.ToString();
+    }
+
+    private static string CreateIndentString(int indentCount)
+    {
+        return new string(' ', indentCount);
+    }
+
+    public static string CreateFormatString(PixelInfo pixelInfo, int indentCount)
+    {
+        var stringBuilder = new StringBuilder();
+
+        if (pixelInfo.Packed) 
+        {
+            stringBuilder.AppendLine("var vector = this.ToVector4();");
+            stringBuilder.Append($"{CreateIndentString(indentCount)}return FormattableString.Invariant($\"{pixelInfo.Name}(");
+            for (var i = 0; i < pixelInfo.ChannelInfos.Length; i++)
+            {
+                for (var j = 0; j < pixelInfo.ChannelInfos.Length; j++)
+                {
+                    bool found = false;
+                    found |= i == 0 && pixelInfo.ChannelInfos[j].Channel == "r";
+                    found |= i == 1 && pixelInfo.ChannelInfos[j].Channel == "g";
+                    found |= i == 2 && pixelInfo.ChannelInfos[j].Channel == "b";
+                    found |= i == 3 && pixelInfo.ChannelInfos[j].Channel == "a";
+                    if (found)
+                    {
+                        if (i > 0)
+                        {
+                            stringBuilder.Append(", ");
+                        }
+                        if (pixelInfo.Packed) 
+                        {
+                            stringBuilder.Append($"{{vector.{vectorNames[j].ToUpper()}:#0.##}}");
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+        else
+        {
+            stringBuilder.Append($"return FormattableString.Invariant($\"{pixelInfo.Name}(");
+            for (var i = 0; i < pixelInfo.ChannelInfos.Length; i++)
+            {
+                if (i > 0)
+                {
+                    stringBuilder.Append(", ");
+                }
+                stringBuilder.Append($"{{this.{pixelInfo.ChannelInfos[i].Channel.ToUpper()}}}");
+            }
+        }
+
+        stringBuilder.Append(")\");");
+        return stringBuilder.ToString();
+    }
+
+    public static string CreateFromVector4String(PixelInfo pixelInfo, int indentCount)
+    {
+        var stringBuilder = new StringBuilder();
+        if (pixelInfo.Packed) 
+        {
+            stringBuilder.Append($"var vector{pixelInfo.ChannelInfos.Length} = new Vector{pixelInfo.ChannelInfos.Length}(");
+            for (var i = 0; i < pixelInfo.ChannelInfos.Length; i++)
+            {
+                if (i != 0)
+                {
+                    stringBuilder.Append(", ");
+                }
+                stringBuilder.Append($"vector.{vectorNames[i].ToUpper()}");
+            }
+            stringBuilder.AppendLine(");");
+            stringBuilder.Append($"{CreateIndentString(indentCount)}this.PackedValue = Pack(ref vector{pixelInfo.ChannelInfos.Length});");
+        }
+        else
+        {
+            for (var i = 0; i < pixelInfo.ChannelInfos.Length; i++)
+            {
+                if (i != 0)
+                {
+                    stringBuilder.Append(CreateIndentString(indentCount));
+                }
+                stringBuilder.Append($"this.{pixelInfo.ChannelInfos[i].Channel.ToUpper()} = ({GetChanneType(pixelInfo.IsFloat, pixelInfo.ChannelInfos[i].Bits)})(vector.{MapChannelNameToVectorName(pixelInfo.ChannelInfos[i].Channel).ToUpper()} * {(1 << pixelInfo.ChannelInfos[i].Bits) - 1});");
+                if (i < pixelInfo.ChannelInfos.Length - 1)
+                {
+                    stringBuilder.AppendLine();
+                }
+            }
+        }
+        return stringBuilder.ToString();
+    }
+
+    public static string CreateToVector4String(PixelInfo pixelInfo, int indentCount)
+    {
+        var stringBuilder = new StringBuilder();
+        stringBuilder.AppendLine("return new Vector4(");
+        for (var i = 0; i < 4; i++)
+        {
+            if (i > pixelInfo.ChannelInfos.Length - 1)
+            {
+                stringBuilder.Append($"{CreateIndentString(indentCount)}1.0f");
+                if (i == 3)
+                {
+                    stringBuilder.Append(");");
+                }
+                else
+                {
+                    stringBuilder.AppendLine(",");
+                }
+                continue;
+            }
+            var bitOffset = 0;
+            for (var j = 0; j < pixelInfo.ChannelInfos.Length; j++)
+            {
+                bool found = false;
+                found |= i == 0 && pixelInfo.ChannelInfos[j].Channel == "r";
+                found |= i == 1 && pixelInfo.ChannelInfos[j].Channel == "g";
+                found |= i == 2 && pixelInfo.ChannelInfos[j].Channel == "b";
+                found |= i == 3 && pixelInfo.ChannelInfos[j].Channel == "a";
+                if (found)
+                {
+                    if (pixelInfo.Packed)
+                    {
+                        stringBuilder.AppendLine($"{CreateIndentString(indentCount)}((this.PackedValue >> {bitOffset}) & 0x{((1 << pixelInfo.ChannelInfos[j].Bits) - 1).ToString("X")}) / 255F,");
+                    }
+                    else
+                    {
+                        stringBuilder.AppendLine($"{CreateIndentString(indentCount)}this.{pixelInfo.ChannelInfos[j].Channel.ToUpper()} / 0x{((1 << pixelInfo.ChannelInfos[j].Bits) - 1).ToString("X")},");
+                    }
+                    break;
+                }
+                else
+                {
+                    bitOffset += pixelInfo.ChannelInfos[j].Bits;
+                }
+            }
+        }
+        return stringBuilder.ToString();
+    }
+
+    public static string CreatePackString(PixelInfo pixelInfo, int indentCount)
+    {
+        var stringBuilder = new StringBuilder();
+        stringBuilder.AppendLine($"return");
+
+        for (var i = 0; i < pixelInfo.ChannelInfos.Length; i++)
+        {
+
+            var bitOffset = 0;
+            for (var j = 0; j < pixelInfo.ChannelInfos.Length; j++)
+            {
+                bool found = false;
+                found |= i == 0 && pixelInfo.ChannelInfos[j].Channel == "r";
+                found |= i == 1 && pixelInfo.ChannelInfos[j].Channel == "g";
+                found |= i == 2 && pixelInfo.ChannelInfos[j].Channel == "b";
+                found |= i == 3 && pixelInfo.ChannelInfos[j].Channel == "a";
+                if (found)
+                {
+                    stringBuilder.Append(CreateIndentString(indentCount));
+                    if (i > 0)
+                    {
+                        stringBuilder.Append("| ");
+                    }
+                    stringBuilder.Append($"((({pixelInfo.PackedType})Math.Round(vector.{vectorNames[i].ToUpper()} * 255F) & 0x{((1 << pixelInfo.ChannelInfos[j].Bits) - 1).ToString("X")}) << {bitOffset})");
+                    if (i != 2)
+                    {
+                        stringBuilder.AppendLine();
+                    }
+                    break;
+                }
+                else
+                {
+                    bitOffset += pixelInfo.ChannelInfos[j].Bits;
+                }
+            }
+
+        }
+
+        stringBuilder.Append(";");
+        return stringBuilder.ToString();
+    }
+
+    public static string CreateEqualsString(PixelInfo pixelInfo)
+    {
+        if (pixelInfo.Packed)
+        {
+            return "this.PackedValue.Equals(other.PackedValue);";
+        }
+
+        var stringBuilder = new StringBuilder();
+       
+        for (var i = 0; i < pixelInfo.ChannelInfos.Length; i++)
+        {
+             var channel = pixelInfo.ChannelInfos[i].Channel.ToUpper();
+             stringBuilder.Append($"this.{channel}.Equals(other.{channel})");
+             if (i != pixelInfo.ChannelInfos.Length - 1)
+             {
+                 stringBuilder.Append(" && ");
+             }
+        }
+
+        stringBuilder.Append(";");
+        return stringBuilder.ToString();
+    }
+
+    public static string CreateHashCodeString(PixelInfo pixelInfo)
+    {
+        if (pixelInfo.Packed)
+        {
+            return "this.PackedValue.GetHashCode();";
+        }
+
+        var stringBuilder = new StringBuilder();
+        stringBuilder.Append("HashCode.Combine(");
+
+        for (var i = 0; i < pixelInfo.ChannelInfos.Length; i++)
+        {
+             stringBuilder.Append($"this.{pixelInfo.ChannelInfos[i].Channel.ToUpper()}");
+             if (i != pixelInfo.ChannelInfos.Length - 1)
+             {
+                 stringBuilder.Append(", ");
+             }
+        }
+
+        stringBuilder.Append(");");
+        return stringBuilder.ToString();
+    }
+
+} #>

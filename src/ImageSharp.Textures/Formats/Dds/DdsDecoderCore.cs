@@ -8,6 +8,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds
     using System.Collections.Generic;
     using System.IO;
     using System.Text;
+    using SixLabors.ImageSharp.Textures.Common.Extensions;
     using SixLabors.ImageSharp.Textures.Formats.Dds.Emums;
     using SixLabors.ImageSharp.Textures.Formats.Dds.Extensions;
     using SixLabors.ImageSharp.Textures.Formats.Dds.Processing;

@@ -5,6 +5,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
 {
     using System;
     using System.Diagnostics;
+    using SixLabors.ImageSharp.Textures.Common.Helpers;
     using SixLabors.ImageSharp.Textures.Formats.Dds;
     using SixLabors.ImageSharp.Textures.Formats.Dds.Emums;
     using SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats;
@@ -329,8 +330,6 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
 
                 if (ms_aModeToInfo[uMode] >= 0)
                 {
-                    bool bSigned = false;
-
                     Debug.Assert(ms_aModeToInfo[uMode] < ms_aInfo.Length);
                     ModeDescriptor[] desc = ms_aDesc[ms_aModeToInfo[uMode]];
 
@@ -379,13 +378,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
 
                     Debug.Assert(uShape < 64);
 
-                    // Sign extend necessary end points
-                    if (bSigned)
-                    {
-                        aEndPts[0].A.SignExtend(info.RGBAPrec[0][0]);
-                    }
-
-                    if (bSigned || info.bTransformed)
+                    if (info.bTransformed)
                     {
                         Debug.Assert(info.uPartitions < Constants.BC6H_MAX_REGIONS);
                         for (int p = 0; p <= info.uPartitions; ++p)
@@ -402,7 +395,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                     // Inverse transform the end points
                     if (info.bTransformed)
                     {
-                        Helpers.TransformInverse(aEndPts, info.RGBAPrec[0][0], bSigned);
+                        Helpers.TransformInverseUnsigned(aEndPts, info.RGBAPrec[0][0]);
                     }
 
                     // Read indices
@@ -429,27 +422,27 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                         Debug.Assert(uRegion < Constants.BC6H_MAX_REGIONS);
 
                         // Unquantize endpoints and interpolate
-                        int r1 = Unquantize(aEndPts[uRegion].A.r, info.RGBAPrec[0][0].r, bSigned);
-                        int g1 = Unquantize(aEndPts[uRegion].A.g, info.RGBAPrec[0][0].g, bSigned);
-                        int b1 = Unquantize(aEndPts[uRegion].A.b, info.RGBAPrec[0][0].b, bSigned);
-                        int r2 = Unquantize(aEndPts[uRegion].B.r, info.RGBAPrec[0][0].r, bSigned);
-                        int g2 = Unquantize(aEndPts[uRegion].B.g, info.RGBAPrec[0][0].g, bSigned);
-                        int b2 = Unquantize(aEndPts[uRegion].B.b, info.RGBAPrec[0][0].b, bSigned);
+                        int r1 = Unquantize(aEndPts[uRegion].A.r, info.RGBAPrec[0][0].r);
+                        int g1 = Unquantize(aEndPts[uRegion].A.g, info.RGBAPrec[0][0].g);
+                        int b1 = Unquantize(aEndPts[uRegion].A.b, info.RGBAPrec[0][0].b);
+                        int r2 = Unquantize(aEndPts[uRegion].B.r, info.RGBAPrec[0][0].r);
+                        int g2 = Unquantize(aEndPts[uRegion].B.g, info.RGBAPrec[0][0].g);
+                        int b2 = Unquantize(aEndPts[uRegion].B.b, info.RGBAPrec[0][0].b);
                         int[] aWeights = info.uPartitions > 0 ? Constants.g_aWeights3 : Constants.g_aWeights4;
                         var fc = new IntColor
                         {
-                            r = FinishUnquantize(((r1 * (Constants.BC67_WEIGHT_MAX - aWeights[uIndex])) + (r2 * aWeights[uIndex]) + Constants.BC67_WEIGHT_ROUND) >> Constants.BC67_WEIGHT_SHIFT, bSigned),
-                            g = FinishUnquantize(((g1 * (Constants.BC67_WEIGHT_MAX - aWeights[uIndex])) + (g2 * aWeights[uIndex]) + Constants.BC67_WEIGHT_ROUND) >> Constants.BC67_WEIGHT_SHIFT, bSigned),
-                            b = FinishUnquantize(((b1 * (Constants.BC67_WEIGHT_MAX - aWeights[uIndex])) + (b2 * aWeights[uIndex]) + Constants.BC67_WEIGHT_ROUND) >> Constants.BC67_WEIGHT_SHIFT, bSigned)
+                            r = FinishUnquantize(((r1 * (Constants.BC67_WEIGHT_MAX - aWeights[uIndex])) + (r2 * aWeights[uIndex]) + Constants.BC67_WEIGHT_ROUND) >> Constants.BC67_WEIGHT_SHIFT),
+                            g = FinishUnquantize(((g1 * (Constants.BC67_WEIGHT_MAX - aWeights[uIndex])) + (g2 * aWeights[uIndex]) + Constants.BC67_WEIGHT_ROUND) >> Constants.BC67_WEIGHT_SHIFT),
+                            b = FinishUnquantize(((b1 * (Constants.BC67_WEIGHT_MAX - aWeights[uIndex])) + (b2 * aWeights[uIndex]) + Constants.BC67_WEIGHT_ROUND) >> Constants.BC67_WEIGHT_SHIFT)
                         };
 
                         ushort[] rgb = new ushort[3];
-                        fc.ToF16(rgb, bSigned);
+                        fc.ToF16Unsigned(rgb);
 
                         // Clamp 0..1, and convert to byte (we're losing high dynamic range)
-                        data[dataIndex++] = (byte)((Math.Max(0.0f, Math.Min(1.0f, ConvertHalfToFloat(rgb[2]))) * 255.0f) + 0.5f); // blue
-                        data[dataIndex++] = (byte)((Math.Max(0.0f, Math.Min(1.0f, ConvertHalfToFloat(rgb[1]))) * 255.0f) + 0.5f); // green
-                        data[dataIndex++] = (byte)((Math.Max(0.0f, Math.Min(1.0f, ConvertHalfToFloat(rgb[0]))) * 255.0f) + 0.5f); // red
+                        data[dataIndex++] = (byte)((Math.Max(0.0f, Math.Min(1.0f, FloatHelper.UnpackFloat16ToFloat(rgb[2]))) * 255.0f) + 0.5f); // blue
+                        data[dataIndex++] = (byte)((Math.Max(0.0f, Math.Min(1.0f, FloatHelper.UnpackFloat16ToFloat(rgb[1]))) * 255.0f) + 0.5f); // green
+                        data[dataIndex++] = (byte)((Math.Max(0.0f, Math.Min(1.0f, FloatHelper.UnpackFloat16ToFloat(rgb[0]))) * 255.0f) + 0.5f); // red
                         data[dataIndex++] = 255;
 
                         // Is mult 4?
@@ -528,121 +521,35 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
             return ret;
         }
 
-        private static int Unquantize(int comp, byte uBitsPerComp, bool bSigned)
+        private static int Unquantize(int comp, byte uBitsPerComp)
         {
             int s = 0;
             int unq;
-            if (bSigned)
+            
+            if (uBitsPerComp >= 15)
             {
-                if (uBitsPerComp >= 16)
-                {
-                    unq = comp;
-                }
-                else
-                {
-                    if (comp < 0)
-                    {
-                        s = 1;
-                        comp = -comp;
-                    }
-
-                    if (comp == 0)
-                    {
-                        unq = 0;
-                    }
-                    else if (comp >= ((1 << (uBitsPerComp - 1)) - 1))
-                    {
-                        unq = 0x7FFF;
-                    }
-                    else
-                    {
-                        unq = ((comp << 15) + 0x4000) >> (uBitsPerComp - 1);
-                    }
-
-                    if (s != 0)
-                    {
-                        unq = -unq;
-                    }
-                }
+                unq = comp;
+            }
+            else if (comp == 0)
+            {
+                unq = 0;
+            }
+            else if (comp == ((1 << uBitsPerComp) - 1))
+            {
+                unq = 0xFFFF;
             }
             else
             {
-                if (uBitsPerComp >= 15)
-                {
-                    unq = comp;
-                }
-                else if (comp == 0)
-                {
-                    unq = 0;
-                }
-                else if (comp == ((1 << uBitsPerComp) - 1))
-                {
-                    unq = 0xFFFF;
-                }
-                else
-                {
-                    unq = ((comp << 16) + 0x8000) >> uBitsPerComp;
-                }
+                unq = ((comp << 16) + 0x8000) >> uBitsPerComp;
             }
+ 
 
             return unq;
         }
 
-        private static int FinishUnquantize(int comp, bool bSigned)
+        private static int FinishUnquantize(int comp)
         {
-            if (bSigned)
-            {
-                return (comp < 0) ? -(((-comp) * 31) >> 5) : (comp * 31) >> 5;  // scale the magnitude by 31/32
-            }
-            else
-            {
-                return (comp * 31) >> 6;                                        // scale the magnitude by 31/64
-            }
-        }
-
-        private static float ConvertHalfToFloat(ushort value)
-        {
-            uint Mantissa = (uint)(value & 0x03FF);
-
-            uint Exponent = (uint)(value & 0x7C00);
-            if (Exponent == 0x7C00) // INF/NAN
-            {
-                Exponent = 0x8f;
-            }
-            else if (Exponent != 0) // The value is normalized
-            {
-                Exponent = (uint)((value >> 10) & 0x1F);
-            }
-            else if (Mantissa != 0) // The value is denormalized
-            {
-                // Normalize the value in the resulting float
-                Exponent = 1;
-
-                do
-                {
-                    Exponent--;
-                    Mantissa <<= 1;
-                } while ((Mantissa & 0x0400) == 0);
-
-                Mantissa &= 0x03FF;
-            }
-            else // The value is zero
-            {
-                Exponent = unchecked((uint)(-112));
-            }
-
-            uint result =
-                ((uint)(value & 0x8000) << 16) // Sign
-                | ((Exponent + 112) << 23) // Exponent
-                | (Mantissa << 13);                             // Mantissa
-
-            float val;
-            unsafe
-            {
-                val = *((float*)(&result));
-            }
-
-            return val;
+            return (comp * 31) >> 6;                                        // scale the magnitude by 31/64
         }
     }
 }

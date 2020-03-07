@@ -1,0 +1,231 @@
+<#@ template debug="false" hostspecific="true" language="C#v3.5" #>
+<#@ output extension=".ignore" #>
+<#@ include file="MultipleOutputHelper.ttinclude" #>
+<#@ include file="Helper.ttinclude" #>
+<# 
+
+    var manager = Manager.Create(Host, GenerationEnvironment); 
+
+    var pixelInfos = new[] {
+    
+        new PixelInfo
+        {
+            Name = "Bgr32x",
+            Packed = true,
+            PackedType = "uint",
+            IsFloat = false,
+            ChannelInfos = new[] {
+                new ChannelInfo { Bits = 8, Channel = "b" },
+                new ChannelInfo { Bits = 8, Channel = "g" },
+                new ChannelInfo { Bits = 8, Channel = "r" }
+            }
+        },
+
+        new PixelInfo
+        {
+            Name = "Rgb32x",
+            Packed = true,
+            PackedType = "uint",
+            IsFloat = false,
+            ChannelInfos = new[] {
+                new ChannelInfo { Bits = 8, Channel = "r" },
+                new ChannelInfo { Bits = 8, Channel = "g" },
+                new ChannelInfo { Bits = 8, Channel = "b" }
+            }
+        },
+
+        new PixelInfo
+        {
+            Name = "R8g8b8x",
+            Packed = false,
+            PackedType = "na",
+            IsFloat = false,
+            ChannelInfos = new[] {
+                new ChannelInfo { Bits = 8, Channel = "r" },
+                new ChannelInfo { Bits = 8, Channel = "g" },
+                new ChannelInfo { Bits = 8, Channel = "b" }
+            }
+        }
+
+    };
+
+    foreach (var pixelInfo in pixelInfos) {
+    
+        manager.StartNewFile($"{pixelInfo.Name}.cs");
+    
+#>// Copyright (c) Six Labors and contributors.
+// Licensed under the Apache License, Version 2.0.
+
+using System;
+using System.Numerics;
+using System.Runtime.CompilerServices;
+using SixLabors.ImageSharp.PixelFormats;
+
+namespace SixLabors.ImageSharp.Textures.PixelFormats
+{
+    /// <summary>
+    /// Packed pixel type containing unsigned normalized values ranging from 0 to 1.
+    /// <#= Helper.CreateDescriptionString(pixelInfo) #>
+    /// <para>
+    /// Ranges from [<#= Helper.CreateVectorFromString(pixelInfo) #>] to [<#= Helper.CreateVectorToString(pixelInfo) #>] in vector form.
+    /// </para>
+    /// </summary>
+    public partial struct <#= pixelInfo.Name #> : IPixel<<#= pixelInfo.Name #>><# if (pixelInfo.Packed) { #>, IPackedVector<<#= pixelInfo.PackedType #>><# } #>
+    {<# if (pixelInfo.Packed) { #>
+        /// <summary>
+        /// Initializes a new instance of the <see cref="<#= pixelInfo.Name #>"/> struct.
+        /// </summary>
+        <#= Helper.CreateVectorString(pixelInfo, "/// <param name=\"{0}\">The {0}-component</param>", "\n        ") #>
+        public <#= pixelInfo.Name #>(<#= Helper.CreateVectorString(pixelInfo, "float {0}", ", ") #>)
+            : this(new Vector<#= pixelInfo.ChannelInfos.Length #>(<#= Helper.CreateVectorString(pixelInfo, "{0}", ", ") #>))
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="<#= pixelInfo.Name #>"/> struct.
+        /// </summary>
+        /// <param name="vector">
+        /// The vector containing the components for the packed vector.
+        /// </param>
+        public <#= pixelInfo.Name #>(Vector<#= pixelInfo.ChannelInfos.Length #> vector) => this.PackedValue = Pack(ref vector);
+
+        /// <inheritdoc/>
+        public <#= pixelInfo.PackedType #> PackedValue { get; set; }
+<# } else { #>
+<#= Helper.CreatePixelChannels(pixelInfo, 8) #><# } #>
+        /// <summary>
+        /// Compares two <see cref="<#= pixelInfo.Name #>"/> objects for equality.
+        /// </summary>
+        /// <param name="left">The <see cref="<#= pixelInfo.Name #>"/> on the left side of the operand.</param>
+        /// <returns>
+        /// True if the <paramref name="left"/> parameter is equal to the <paramref name="right"/> parameter; otherwise, false.
+        /// </returns>
+        /// <param name="right">The <see cref="<#= pixelInfo.Name #>"/> on the right side of the operand.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool operator ==(<#= pixelInfo.Name #> left, <#= pixelInfo.Name #> right) => left.Equals(right);
+
+        /// <summary>
+        /// Compares two <see cref="<#= pixelInfo.Name #>"/> objects for equality.
+        /// </summary>
+        /// <param name="left">The <see cref="<#= pixelInfo.Name #>"/> on the left side of the operand.</param>
+        /// <param name="right">The <see cref="<#= pixelInfo.Name #>"/> on the right side of the operand.</param>
+        /// <returns>
+        /// True if the <paramref name="left"/> parameter is not equal to the <paramref name="right"/> parameter; otherwise, false.
+        /// </returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool operator !=(<#= pixelInfo.Name #> left, <#= pixelInfo.Name #> right) => !left.Equals(right);
+
+        /// <inheritdoc />
+        public PixelOperations<<#= pixelInfo.Name #>> CreatePixelOperations() => new PixelOperations<<#= pixelInfo.Name #>>();
+
+        /// <inheritdoc/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void FromScaledVector4(Vector4 vector) => this.FromVector4(vector);
+
+        /// <inheritdoc/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Vector4 ToScaledVector4() => this.ToVector4();
+
+        /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void FromVector4(Vector4 vector)
+        {
+            <#= Helper.CreateFromVector4String(pixelInfo, 12) #>
+        }
+
+        /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Vector4 ToVector4()
+        {
+            <#= Helper.CreateToVector4String(pixelInfo, 16) #>
+        }
+
+        /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void FromBgra5551(Bgra5551 source) => this.FromScaledVector4(source.ToScaledVector4());
+
+        /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void FromArgb32(Argb32 source) => this.FromScaledVector4(source.ToScaledVector4());
+
+        /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void FromBgr24(Bgr24 source) => this.FromScaledVector4(source.ToScaledVector4());
+
+        /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void FromBgra32(Bgra32 source) => this.FromScaledVector4(source.ToScaledVector4());
+
+        /// <inheritdoc/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void FromL8(L8 source) => this.FromScaledVector4(source.ToScaledVector4());
+
+        /// <inheritdoc/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void FromL16(L16 source) => this.FromScaledVector4(source.ToScaledVector4());
+
+        /// <inheritdoc/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void FromLa16(La16 source) => this.FromScaledVector4(source.ToScaledVector4());
+
+        /// <inheritdoc/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void FromLa32(La32 source) => this.FromScaledVector4(source.ToScaledVector4());
+
+        /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void FromRgb24(Rgb24 source) => this.FromScaledVector4(source.ToScaledVector4());
+
+        /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void FromRgba32(Rgba32 source) => this.FromScaledVector4(source.ToScaledVector4());
+
+        /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void ToRgba32(ref Rgba32 dest)
+        {
+            dest.FromScaledVector4(this.ToScaledVector4());
+        }
+
+        /// <inheritdoc/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void FromRgb48(Rgb48 source) => this.FromScaledVector4(source.ToScaledVector4());
+
+        /// <inheritdoc/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void FromRgba64(Rgba64 source) => this.FromScaledVector4(source.ToScaledVector4());
+
+        /// <inheritdoc />
+        public override bool Equals(object obj) => obj is <#= pixelInfo.Name #> other && this.Equals(other);
+
+        /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool Equals(<#= pixelInfo.Name #> other) => <#= Helper.CreateEqualsString(pixelInfo) #>
+
+        /// <inheritdoc />
+        public override string ToString()
+        {
+            <#= Helper.CreateFormatString(pixelInfo, 12) #>
+        }
+
+        /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public override int GetHashCode() => <#= Helper.CreateHashCodeString(pixelInfo) #>
+<# if (pixelInfo.Packed) { #>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static <#= pixelInfo.PackedType #> Pack(ref Vector<#= pixelInfo.ChannelInfos.Length #> vector)
+        {
+            vector = Vector<#=pixelInfo.ChannelInfos.Length#>.Clamp(vector, Vector<#= pixelInfo.ChannelInfos.Length #>.Zero, Vector<#= pixelInfo.ChannelInfos.Length #>.One);
+            <#= Helper.CreatePackString(pixelInfo, 16) #>
+        }
+<# } #>    }
+}
+<# 
+        manager.EndBlock();
+    }
+
+     manager.Process(true); 
+#>
+<#+
+private
+#>

@@ -54,18 +54,34 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.PixelFormats
             return ((x & 1 << nb - 1) != 0 ? ~0 ^ (1 << nb) - 1 : 0) | x;
         }
 
-        public void ToF16(ushort[] aF16, bool bSigned)
+        public void ToF16Signed(ushort[] aF16)
         {
-            aF16[0] = INT2F16(r, bSigned);
-            aF16[1] = INT2F16(g, bSigned);
-            aF16[2] = INT2F16(b, bSigned);
+            aF16[0] = INT2F16Signed(r);
+            aF16[1] = INT2F16Signed(g);
+            aF16[2] = INT2F16Signed(b);
         }
 
-        private static ushort INT2F16(int input, bool bSigned)
+        public void ToF16Unsigned(ushort[] aF16)
+        {
+            aF16[0] = INT2F16Unsigned(r);
+            aF16[1] = INT2F16Unsigned(g);
+            aF16[2] = INT2F16Unsigned(b);
+        }
+
+        private static ushort INT2F16Unsigned(int input)
         {
             ushort res;
-            if (bSigned)
-            {
+
+                Debug.Assert(input >= 0 && input <= Constants.F16MAX);
+                res = (ushort)input;
+
+            return res;
+        }
+
+        private static ushort INT2F16Signed(int input)
+        {
+            ushort res;
+
                 int s = 0;
                 if (input < 0)
                 {
@@ -74,12 +90,6 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.PixelFormats
                 }
 
                 res = (ushort)(s | input);
-            }
-            else
-            {
-                Debug.Assert(input >= 0 && input <= Constants.F16MAX);
-                res = (ushort)input;
-            }
 
             return res;
         }

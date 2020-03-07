@@ -5,6 +5,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
 {
     using System;
     using System.IO;
+    using SixLabors.ImageSharp.Textures.Common.Extensions;
     using SixLabors.ImageSharp.Textures.Formats.Dds;
     using SixLabors.ImageSharp.Textures.Formats.Dds.Emums;
     using SixLabors.ImageSharp.Textures.Formats.Dds.Extensions;
@@ -124,7 +125,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 case DdsFourCC.BC5S:
                     return this.AllocateMipMaps<Bc5s>(stream, width, height, count);
                 default:
-                    throw new ArgumentException($"FourCC: {this.DdsHeader.PixelFormat.FourCC} not supported.");
+                    throw new ArgumentException($"FourCC: {this.DdsHeader.PixelFormat.FourCC.FourCcToString()} not supported.");
             }
         }
 
@@ -234,7 +235,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 return this.AllocateMipMaps<Rgba32>(stream, width, height, count);
             }
 
-            if (hasAlpha && pixelFormat.RBitMask == 0xFF0000 && pixelFormat.GBitMask == 0xFF00 && pixelFormat.BBitMask == 0xFF)
+            if (!hasAlpha && pixelFormat.RBitMask == 0xFF0000 && pixelFormat.GBitMask == 0xFF00 && pixelFormat.BBitMask == 0xFF)
             {
                 return this.AllocateMipMaps<Bgr32>(stream, width, height, count);
             }
@@ -249,8 +250,13 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 return this.AllocateMipMaps<Rg32>(stream, width, height, count);
             }
 
+            //R11G11B10_Float
+
             throw new Exception($"Unsupported 32 bit format");
         }
+
+        //https://docs.microsoft.com/en-us/windows/win32/direct3ddds/dx-graphics-dds-pguide
+        //https://docs.microsoft.com/en-us/windows/win32/api/dxgiformat/ne-dxgiformat-dxgi_format
 
         private MipMap[] GetDx10Dds(Stream stream, int width, int height, int count)
         {
@@ -330,7 +336,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 case DxgiFormat.R16G16_UInt:
                 case DxgiFormat.R16G16_SNorm:
                 case DxgiFormat.R16G16_SInt:
-                    throw new Exception("not implemented");
+                    return this.AllocateMipMaps<Rg16>(stream, width, height, count);
                 case DxgiFormat.R32_Typeless:
                 case DxgiFormat.R32_Float:
                 case DxgiFormat.R32_UInt:
@@ -395,7 +401,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 case DxgiFormat.V408:
                 case DxgiFormat.Unknown:
                 default:
-                    throw new ArgumentOutOfRangeException();
+                    throw new Exception($"Unsupported format {this.DdsHeaderDxt10.DxgiFormat.ToString()}");
             }
         }
     }
