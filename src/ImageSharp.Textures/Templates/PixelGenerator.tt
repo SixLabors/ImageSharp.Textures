@@ -45,6 +45,19 @@
                 new ChannelInfo { Bits = 8, Channel = "g" },
                 new ChannelInfo { Bits = 8, Channel = "b" }
             }
+        },
+
+        new PixelInfo
+        {
+            Name = "R11G11B10_Float",
+            Packed = true,
+            PackedType = "uint",
+            IsFloat = true,
+            ChannelInfos = new[] {
+                new ChannelInfo { Bits = 11, Channel = "r" },
+                new ChannelInfo { Bits = 11, Channel = "g" },
+                new ChannelInfo { Bits = 10, Channel = "b" }
+            }
         }
 
     };
@@ -56,43 +69,15 @@
 #>// Copyright (c) Six Labors and contributors.
 // Licensed under the Apache License, Version 2.0.
 
-using System;
-using System.Numerics;
-using System.Runtime.CompilerServices;
-using SixLabors.ImageSharp.PixelFormats;
+<#= Helper.GenerateUsings(pixelInfo) #>
 
 namespace SixLabors.ImageSharp.Textures.PixelFormats
 {
-    /// <summary>
-    /// Packed pixel type containing unsigned normalized values ranging from 0 to 1.
-    /// <#= Helper.CreateDescriptionString(pixelInfo) #>
-    /// <para>
-    /// Ranges from [<#= Helper.CreateVectorFromString(pixelInfo) #>] to [<#= Helper.CreateVectorToString(pixelInfo) #>] in vector form.
-    /// </para>
-    /// </summary>
-    public partial struct <#= pixelInfo.Name #> : IPixel<<#= pixelInfo.Name #>><# if (pixelInfo.Packed) { #>, IPackedVector<<#= pixelInfo.PackedType #>><# } #>
-    {<# if (pixelInfo.Packed) { #>
-        /// <summary>
-        /// Initializes a new instance of the <see cref="<#= pixelInfo.Name #>"/> struct.
-        /// </summary>
-        <#= Helper.CreateVectorString(pixelInfo, "/// <param name=\"{0}\">The {0}-component</param>", "\n        ") #>
-        public <#= pixelInfo.Name #>(<#= Helper.CreateVectorString(pixelInfo, "float {0}", ", ") #>)
-            : this(new Vector<#= pixelInfo.ChannelInfos.Length #>(<#= Helper.CreateVectorString(pixelInfo, "{0}", ", ") #>))
-        {
-        }
+    <#= Helper.GenerateSummary(pixelInfo, 4) #>
+    <#= Helper.GenerateStructHeader(pixelInfo, 4) #>
+    {
+        <#= Helper.GeneratePixelChannels(pixelInfo, 8) #><#= Helper.GenerateConstructors(pixelInfo, 8) #>
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="<#= pixelInfo.Name #>"/> struct.
-        /// </summary>
-        /// <param name="vector">
-        /// The vector containing the components for the packed vector.
-        /// </param>
-        public <#= pixelInfo.Name #>(Vector<#= pixelInfo.ChannelInfos.Length #> vector) => this.PackedValue = Pack(ref vector);
-
-        /// <inheritdoc/>
-        public <#= pixelInfo.PackedType #> PackedValue { get; set; }
-<# } else { #>
-<#= Helper.CreatePixelChannels(pixelInfo, 8) #><# } #>
         /// <summary>
         /// Compares two <see cref="<#= pixelInfo.Name #>"/> objects for equality.
         /// </summary>

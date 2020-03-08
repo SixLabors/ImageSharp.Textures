@@ -32,80 +32,16 @@ class Helper
 
     private static string[] channelNames = new[] { "r", "g", "b", "a" };
 
-    public static string MapChannelNameToVectorName(string channelName)
+    private static string[] numbers = new[] { "one", "two", "three", "four" };
+
+    private static string GenerateIndent(int indentCount)
     {
-        for (var i = 0; i < channelNames.Length; i++)
-        {
-            if (channelNames[i].Equals(channelName))
-            {
-                return vectorNames[i];
-            }
-        }
-        throw new Exception("Channel name not found.");
+        return new string(' ', indentCount);
     }
 
-    public static string MapVectorNameToChannelName(string vectorName)
+    private static bool AllBitsSame(PixelInfo pixelInfo)
     {
-        for (var i = 0; i < vectorNames.Length; i++)
-        {
-            if (vectorNames[i].Equals(vectorName))
-            {
-                return channelNames[i];
-            }
-        }
-        throw new Exception("Vector name not found.");
-    }
-
-    public static string CreateVectorString(PixelInfo pixelInfo, string format, string separator)
-    {
-        var names = vectorNames.Take(pixelInfo.ChannelInfos.Length).ToArray();
-
-        string result = string.Empty;
-        for (int i = 0; i < names.Length; i++)
-        {
-            if (i > 0)
-            {
-                result = $"{result}{separator}";
-            }
-
-            result = $"{result}{string.Format(format, names[i])}";
-        }
-
-        return result;
-    }
-
-    public static string CreateVectorFromString(PixelInfo pixelInfo)
-    {
-        string result = string.Empty;
-
-        for (int i = 0; i < pixelInfo.ChannelInfos.Length; i++)
-        {
-            if (i > 0)
-            {
-                result = $"{result}, ";
-            }
-
-            result = $"{result}0";
-        }
-
-        return result;
-    }
-
-    public static string CreateVectorToString(PixelInfo pixelInfo)
-    {
-        string result = string.Empty;
-
-        for (int i = 0; i < pixelInfo.ChannelInfos.Length; i++)
-        {
-            if (i > 0)
-            {
-                result = $"{result}, ";
-            }
-
-            result = $"{result}1";
-        }
-
-        return result;
+        return pixelInfo.ChannelInfos.Select(c => c.Bits).Max() == pixelInfo.ChannelInfos.Select(c => c.Bits).Min();
     }
 
     private static string GetChannelName(string channel)
@@ -150,30 +86,53 @@ class Helper
         throw new Exception("Unregognized bits.");
     }
 
-    public static string CreatePixelChannels(PixelInfo pixelInfo, int indentCount)
+    public static string MapChannelNameToVectorName(string channelName)
     {
-        var indentString = CreateIndentString(indentCount);
-        var stringBuilder = new StringBuilder();
-        for (var i = 0; i < pixelInfo.ChannelInfos.Length; i++)
+        for (var i = 0; i < channelNames.Length; i++)
         {
-             stringBuilder.AppendLine($"{indentString}/// <summary>");
-             stringBuilder.AppendLine($"{indentString}/// Gets or sets the {GetChannelName(pixelInfo.ChannelInfos[i].Channel)} component.");
-             stringBuilder.AppendLine($"{indentString}/// </summary>");
-             stringBuilder.AppendLine($"{indentString}public {GetChanneType(pixelInfo.IsFloat, pixelInfo.ChannelInfos[i].Bits)} {pixelInfo.ChannelInfos[i].Channel.ToUpper()};");
-             if (i != pixelInfo.ChannelInfos.Length - 1)
-             {
-                 stringBuilder.AppendLine();
-             }
+            if (channelNames[i].Equals(channelName))
+            {
+                return vectorNames[i];
+            }
+        }
+        throw new Exception("Channel name not found.");
+    }
+
+    public static string MapVectorNameToChannelName(string vectorName)
+    {
+        for (var i = 0; i < vectorNames.Length; i++)
+        {
+            if (vectorNames[i].Equals(vectorName))
+            {
+                return channelNames[i];
+            }
+        }
+        throw new Exception("Vector name not found.");
+    }
+
+    public static string GenerateUsings(PixelInfo pixelInfo)
+    {
+        var stringBuilder = new StringBuilder();
+        stringBuilder.AppendLine("using System;");
+        stringBuilder.AppendLine("using System.Numerics;");
+        stringBuilder.AppendLine("using System.Runtime.CompilerServices;");
+        if (!pixelInfo.Packed)
+        {
+            stringBuilder.AppendLine("using System.Runtime.InteropServices;");
+        }
+        stringBuilder.Append("using SixLabors.ImageSharp.PixelFormats;");
+        if (pixelInfo.IsFloat && pixelInfo.ChannelInfos.Where(c => c.Bits != 32 && c.Bits != 64).Any())
+        {
+            stringBuilder.AppendLine();
+            stringBuilder.Append("using SixLabors.ImageSharp.Textures.Common.Helpers;");
         }
         return stringBuilder.ToString();
     }
 
-    public static string CreateDescriptionString(PixelInfo pixelInfo)
+    private static string GeneratePackedDescription(PixelInfo pixelInfo, int indentCount)
     {
-        var allBitsSame = pixelInfo.ChannelInfos.Select(c => c.Bits).Max() == pixelInfo.ChannelInfos.Select(c => c.Bits).Min();
-
         var stringBuilder = new StringBuilder();
-        stringBuilder.Append("The ");
+        stringBuilder.Append($"{GenerateIndent(indentCount)}/// The ");
         for (int i = 0; i < pixelInfo.ChannelInfos.Length; i++)
         {
             if (i == pixelInfo.ChannelInfos.Length - 1)
@@ -194,7 +153,7 @@ class Helper
             stringBuilder.Append("s");
         }
 
-        if (!allBitsSame)
+        if (!AllBitsSame(pixelInfo))
         {
             stringBuilder.Append(" uses ");
 
@@ -219,7 +178,7 @@ class Helper
         }
 
         stringBuilder.Append(" bit");
-        if (!allBitsSame)
+        if (!AllBitsSame(pixelInfo))
         {
               stringBuilder.Append("s respectively");
         }
@@ -232,9 +191,194 @@ class Helper
         return stringBuilder.ToString();
     }
 
-    private static string CreateIndentString(int indentCount)
+    private static string GenerateComponentDescription(PixelInfo pixelInfo, int indentCount)
     {
-        return new string(' ', indentCount);
+        if (!AllBitsSame(pixelInfo))
+        {
+            throw new Exception("All bits should be the smae.");
+        }
+        var stringBuilder = new StringBuilder();
+        stringBuilder.AppendLine($"{GenerateIndent(indentCount)}/// Pixel type containing {numbers[pixelInfo.ChannelInfos.Length - 1]} {pixelInfo.ChannelInfos[0].Bits}-bit unsigned normalized values ranging from 0 to {(1 << pixelInfo.ChannelInfos[0].Bits) - 1}.");
+        stringBuilder.Append($"{GenerateIndent(indentCount)}/// The color components are stored in ");
+        for (int i = 0; i < pixelInfo.ChannelInfos.Length; i++)
+        {
+            if (i != 0)
+            {
+                stringBuilder.Append(", ");
+            }
+            stringBuilder.Append(GetChannelName(pixelInfo.ChannelInfos[i].Channel));
+        }
+        stringBuilder.Append($" order (least significant to most significant {GetChanneType(pixelInfo.IsFloat, pixelInfo.ChannelInfos[0].Bits)}).");
+        return stringBuilder.ToString();
+    }
+
+    private static string GenerateVectorFrom(PixelInfo pixelInfo)
+    {
+        var stringBuilder = new StringBuilder();
+        for (int i = 0; i < pixelInfo.ChannelInfos.Length; i++)
+        {
+            if (i != 0)
+            {
+                stringBuilder.Append(", ");
+            }
+            stringBuilder.Append("0");
+        }
+        return stringBuilder.ToString();
+    }
+
+    private static string GenerateVectorTo(PixelInfo pixelInfo)
+    {
+        var stringBuilder = new StringBuilder();
+        for (int i = 0; i < pixelInfo.ChannelInfos.Length; i++)
+        {
+            if (i != 0)
+            {
+                stringBuilder.Append(", ");
+            }
+            stringBuilder.Append("1");
+        }
+        return stringBuilder.ToString();
+    }
+
+    public static string GenerateSummary(PixelInfo pixelInfo, int indentCount)
+    {
+        var stringBuilder = new StringBuilder();
+        stringBuilder.AppendLine("/// <summary>");
+        if (pixelInfo.Packed)
+        {
+            stringBuilder.AppendLine($"{GenerateIndent(indentCount)}/// Packed pixel type containing unsigned normalized values ranging from 0 to 1.");
+            stringBuilder.AppendLine(GeneratePackedDescription(pixelInfo, indentCount));
+        }
+        else
+        {
+            stringBuilder.AppendLine(GenerateComponentDescription(pixelInfo, indentCount));
+        }
+        stringBuilder.AppendLine($"{GenerateIndent(indentCount)}/// <para>");
+        stringBuilder.AppendLine($"{GenerateIndent(indentCount)}/// Ranges from [{GenerateVectorFrom(pixelInfo)}] to [{GenerateVectorTo(pixelInfo)}] in vector form.");
+        stringBuilder.AppendLine($"{GenerateIndent(indentCount)}/// </para>");
+        stringBuilder.Append($"{GenerateIndent(indentCount)}/// </summary>");
+        return stringBuilder.ToString();
+    }
+
+    public static string GenerateStructHeader(PixelInfo pixelInfo, int indentCount)
+    {
+        var stringBuilder = new StringBuilder();
+        if (!pixelInfo.Packed)
+        {
+            stringBuilder.AppendLine("[StructLayout(LayoutKind.Explicit)]");
+            stringBuilder.Append(GenerateIndent(indentCount));
+        }        
+        stringBuilder.Append($"public partial struct {pixelInfo.Name} : IPixel<{pixelInfo.Name}>");
+        if (pixelInfo.Packed)
+        {
+            stringBuilder.Append($", IPackedVector<{pixelInfo.PackedType}>");
+        }
+        return stringBuilder.ToString();
+    }
+
+    public static string GeneratePixelChannels(PixelInfo pixelInfo, int indentCount)
+    {
+        if (pixelInfo.Packed || !AllBitsSame(pixelInfo))
+        {
+            return string.Empty;
+        }
+        var stringBuilder = new StringBuilder();
+        for (var i = 0; i < pixelInfo.ChannelInfos.Length; i++)
+        {
+             if (i != 0)
+             {
+                 stringBuilder.AppendLine();
+                 stringBuilder.Append(GenerateIndent(indentCount));
+             }
+             stringBuilder.AppendLine($"/// <summary>");
+             stringBuilder.AppendLine($"{GenerateIndent(indentCount)}/// Gets or sets the {GetChannelName(pixelInfo.ChannelInfos[i].Channel)} component.");
+             stringBuilder.AppendLine($"{GenerateIndent(indentCount)}/// </summary>");
+             stringBuilder.AppendLine($"{GenerateIndent(indentCount)}[FieldOffset({(pixelInfo.ChannelInfos[0].Bits / 8) * i})]");
+             stringBuilder.AppendLine($"{GenerateIndent(indentCount)}public {GetChanneType(pixelInfo.IsFloat, pixelInfo.ChannelInfos[i].Bits)} {pixelInfo.ChannelInfos[i].Channel.ToUpper()};");
+             stringBuilder.AppendLine();
+        }
+        return stringBuilder.ToString();
+    }
+
+    public static string GenerateConstructors(PixelInfo pixelInfo, int indentCount)
+    {
+        var stringBuilder = new StringBuilder();
+
+        if (pixelInfo.Packed)
+        {
+            stringBuilder.AppendLine("/// <summary>");
+            stringBuilder.AppendLine($"{GenerateIndent(indentCount)}/// Initializes a new instance of the <see cref=\"{pixelInfo.Name}\"/> struct.");
+            stringBuilder.AppendLine($"{GenerateIndent(indentCount)}/// </summary>");
+            for (var i = 0; i < pixelInfo.ChannelInfos.Length; i++)
+            {
+                stringBuilder.AppendLine($"{GenerateIndent(indentCount)}/// <param name=\"{vectorNames[i]}\">The {vectorNames[i]}-component</param>");
+            }
+            stringBuilder.Append($"{GenerateIndent(indentCount)}public {pixelInfo.Name}(");
+            for (var i = 0; i < pixelInfo.ChannelInfos.Length; i++)
+            {
+                if (i != 0)
+                {
+                    stringBuilder.Append(", ");
+                }
+                stringBuilder.Append($"float {vectorNames[i]}");
+            }
+            stringBuilder.AppendLine(")");
+            stringBuilder.Append($"{GenerateIndent(indentCount + 4)}: this(new Vector{pixelInfo.ChannelInfos.Length}(");
+            for (var i = 0; i < pixelInfo.ChannelInfos.Length; i++)
+            {
+                if (i != 0)
+                {
+                    stringBuilder.Append(", ");
+                }
+                stringBuilder.Append(vectorNames[i]);
+            }
+            stringBuilder.AppendLine("))");
+            stringBuilder.AppendLine($"{GenerateIndent(indentCount)}{{");
+            stringBuilder.AppendLine($"{GenerateIndent(indentCount)}}}");
+            stringBuilder.AppendLine();
+            stringBuilder.AppendLine($"{GenerateIndent(indentCount)}/// <summary>");
+            stringBuilder.AppendLine($"{GenerateIndent(indentCount)}/// Initializes a new instance of the <see cref=\"{pixelInfo.Name}\"/> struct.");
+            stringBuilder.AppendLine($"{GenerateIndent(indentCount)}/// </summary>");
+            stringBuilder.AppendLine($"{GenerateIndent(indentCount)}/// <param name=\"vector\">");
+            stringBuilder.AppendLine($"{GenerateIndent(indentCount)}/// The vector containing the components for the packed vector.");
+            stringBuilder.AppendLine($"{GenerateIndent(indentCount)}/// </param>");
+            stringBuilder.AppendLine($"{GenerateIndent(indentCount)}public {pixelInfo.Name}(Vector{pixelInfo.ChannelInfos.Length} vector) => this.PackedValue = Pack(ref vector);");
+            stringBuilder.AppendLine();
+            stringBuilder.AppendLine($"{GenerateIndent(indentCount)}/// <inheritdoc/>");
+            stringBuilder.Append($"{GenerateIndent(indentCount)}public {pixelInfo.PackedType} PackedValue {{ get; set; }}");
+        }        
+        else
+        {
+            if (!AllBitsSame(pixelInfo))
+            {
+                return string.Empty;
+            }
+            stringBuilder.AppendLine($"{GenerateIndent(indentCount)}/// <summary>");
+            stringBuilder.AppendLine($"{GenerateIndent(indentCount)}/// Initializes a new instance of the <see cref=\"{pixelInfo.Name}\"/> struct.");
+            stringBuilder.AppendLine($"{GenerateIndent(indentCount)}/// </summary>");
+            for (var i = 0; i < pixelInfo.ChannelInfos.Length; i++)
+            {
+                stringBuilder.AppendLine($"{GenerateIndent(indentCount)}/// <param name=\"{pixelInfo.ChannelInfos[i].Channel}\">The {GetChannelName(pixelInfo.ChannelInfos[i].Channel)} component.</param>");
+            }
+            stringBuilder.AppendLine($"{GenerateIndent(indentCount)}[MethodImpl(MethodImplOptions.AggressiveInlining)]");
+            stringBuilder.Append($"{GenerateIndent(indentCount)}public {pixelInfo.Name}(");
+            for (var i = 0; i < pixelInfo.ChannelInfos.Length; i++)
+            {
+                if (i != 0)
+                {
+                    stringBuilder.Append(", ");
+                }
+                stringBuilder.Append($"{GetChanneType(pixelInfo.IsFloat, pixelInfo.ChannelInfos[0].Bits)} {channelNames[i]}");
+            }
+            stringBuilder.AppendLine(")");
+            stringBuilder.AppendLine($"{GenerateIndent(indentCount)}{{");
+            for (var i = 0; i < pixelInfo.ChannelInfos.Length; i++)
+            {
+                stringBuilder.AppendLine($"{GenerateIndent(indentCount + 4)}this.{channelNames[i].ToUpper()} = {channelNames[i]};");
+            }
+            stringBuilder.Append($"{GenerateIndent(indentCount)}}}");
+        }
+        return stringBuilder.ToString();
     }
 
     public static string CreateFormatString(PixelInfo pixelInfo, int indentCount)
@@ -244,7 +388,7 @@ class Helper
         if (pixelInfo.Packed) 
         {
             stringBuilder.AppendLine("var vector = this.ToVector4();");
-            stringBuilder.Append($"{CreateIndentString(indentCount)}return FormattableString.Invariant($\"{pixelInfo.Name}(");
+            stringBuilder.Append($"{GenerateIndent(indentCount)}return FormattableString.Invariant($\"{pixelInfo.Name}(");
             for (var i = 0; i < pixelInfo.ChannelInfos.Length; i++)
             {
                 for (var j = 0; j < pixelInfo.ChannelInfos.Length; j++)
@@ -301,7 +445,7 @@ class Helper
                 stringBuilder.Append($"vector.{vectorNames[i].ToUpper()}");
             }
             stringBuilder.AppendLine(");");
-            stringBuilder.Append($"{CreateIndentString(indentCount)}this.PackedValue = Pack(ref vector{pixelInfo.ChannelInfos.Length});");
+            stringBuilder.Append($"{GenerateIndent(indentCount)}this.PackedValue = Pack(ref vector{pixelInfo.ChannelInfos.Length});");
         }
         else
         {
@@ -309,7 +453,7 @@ class Helper
             {
                 if (i != 0)
                 {
-                    stringBuilder.Append(CreateIndentString(indentCount));
+                    stringBuilder.Append(GenerateIndent(indentCount));
                 }
                 stringBuilder.Append($"this.{pixelInfo.ChannelInfos[i].Channel.ToUpper()} = ({GetChanneType(pixelInfo.IsFloat, pixelInfo.ChannelInfos[i].Bits)})(vector.{MapChannelNameToVectorName(pixelInfo.ChannelInfos[i].Channel).ToUpper()} * {(1 << pixelInfo.ChannelInfos[i].Bits) - 1});");
                 if (i < pixelInfo.ChannelInfos.Length - 1)
@@ -329,7 +473,7 @@ class Helper
         {
             if (i > pixelInfo.ChannelInfos.Length - 1)
             {
-                stringBuilder.Append($"{CreateIndentString(indentCount)}1.0f");
+                stringBuilder.Append($"{GenerateIndent(indentCount)}1.0f");
                 if (i == 3)
                 {
                     stringBuilder.Append(");");
@@ -352,11 +496,18 @@ class Helper
                 {
                     if (pixelInfo.Packed)
                     {
-                        stringBuilder.AppendLine($"{CreateIndentString(indentCount)}((this.PackedValue >> {bitOffset}) & 0x{((1 << pixelInfo.ChannelInfos[j].Bits) - 1).ToString("X")}) / 255F,");
+                        if (pixelInfo.IsFloat) 
+                        {
+                            stringBuilder.AppendLine($"{GenerateIndent(indentCount)}FloatHelper.UnpackFloat{pixelInfo.ChannelInfos[j].Bits}ToFloat((ushort)((this.PackedValue >> {bitOffset}) & 0x{((1 << pixelInfo.ChannelInfos[j].Bits) - 1).ToString("X")})),");
+                        }
+                        else
+                        {
+                            stringBuilder.AppendLine($"{GenerateIndent(indentCount)}((this.PackedValue >> {bitOffset}) & 0x{((1 << pixelInfo.ChannelInfos[j].Bits) - 1).ToString("X")}) / {(1 << pixelInfo.ChannelInfos[j].Bits) - 1}F,");
+                        }
                     }
                     else
                     {
-                        stringBuilder.AppendLine($"{CreateIndentString(indentCount)}this.{pixelInfo.ChannelInfos[j].Channel.ToUpper()} / 0x{((1 << pixelInfo.ChannelInfos[j].Bits) - 1).ToString("X")},");
+                        stringBuilder.AppendLine($"{GenerateIndent(indentCount)}this.{pixelInfo.ChannelInfos[j].Channel.ToUpper()} / {(1 << pixelInfo.ChannelInfos[j].Bits) - 1}F,");
                     }
                     break;
                 }
@@ -387,12 +538,19 @@ class Helper
                 found |= i == 3 && pixelInfo.ChannelInfos[j].Channel == "a";
                 if (found)
                 {
-                    stringBuilder.Append(CreateIndentString(indentCount));
+                    stringBuilder.Append(GenerateIndent(indentCount));
                     if (i > 0)
                     {
                         stringBuilder.Append("| ");
                     }
-                    stringBuilder.Append($"((({pixelInfo.PackedType})Math.Round(vector.{vectorNames[i].ToUpper()} * 255F) & 0x{((1 << pixelInfo.ChannelInfos[j].Bits) - 1).ToString("X")}) << {bitOffset})");
+                    if (pixelInfo.IsFloat)
+                    {
+                        stringBuilder.Append($"(({pixelInfo.PackedType})FloatHelper.PackFloatToFloat{pixelInfo.ChannelInfos[j].Bits}(vector.{vectorNames[i].ToUpper()}) << {bitOffset})");
+                    }
+                    else
+                    {
+                        stringBuilder.Append($"((({pixelInfo.PackedType})Math.Round(vector.{vectorNames[i].ToUpper()} * {(1 << pixelInfo.ChannelInfos[j].Bits) - 1}F) & 0x{((1 << pixelInfo.ChannelInfos[j].Bits) - 1).ToString("X")}) << {bitOffset})");
+                    }
                     if (i != 2)
                     {
                         stringBuilder.AppendLine();
