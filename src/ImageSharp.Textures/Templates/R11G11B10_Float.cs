@@ -86,7 +86,7 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         public Vector4 ToVector4()
         {
             return new Vector4(
-                FloatHelper.UnpackFloat11ToFloat((ushort)((this.PackedValue >> 0) & 0x7FF)),
+                FloatHelper.UnpackFloat11ToFloat((ushort)(this.PackedValue & 0x7FF)),
                 FloatHelper.UnpackFloat11ToFloat((ushort)((this.PackedValue >> 11) & 0x7FF)),
                 FloatHelper.UnpackFloat10ToFloat((ushort)((this.PackedValue >> 22) & 0x3FF)),
                 1.0f);
@@ -170,7 +170,7 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         {
             vector = Vector3.Clamp(vector, Vector3.Zero, Vector3.One);
             return
-                ((uint)FloatHelper.PackFloatToFloat11(vector.X) << 0)
+                (uint)FloatHelper.PackFloatToFloat11(vector.X)
                 | ((uint)FloatHelper.PackFloatToFloat11(vector.Y) << 11)
                 | ((uint)FloatHelper.PackFloatToFloat10(vector.Z) << 22);
         }

@@ -111,19 +111,9 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Vector4 ToScaledVector4() => this.ToVector4();
 
-        /// <inheritdoc />
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void FromVector4(Vector4 vector)
-        {
-            <#= Helper.CreateFromVector4String(pixelInfo, 12) #>
-        }
+        <#= Helper.GenertateFromVector4(pixelInfo, 8) #>
 
-        /// <inheritdoc />
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Vector4 ToVector4()
-        {
-            <#= Helper.CreateToVector4String(pixelInfo, 16) #>
-        }
+        <#= Helper.GenertateToVector4(pixelInfo, 8) #>
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -183,27 +173,12 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         /// <inheritdoc />
         public override bool Equals(object obj) => obj is <#= pixelInfo.Name #> other && this.Equals(other);
 
-        /// <inheritdoc />
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool Equals(<#= pixelInfo.Name #> other) => <#= Helper.CreateEqualsString(pixelInfo) #>
+        <#= Helper.GenerateEquals(pixelInfo, 8) #>
 
-        /// <inheritdoc />
-        public override string ToString()
-        {
-            <#= Helper.CreateFormatString(pixelInfo, 12) #>
-        }
+        <#= Helper.GenerateToString(pixelInfo, 8) #>
 
-        /// <inheritdoc />
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override int GetHashCode() => <#= Helper.CreateHashCodeString(pixelInfo) #>
-<# if (pixelInfo.Packed) { #>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static <#= pixelInfo.PackedType #> Pack(ref Vector<#= pixelInfo.ChannelInfos.Length #> vector)
-        {
-            vector = Vector<#=pixelInfo.ChannelInfos.Length#>.Clamp(vector, Vector<#= pixelInfo.ChannelInfos.Length #>.Zero, Vector<#= pixelInfo.ChannelInfos.Length #>.One);
-            <#= Helper.CreatePackString(pixelInfo, 16) #>
-        }
-<# } #>    }
+        <#= Helper.GenerateHashCode(pixelInfo, 8) #><#= Helper.GeneratePack(pixelInfo, 8) #>
+    }
 }
 <# 
         manager.EndBlock();

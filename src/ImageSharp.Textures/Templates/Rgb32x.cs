@@ -85,7 +85,7 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         public Vector4 ToVector4()
         {
             return new Vector4(
-                ((this.PackedValue >> 0) & 0xFF) / 255F,
+                (this.PackedValue & 0xFF) / 255F,
                 ((this.PackedValue >> 8) & 0xFF) / 255F,
                 ((this.PackedValue >> 16) & 0xFF) / 255F,
                 1.0f);
@@ -169,7 +169,7 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         {
             vector = Vector3.Clamp(vector, Vector3.Zero, Vector3.One);
             return
-                (((uint)Math.Round(vector.X * 255F) & 0xFF) << 0)
+                ((uint)Math.Round(vector.X * 255F) & 0xFF)
                 | (((uint)Math.Round(vector.Y * 255F) & 0xFF) << 8)
                 | (((uint)Math.Round(vector.Z * 255F) & 0xFF) << 16);
         }
