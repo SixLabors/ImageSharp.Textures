@@ -4,65 +4,77 @@
 using System;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using SixLabors.ImageSharp.PixelFormats;
 
 namespace SixLabors.ImageSharp.Textures.PixelFormats
 {
     /// <summary>
-    /// Packed pixel type containing unsigned normalized values ranging from 0 to 1.
-    /// The x, y and z components use 8 bits.
+    /// Pixel type containing three 8-bit unsigned normalized values ranging from 0 to 255.
+    /// The color components are stored in red, green, blue order (least significant to most significant byte).
     /// <para>
     /// Ranges from [0, 0, 0] to [1, 1, 1] in vector form.
     /// </para>
     /// </summary>
-    public partial struct Bgr32x : IPixel<Bgr32x>, IPackedVector<uint>
+    [StructLayout(LayoutKind.Explicit)]
+    public partial struct R8G8B8 : IPixel<R8G8B8>
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="Bgr32x"/> struct.
+        /// Gets or sets the red component.
         /// </summary>
-        /// <param name="x">The x-component</param>
-        /// <param name="y">The y-component</param>
-        /// <param name="z">The z-component</param>
-        public Bgr32x(float x, float y, float z)
-            : this(new Vector3(x, y, z))
+        [FieldOffset(0)]
+        public byte R;
+
+        /// <summary>
+        /// Gets or sets the green component.
+        /// </summary>
+        [FieldOffset(1)]
+        public byte G;
+
+        /// <summary>
+        /// Gets or sets the blue component.
+        /// </summary>
+        [FieldOffset(2)]
+        public byte B;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="R8G8B8"/> struct.
+        /// </summary>
+        /// <param name="r">The red component.</param>
+        /// <param name="g">The green component.</param>
+        /// <param name="b">The blue component.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public R8G8B8(byte r, byte g, byte b)
         {
+            this.R = r;
+            this.G = g;
+            this.B = b;
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="Bgr32x"/> struct.
+        /// Compares two <see cref="R8G8B8"/> objects for equality.
         /// </summary>
-        /// <param name="vector">
-        /// The vector containing the components for the packed vector.
-        /// </param>
-        public Bgr32x(Vector3 vector) => this.PackedValue = Pack(ref vector);
-
-        /// <inheritdoc/>
-        public uint PackedValue { get; set; }
-
-        /// <summary>
-        /// Compares two <see cref="Bgr32x"/> objects for equality.
-        /// </summary>
-        /// <param name="left">The <see cref="Bgr32x"/> on the left side of the operand.</param>
+        /// <param name="left">The <see cref="R8G8B8"/> on the left side of the operand.</param>
         /// <returns>
         /// True if the <paramref name="left"/> parameter is equal to the <paramref name="right"/> parameter; otherwise, false.
         /// </returns>
-        /// <param name="right">The <see cref="Bgr32x"/> on the right side of the operand.</param>
+        /// <param name="right">The <see cref="R8G8B8"/> on the right side of the operand.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool operator ==(Bgr32x left, Bgr32x right) => left.Equals(right);
+        public static bool operator ==(R8G8B8 left, R8G8B8 right) => left.Equals(right);
 
         /// <summary>
-        /// Compares two <see cref="Bgr32x"/> objects for equality.
+        /// Compares two <see cref="R8G8B8"/> objects for equality.
         /// </summary>
-        /// <param name="left">The <see cref="Bgr32x"/> on the left side of the operand.</param>
-        /// <param name="right">The <see cref="Bgr32x"/> on the right side of the operand.</param>
+        /// <param name="left">The <see cref="R8G8B8"/> on the left side of the operand.</param>
+        /// <param name="right">The <see cref="R8G8B8"/> on the right side of the operand.</param>
         /// <returns>
         /// True if the <paramref name="left"/> parameter is not equal to the <paramref name="right"/> parameter; otherwise, false.
         /// </returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool operator !=(Bgr32x left, Bgr32x right) => !left.Equals(right);
+        public static bool operator !=(R8G8B8 left, R8G8B8 right) => !left.Equals(right);
 
         /// <inheritdoc />
-        public PixelOperations<Bgr32x> CreatePixelOperations() => new PixelOperations<Bgr32x>();
+        public PixelOperations<R8G8B8> CreatePixelOperations() => new PixelOperations<R8G8B8>();
 
         /// <inheritdoc/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -76,8 +88,9 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void FromVector4(Vector4 vector)
         {
-            var vector3 = new Vector3(vector.X, vector.Y, vector.Z);
-            this.PackedValue = Pack(ref vector3);
+            this.R = (byte)(vector.X * 255);
+            this.G = (byte)(vector.Y * 255);
+            this.B = (byte)(vector.Z * 255);
         }
 
         /// <inheritdoc />
@@ -85,9 +98,9 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         public Vector4 ToVector4()
         {
             return new Vector4(
-                ((this.PackedValue >> 16) & 0xFF) / 255F,
-                ((this.PackedValue >> 8) & 0xFF) / 255F,
-                (this.PackedValue & 0xFF) / 255F,
+                this.R / 255F,
+                this.G / 255F,
+                this.B / 255F,
                 1.0f);
         }
 
@@ -147,31 +160,20 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         public void FromRgba64(Rgba64 source) => this.FromScaledVector4(source.ToScaledVector4());
 
         /// <inheritdoc />
-        public override bool Equals(object obj) => obj is Bgr32x other && this.Equals(other);
+        public override bool Equals(object obj) => obj is R8G8B8 other && this.Equals(other);
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool Equals(Bgr32x other) => this.PackedValue.Equals(other.PackedValue);
+        public bool Equals(R8G8B8 other) => this.R.Equals(other.R) && this.G.Equals(other.G) && this.B.Equals(other.B);
 
         /// <inheritdoc />
         public override string ToString()
         {
-            var vector = this.ToVector4();
-            return FormattableString.Invariant($"Bgr32x({vector.Z:#0.##}, {vector.Y:#0.##}, {vector.X:#0.##})");
+            return FormattableString.Invariant($"R8G8B8({this.R}, {this.G}, {this.B})");
         }
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override int GetHashCode() => this.PackedValue.GetHashCode();
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static uint Pack(ref Vector3 vector)
-        {
-            vector = Vector3.Clamp(vector, Vector3.Zero, Vector3.One);
-            return
-                (((uint)Math.Round(vector.X * 255F) & 0xFF) << 16)
-                | (((uint)Math.Round(vector.Y * 255F) & 0xFF) << 8)
-                | ((uint)Math.Round(vector.Z * 255F) & 0xFF);
-        }
+        public override int GetHashCode() => HashCode.Combine(this.R, this.G, this.B);
     }
 }

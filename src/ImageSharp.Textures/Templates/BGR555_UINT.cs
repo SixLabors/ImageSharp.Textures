@@ -4,79 +4,65 @@
 using System;
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using SixLabors.ImageSharp.PixelFormats;
 
 namespace SixLabors.ImageSharp.Textures.PixelFormats
 {
     /// <summary>
-    /// Pixel type containing three 8-bit unsigned normalized values ranging from 0 to 255.
-    /// The color components are stored in red, green, blue order (least significant to most significant byte).
+    /// Packed pixel type containing unsigned normalized values ranging from 0 to 1.
+    /// The x, y and z components use 5 bits.
     /// <para>
     /// Ranges from [0, 0, 0] to [1, 1, 1] in vector form.
     /// </para>
     /// </summary>
-    [StructLayout(LayoutKind.Explicit)]
-    public partial struct R8g8b8x : IPixel<R8g8b8x>
+    public partial struct BGR555_UINT : IPixel<BGR555_UINT>, IPackedVector<uint>
     {
         /// <summary>
-        /// Gets or sets the red component.
+        /// Initializes a new instance of the <see cref="BGR555_UINT"/> struct.
         /// </summary>
-        [FieldOffset(0)]
-        public byte R;
-
-
-        /// <summary>
-        /// Gets or sets the green component.
-        /// </summary>
-        [FieldOffset(1)]
-        public byte G;
-
-
-        /// <summary>
-        /// Gets or sets the blue component.
-        /// </summary>
-        [FieldOffset(2)]
-        public byte B;
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="R8g8b8x"/> struct.
-        /// </summary>
-        /// <param name="r">The red component.</param>
-        /// <param name="g">The green component.</param>
-        /// <param name="b">The blue component.</param>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public R8g8b8x(byte r, byte g, byte b)
+        /// <param name="x">The x-component</param>
+        /// <param name="y">The y-component</param>
+        /// <param name="z">The z-component</param>
+        public BGR555_UINT(float x, float y, float z)
+            : this(new Vector3(x, y, z))
         {
-            this.R = r;
-            this.G = g;
-            this.B = b;
         }
 
         /// <summary>
-        /// Compares two <see cref="R8g8b8x"/> objects for equality.
+        /// Initializes a new instance of the <see cref="BGR555_UINT"/> struct.
         /// </summary>
-        /// <param name="left">The <see cref="R8g8b8x"/> on the left side of the operand.</param>
+        /// <param name="vector">
+        /// The vector containing the components for the packed vector.
+        /// </param>
+        public BGR555_UINT(Vector3 vector) => this.PackedValue = Pack(ref vector);
+
+        /// <inheritdoc/>
+        public uint PackedValue { get; set; }
+
+        /// <summary>
+        /// Compares two <see cref="BGR555_UINT"/> objects for equality.
+        /// </summary>
+        /// <param name="left">The <see cref="BGR555_UINT"/> on the left side of the operand.</param>
         /// <returns>
         /// True if the <paramref name="left"/> parameter is equal to the <paramref name="right"/> parameter; otherwise, false.
         /// </returns>
-        /// <param name="right">The <see cref="R8g8b8x"/> on the right side of the operand.</param>
+        /// <param name="right">The <see cref="BGR555_UINT"/> on the right side of the operand.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool operator ==(R8g8b8x left, R8g8b8x right) => left.Equals(right);
+        public static bool operator ==(BGR555_UINT left, BGR555_UINT right) => left.Equals(right);
 
         /// <summary>
-        /// Compares two <see cref="R8g8b8x"/> objects for equality.
+        /// Compares two <see cref="BGR555_UINT"/> objects for equality.
         /// </summary>
-        /// <param name="left">The <see cref="R8g8b8x"/> on the left side of the operand.</param>
-        /// <param name="right">The <see cref="R8g8b8x"/> on the right side of the operand.</param>
+        /// <param name="left">The <see cref="BGR555_UINT"/> on the left side of the operand.</param>
+        /// <param name="right">The <see cref="BGR555_UINT"/> on the right side of the operand.</param>
         /// <returns>
         /// True if the <paramref name="left"/> parameter is not equal to the <paramref name="right"/> parameter; otherwise, false.
         /// </returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool operator !=(R8g8b8x left, R8g8b8x right) => !left.Equals(right);
+        public static bool operator !=(BGR555_UINT left, BGR555_UINT right) => !left.Equals(right);
 
         /// <inheritdoc />
-        public PixelOperations<R8g8b8x> CreatePixelOperations() => new PixelOperations<R8g8b8x>();
+        public PixelOperations<BGR555_UINT> CreatePixelOperations() => new PixelOperations<BGR555_UINT>();
 
         /// <inheritdoc/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -90,9 +76,8 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void FromVector4(Vector4 vector)
         {
-            this.R = (byte)(vector.X * 255);
-            this.G = (byte)(vector.Y * 255);
-            this.B = (byte)(vector.Z * 255);
+            var vector3 = new Vector3(vector.X, vector.Y, vector.Z);
+            this.PackedValue = Pack(ref vector3);
         }
 
         /// <inheritdoc />
@@ -100,9 +85,9 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         public Vector4 ToVector4()
         {
             return new Vector4(
-                this.R / 255F,
-                this.G / 255F,
-                this.B / 255F,
+                ((this.PackedValue >> 10) & 0x1F) / 31F,
+                ((this.PackedValue >> 5) & 0x1F) / 31F,
+                (this.PackedValue & 0x1F) / 31F,
                 1.0f);
         }
 
@@ -162,20 +147,31 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         public void FromRgba64(Rgba64 source) => this.FromScaledVector4(source.ToScaledVector4());
 
         /// <inheritdoc />
-        public override bool Equals(object obj) => obj is R8g8b8x other && this.Equals(other);
+        public override bool Equals(object obj) => obj is BGR555_UINT other && this.Equals(other);
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool Equals(R8g8b8x other) => this.R.Equals(other.R) && this.G.Equals(other.G) && this.B.Equals(other.B);
+        public bool Equals(BGR555_UINT other) => this.PackedValue.Equals(other.PackedValue);
 
         /// <inheritdoc />
         public override string ToString()
         {
-            return FormattableString.Invariant($"R8g8b8x({this.R}, {this.G}, {this.B})");
+            var vector = this.ToVector4();
+            return FormattableString.Invariant($"BGR555_UINT({vector.Z:#0.##}, {vector.Y:#0.##}, {vector.X:#0.##})");
         }
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override int GetHashCode() => HashCode.Combine(this.R, this.G, this.B);
+        public override int GetHashCode() => this.PackedValue.GetHashCode();
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static uint Pack(ref Vector3 vector)
+        {
+            vector = Vector3.Clamp(vector, Vector3.Zero, Vector3.One);
+            return (uint)(
+                (((uint)Math.Round(vector.X * 31F) & 0x1F) << 10)
+                | (((uint)Math.Round(vector.Y * 31F) & 0x1F) << 5)
+                | ((uint)Math.Round(vector.Z * 31F) & 0x1F));
+        }
     }
 }

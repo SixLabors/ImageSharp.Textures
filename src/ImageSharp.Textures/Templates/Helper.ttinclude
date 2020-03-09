@@ -299,8 +299,8 @@ class Helper
              stringBuilder.AppendLine($"{GenerateIndent(indentCount)}/// </summary>");
              stringBuilder.AppendLine($"{GenerateIndent(indentCount)}[FieldOffset({(pixelInfo.ChannelInfos[0].Bits / 8) * i})]");
              stringBuilder.AppendLine($"{GenerateIndent(indentCount)}public {GetChanneType(pixelInfo.IsFloat, pixelInfo.ChannelInfos[i].Bits)} {pixelInfo.ChannelInfos[i].Channel.ToUpper()};");
-             stringBuilder.AppendLine();
         }
+        stringBuilder.AppendLine();
         return stringBuilder.ToString();
     }
 
@@ -555,7 +555,7 @@ class Helper
         stringBuilder.AppendLine($"{GenerateIndent(indentCount)}private static {pixelInfo.PackedType} Pack(ref Vector{pixelInfo.ChannelInfos.Length} vector)");
         stringBuilder.AppendLine($"{GenerateIndent(indentCount)}{{");
         stringBuilder.AppendLine($"{GenerateIndent(indentCount + 4)}vector = Vector{pixelInfo.ChannelInfos.Length}.Clamp(vector, Vector{pixelInfo.ChannelInfos.Length}.Zero, Vector{pixelInfo.ChannelInfos.Length}.One);");
-        stringBuilder.AppendLine($"{GenerateIndent(indentCount + 4)}return");
+        stringBuilder.AppendLine($"{GenerateIndent(indentCount + 4)}return ({pixelInfo.PackedType})(");
         for (var i = 0; i < pixelInfo.ChannelInfos.Length; i++)
         {
             var bitOffset = 0;
@@ -577,22 +577,22 @@ class Helper
                     {
                         if (bitOffset == 0) 
                         {
-                            stringBuilder.Append($"({pixelInfo.PackedType})FloatHelper.PackFloatToFloat{pixelInfo.ChannelInfos[j].Bits}(vector.{vectorNames[i].ToUpper()})");
+                            stringBuilder.Append($"(uint)FloatHelper.PackFloatToFloat{pixelInfo.ChannelInfos[j].Bits}(vector.{vectorNames[i].ToUpper()})");
                         }
                         else
                         {
-                            stringBuilder.Append($"(({pixelInfo.PackedType})FloatHelper.PackFloatToFloat{pixelInfo.ChannelInfos[j].Bits}(vector.{vectorNames[i].ToUpper()}) << {bitOffset})");
+                            stringBuilder.Append($"((uint)FloatHelper.PackFloatToFloat{pixelInfo.ChannelInfos[j].Bits}(vector.{vectorNames[i].ToUpper()}) << {bitOffset})");
                         }
                     }
                     else
                     {
                         if (bitOffset == 0) 
                         {
-                            stringBuilder.Append($"(({pixelInfo.PackedType})Math.Round(vector.{vectorNames[i].ToUpper()} * {(1 << pixelInfo.ChannelInfos[j].Bits) - 1}F) & 0x{((1 << pixelInfo.ChannelInfos[j].Bits) - 1).ToString("X")})");
+                            stringBuilder.Append($"((uint)Math.Round(vector.{vectorNames[i].ToUpper()} * {(1 << pixelInfo.ChannelInfos[j].Bits) - 1}F) & 0x{((1 << pixelInfo.ChannelInfos[j].Bits) - 1).ToString("X")})");
                         }
                         else
                         {
-                            stringBuilder.Append($"((({pixelInfo.PackedType})Math.Round(vector.{vectorNames[i].ToUpper()} * {(1 << pixelInfo.ChannelInfos[j].Bits) - 1}F) & 0x{((1 << pixelInfo.ChannelInfos[j].Bits) - 1).ToString("X")}) << {bitOffset})");
+                            stringBuilder.Append($"(((uint)Math.Round(vector.{vectorNames[i].ToUpper()} * {(1 << pixelInfo.ChannelInfos[j].Bits) - 1}F) & 0x{((1 << pixelInfo.ChannelInfos[j].Bits) - 1).ToString("X")}) << {bitOffset})");
                         }
                     }
                     if (i != 2)
@@ -607,7 +607,7 @@ class Helper
                 }
             }
         }
-        stringBuilder.AppendLine(";");
+        stringBuilder.AppendLine(");");
         stringBuilder.Append($"{GenerateIndent(indentCount)}}}");
         return stringBuilder.ToString();
     }

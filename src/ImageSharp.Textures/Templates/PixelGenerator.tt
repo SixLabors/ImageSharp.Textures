@@ -7,10 +7,22 @@
     var manager = Manager.Create(Host, GenerationEnvironment); 
 
     var pixelInfos = new[] {
+
+        new PixelInfo
+        {
+            Name = "BGR555_UINT",
+            PackedType = "uint",
+            IsFloat = false,
+            ChannelInfos = new[] {
+                new ChannelInfo { Bits = 5, Channel = "b" },
+                new ChannelInfo { Bits = 5, Channel = "g" },
+                new ChannelInfo { Bits = 5, Channel = "r" }
+            }
+        },
     
         new PixelInfo
         {
-            Name = "Bgr32x",
+            Name = "BGR32_UINT",
             PackedType = "uint",
             IsFloat = false,
             ChannelInfos = new[] {
@@ -22,7 +34,7 @@
 
         new PixelInfo
         {
-            Name = "Rgb32x",
+            Name = "RGB32_UINT",
             PackedType = "uint",
             IsFloat = false,
             ChannelInfos = new[] {
@@ -34,7 +46,7 @@
 
         new PixelInfo
         {
-            Name = "R8g8b8x",
+            Name = "R8G8B8",
             PackedType = "none",
             IsFloat = false,
             ChannelInfos = new[] {
@@ -46,7 +58,7 @@
 
         new PixelInfo
         {
-            Name = "R11G11B10_Float",
+            Name = "R11G11B10_FLOAT",
             PackedType = "uint",
             IsFloat = true,
             ChannelInfos = new[] {
