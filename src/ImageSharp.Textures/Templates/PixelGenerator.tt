@@ -11,7 +11,6 @@
         new PixelInfo
         {
             Name = "Bgr32x",
-            Packed = true,
             PackedType = "uint",
             IsFloat = false,
             ChannelInfos = new[] {
@@ -24,7 +23,6 @@
         new PixelInfo
         {
             Name = "Rgb32x",
-            Packed = true,
             PackedType = "uint",
             IsFloat = false,
             ChannelInfos = new[] {
@@ -37,8 +35,7 @@
         new PixelInfo
         {
             Name = "R8g8b8x",
-            Packed = false,
-            PackedType = "na",
+            PackedType = "none",
             IsFloat = false,
             ChannelInfos = new[] {
                 new ChannelInfo { Bits = 8, Channel = "r" },
@@ -50,7 +47,6 @@
         new PixelInfo
         {
             Name = "R11G11B10_Float",
-            Packed = true,
             PackedType = "uint",
             IsFloat = true,
             ChannelInfos = new[] {

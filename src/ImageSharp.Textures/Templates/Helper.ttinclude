@@ -19,7 +19,6 @@ public struct ChannelInfo
 public struct PixelInfo
 {
     public string Name;
-    public bool Packed;
     public string PackedType;
     public bool IsFloat;
     public ChannelInfo[] ChannelInfos;
@@ -42,6 +41,11 @@ class Helper
     private static bool AllBitsSame(PixelInfo pixelInfo)
     {
         return pixelInfo.ChannelInfos.Select(c => c.Bits).Max() == pixelInfo.ChannelInfos.Select(c => c.Bits).Min();
+    }
+
+    private static bool IsPacked(PixelInfo pixelInfo)
+    {
+        return !pixelInfo.PackedType.Equals("none");
     }
 
     private static string GetChannelName(string channel)
@@ -116,7 +120,7 @@ class Helper
         stringBuilder.AppendLine("using System;");
         stringBuilder.AppendLine("using System.Numerics;");
         stringBuilder.AppendLine("using System.Runtime.CompilerServices;");
-        if (!pixelInfo.Packed)
+        if (!IsPacked(pixelInfo))
         {
             stringBuilder.AppendLine("using System.Runtime.InteropServices;");
         }
@@ -244,7 +248,7 @@ class Helper
     {
         var stringBuilder = new StringBuilder();
         stringBuilder.AppendLine("/// <summary>");
-        if (pixelInfo.Packed)
+        if (IsPacked(pixelInfo))
         {
             stringBuilder.AppendLine($"{GenerateIndent(indentCount)}/// Packed pixel type containing unsigned normalized values ranging from 0 to 1.");
             stringBuilder.AppendLine(GeneratePackedDescription(pixelInfo, indentCount));
@@ -263,13 +267,13 @@ class Helper
     public static string GenerateStructHeader(PixelInfo pixelInfo, int indentCount)
     {
         var stringBuilder = new StringBuilder();
-        if (!pixelInfo.Packed)
+        if (!IsPacked(pixelInfo))
         {
             stringBuilder.AppendLine("[StructLayout(LayoutKind.Explicit)]");
             stringBuilder.Append(GenerateIndent(indentCount));
         }        
         stringBuilder.Append($"public partial struct {pixelInfo.Name} : IPixel<{pixelInfo.Name}>");
-        if (pixelInfo.Packed)
+        if (IsPacked(pixelInfo))
         {
             stringBuilder.Append($", IPackedVector<{pixelInfo.PackedType}>");
         }
@@ -278,7 +282,7 @@ class Helper
 
     public static string GeneratePixelChannels(PixelInfo pixelInfo, int indentCount)
     {
-        if (pixelInfo.Packed || !AllBitsSame(pixelInfo))
+        if (IsPacked(pixelInfo) || !AllBitsSame(pixelInfo))
         {
             return string.Empty;
         }
@@ -304,7 +308,7 @@ class Helper
     {
         var stringBuilder = new StringBuilder();
 
-        if (pixelInfo.Packed)
+        if (IsPacked(pixelInfo))
         {
             stringBuilder.AppendLine("/// <summary>");
             stringBuilder.AppendLine($"{GenerateIndent(indentCount)}/// Initializes a new instance of the <see cref=\"{pixelInfo.Name}\"/> struct.");
@@ -387,7 +391,7 @@ class Helper
         stringBuilder.AppendLine("/// <inheritdoc />");
         stringBuilder.AppendLine($"{GenerateIndent(indentCount)}public override string ToString()");
         stringBuilder.AppendLine($"{GenerateIndent(indentCount)}{{");
-        if (pixelInfo.Packed) 
+        if (IsPacked(pixelInfo)) 
         {
             stringBuilder.AppendLine($"{GenerateIndent(indentCount + 4)}var vector = this.ToVector4();");
             stringBuilder.Append($"{GenerateIndent(indentCount + 4)}return FormattableString.Invariant($\"{pixelInfo.Name}(");
@@ -406,7 +410,7 @@ class Helper
                         {
                             stringBuilder.Append(", ");
                         }
-                        if (pixelInfo.Packed) 
+                        if (IsPacked(pixelInfo)) 
                         {
                             stringBuilder.Append($"{{vector.{vectorNames[j].ToUpper()}:#0.##}}");
                         }
@@ -439,7 +443,7 @@ class Helper
         stringBuilder.AppendLine($"{GenerateIndent(indentCount)}[MethodImpl(MethodImplOptions.AggressiveInlining)]");
         stringBuilder.AppendLine($"{GenerateIndent(indentCount)}public void FromVector4(Vector4 vector)");
         stringBuilder.AppendLine($"{GenerateIndent(indentCount)}{{");
-        if (pixelInfo.Packed) 
+        if (IsPacked(pixelInfo)) 
         {
             stringBuilder.Append($"{GenerateIndent(indentCount + 4)}var vector{pixelInfo.ChannelInfos.Length} = new Vector{pixelInfo.ChannelInfos.Length}(");
             for (var i = 0; i < pixelInfo.ChannelInfos.Length; i++)
@@ -497,7 +501,7 @@ class Helper
                 found |= i == 3 && pixelInfo.ChannelInfos[j].Channel == "a";
                 if (found)
                 {
-                    if (pixelInfo.Packed)
+                    if (IsPacked(pixelInfo))
                     {
                         if (pixelInfo.IsFloat) 
                         {
@@ -540,7 +544,7 @@ class Helper
 
     public static string GeneratePack(PixelInfo pixelInfo, int indentCount)
     {
-        if (!pixelInfo.Packed)
+        if (!IsPacked(pixelInfo))
         {
             return string.Empty;
         }
@@ -614,7 +618,7 @@ class Helper
         stringBuilder.AppendLine("/// <inheritdoc />");
         stringBuilder.AppendLine($"{GenerateIndent(indentCount)}[MethodImpl(MethodImplOptions.AggressiveInlining)]");
         stringBuilder.Append($"{GenerateIndent(indentCount)}public bool Equals({pixelInfo.Name} other) => ");
-        if (pixelInfo.Packed)
+        if (IsPacked(pixelInfo))
         {
             stringBuilder.Append("this.PackedValue.Equals(other.PackedValue);");
             return stringBuilder.ToString();
@@ -638,7 +642,7 @@ class Helper
         stringBuilder.AppendLine("/// <inheritdoc />");
         stringBuilder.AppendLine($"{GenerateIndent(indentCount)}[MethodImpl(MethodImplOptions.AggressiveInlining)]");
         stringBuilder.Append($"{GenerateIndent(indentCount)}public override int GetHashCode() => ");
-        if (pixelInfo.Packed)
+        if (IsPacked(pixelInfo))
         {
             stringBuilder.Append("this.PackedValue.GetHashCode();");
             return stringBuilder.ToString();
