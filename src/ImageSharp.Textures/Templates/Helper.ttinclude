@@ -45,24 +45,24 @@ class Helper
 
     private static bool IsPacked(PixelInfo pixelInfo)
     {
-        return !pixelInfo.PackedType.Equals("none");
+        return !pixelInfo.PackedType.Equals("none", StringComparison.CurrentCultureIgnoreCase);
     }
 
     private static string GetChannelName(string channel)
     {
-        if (channel.Equals("r")) 
+        if (channel.Equals("r", StringComparison.CurrentCultureIgnoreCase)) 
         {
             return "red";
         }
-        else if (channel.Equals("g")) 
+        else if (channel.Equals("g", StringComparison.CurrentCultureIgnoreCase)) 
         {
             return "green";
         }
-        else if (channel.Equals("b")) 
+        else if (channel.Equals("b", StringComparison.CurrentCultureIgnoreCase)) 
         {
             return "blue";
         }
-        else if (channel.Equals("a")) 
+        else if (channel.Equals("a", StringComparison.CurrentCultureIgnoreCase)) 
         { 
             return "alpha";
         }
@@ -94,7 +94,7 @@ class Helper
     {
         for (var i = 0; i < channelNames.Length; i++)
         {
-            if (channelNames[i].Equals(channelName))
+            if (channelNames[i].Equals(channelName, StringComparison.CurrentCultureIgnoreCase))
             {
                 return vectorNames[i];
             }
@@ -106,7 +106,7 @@ class Helper
     {
         for (var i = 0; i < vectorNames.Length; i++)
         {
-            if (vectorNames[i].Equals(vectorName))
+            if (vectorNames[i].Equals(vectorName, StringComparison.CurrentCultureIgnoreCase))
             {
                 return channelNames[i];
             }
