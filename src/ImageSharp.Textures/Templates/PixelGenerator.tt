@@ -10,6 +10,32 @@
 
         new PixelInfo
         {
+            Name = "R32G32B32A32_FLOAT",
+            PackedType = "none",
+            IsFloat = true,
+            ChannelInfos = new[] {
+                new ChannelInfo { Bits = 32, Channel = "r" },
+                new ChannelInfo { Bits = 32, Channel = "g" },
+                new ChannelInfo { Bits = 32, Channel = "b" },
+                new ChannelInfo { Bits = 32, Channel = "a" }
+            }
+        },
+
+        new PixelInfo
+        {
+            Name = "R32G32B32A32_UINT",
+            PackedType = "none",
+            IsFloat = false,
+            ChannelInfos = new[] {
+                new ChannelInfo { Bits = 32, Channel = "r" },
+                new ChannelInfo { Bits = 32, Channel = "g" },
+                new ChannelInfo { Bits = 32, Channel = "b" },
+                new ChannelInfo { Bits = 32, Channel = "a" }
+            }
+        },
+
+        new PixelInfo
+        {
             Name = "BGR555_UINT",
             PackedType = "uint",
             IsFloat = false,

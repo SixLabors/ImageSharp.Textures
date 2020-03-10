@@ -90,6 +90,31 @@ class Helper
         throw new Exception("Unregognized bits.");
     }
 
+    private static ulong GetMaxValue(int bits)
+    {
+        if (bits == 5) 
+        {
+            return (1 << 5) - 1;
+        }
+        if (bits == 8) 
+        {
+            return byte.MaxValue;
+        }
+        else if (bits == 16) 
+        {
+            return ushort.MaxValue;
+        }
+        else if (bits == 32) 
+        {
+            return uint.MaxValue;
+        }
+        else if (bits == 64) 
+        { 
+            return ulong.MaxValue;
+        }
+        throw new Exception($"Unregognized bits {bits}.");
+    }
+
     public static string MapChannelNameToVectorName(string channelName)
     {
         for (var i = 0; i < channelNames.Length; i++)
@@ -461,7 +486,14 @@ class Helper
         {
             for (var i = 0; i < pixelInfo.ChannelInfos.Length; i++)
             {
-                stringBuilder.AppendLine($"{GenerateIndent(indentCount + 4)}this.{pixelInfo.ChannelInfos[i].Channel.ToUpper()} = ({GetChanneType(pixelInfo.IsFloat, pixelInfo.ChannelInfos[i].Bits)})(vector.{MapChannelNameToVectorName(pixelInfo.ChannelInfos[i].Channel).ToUpper()} * {(1 << pixelInfo.ChannelInfos[i].Bits) - 1});");
+                if (pixelInfo.IsFloat) 
+                {
+                    stringBuilder.AppendLine($"{GenerateIndent(indentCount + 4)}this.{pixelInfo.ChannelInfos[i].Channel.ToUpper()} = vector.{MapChannelNameToVectorName(pixelInfo.ChannelInfos[i].Channel).ToUpper()};");
+                }
+                else
+                {
+                    stringBuilder.AppendLine($"{GenerateIndent(indentCount + 4)}this.{pixelInfo.ChannelInfos[i].Channel.ToUpper()} = ({GetChanneType(pixelInfo.IsFloat, pixelInfo.ChannelInfos[i].Bits)})(vector.{MapChannelNameToVectorName(pixelInfo.ChannelInfos[i].Channel).ToUpper()} * {GetMaxValue(pixelInfo.ChannelInfos[i].Bits)});");
+                }
             }
         }
         stringBuilder.Append($"{GenerateIndent(indentCount)}}}");
@@ -478,19 +510,6 @@ class Helper
         stringBuilder.AppendLine($"{GenerateIndent(indentCount + 4)}return new Vector4(");
         for (var i = 0; i < 4; i++)
         {
-            if (i > pixelInfo.ChannelInfos.Length - 1)
-            {
-                stringBuilder.Append($"{GenerateIndent(indentCount + 8)}1.0f");
-                if (i == 3)
-                {
-                    stringBuilder.AppendLine(");");
-                }
-                else
-                {
-                    stringBuilder.AppendLine(",");
-                }
-                continue;
-            }
             var bitOffset = 0;
             for (var j = 0; j < pixelInfo.ChannelInfos.Length; j++)
             {
@@ -507,28 +526,35 @@ class Helper
                         {
                             if (bitOffset == 0)
                             {
-                                stringBuilder.AppendLine($"{GenerateIndent(indentCount + 8)}FloatHelper.UnpackFloat{pixelInfo.ChannelInfos[j].Bits}ToFloat((ushort)(this.PackedValue & 0x{((1 << pixelInfo.ChannelInfos[j].Bits) - 1).ToString("X")})),");
+                                stringBuilder.Append($"{GenerateIndent(indentCount + 8)}FloatHelper.UnpackFloat{pixelInfo.ChannelInfos[j].Bits}ToFloat((ushort)(this.PackedValue & 0x{((1 << pixelInfo.ChannelInfos[j].Bits) - 1).ToString("X")}))");
                             }
                             else
                             {
-                                stringBuilder.AppendLine($"{GenerateIndent(indentCount + 8)}FloatHelper.UnpackFloat{pixelInfo.ChannelInfos[j].Bits}ToFloat((ushort)((this.PackedValue >> {bitOffset}) & 0x{((1 << pixelInfo.ChannelInfos[j].Bits) - 1).ToString("X")})),");
+                                stringBuilder.Append($"{GenerateIndent(indentCount + 8)}FloatHelper.UnpackFloat{pixelInfo.ChannelInfos[j].Bits}ToFloat((ushort)((this.PackedValue >> {bitOffset}) & 0x{((1 << pixelInfo.ChannelInfos[j].Bits) - 1).ToString("X")}))");
                             }
                         }
                         else
                         {
                             if (bitOffset == 0)
                             {
-                                stringBuilder.AppendLine($"{GenerateIndent(indentCount + 8)}(this.PackedValue & 0x{((1 << pixelInfo.ChannelInfos[j].Bits) - 1).ToString("X")}) / {(1 << pixelInfo.ChannelInfos[j].Bits) - 1}F,");
+                                stringBuilder.Append($"{GenerateIndent(indentCount + 8)}(this.PackedValue & 0x{((1 << pixelInfo.ChannelInfos[j].Bits) - 1).ToString("X")}) / {(1 << pixelInfo.ChannelInfos[j].Bits) - 1}F");
                             }
                             else
                             {
-                                stringBuilder.AppendLine($"{GenerateIndent(indentCount + 8)}((this.PackedValue >> {bitOffset}) & 0x{((1 << pixelInfo.ChannelInfos[j].Bits) - 1).ToString("X")}) / {(1 << pixelInfo.ChannelInfos[j].Bits) - 1}F,");
+                                stringBuilder.Append($"{GenerateIndent(indentCount + 8)}((this.PackedValue >> {bitOffset}) & 0x{((1 << pixelInfo.ChannelInfos[j].Bits) - 1).ToString("X")}) / {(1 << pixelInfo.ChannelInfos[j].Bits) - 1}F");
                             }
                         }
                     }
                     else
                     {
-                        stringBuilder.AppendLine($"{GenerateIndent(indentCount + 8)}this.{pixelInfo.ChannelInfos[j].Channel.ToUpper()} / {(1 << pixelInfo.ChannelInfos[j].Bits) - 1}F,");
+                        if (pixelInfo.IsFloat) 
+                        {
+                            stringBuilder.Append($"{GenerateIndent(indentCount + 8)}this.{pixelInfo.ChannelInfos[j].Channel.ToUpper()}");
+                        }
+                        else
+                        {
+                            stringBuilder.Append($"{GenerateIndent(indentCount + 8)}this.{pixelInfo.ChannelInfos[j].Channel.ToUpper()} / {GetMaxValue(pixelInfo.ChannelInfos[j].Bits)}F");
+                        }
                     }
                     break;
                 }
@@ -536,6 +562,18 @@ class Helper
                 {
                     bitOffset += pixelInfo.ChannelInfos[j].Bits;
                 }
+            }
+            if (i > pixelInfo.ChannelInfos.Length - 1)
+            {
+                stringBuilder.Append($"{GenerateIndent(indentCount + 8)}1.0f");
+            }
+            if (i == 3)
+            {
+                stringBuilder.AppendLine(");");
+            }
+            else
+            {
+                stringBuilder.AppendLine(",");
             }
         }
         stringBuilder.Append($"{GenerateIndent(indentCount)}}}");
