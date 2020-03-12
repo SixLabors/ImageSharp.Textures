@@ -10,8 +10,8 @@ using SixLabors.ImageSharp.PixelFormats;
 namespace SixLabors.ImageSharp.Textures.PixelFormats
 {
     /// <summary>
-    /// Pixel type containing four 32-bit unsigned normalized values ranging from 0 to 0.
-    /// The color components are stored in red, green, blue, alpha order (least significant to most significant uint).
+    /// Pixel type containing four 32-bit unsigned normalized values ranging from 0 to 4294967295.
+    /// The color components are stored in red, green, blue, alpha
     /// <para>
     /// Ranges from [0, 0, 0, 0] to [1, 1, 1, 1] in vector form.
     /// </para>

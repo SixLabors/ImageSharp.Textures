@@ -86,9 +86,9 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         public Vector4 ToVector4()
         {
             return new Vector4(
-                FloatHelper.UnpackFloat11ToFloat((ushort)(this.PackedValue & 0x7FF)),
-                FloatHelper.UnpackFloat11ToFloat((ushort)((this.PackedValue >> 11) & 0x7FF)),
-                FloatHelper.UnpackFloat10ToFloat((ushort)((this.PackedValue >> 22) & 0x3FF)),
+                FloatHelper.UnpackFloat11ToFloat((ushort)(this.PackedValue & 2047)),
+                FloatHelper.UnpackFloat11ToFloat((ushort)((this.PackedValue >> 11) & 2047)),
+                FloatHelper.UnpackFloat10ToFloat((ushort)((this.PackedValue >> 22) & 1023)),
                 1.0f);
         }
 

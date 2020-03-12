@@ -85,9 +85,9 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         public Vector4 ToVector4()
         {
             return new Vector4(
-                ((this.PackedValue >> 10) & 0x1F) / 31F,
-                ((this.PackedValue >> 5) & 0x1F) / 31F,
-                (this.PackedValue & 0x1F) / 31F,
+                ((this.PackedValue >> 10) & 31) / 31F,
+                ((this.PackedValue >> 5) & 31) / 31F,
+                (this.PackedValue & 31) / 31F,
                 1.0f);
         }
 
@@ -169,9 +169,9 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         {
             vector = Vector3.Clamp(vector, Vector3.Zero, Vector3.One);
             return (uint)(
-                (((uint)Math.Round(vector.X * 31F) & 0x1F) << 10)
-                | (((uint)Math.Round(vector.Y * 31F) & 0x1F) << 5)
-                | ((uint)Math.Round(vector.Z * 31F) & 0x1F));
+                (((uint)Math.Round(vector.X * 31F) & 31) << 10)
+                | (((uint)Math.Round(vector.Y * 31F) & 31) << 5)
+                | ((uint)Math.Round(vector.Z * 31F) & 31));
         }
     }
 }

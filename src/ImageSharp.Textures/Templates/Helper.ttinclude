@@ -13,6 +13,7 @@
 public struct ChannelInfo
 {
     public int Bits;
+    public bool IsFloat;
     public string Channel;
 }
 
@@ -20,7 +21,6 @@ public struct PixelInfo
 {
     public string Name;
     public string PackedType;
-    public bool IsFloat;
     public ChannelInfo[] ChannelInfos;
 }
 
@@ -45,7 +45,12 @@ class Helper
 
     private static bool IsPacked(PixelInfo pixelInfo)
     {
-        return !pixelInfo.PackedType.Equals("none", StringComparison.CurrentCultureIgnoreCase);
+        return IsPacked(pixelInfo.PackedType);
+    }
+
+    private static bool IsPacked(string packedType)
+    {
+        return !packedType.Equals("none", StringComparison.CurrentCultureIgnoreCase);
     }
 
     private static string GetChannelName(string channel)
@@ -69,34 +74,61 @@ class Helper
         throw new Exception("Unregognized channel.");
     }
 
-    private static string GetChanneType(bool isFloat, int bits)
+    private static string GetChanneType(string packedType, ChannelInfo channelInfo)
     {
-        if (!isFloat && bits == 8) 
+        if (IsPacked(packedType))
+        {
+            if (channelInfo.Bits <= 8) 
+            {
+                return "byte";
+            }
+            else if (channelInfo.Bits <= 16) 
+            {
+                return "ushort";
+            }
+            else if (channelInfo.Bits <= 32) 
+            {
+                return "uint";
+            }
+            else if (channelInfo.Bits <= 64) 
+            { 
+                return "ulong";
+            }
+        }
+        if (!channelInfo.IsFloat && channelInfo.Bits == 8) 
         {
             return "byte";
         }
-        else if (bits == 16) 
+        else if (channelInfo.Bits == 10 || channelInfo.Bits == 11 || channelInfo.Bits == 16) 
         {
-            return isFloat ? "float16" : "ushort";
+            return "ushort";
         }
-        else if (bits == 32) 
+        else if (channelInfo.Bits == 32) 
         {
-            return isFloat ? "float" : "uint";
+            return channelInfo.IsFloat ? "float" : "uint";
         }
-        else if (bits == 64) 
+        else if (channelInfo.Bits == 64) 
         { 
-            return isFloat ? "double" : "ulong";
+            return channelInfo.IsFloat ? "double" : "ulong";
         }
-        throw new Exception("Unregognized bits.");
+        throw new Exception($"Unregognized bits {channelInfo.IsFloat} {channelInfo.Bits}.");
     }
 
-    private static ulong GetMaxValue(int bits)
+    private static object GetMaxValue(int bits)
     {
         if (bits == 5) 
         {
             return (1 << 5) - 1;
         }
-        if (bits == 8) 
+        else if (bits == 10) 
+        {
+            return (1 << 10) - 1;
+        }
+        else if (bits == 11) 
+        {
+            return (1 << 11) - 1;
+        }
+        else if (bits == 8) 
         {
             return byte.MaxValue;
         }
@@ -150,7 +182,7 @@ class Helper
             stringBuilder.AppendLine("using System.Runtime.InteropServices;");
         }
         stringBuilder.Append("using SixLabors.ImageSharp.PixelFormats;");
-        if (pixelInfo.IsFloat && pixelInfo.ChannelInfos.Where(c => c.Bits != 32 && c.Bits != 64).Any())
+        if (IsPacked(pixelInfo) && pixelInfo.ChannelInfos.Where(c => c.IsFloat).Any())
         {
             stringBuilder.AppendLine();
             stringBuilder.Append("using SixLabors.ImageSharp.Textures.Common.Helpers;");
@@ -227,7 +259,7 @@ class Helper
             throw new Exception("All bits should be the smae.");
         }
         var stringBuilder = new StringBuilder();
-        stringBuilder.AppendLine($"{GenerateIndent(indentCount)}/// Pixel type containing {numbers[pixelInfo.ChannelInfos.Length - 1]} {pixelInfo.ChannelInfos[0].Bits}-bit unsigned normalized values ranging from 0 to {(1 << pixelInfo.ChannelInfos[0].Bits) - 1}.");
+        stringBuilder.AppendLine($"{GenerateIndent(indentCount)}/// Pixel type containing {numbers[pixelInfo.ChannelInfos.Length - 1]} {pixelInfo.ChannelInfos[0].Bits}-bit unsigned normalized values ranging from 0 to {GetMaxValue(pixelInfo.ChannelInfos[0].Bits)}.");
         stringBuilder.Append($"{GenerateIndent(indentCount)}/// The color components are stored in ");
         for (int i = 0; i < pixelInfo.ChannelInfos.Length; i++)
         {
@@ -237,7 +269,7 @@ class Helper
             }
             stringBuilder.Append(GetChannelName(pixelInfo.ChannelInfos[i].Channel));
         }
-        stringBuilder.Append($" order (least significant to most significant {GetChanneType(pixelInfo.IsFloat, pixelInfo.ChannelInfos[0].Bits)}).");
+        //stringBuilder.Append($" order (least significant to most significant {GetChanneType(pixelInfo.PackedType, pixelInfo.ChannelInfos[0])}).");
         return stringBuilder.ToString();
     }
 
@@ -323,7 +355,7 @@ class Helper
              stringBuilder.AppendLine($"{GenerateIndent(indentCount)}/// Gets or sets the {GetChannelName(pixelInfo.ChannelInfos[i].Channel)} component.");
              stringBuilder.AppendLine($"{GenerateIndent(indentCount)}/// </summary>");
              stringBuilder.AppendLine($"{GenerateIndent(indentCount)}[FieldOffset({(pixelInfo.ChannelInfos[0].Bits / 8) * i})]");
-             stringBuilder.AppendLine($"{GenerateIndent(indentCount)}public {GetChanneType(pixelInfo.IsFloat, pixelInfo.ChannelInfos[i].Bits)} {pixelInfo.ChannelInfos[i].Channel.ToUpper()};");
+             stringBuilder.AppendLine($"{GenerateIndent(indentCount)}public {GetChanneType(pixelInfo.PackedType, pixelInfo.ChannelInfos[i])} {pixelInfo.ChannelInfos[i].Channel.ToUpper()};");
         }
         stringBuilder.AppendLine();
         return stringBuilder.ToString();
@@ -397,7 +429,7 @@ class Helper
                 {
                     stringBuilder.Append(", ");
                 }
-                stringBuilder.Append($"{GetChanneType(pixelInfo.IsFloat, pixelInfo.ChannelInfos[0].Bits)} {channelNames[i]}");
+                stringBuilder.Append($"{GetChanneType(pixelInfo.PackedType, pixelInfo.ChannelInfos[0])} {channelNames[i]}");
             }
             stringBuilder.AppendLine(")");
             stringBuilder.AppendLine($"{GenerateIndent(indentCount)}{{");
@@ -486,13 +518,13 @@ class Helper
         {
             for (var i = 0; i < pixelInfo.ChannelInfos.Length; i++)
             {
-                if (pixelInfo.IsFloat) 
+                if (pixelInfo.ChannelInfos[i].IsFloat) 
                 {
                     stringBuilder.AppendLine($"{GenerateIndent(indentCount + 4)}this.{pixelInfo.ChannelInfos[i].Channel.ToUpper()} = vector.{MapChannelNameToVectorName(pixelInfo.ChannelInfos[i].Channel).ToUpper()};");
                 }
                 else
                 {
-                    stringBuilder.AppendLine($"{GenerateIndent(indentCount + 4)}this.{pixelInfo.ChannelInfos[i].Channel.ToUpper()} = ({GetChanneType(pixelInfo.IsFloat, pixelInfo.ChannelInfos[i].Bits)})(vector.{MapChannelNameToVectorName(pixelInfo.ChannelInfos[i].Channel).ToUpper()} * {GetMaxValue(pixelInfo.ChannelInfos[i].Bits)});");
+                    stringBuilder.AppendLine($"{GenerateIndent(indentCount + 4)}this.{pixelInfo.ChannelInfos[i].Channel.ToUpper()} = ({GetChanneType(pixelInfo.PackedType, pixelInfo.ChannelInfos[i])})(vector.{MapChannelNameToVectorName(pixelInfo.ChannelInfos[i].Channel).ToUpper()} * {GetMaxValue(pixelInfo.ChannelInfos[i].Bits)});");
                 }
             }
         }
@@ -522,32 +554,32 @@ class Helper
                 {
                     if (IsPacked(pixelInfo))
                     {
-                        if (pixelInfo.IsFloat) 
+                        if (pixelInfo.ChannelInfos[j].IsFloat) 
                         {
                             if (bitOffset == 0)
                             {
-                                stringBuilder.Append($"{GenerateIndent(indentCount + 8)}FloatHelper.UnpackFloat{pixelInfo.ChannelInfos[j].Bits}ToFloat((ushort)(this.PackedValue & 0x{((1 << pixelInfo.ChannelInfos[j].Bits) - 1).ToString("X")}))");
+                                stringBuilder.Append($"{GenerateIndent(indentCount + 8)}FloatHelper.UnpackFloat{pixelInfo.ChannelInfos[j].Bits}ToFloat(({GetChanneType(pixelInfo.PackedType, pixelInfo.ChannelInfos[j])})(this.PackedValue & {GetMaxValue(pixelInfo.ChannelInfos[j].Bits)}))");
                             }
                             else
                             {
-                                stringBuilder.Append($"{GenerateIndent(indentCount + 8)}FloatHelper.UnpackFloat{pixelInfo.ChannelInfos[j].Bits}ToFloat((ushort)((this.PackedValue >> {bitOffset}) & 0x{((1 << pixelInfo.ChannelInfos[j].Bits) - 1).ToString("X")}))");
+                                stringBuilder.Append($"{GenerateIndent(indentCount + 8)}FloatHelper.UnpackFloat{pixelInfo.ChannelInfos[j].Bits}ToFloat(({GetChanneType(pixelInfo.PackedType, pixelInfo.ChannelInfos[j])})((this.PackedValue >> {bitOffset}) & {GetMaxValue(pixelInfo.ChannelInfos[j].Bits)}))");
                             }
                         }
                         else
                         {
                             if (bitOffset == 0)
                             {
-                                stringBuilder.Append($"{GenerateIndent(indentCount + 8)}(this.PackedValue & 0x{((1 << pixelInfo.ChannelInfos[j].Bits) - 1).ToString("X")}) / {(1 << pixelInfo.ChannelInfos[j].Bits) - 1}F");
+                                stringBuilder.Append($"{GenerateIndent(indentCount + 8)}(this.PackedValue & {GetMaxValue(pixelInfo.ChannelInfos[j].Bits)}) / {GetMaxValue(pixelInfo.ChannelInfos[j].Bits)}F");
                             }
                             else
                             {
-                                stringBuilder.Append($"{GenerateIndent(indentCount + 8)}((this.PackedValue >> {bitOffset}) & 0x{((1 << pixelInfo.ChannelInfos[j].Bits) - 1).ToString("X")}) / {(1 << pixelInfo.ChannelInfos[j].Bits) - 1}F");
+                                stringBuilder.Append($"{GenerateIndent(indentCount + 8)}((this.PackedValue >> {bitOffset}) & {GetMaxValue(pixelInfo.ChannelInfos[j].Bits)}) / {GetMaxValue(pixelInfo.ChannelInfos[j].Bits)}F");
                             }
                         }
                     }
                     else
                     {
-                        if (pixelInfo.IsFloat) 
+                        if (pixelInfo.ChannelInfos[j].IsFloat) 
                         {
                             stringBuilder.Append($"{GenerateIndent(indentCount + 8)}this.{pixelInfo.ChannelInfos[j].Channel.ToUpper()}");
                         }
@@ -565,7 +597,8 @@ class Helper
             }
             if (i > pixelInfo.ChannelInfos.Length - 1)
             {
-                stringBuilder.Append($"{GenerateIndent(indentCount + 8)}1.0f");
+                var value = i < 3 ? "0.0f" : "1.0f";
+                stringBuilder.Append($"{GenerateIndent(indentCount + 8)}{value}");
             }
             if (i == 3)
             {
@@ -611,7 +644,7 @@ class Helper
                     {
                         stringBuilder.Append("| ");
                     }
-                    if (pixelInfo.IsFloat)
+                    if (pixelInfo.ChannelInfos[j].IsFloat)
                     {
                         if (bitOffset == 0) 
                         {
@@ -626,14 +659,14 @@ class Helper
                     {
                         if (bitOffset == 0) 
                         {
-                            stringBuilder.Append($"((uint)Math.Round(vector.{vectorNames[i].ToUpper()} * {(1 << pixelInfo.ChannelInfos[j].Bits) - 1}F) & 0x{((1 << pixelInfo.ChannelInfos[j].Bits) - 1).ToString("X")})");
+                            stringBuilder.Append($"((uint)Math.Round(vector.{vectorNames[i].ToUpper()} * {GetMaxValue(pixelInfo.ChannelInfos[j].Bits)}F) & {GetMaxValue(pixelInfo.ChannelInfos[j].Bits)})");
                         }
                         else
                         {
-                            stringBuilder.Append($"(((uint)Math.Round(vector.{vectorNames[i].ToUpper()} * {(1 << pixelInfo.ChannelInfos[j].Bits) - 1}F) & 0x{((1 << pixelInfo.ChannelInfos[j].Bits) - 1).ToString("X")}) << {bitOffset})");
+                            stringBuilder.Append($"(((uint)Math.Round(vector.{vectorNames[i].ToUpper()} * {GetMaxValue(pixelInfo.ChannelInfos[j].Bits)}F) & {GetMaxValue(pixelInfo.ChannelInfos[j].Bits)}) << {bitOffset})");
                         }
                     }
-                    if (i != 2)
+                    if (i != pixelInfo.ChannelInfos.Length - 1)
                     {
                         stringBuilder.AppendLine();
                     }
@@ -645,7 +678,7 @@ class Helper
                 }
             }
         }
-        stringBuilder.AppendLine(");");
+        stringBuilder.AppendLine($");");
         stringBuilder.Append($"{GenerateIndent(indentCount)}}}");
         return stringBuilder.ToString();
     }

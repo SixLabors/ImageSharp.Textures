@@ -12,12 +12,11 @@
         {
             Name = "R32G32B32A32_FLOAT",
             PackedType = "none",
-            IsFloat = true,
             ChannelInfos = new[] {
-                new ChannelInfo { Bits = 32, Channel = "r" },
-                new ChannelInfo { Bits = 32, Channel = "g" },
-                new ChannelInfo { Bits = 32, Channel = "b" },
-                new ChannelInfo { Bits = 32, Channel = "a" }
+                new ChannelInfo { Bits = 32, IsFloat = true, Channel = "r" },
+                new ChannelInfo { Bits = 32, IsFloat = true, Channel = "g" },
+                new ChannelInfo { Bits = 32, IsFloat = true, Channel = "b" },
+                new ChannelInfo { Bits = 32, IsFloat = true, Channel = "a" }
             }
         },
 
@@ -25,24 +24,102 @@
         {
             Name = "R32G32B32A32_UINT",
             PackedType = "none",
-            IsFloat = false,
             ChannelInfos = new[] {
-                new ChannelInfo { Bits = 32, Channel = "r" },
-                new ChannelInfo { Bits = 32, Channel = "g" },
-                new ChannelInfo { Bits = 32, Channel = "b" },
-                new ChannelInfo { Bits = 32, Channel = "a" }
+                new ChannelInfo { Bits = 32, IsFloat = false, Channel = "r" },
+                new ChannelInfo { Bits = 32, IsFloat = false, Channel = "g" },
+                new ChannelInfo { Bits = 32, IsFloat = false, Channel = "b" },
+                new ChannelInfo { Bits = 32, IsFloat = false, Channel = "a" }
             }
         },
 
         new PixelInfo
         {
+            Name = "R32G32B32_FLOAT",
+            PackedType = "none",
+            ChannelInfos = new[] {
+                new ChannelInfo { Bits = 32, IsFloat = true, Channel = "r" },
+                new ChannelInfo { Bits = 32, IsFloat = true, Channel = "g" },
+                new ChannelInfo { Bits = 32, IsFloat = true, Channel = "b" }
+            }
+        },
+
+        new PixelInfo
+        {
+            Name = "R32G32B32_UINT",
+            PackedType = "none",
+            ChannelInfos = new[] {
+                new ChannelInfo { Bits = 32, IsFloat = false, Channel = "r" },
+                new ChannelInfo { Bits = 32, IsFloat = false, Channel = "g" },
+                new ChannelInfo { Bits = 32, IsFloat = false, Channel = "b" }
+            }
+        },
+
+        new PixelInfo
+        {
+            Name = "R16G16B16A16_FLOAT",
+            PackedType = "ulong",
+            ChannelInfos = new[] {
+                new ChannelInfo { Bits = 16, IsFloat = true, Channel = "r" },
+                new ChannelInfo { Bits = 16, IsFloat = true, Channel = "g" },
+                new ChannelInfo { Bits = 16, IsFloat = true, Channel = "b" },
+                new ChannelInfo { Bits = 16, IsFloat = true, Channel = "a" }
+            }
+        },
+
+        new PixelInfo
+        {
+            Name = "R16G16B16A16_UINT",
+            PackedType = "ulong",
+            ChannelInfos = new[] {
+                new ChannelInfo { Bits = 16, IsFloat = false, Channel = "r" },
+                new ChannelInfo { Bits = 16, IsFloat = false, Channel = "g" },
+                new ChannelInfo { Bits = 16, IsFloat = false, Channel = "b" },
+                new ChannelInfo { Bits = 16, IsFloat = false, Channel = "a" }
+            }
+        },
+
+        new PixelInfo
+        {
+            Name = "R32G32_FLOAT",
+            PackedType = "none",
+            ChannelInfos = new[] {
+                new ChannelInfo { Bits = 32, IsFloat = true, Channel = "r" },
+                new ChannelInfo { Bits = 32, IsFloat = true, Channel = "g" }
+            }
+        },
+
+        new PixelInfo
+        {
+            Name = "R32G32_UINT",
+            PackedType = "none",
+            ChannelInfos = new[] {
+                new ChannelInfo { Bits = 32, IsFloat = false, Channel = "r" },
+                new ChannelInfo { Bits = 32, IsFloat = false, Channel = "g" }
+            }
+        },
+
+        new PixelInfo
+        {
+            Name = "D32_FLOAT_S8X24_UINT",
+            PackedType = "ulong",
+            ChannelInfos = new[] {
+                new ChannelInfo { Bits = 32, IsFloat = true, Channel = "r" },
+                new ChannelInfo { Bits = 8, IsFloat = false, Channel = "g" }
+            }
+        },
+
+
+
+
+
+        new PixelInfo
+        {
             Name = "BGR555_UINT",
             PackedType = "uint",
-            IsFloat = false,
             ChannelInfos = new[] {
-                new ChannelInfo { Bits = 5, Channel = "b" },
-                new ChannelInfo { Bits = 5, Channel = "g" },
-                new ChannelInfo { Bits = 5, Channel = "r" }
+                new ChannelInfo { Bits = 5, IsFloat = false, Channel = "b" },
+                new ChannelInfo { Bits = 5, IsFloat = false, Channel = "g" },
+                new ChannelInfo { Bits = 5, IsFloat = false, Channel = "r" }
             }
         },
     
@@ -50,11 +127,10 @@
         {
             Name = "BGR32_UINT",
             PackedType = "uint",
-            IsFloat = false,
             ChannelInfos = new[] {
-                new ChannelInfo { Bits = 8, Channel = "b" },
-                new ChannelInfo { Bits = 8, Channel = "g" },
-                new ChannelInfo { Bits = 8, Channel = "r" }
+                new ChannelInfo { Bits = 8, IsFloat = false, Channel = "b" },
+                new ChannelInfo { Bits = 8, IsFloat = false, Channel = "g" },
+                new ChannelInfo { Bits = 8, IsFloat = false, Channel = "r" }
             }
         },
 
@@ -62,11 +138,10 @@
         {
             Name = "RGB32_UINT",
             PackedType = "uint",
-            IsFloat = false,
             ChannelInfos = new[] {
-                new ChannelInfo { Bits = 8, Channel = "r" },
-                new ChannelInfo { Bits = 8, Channel = "g" },
-                new ChannelInfo { Bits = 8, Channel = "b" }
+                new ChannelInfo { Bits = 8, IsFloat = false, Channel = "r" },
+                new ChannelInfo { Bits = 8, IsFloat = false, Channel = "g" },
+                new ChannelInfo { Bits = 8, IsFloat = false, Channel = "b" }
             }
         },
 
@@ -74,11 +149,10 @@
         {
             Name = "R8G8B8",
             PackedType = "none",
-            IsFloat = false,
             ChannelInfos = new[] {
-                new ChannelInfo { Bits = 8, Channel = "r" },
-                new ChannelInfo { Bits = 8, Channel = "g" },
-                new ChannelInfo { Bits = 8, Channel = "b" }
+                new ChannelInfo { Bits = 8, IsFloat = false, Channel = "r" },
+                new ChannelInfo { Bits = 8, IsFloat = false, Channel = "g" },
+                new ChannelInfo { Bits = 8, IsFloat = false, Channel = "b" }
             }
         },
 
@@ -86,11 +160,10 @@
         {
             Name = "R11G11B10_FLOAT",
             PackedType = "uint",
-            IsFloat = true,
             ChannelInfos = new[] {
-                new ChannelInfo { Bits = 11, Channel = "r" },
-                new ChannelInfo { Bits = 11, Channel = "g" },
-                new ChannelInfo { Bits = 10, Channel = "b" }
+                new ChannelInfo { Bits = 11, IsFloat = true, Channel = "r" },
+                new ChannelInfo { Bits = 11, IsFloat = true, Channel = "g" },
+                new ChannelInfo { Bits = 10, IsFloat = true, Channel = "b" }
             }
         }
 

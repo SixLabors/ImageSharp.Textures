@@ -1,0 +1,59 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <RuntimeIdentifiers>win-x64;osx-x64</RuntimeIdentifiers>
+    <StartupObject>Phoenix.Import.Application.Program</StartupObject>
+    <ApplicationIcon>Icon.ico</ApplicationIcon>
+    <PublishTrimmed>false</PublishTrimmed>
+    <LangVersion>8.0</LangVersion>
+    <RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
+    <RunAnalyzersDuringLiveAnalysis>false</RunAnalyzersDuringLiveAnalysis>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="SixLabors.ImageSharp" Version="1.0.0-unstable0934" />
+    <PackageReference Include="Veldrid.ImageSharp" Version="4.7.0" />
+    <PackageReference Include="Veldrid.ImGui" Version="5.67.0" />
+    <PackageReference Include="Veldrid.StartupUtilities" Version="4.5.0" />
+    <PackageReference Include="Veldrid.Utilities" Version="4.5.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Remove="Shaders\GLSL\imgui-frag.glsl" />
+    <None Remove="Shaders\GLSL\imgui-vertex.glsl" />
+    <None Remove="Shaders\HLSL\imgui-frag.hlsl" />
+    <None Remove="Shaders\HLSL\imgui-frag.hlsl.bytes" />
+    <None Remove="Shaders\Metal\imgui-frag.metallib" />
+    <None Remove="Shaders\SPIR-V\imgui-frag.glsl" />
+    <None Remove="Shaders\SPIR-V\imgui-frag.spv" />
+    <None Remove="Shaders\SPIR-V\imgui-vertex.glsl" />
+    <None Remove="Shaders\SPIR-V\imgui-vertex.spv" />
+    <None Remove="Shaders\SPIRV\imgui-vert.spv" />
+    <None Remove="Shaders\Metal\imgui-frag.metallib" />
+    <None Remove="Shaders\Metal\imgui-vertex.metal" />
+    <None Remove="Shaders\Metal\imgui-vertex.metallib" />
+    <None Remove="Shaders\GLSL\imgui-frag.glsl" />
+    <None Remove="Shaders\GLSL\imgui-vert.glsl" />
+    <None Remove="Shaders\HLSL\imgui-frag.hlsl.bytes" />
+    <None Remove="Shaders\HLSL\imgui-vert.hlsl.bytes" />
+    <None Remove="Shaders\Metal\imgui-vert.metallib" />
+    <None Remove="Shaders\SPIR-V\imgui-frag.spv" />
+    <None Remove="Shaders\SPIR-V\imgui-vert.spv" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\ImageSharp.Textures\ImageSharp.Textures.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="Shaders\SPIRV\imgui-vert.spv">
+      <LogicalName>Phoenix.Import.Application.Shaders.SPIRV.imgui-vert.spv</LogicalName>
+    </None>
+  </ItemGroup>
+  <Import Project="..\Images\Images.projitems" Label="Shared" />
+</Project>
