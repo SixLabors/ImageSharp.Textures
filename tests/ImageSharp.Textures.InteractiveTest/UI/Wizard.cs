@@ -7,16 +7,7 @@ namespace Phoenix.Import.Application.UI
     public class Wizard
     {
         public int Pages { get; set; }
-
-        private int _currentPageIndex;
-        public int CurrentPageIndex
-        {
-            get => _currentPageIndex;
-            set
-            {
-                _currentPageIndex = value;
-            }
-        }
+        public int CurrentPageIndex { get; set; }
 
         public Action OnCancel { get; set; }
         public Action OnValidate { get; set; }
@@ -30,7 +21,7 @@ namespace Phoenix.Import.Application.UI
 
         public Wizard()
         {
-            CancelButton = new Button()
+            this.CancelButton = new Button()
             {
                 Title = "Cancel",
                 Enabled = true,
@@ -38,7 +29,7 @@ namespace Phoenix.Import.Application.UI
                 Size = new Vector2(100, 30)
             };
 
-            ValidateButton = new Button()
+            this.ValidateButton = new Button()
             {
                 Title = "Validate",
                 Enabled = true,
@@ -46,7 +37,7 @@ namespace Phoenix.Import.Application.UI
                 Size = new Vector2(100, 30)
             };
 
-            PreviousButton = new Button()
+            this.PreviousButton = new Button()
             {
                 Title = "Previous",
                 Enabled = true,
@@ -54,7 +45,7 @@ namespace Phoenix.Import.Application.UI
                 Size = new Vector2(100, 30)
             };
 
-            NextButton = new Button()
+            this.NextButton = new Button()
             {
                 Title = "Next",
                 Enabled = true,
@@ -62,8 +53,8 @@ namespace Phoenix.Import.Application.UI
                 Size = new Vector2(100, 30)
             };
 
-            Pages = 1;
-            CurrentPageIndex = 0;
+            this.Pages = 1;
+            this.CurrentPageIndex = 0;
         }
 
         public void Render(Action renderPage)
@@ -73,63 +64,62 @@ namespace Phoenix.Import.Application.UI
             ImGui.EndChild();
 
             ImGui.SetCursorPos(new Vector2(8, ImGui.GetWindowSize().Y - 38));
-            CancelButton.Render(CancelAction);
+            this.CancelButton.Render(this.CancelAction);
 
             ImGui.SetCursorPos(new Vector2(ImGui.GetWindowSize().X - 324, ImGui.GetWindowSize().Y - 38));
-            ValidateButton.Render(ValidateAction);
+            this.ValidateButton.Render(this.ValidateAction);
 
             ImGui.SetCursorPos(new Vector2(ImGui.GetWindowSize().X - 216, ImGui.GetWindowSize().Y - 38));
-            PreviousButton.Render(PreviousAction);
+            this.PreviousButton.Render(this.PreviousAction);
 
             ImGui.SetCursorPos(new Vector2(ImGui.GetWindowSize().X - 108, ImGui.GetWindowSize().Y - 38));
-            NextButton.Render(NextAction);
+            this.NextButton.Render(this.NextAction);
         }
 
         private void CancelAction()
         {
-            OnCancel?.Invoke();
+            this.OnCancel?.Invoke();
         }
 
         private void ValidateAction()
         {
-            OnValidate?.Invoke();
+            this.OnValidate?.Invoke();
         }
 
         private void PreviousAction()
         {
-            var pageIndex = CurrentPageIndex;
+            int pageIndex = this.CurrentPageIndex;
             if (pageIndex > 0)
             {
                 pageIndex -= 1;
             }
-            if (OnPrevious?.Invoke(pageIndex) ?? false)
+            if (this.OnPrevious?.Invoke(pageIndex) ?? false)
             {
-                CurrentPageIndex = pageIndex;
+                this.CurrentPageIndex = pageIndex;
             }
         }
 
         private void NextAction()
         {
-            var pageIndex = CurrentPageIndex;
-            if (pageIndex < (Pages - 1))
+            int pageIndex = this.CurrentPageIndex;
+            if (pageIndex < (this.Pages - 1))
             {
                 pageIndex += 1;
             }
-            if (OnNext?.Invoke(pageIndex) ?? false)
+            if (this.OnNext?.Invoke(pageIndex) ?? false)
             {
-                CurrentPageIndex = pageIndex;
+                this.CurrentPageIndex = pageIndex;
             }
         }
 
         public void GoHome()
         {
-            CurrentPageIndex = 0;
+            this.CurrentPageIndex = 0;
         }
 
         public void GoNext()
         {
-            NextAction();
+            this.NextAction();
         }
-
     }
 }

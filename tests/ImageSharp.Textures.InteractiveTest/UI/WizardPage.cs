@@ -1,5 +1,4 @@
-﻿using System;
-namespace Phoenix.Import.Application.UI
+﻿namespace Phoenix.Import.Application.UI
 {
     public abstract class WizardPage
     {
@@ -7,12 +6,12 @@ namespace Phoenix.Import.Application.UI
 
         protected WizardPage(Wizard wizard)
         {
-            Wizard = wizard;
+            this.Wizard = wizard;
         }
 
         public virtual void Cancel()
         {
-            Wizard.GoHome();
+            this.Wizard.GoHome();
         }
 
         public virtual void Validate()

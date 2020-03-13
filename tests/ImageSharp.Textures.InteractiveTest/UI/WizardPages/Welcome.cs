@@ -23,6 +23,5 @@ namespace Phoenix.Import.Application.UI.WizardPages
             ImGui.Spacing();
             ImGui.TextWrapped("Welcome to the ImageSharp Textures Test tool.");
         }
-
     }
 }

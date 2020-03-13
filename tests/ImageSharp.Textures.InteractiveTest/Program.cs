@@ -8,44 +8,44 @@ namespace Phoenix.Import.Application
 {
     public class Program
     {
-        private static UiManager _uiManager;
-        private static Sdl2Window _window;
-        private static DateTime _prevUpdateTime;
+        private static UiManager uiManager;
+        private static Sdl2Window window;
+        private static DateTime prevUpdateTime;
 
-        public static void Main(string[] args)
+        public static void Main()
         {
-            _uiManager = new UiManager();
+            uiManager = new UiManager();
 
-            _window = VeldridStartup.CreateWindow(new WindowCreateInfo(50, 50, 1280, 720, WindowState.Normal, $"ImageSharp.Textures.InteractiveTest"));
-            ApplicationManager.GraphicsDevice = VeldridStartup.CreateGraphicsDevice(_window, GraphicsBackend.OpenGL);      
+            window = VeldridStartup.CreateWindow(new WindowCreateInfo(50, 50, 1280, 720, WindowState.Normal, $"ImageSharp.Textures.InteractiveTest"));
+            ApplicationManager.GraphicsDevice = VeldridStartup.CreateGraphicsDevice(window, GraphicsBackend.OpenGL);      
 
-            _window.Resized += _window_Resized;
+            window.Resized += Window_Resized;
 
             ApplicationManager.CommandList = ApplicationManager.GraphicsDevice.ResourceFactory.CreateCommandList();
-            ApplicationManager.Controller = new ImGuiRenderer(ApplicationManager.GraphicsDevice, ApplicationManager.GraphicsDevice.MainSwapchain.Framebuffer.OutputDescription, _window.Width, _window.Height);
+            ApplicationManager.Controller = new ImGuiRenderer(ApplicationManager.GraphicsDevice, ApplicationManager.GraphicsDevice.MainSwapchain.Framebuffer.OutputDescription, window.Width, window.Height);
 
             ImGui.StyleColorsDark();
 
             // Main application loop
-            while (_window.Exists)
+            while (window.Exists)
             {
-                InputSnapshot snapshot = _window.PumpEvents();
-                if (!_window.Exists)
+                InputSnapshot snapshot = window.PumpEvents();
+                if (!window.Exists)
                 {
                     break;
                 }
 
                 DateTime curUpdateTime = DateTime.Now;
-                if (_prevUpdateTime.Ticks == 0)
+                if (prevUpdateTime.Ticks == 0)
                 {
-                    _prevUpdateTime = curUpdateTime;
+                    prevUpdateTime = curUpdateTime;
                 }
-                float dt = (float)(curUpdateTime - _prevUpdateTime).TotalSeconds;
+                float dt = (float)(curUpdateTime - prevUpdateTime).TotalSeconds;
                 if (dt <= 0)
                 {
                     dt = float.Epsilon;
                 }
-                _prevUpdateTime = curUpdateTime;
+                prevUpdateTime = curUpdateTime;
 
                 ApplicationManager.Controller.Update(dt, snapshot); 
 
@@ -73,15 +73,15 @@ namespace Phoenix.Import.Application
             ApplicationManager.GraphicsDevice.Dispose();
         }
 
-        static void _window_Resized()
+        static void Window_Resized()
         {
-            ApplicationManager.GraphicsDevice.MainSwapchain.Resize((uint)_window.Width, (uint)_window.Height);
-            ApplicationManager.Controller.WindowResized(_window.Width, _window.Height);
+            ApplicationManager.GraphicsDevice.MainSwapchain.Resize((uint)window.Width, (uint)window.Height);
+            ApplicationManager.Controller.WindowResized(window.Width, window.Height);
         }
 
         private static void SubmitUi()
         {
-            _uiManager.Render(_window.Width, _window.Height);
+            uiManager.Render(window.Width, window.Height);
         }
     }
 }

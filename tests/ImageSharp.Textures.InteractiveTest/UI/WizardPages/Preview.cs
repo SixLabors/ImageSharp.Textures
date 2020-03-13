@@ -89,6 +89,7 @@ namespace Phoenix.Import.Application.UI.WizardPages
                 using var result = (FlatTexture)decoder.DecodeTexture(SixLabors.ImageSharp.Textures.Configuration.Default, fileStream);
                 using Image ddsImage = result.MipMaps[0].GetImage();
                 using Image<Rgba32> clone = ddsImage.CloneAs<Rgba32>();
+                clone.Save(saveFilePath);
                 return new ImageInfo { TexturePtr = ApplicationManager.Create(clone), Size = new Vector2(clone.Width, clone.Height), FilePath = filePath, TempFilePath = saveFilePath };
             }
             catch (Exception ex)
