@@ -24,8 +24,7 @@ namespace Phoenix.Import.Application
             _wizardPages = new WizardPage[]
             {
                 new Welcome(_wizard),
-                new Select(_wizard),
-                new Review(_wizard)
+                new Preview(_wizard)
             };
             _wizard.Pages = _wizardPages.Length;
 

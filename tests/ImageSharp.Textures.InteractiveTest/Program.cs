@@ -8,16 +8,14 @@ namespace Phoenix.Import.Application
 {
     public class Program
     {
-        //https://github.com/AvaloniaUI/Avalonia/wiki/Hide-console-window-for-self-contained-.NET-Core-application
-
         private static UiManager _uiManager;
         private static Sdl2Window _window;
         private static DateTime _prevUpdateTime;
+
         public static void Main(string[] args)
         {
             _uiManager = new UiManager();
 
-       
             _window = VeldridStartup.CreateWindow(new WindowCreateInfo(50, 50, 1280, 720, WindowState.Normal, $"ImageSharp.Textures.InteractiveTest"));
             ApplicationManager.GraphicsDevice = VeldridStartup.CreateGraphicsDevice(_window, GraphicsBackend.OpenGL);      
 
@@ -31,18 +29,18 @@ namespace Phoenix.Import.Application
             // Main application loop
             while (_window.Exists)
             {
-                var snapshot = _window.PumpEvents();
+                InputSnapshot snapshot = _window.PumpEvents();
                 if (!_window.Exists)
                 {
                     break;
                 }
 
-                var curUpdateTime = DateTime.Now;
+                DateTime curUpdateTime = DateTime.Now;
                 if (_prevUpdateTime.Ticks == 0)
                 {
                     _prevUpdateTime = curUpdateTime;
                 }
-                var dt = (float)(curUpdateTime - _prevUpdateTime).TotalSeconds;
+                float dt = (float)(curUpdateTime - _prevUpdateTime).TotalSeconds;
                 if (dt <= 0)
                 {
                     dt = float.Epsilon;

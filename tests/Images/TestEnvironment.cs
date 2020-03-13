@@ -6,11 +6,13 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 
-namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities
+namespace SixLabors.ImageSharp.Textures
 {
     public static class TestEnvironment
     {
         private const string ImageSharpTexturesSolutionFileName = "ImageSharp.Textures.sln";
+
+        private const string ToolsRelativePath = @"tests\Tools";
 
         private const string InputImagesRelativePath = @"tests\Images\Input";
 
@@ -60,6 +62,11 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities
         private static string GetFullPath(string relativePath) =>
             Path.Combine(SolutionDirectoryFullPath, relativePath)
             .Replace('\\', Path.DirectorySeparatorChar);
+
+        /// <summary>
+        /// Gets the correct full path to the Tools directory.
+        /// </summary>
+        internal static string ToolsDirectoryFullPath => GetFullPath(ToolsRelativePath);
 
         /// <summary>
         /// Gets the correct full path to the Input Images directory.

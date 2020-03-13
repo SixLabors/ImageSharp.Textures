@@ -8,9 +8,9 @@ namespace Phoenix.Import.Application.UI
     {
         public static void RenderSpinner(Vector2 position, float radius, int thickness)
         {
-            var time = (float)ImGui.GetTime();
-            var color = ImGui.ColorConvertFloat4ToU32(new Vector4(0.5f, 0.5f, 0.5f, 1));
-            var drawList = ImGui.GetWindowDrawList();
+            float time = (float)ImGui.GetTime();
+            uint color = ImGui.ColorConvertFloat4ToU32(new Vector4(0.5f, 0.5f, 0.5f, 1));
+            ImDrawListPtr drawList = ImGui.GetWindowDrawList();
 
             int num_segments = 30;
             int start = (int)MathF.Abs(MathF.Sin(time * 1.8f) * (num_segments - 5));

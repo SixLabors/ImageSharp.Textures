@@ -15,6 +15,7 @@
     <None Remove="Images.projitems" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)TestEnvironment.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)TestTextures.cs" />
   </ItemGroup>
 </Project>

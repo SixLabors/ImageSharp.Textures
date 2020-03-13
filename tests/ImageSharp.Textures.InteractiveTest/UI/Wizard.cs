@@ -123,7 +123,7 @@ namespace Phoenix.Import.Application.UI
 
         public void GoHome()
         {
-            CurrentPageIndex = 2;
+            CurrentPageIndex = 0;
         }
 
         public void GoNext()

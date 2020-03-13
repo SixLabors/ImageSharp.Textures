@@ -2,22 +2,18 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Net;
 using System.Numerics;
 using System.Runtime.InteropServices;
-using System.Threading;
-using System.Threading.Tasks;
 using ImGuiNET;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Processing;
+using SixLabors.ImageSharp.Textures;
 using SixLabors.ImageSharp.Textures.Formats.Dds;
 using SixLabors.ImageSharp.Textures.TextureFormats;
 
 namespace Phoenix.Import.Application.UI.WizardPages
 {
-    public class Review : WizardPage
+    public class Preview : WizardPage
     {
         public struct ImageInfo
         {
@@ -25,56 +21,47 @@ namespace Phoenix.Import.Application.UI.WizardPages
             public Vector2 Size;
             public string FilePath;
             public string TempFilePath;
+            public string ErrorMessage;
         }
-
-        private readonly InputDialog _inputDialog;
-        private readonly Dialog _dialog;
-        private readonly AlertDialog _alertDialog;
 
         private string rootFolder;
         private string currentFolder;
+        private string currentFile;
 
         private ImageInfo expectedImageInfo;
         private ImageInfo actualImageInfo;
 
-        public Review(Wizard wizard) : base(wizard)
+        public Preview(Wizard wizard) : base(wizard)
         {
-            this._inputDialog = new InputDialog();
-            this._dialog = new Dialog();
-            this._alertDialog = new AlertDialog();
-
-            this.rootFolder = @"D:\GitPersonal\ImageSharp.Textures\tests\Images\Input\Dds\Flat\";
+            this.rootFolder = Path.Combine(TestEnvironment.InputImagesDirectoryFullPath, "Dds", "Flat");
             this.currentFolder = this.rootFolder;
         }
 
         public void OpenCompare(string filePath1, string filePath2)
         {
-            string command = @"C:\Program Files\Beyond Compare 4\bcomp.exe";
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
+                string command = @"C:\Program Files\Beyond Compare 4\bcomp.exe";
                 Process.Start(new ProcessStartInfo(command, $"\"{filePath1}\" \"{filePath2}\" /fv=\"Picture Compare\""));
-            }
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-            {
-                //Process.Start("open", url);
             }
         }
 
         public string DecompressDDS(string filePath)
         {
-            string command = @"D:\GitPersonal\ImageSharp.Textures\tests\Tools\TexConv.exe";
+            string command = Path.Combine(TestEnvironment.ToolsDirectoryFullPath, "TexConv.exe");
             var process = new Process();
             process.StartInfo.FileName = command;
             process.StartInfo.Arguments = $"-ft PNG \"{filePath}\" -o {Path.GetTempPath()}";
             process.StartInfo.RedirectStandardOutput = true;
             process.Start();
             process.WaitForExit();
-            string saveFilePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.png");
             string sourceFile = Path.Combine(Path.GetTempPath(), $"{Path.GetFileNameWithoutExtension(filePath)}.png");
-            if (File.Exists(sourceFile))
+            if (!File.Exists(sourceFile))
             {
-                File.Move(sourceFile, saveFilePath);
+                throw new Exception(process.StandardOutput.ReadToEnd());
             }
+            string saveFilePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.png");
+            File.Move(sourceFile, saveFilePath);
             return saveFilePath;
         }
 
@@ -83,17 +70,13 @@ namespace Phoenix.Import.Application.UI.WizardPages
             try
             {
                 string ddsSaveFilePath = this.DecompressDDS(filePath);
-                if (File.Exists(ddsSaveFilePath))
-                {
-                    using var clone = Image.Load<Rgba32>(ddsSaveFilePath);
-                    return new ImageInfo { TexturePtr = ApplicationManager.Create(clone), Size = new Vector2(clone.Width, clone.Height), FilePath = filePath, TempFilePath = ddsSaveFilePath };
-                }
+                using var clone = Image.Load<Rgba32>(ddsSaveFilePath);
+                return new ImageInfo { TexturePtr = ApplicationManager.Create(clone), Size = new Vector2(clone.Width, clone.Height), FilePath = filePath, TempFilePath = ddsSaveFilePath };
             }
             catch (Exception ex)
             {
-                //exc
+                return new ImageInfo { TexturePtr = IntPtr.Zero, Size = Vector2.Zero, FilePath = filePath, TempFilePath = string.Empty, ErrorMessage = ex.ToString() };
             }
-            return new ImageInfo { TexturePtr = IntPtr.Zero, Size = Vector2.Zero, FilePath = filePath, TempFilePath = string.Empty };
         }
 
         public ImageInfo LoadActualImage(string filePath)
@@ -110,17 +93,13 @@ namespace Phoenix.Import.Application.UI.WizardPages
             }
             catch (Exception ex)
             {
+                return new ImageInfo { TexturePtr = IntPtr.Zero, Size = Vector2.Zero, FilePath = filePath, TempFilePath = string.Empty, ErrorMessage = ex.ToString() };
             }
-            return new ImageInfo { TexturePtr = IntPtr.Zero, Size = Vector2.Zero, FilePath = filePath, TempFilePath = string.Empty };
         }
 
         public override void Initialize()
         {
             ApplicationManager.ClearImageCache();
-
-            string imagePath = @"D:\GitPersonal\ImageSharp.Textures\tests\Images\Input\Dds\Flat\TexConv\9.1\flat DXT1.DDS";
-            this.expectedImageInfo = this.LoadExpected(imagePath);
-            this.actualImageInfo = this.LoadActualImage(imagePath);
         }
 
         private static void DrawLines(IReadOnlyList<Vector2> points, Vector2 location, float size)
@@ -164,9 +143,9 @@ namespace Phoenix.Import.Application.UI.WizardPages
 
         public override void Render()
         {
-            this.Wizard.CancelButton.Visble = true;
+            this.Wizard.NextButton.Enabled = true;
             this.Wizard.PreviousButton.Visble = false;
-            this.Wizard.NextButton.Title = "Approve";
+            this.Wizard.NextButton.Title = "Home";
 
             Vector2 size = ImGui.GetWindowSize();
 
@@ -174,7 +153,7 @@ namespace Phoenix.Import.Application.UI.WizardPages
             ImGui.PopItemWidth();
             ImGui.Spacing();
 
-            if (ImGui.BeginChildFrame(1, new Vector2(200, size.Y - 100), ImGuiWindowFlags.None))
+            if (ImGui.BeginChildFrame(1, new Vector2(200, size.Y - 24), ImGuiWindowFlags.None))
             {
                 var directories = new List<string>();
                 if (!this.currentFolder.Equals(this.rootFolder, StringComparison.CurrentCultureIgnoreCase))
@@ -188,12 +167,11 @@ namespace Phoenix.Import.Application.UI.WizardPages
                     iconPosition.Y -= ImGui.GetScrollY();
                     float lineHeight = ImGui.GetTextLineHeight();
                     ImGui.SetCursorPosX(lineHeight * 2);
-
                     if (ImGui.Selectable(Path.GetFileName(directory), false, ImGuiSelectableFlags.DontClosePopups))
                     {
+                        this.currentFile = null;
                         this.currentFolder = directory.Equals("..") ? Path.GetFullPath(Path.Combine(this.currentFolder, "..")) : directory;
                     }
-
                     GenerateFolderIcon(iconPosition, lineHeight);
                 }
 
@@ -204,47 +182,55 @@ namespace Phoenix.Import.Application.UI.WizardPages
                     iconPosition.Y -= ImGui.GetScrollY();
                     float lineHeight = ImGui.GetTextLineHeight();
                     ImGui.SetCursorPosX(lineHeight * 2);
-
-                    if (ImGui.Selectable(Path.GetFileName(file), false, ImGuiSelectableFlags.DontClosePopups))
+                    if (ImGui.Selectable(Path.GetFileName(file), string.Equals(file, this.currentFile, StringComparison.CurrentCultureIgnoreCase), ImGuiSelectableFlags.DontClosePopups))
                     {
                         ApplicationManager.ClearImageCache();
+                        this.currentFile = file;
                         this.expectedImageInfo = this.LoadExpected(file);
                         this.actualImageInfo = this.LoadActualImage(file);
                     }
-
                     GenerateFileIcon(iconPosition, lineHeight);
                 }
-
-
                 ImGui.EndChildFrame();
             }
 
             ImGui.SameLine();
-            if (ImGui.BeginChildFrame(2, new Vector2(size.X - 224, size.Y - 100), ImGuiWindowFlags.None))
+            if (ImGui.BeginChildFrame(2, new Vector2(size.X - 224, size.Y - 24), ImGuiWindowFlags.None))
             {
+                ImGui.Text("Expected Image");
                 if (this.expectedImageInfo.TexturePtr != IntPtr.Zero)
                 {
-                    ImGui.Text($"Expected Image ({this.expectedImageInfo.FilePath})");
                     ImGui.Image(this.expectedImageInfo.TexturePtr, this.expectedImageInfo.Size);
                 }
+                else if (this.expectedImageInfo.ErrorMessage != null)
+                {
+                    ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(1, 0, 0, 1));
+                    ImGui.TextWrapped(this.expectedImageInfo.ErrorMessage);
+                    ImGui.PopStyleColor();
+                }
 
+                ImGui.Spacing();
+
+                ImGui.Text("Actual Image");
                 if (this.actualImageInfo.TexturePtr != IntPtr.Zero)
                 {
-                    ImGui.Text($"Actual Image ({this.actualImageInfo.FilePath})");
                     ImGui.Image(this.actualImageInfo.TexturePtr, this.actualImageInfo.Size);
                 }
+                else if (this.actualImageInfo.ErrorMessage != null)
+                {
+                    ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(1, 0, 0, 1));
+                    ImGui.TextWrapped(this.actualImageInfo.ErrorMessage);
+                    ImGui.PopStyleColor();
+                }
+                
+                ImGui.Spacing();
 
                 if (ImGui.Button("Compare"))
                 {
                     this.OpenCompare(this.expectedImageInfo.TempFilePath, this.actualImageInfo.TempFilePath);
                 }
-
                 ImGui.EndChildFrame();
             }
-
-
-
-           
         }
 
         public override bool Next(WizardPage newWizardPage)

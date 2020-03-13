@@ -10,13 +10,13 @@ namespace Phoenix.Import.Application.UI
 
         public MenuBar()
         {
-            DarkMode = true;
-            DemoMode = false;
+            this.DarkMode = true;
+            this.DemoMode = false;
         }
 
         public void Render(out float menuHeight)
         {
-            if (DarkMode)
+            if (this.DarkMode)
             {
                 ImGui.StyleColorsDark();
             }
@@ -30,13 +30,13 @@ namespace Phoenix.Import.Application.UI
             {
                 if (ImGui.BeginMenu("Theme"))
                 {
-                    if (ImGui.MenuItem("Light", "", !DarkMode, DarkMode))
+                    if (ImGui.MenuItem("Light", "", !this.DarkMode, this.DarkMode))
                     {
-                        DarkMode = false;
+                        this.DarkMode = false;
                     }
-                    if (ImGui.MenuItem("Dark", "", DarkMode, !DarkMode))
+                    if (ImGui.MenuItem("Dark", "", this.DarkMode, !this.DarkMode))
                     {
-                        DarkMode = true;
+                        this.DarkMode = true;
                     }
                     //if (ImGui.MenuItem("Demo", "", DemoMode))
                     //{
