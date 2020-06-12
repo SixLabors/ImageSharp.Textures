@@ -20,7 +20,7 @@ https://docs.microsoft.com/en-us/windows/uwp/gaming/complete-code-for-ddstexture
     {
         /// <inheritdoc/>
         public Image<TPixel> Decode<TPixel>(Configuration configuration, Stream stream)
-            where TPixel : struct, IPixel<TPixel>
+            where TPixel : unmanaged, IPixel<TPixel>
         {
             throw new NotSupportedException();
         }

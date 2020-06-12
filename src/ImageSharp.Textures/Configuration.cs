@@ -8,7 +8,7 @@ namespace SixLabors.ImageSharp.Textures
     using SixLabors.ImageSharp.Textures.Formats;
     using SixLabors.ImageSharp.Textures.Formats.Dds;
     using SixLabors.ImageSharp.Textures.IO;
-    using SixLabors.Memory;
+    using SixLabors.ImageSharp.Memory;
 
     /// <summary>
     /// Provides configuration code which allows altering default behaviour or extending the library.

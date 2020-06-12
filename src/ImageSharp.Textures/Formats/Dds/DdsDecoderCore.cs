@@ -13,7 +13,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds
     using SixLabors.ImageSharp.Textures.Formats.Dds.Extensions;
     using SixLabors.ImageSharp.Textures.Formats.Dds.Processing;
     using SixLabors.ImageSharp.Textures.TextureFormats;
-    using SixLabors.Memory;
+    using SixLabors.ImageSharp.Memory;
 
     internal sealed class DdsDecoderCore
     {

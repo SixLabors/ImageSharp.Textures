@@ -7,7 +7,6 @@ using System.Linq;
 using SixLabors.ImageSharp.Advanced;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Textures.Tests.TestUtilities.ImageComparison.Exceptions;
-using SixLabors.Primitives;
 
 namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.ImageComparison
 {
@@ -35,8 +34,8 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.ImageComparison
         public abstract ImageSimilarityReport<TPixelA, TPixelB> CompareImages<TPixelA, TPixelB>(
             Image<TPixelA> expected,
             Image<TPixelB> actual)
-            where TPixelA : struct, IPixel<TPixelA>
-            where TPixelB : struct, IPixel<TPixelB>;
+            where TPixelA : unmanaged, IPixel<TPixelA>
+            where TPixelB : unmanaged, IPixel<TPixelB>;
     }
 
     public static class ImageComparerExtensions
@@ -45,8 +44,8 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.ImageComparison
             this ImageComparer comparer,
             Image<TPixelA> expected,
             Image<TPixelB> actual)
-            where TPixelA : struct, IPixel<TPixelA>
-            where TPixelB : struct, IPixel<TPixelB>
+            where TPixelA : unmanaged, IPixel<TPixelA>
+            where TPixelB : unmanaged, IPixel<TPixelB>
         {
             return comparer.CompareImages(expected, actual);
         }
@@ -55,8 +54,8 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.ImageComparison
             this ImageComparer comparer,
             Image<TPixelA> expected,
             Image<TPixelB> actual)
-            where TPixelA : struct, IPixel<TPixelA>
-            where TPixelB : struct, IPixel<TPixelB>
+            where TPixelA : unmanaged, IPixel<TPixelA>
+            where TPixelB : unmanaged, IPixel<TPixelB>
         {
             if (expected.Size() != actual.Size())
             {
@@ -80,8 +79,8 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.ImageComparison
             Image<TPixelA> expected,
             Image<TPixelB> actual,
             Rectangle ignoredRegion)
-            where TPixelA : struct, IPixel<TPixelA>
-            where TPixelB : struct, IPixel<TPixelB>
+            where TPixelA : unmanaged, IPixel<TPixelA>
+            where TPixelB : unmanaged, IPixel<TPixelB>
         {
             if (expected.Size() != actual.Size())
             {
