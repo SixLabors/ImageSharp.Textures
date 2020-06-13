@@ -21,7 +21,7 @@ namespace Phoenix.Import.Application
             lock (lockObject)
             {
                 Texture texture = GraphicsDevice.ResourceFactory.CreateTexture(TextureDescription.Texture2D((uint)image.Width, (uint)image.Height, 1, 1, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.Sampled));
-                fixed (void* pin = &MemoryMarshal.GetReference(image.GetPixelSpan()))
+                fixed (void* pin = &MemoryMarshal.GetReference(image.GetPixelRowSpan(0)))
                 {
                     GraphicsDevice.UpdateTexture(texture, (IntPtr)pin, (uint)(4 * image.Width * image.Height), 0, 0, 0, (uint)image.Width, (uint)image.Height, 1, 0, 0);
                 }

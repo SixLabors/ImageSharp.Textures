@@ -6,7 +6,7 @@ namespace SixLabors.ImageSharp.Textures
     using System;
     using System.Buffers;
     using System.IO;
-    using SixLabors.Memory;
+    using SixLabors.ImageSharp.Memory;
 
     /// <summary>
     /// Extension methods for the <see cref="Stream"/> type.

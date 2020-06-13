@@ -2,10 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using SixLabors.ImageSharp.Advanced;
 using SixLabors.ImageSharp.PixelFormats;
-
-using SixLabors.Primitives;
 
 namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.ImageComparison
 {

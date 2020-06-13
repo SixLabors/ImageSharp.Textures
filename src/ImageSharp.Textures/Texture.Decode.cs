@@ -7,7 +7,7 @@ namespace SixLabors.ImageSharp.Textures
     using System.IO;
     using System.Linq;
     using SixLabors.ImageSharp.Textures.Formats;
-    using SixLabors.Memory;
+    using SixLabors.ImageSharp.Memory;
 
     /// <content>
     /// Adds static methods allowing the decoding of new images.

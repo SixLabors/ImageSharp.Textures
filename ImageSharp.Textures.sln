@@ -37,7 +37,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ImageSharp.Textures.Interac
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		tests\Images\Images.projitems*{17fcbd4d-d232-45e8-876f-dfbc2fad52cf}*SharedItemsImports = 5
+		tests\Images\Images.projitems*{18be79b6-6b95-4ed7-a963-ad75f6cb9f3c}*SharedItemsImports = 5
 		tests\Images\Images.projitems*{68a8cc40-6aed-4e96-b524-31b1158fdeea}*SharedItemsImports = 13
+		tests\Images\Images.projitems*{b159ffd1-e646-42d0-892c-4abf69103712}*SharedItemsImports = 5
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

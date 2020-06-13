@@ -1,6 +1,4 @@
 using System.Numerics;
-using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.Primitives;
 
 namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.ImageComparison
 {
