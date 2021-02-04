@@ -160,7 +160,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 return this.AllocateMipMaps<L8>(stream, width, height, count);
             }
 
-            throw new Exception($"Unsupported 8 bit format");
+            throw new Exception("Unsupported 8 bit format");
         }
 
         private MipMap[] SixteenBitImageFormat(Stream stream, int width, int height, int count)
@@ -199,7 +199,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 return this.AllocateMipMaps<Rg16>(stream, width, height, count);
             }
 
-            throw new Exception($"Unsupported 16 bit format");
+            throw new Exception("Unsupported 16 bit format");
         }
 
         private MipMap[] TwentyFourBitImageFormat(Stream stream, int width, int height, int count)
@@ -210,10 +210,10 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
 
             if (!hasAlpha && pixelFormat.RBitMask == 0xFF0000 && pixelFormat.GBitMask == 0xFF00 && pixelFormat.BBitMask == 0xFF)
             {
-                this.AllocateMipMaps<Rgb24>(stream, width, height, count);
+                return this.AllocateMipMaps<Rgb24>(stream, width, height, count);
             }
 
-            throw new Exception($"Unsupported 24 bit format");
+            throw new Exception("Unsupported 24 bit format");
         }
 
         private MipMap[] ThirtyTwoBitImageFormat(Stream stream, int width, int height, int count)
@@ -399,7 +399,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 case DxgiFormat.V408:
                 case DxgiFormat.Unknown:
                 default:
-                    throw new Exception($"Unsupported format {this.DdsHeaderDxt10.DxgiFormat.ToString()}");
+                    throw new Exception($"Unsupported format {this.DdsHeaderDxt10.DxgiFormat}");
             }
         }
     }
