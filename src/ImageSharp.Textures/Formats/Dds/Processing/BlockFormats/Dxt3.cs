@@ -7,22 +7,29 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
 {
     public struct Dxt3 : IBlock<Dxt3>
     {
+        /// <inheritdoc/>
         public int BitsPerPixel => 32;
 
+        /// <inheritdoc/>
         public byte PixelDepthBytes => 4;
 
+        /// <inheritdoc/>
         public byte DivSize => 4;
 
+        /// <inheritdoc/>
         public byte CompressedBytesPerBlock => 16;
 
+        /// <inheritdoc/>
         public bool Compressed => true;
 
+        /// <inheritdoc/>
         public Image GetImage(byte[] blockData, int width, int height)
         {
             byte[] decompressedData = this.Decompress(blockData, width, height);
             return Image.LoadPixelData<ImageSharp.PixelFormats.Rgba32>(decompressedData, width, height);
         }
 
+        /// <inheritdoc/>
         public byte[] Decompress(byte[] blockData, int width, int height)
         {
             IBlock self = this;

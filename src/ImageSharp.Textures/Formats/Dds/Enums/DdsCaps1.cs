@@ -1,10 +1,10 @@
 // Copyright (c) Six Labors and contributors.
 // Licensed under the Apache License, Version 2.0.
 
+using System;
+
 namespace SixLabors.ImageSharp.Textures.Formats.Dds.Emums
 {
-    using System;
-
     /// <summary> Specifies the complexity of the surfaces stored. </summary>
     /// <remarks>
     /// The DDS_SURFACE_FLAGS_MIPMAP flag, which is defined in Dds.h, is a bitwise-OR combination of the

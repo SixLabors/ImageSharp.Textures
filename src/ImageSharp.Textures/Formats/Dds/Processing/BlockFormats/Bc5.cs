@@ -35,12 +35,12 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
         {
             IBlock self = this;
 
-            byte[] _firstGradient = new byte[8];
-            byte[] _secondGradient = new byte[8];
+            byte[] firstGradient = new byte[8];
+            byte[] secondGradient = new byte[8];
 
             return Helper.InMemoryDecode<Bc5>(blockData, width, height, (byte[] stream, byte[] data, int streamIndex, int dataIndex, int stride) =>
             {
-                streamIndex = ExtractGradient(_firstGradient, blockData, streamIndex);
+                streamIndex = ExtractGradient(firstGradient, blockData, streamIndex);
                 ulong firstCodes = blockData[streamIndex++];
                 firstCodes |= (ulong)blockData[streamIndex++] << 8;
                 firstCodes |= (ulong)blockData[streamIndex++] << 16;
@@ -48,7 +48,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 firstCodes |= (ulong)blockData[streamIndex++] << 32;
                 firstCodes |= (ulong)blockData[streamIndex++] << 40;
 
-                streamIndex = ExtractGradient(_secondGradient, blockData, streamIndex);
+                streamIndex = ExtractGradient(secondGradient, blockData, streamIndex);
                 ulong secondCodes = blockData[streamIndex++];
                 secondCodes |= (ulong)blockData[streamIndex++] << 8;
                 secondCodes |= (ulong)blockData[streamIndex++] << 16;
@@ -64,8 +64,8 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                         byte firstIndex = (byte)(firstCodes >> (alphaShift + (3 * j)) & 0x07);
                         byte secondIndex = (byte)(secondCodes >> (alphaShift + (3 * j)) & 0x07);
                         data[dataIndex++] = 0; // skip blue.
-                        data[dataIndex++] = _secondGradient[secondIndex];
-                        data[dataIndex++] = _firstGradient[firstIndex];
+                        data[dataIndex++] = secondGradient[secondIndex];
+                        data[dataIndex++] = firstGradient[firstIndex];
                     }
 
                     dataIndex += self.PixelDepthBytes * (stride - self.DivSize);

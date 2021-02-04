@@ -3,6 +3,7 @@
 
 using System;
 using System.IO;
+
 using SixLabors.ImageSharp.Textures.Common.Extensions;
 using SixLabors.ImageSharp.Textures.Formats.Dds.Emums;
 using SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats;
@@ -327,7 +328,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 case DxgiFormat.R10G10B10A2_Typeless:
                 case DxgiFormat.R10G10B10A2_UNorm:
                 case DxgiFormat.R10G10B10A2_UInt:
-                    throw new Exception("not implemented");
+                    return this.AllocateMipMaps<Rgba1010102>(stream, width, height, count);
                 case DxgiFormat.R16G16_Typeless:
                 case DxgiFormat.R16G16_Float:
                 case DxgiFormat.R16G16_UNorm:
