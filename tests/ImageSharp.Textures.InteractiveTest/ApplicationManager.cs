@@ -1,8 +1,10 @@
-﻿using System;
+﻿// Copyright (c) Six Labors and contributors.
+// Licensed under the Apache License, Version 2.0.
+
+using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Advanced;
 using SixLabors.ImageSharp.PixelFormats;
 using Veldrid;
 
@@ -11,8 +13,11 @@ namespace Phoenix.Import.Application
     public static class ApplicationManager
     {
         public static CommandList CommandList { get; set; }
+
         public static GraphicsDevice GraphicsDevice { get; set; }
+
         public static ImGuiRenderer Controller { get; set; }
+
 
         private static readonly object lockObject = new object();
 
@@ -25,6 +30,7 @@ namespace Phoenix.Import.Application
                 {
                     GraphicsDevice.UpdateTexture(texture, (IntPtr)pin, (uint)(4 * image.Width * image.Height), 0, 0, 0, (uint)image.Width, (uint)image.Height, 1, 0, 0);
                 }
+
                 return Controller.GetOrCreateImGuiBinding(GraphicsDevice.ResourceFactory, texture);
             }
         }
@@ -43,6 +49,7 @@ namespace Phoenix.Import.Application
                 {
                     _datastore = new Dictionary<string, object>();
                 }
+
                 return _datastore;
             }
         }

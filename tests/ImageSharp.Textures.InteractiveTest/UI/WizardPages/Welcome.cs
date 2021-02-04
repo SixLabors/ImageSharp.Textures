@@ -1,11 +1,15 @@
-﻿using System;
+﻿// Copyright (c) Six Labors and contributors.
+// Licensed under the Apache License, Version 2.0.
+
+using System;
 using ImGuiNET;
 
 namespace Phoenix.Import.Application.UI.WizardPages
 {
     public class Welcome : WizardPage
     {
-        public Welcome(Wizard wizard) : base(wizard)
+        public Welcome(Wizard wizard)
+            : base(wizard)
         {
         }
 

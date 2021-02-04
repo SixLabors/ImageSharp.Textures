@@ -1,17 +1,13 @@
 // Copyright (c) Six Labors and contributors.
 // Licensed under the Apache License, Version 2.0.
 
+using System.Runtime.CompilerServices;
+using SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats;
+
 namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
 {
-    using System;
-    using System.Runtime.CompilerServices;
-    using SixLabors.ImageSharp;
-    using SixLabors.ImageSharp.PixelFormats;
-    using SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats;
-
     public struct Bc4 : IBlock<Bc4>
     {
-
         public int BitsPerPixel => 8;
 
         public byte PixelDepthBytes => 1;
@@ -34,7 +30,6 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
 
             return Helper.InMemoryDecode<Bc4>(blockData, width, height, (byte[] stream, byte[] data, int streamIndex, int dataIndex, int stride) =>
             {
-
                 byte red0 = blockData[streamIndex++];
                 byte red1 = blockData[streamIndex++];
                 ulong rIndex = blockData[streamIndex++];

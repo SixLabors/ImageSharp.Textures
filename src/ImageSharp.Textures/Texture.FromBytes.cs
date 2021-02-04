@@ -1,12 +1,12 @@
 // Copyright (c) Six Labors and contributors.
 // Licensed under the Apache License, Version 2.0.
 
+using System;
+using System.IO;
+using SixLabors.ImageSharp.Textures.Formats;
+
 namespace SixLabors.ImageSharp.Textures
 {
-    using System;
-    using System.IO;
-    using SixLabors.ImageSharp.Textures.Formats;
-
     /// <content>
     /// Adds static methods allowing the creation of new image from a byte array.
     /// </content>
@@ -35,8 +35,6 @@ namespace SixLabors.ImageSharp.Textures
                 return DetectFormat(config, stream);
             }
         }
-
-
 
         /// <summary>
         /// By reading the header on the provided byte array this calculates the images format.

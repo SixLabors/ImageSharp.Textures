@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Copyright (c) Six Labors and contributors.
+// Licensed under the Apache License, Version 2.0.
+
+using System;
 using System.Numerics;
 using System.Threading;
 using ImGuiNET;
@@ -34,8 +37,6 @@ namespace Phoenix.Import.Application
             _wizard.OnNext += NextButton_Action;
         }
 
-
-
         public void Render(float width, float height)
         {
             var backgroundColor = ImGui.GetColorU32(ImGuiCol.WindowBg);
@@ -51,11 +52,11 @@ namespace Phoenix.Import.Application
             }
 
             ImGui.PushStyleVar(ImGuiStyleVar.WindowRounding, 0);
-            if (ImGui.Begin("", ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoNav | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse))
+            if (ImGui.Begin(string.Empty, ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoNav | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse))
             {
                 ImGui.SetWindowPos(new Vector2(0.0f, menuHeight));
                 ImGui.SetWindowSize(new Vector2(width, height - menuHeight));
-        
+
                 _titleBar.Render(_wizard.CurrentPageIndex);
 
                 _wizard.CancelButton.Visble = false;
@@ -83,6 +84,7 @@ namespace Phoenix.Import.Application
 
                 ImGui.End();
             }
+
             ImGui.PopStyleVar();
             ImGui.PopStyleColor();
         }
@@ -114,8 +116,8 @@ namespace Phoenix.Import.Application
             {
                 _wizardPages[newPageIndex].Initialize();
             }
+
             return value;
         }
-
     }
 }

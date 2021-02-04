@@ -1,11 +1,10 @@
 // Copyright (c) Six Labors and contributors.
 // Licensed under the Apache License, Version 2.0.
 
+using SixLabors.ImageSharp.Textures.Formats.Dds.Emums;
+
 namespace SixLabors.ImageSharp.Textures.Formats.Dds.Extensions
 {
-    using SixLabors.ImageSharp.Textures.Formats.Dds;
-    using SixLabors.ImageSharp.Textures.Formats.Dds.Emums;
-
     internal static class DdsHeaderExtensions
     {
         /// <summary>
@@ -64,10 +63,10 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Extensions
         }
 
         /// <summary>
-        /// 
+        /// Gets the number of textures.
         /// </summary>
         /// <param name="ddsHeader"><see cref="DdsHeader" /></param>
-        /// <returns></returns>
+        /// <returns>Number of textures.</returns>
         public static int TextureCount(this DdsHeader ddsHeader)
         {
             return ddsHeader.HasMipmaps() ? (int)ddsHeader.MipMapCount : 1;

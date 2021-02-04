@@ -1,3 +1,6 @@
+// Copyright (c) Six Labors and contributors.
+// Licensed under the Apache License, Version 2.0.
+
 using System.Numerics;
 
 namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.ImageComparison
@@ -30,8 +33,11 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.ImageComparison
         public Point Position { get; }
 
         public float RedDifference { get; }
+
         public float GreenDifference { get; }
+
         public float BlueDifference { get; }
+
         public float AlphaDifference { get; }
 
         public override string ToString() =>

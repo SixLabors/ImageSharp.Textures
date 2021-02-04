@@ -1,37 +1,41 @@
 // Copyright (c) Six Labors and contributors.
 // Licensed under the Apache License, Version 2.0.
 
+using SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats;
+
 namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
 {
-    using System;
-    using SixLabors.ImageSharp.Textures.Formats.Dds;
-    using SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats;
-
     public struct Bc5s : IBlock<Bc5s>
     {
+        /// <inheritdoc/>
         public int BitsPerPixel => 24;
 
+        /// <inheritdoc/>
         public byte PixelDepthBytes => 3;
 
+        /// <inheritdoc/>
         public byte DivSize => 4;
 
+        /// <inheritdoc/>
         public byte CompressedBytesPerBlock => 16;
 
+        /// <inheritdoc/>
         public bool Compressed => true;
 
+        /// <inheritdoc/>
         public Image GetImage(byte[] blockData, int width, int height)
         {
             byte[] decompressedData = this.Decompress(blockData, width, height);
             return Image.LoadPixelData<ImageSharp.PixelFormats.Rgb24>(decompressedData, width, height);
         }
 
+        /// <inheritdoc/>
         public byte[] Decompress(byte[] blockData, int width, int height)
         {
             IBlock self = this;
 
             return Helper.InMemoryDecode<Bc5s>(blockData, width, height, (byte[] stream, byte[] data, int streamIndex, int dataIndex, int stride) =>
             {
-
                 sbyte red0 = (sbyte)blockData[streamIndex++];
                 sbyte red1 = (sbyte)blockData[streamIndex++];
                 red0 = red0 == -128 ? (sbyte)-127 : red0;

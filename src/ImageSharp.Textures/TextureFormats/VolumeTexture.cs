@@ -10,12 +10,15 @@ namespace SixLabors.ImageSharp.Textures.TextureFormats
     {
         private bool isDisposed;
 
-        public List<FlatTexture> Slices { get; }
-
+        /// <summary>
+        /// Initializes a new instance of the <see cref="VolumeTexture"/> class.
+        /// </summary>
         public VolumeTexture()
         {
-            Slices = new List<FlatTexture>();
+            this.Slices = new List<FlatTexture>();
         }
+
+        public List<FlatTexture> Slices { get; }
 
         /// <inheritdoc/>
         protected override void Dispose(bool disposing)

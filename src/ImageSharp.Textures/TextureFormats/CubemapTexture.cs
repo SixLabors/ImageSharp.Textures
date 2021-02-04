@@ -9,6 +9,16 @@ namespace SixLabors.ImageSharp.Textures.TextureFormats
     {
         private bool isDisposed;
 
+        public CubemapTexture()
+        {
+            this.PositiveX = new FlatTexture();
+            this.NegativeX = new FlatTexture();
+            this.PositiveY = new FlatTexture();
+            this.NegativeY = new FlatTexture();
+            this.PositiveZ = new FlatTexture();
+            this.NegativeZ = new FlatTexture();
+        }
+
         public FlatTexture PositiveX { get; }
 
         public FlatTexture NegativeX { get; }
@@ -20,16 +30,6 @@ namespace SixLabors.ImageSharp.Textures.TextureFormats
         public FlatTexture PositiveZ { get; }
 
         public FlatTexture NegativeZ { get; }
-
-        public CubemapTexture()
-        {
-            PositiveX = new FlatTexture();
-            NegativeX = new FlatTexture();
-            PositiveY = new FlatTexture();
-            NegativeY = new FlatTexture();
-            PositiveZ = new FlatTexture();
-            NegativeZ = new FlatTexture();
-        }
 
         /// <inheritdoc/>
         protected override void Dispose(bool disposing)

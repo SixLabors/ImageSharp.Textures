@@ -95,7 +95,6 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.ImageComparison
             ImageSimilarityReport report = comparer.CompareImages(expected, actual);
             if ((report.TotalNormalizedDifference ?? 0F) != 0F)
             {
-
                 IEnumerable<PixelDifference> outsideChanges = report.Differences.Where(
                     x =>
                     !(ignoredRegion.X <= x.Position.X

@@ -1,14 +1,14 @@
 // Copyright (c) Six Labors and contributors.
 // Licensed under the Apache License, Version 2.0.
 
+using System;
+using System.IO;
+using System.Linq;
+using SixLabors.ImageSharp.Memory;
+using SixLabors.ImageSharp.Textures.Formats;
+
 namespace SixLabors.ImageSharp.Textures
 {
-    using System;
-    using System.IO;
-    using System.Linq;
-    using SixLabors.ImageSharp.Textures.Formats;
-    using SixLabors.ImageSharp.Memory;
-
     /// <content>
     /// Adds static methods allowing the decoding of new images.
     /// </content>
@@ -18,10 +18,10 @@ namespace SixLabors.ImageSharp.Textures
         /// </summary>
         /// <param name="textureType"><see cref="TextureType" /></param>
         /// <returns>The result <see cref="Texture"/></returns>
-        //internal static Texture CreateUninitialized(TextureType textureType)
-        //{
-        //    return new Texture(textureType);
-        //}
+        // internal static Texture CreateUninitialized(TextureType textureType)
+        // {
+        //     return new Texture(textureType);
+        // }
 
         /// <summary>
         /// By reading the header on the provided stream this calculates the images format.
@@ -75,7 +75,6 @@ namespace SixLabors.ImageSharp.Textures
         /// </summary>
         /// <param name="stream">The stream.</param>
         /// <param name="config">the configuration.</param>
-        /// <typeparam name="TPixel">The pixel format.</typeparam>
         /// <returns>
         /// A new <see cref="Texture{TPixel}"/>.
         /// </returns>

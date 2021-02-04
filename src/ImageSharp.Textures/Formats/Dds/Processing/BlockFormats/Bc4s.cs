@@ -1,42 +1,44 @@
 // Copyright (c) Six Labors and contributors.
 // Licensed under the Apache License, Version 2.0.
 
+using System.Runtime.CompilerServices;
+using SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats;
+
 namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
 {
-    using System;
-    using System.Runtime.CompilerServices;
-    using SixLabors.ImageSharp.PixelFormats;
-    using SixLabors.ImageSharp.Textures.Formats.Dds;
-    using SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats;
-
     public struct Bc4s : IBlock<Bc4s>
     {
         private const float Multiplier = 255.0f / 254.0f;
 
-
+        /// <inheritdoc/>
         public int BitsPerPixel => 8;
 
+        /// <inheritdoc/>
         public byte PixelDepthBytes => 1;
 
+        /// <inheritdoc/>
         public byte DivSize => 4;
 
+        /// <inheritdoc/>
         public byte CompressedBytesPerBlock => 8;
 
+        /// <inheritdoc/>
         public bool Compressed => true;
 
+        /// <inheritdoc/>
         public Image GetImage(byte[] blockData, int width, int height)
         {
             byte[] decompressedData = this.Decompress(blockData, width, height);
             return Image.LoadPixelData<ImageSharp.PixelFormats.L8>(decompressedData, width, height);
         }
 
+        /// <inheritdoc/>
         public byte[] Decompress(byte[] blockData, int width, int height)
         {
             IBlock self = this;
 
             return Helper.InMemoryDecode<Bc4s>(blockData, width, height, (byte[] stream, byte[] data, int streamIndex, int dataIndex, int stride) =>
             {
-
                 sbyte red0 = (sbyte)blockData[streamIndex++];
                 sbyte red1 = (sbyte)blockData[streamIndex++];
                 red0 = red0 == -128 ? (sbyte)-127 : red0;
@@ -51,7 +53,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
 
                 for (int i = 0; i < 16; ++i)
                 {
-                    uint index = (byte)((uint)(rIndex >> 3 * i) & 0x07);
+                    uint index = (byte)((uint)(rIndex >> (3 * i)) & 0x07);
 
                     data[dataIndex++] = InterpolateColor((byte)index, red0, red1);
 
@@ -63,7 +65,6 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 }
 
                 return streamIndex;
-
             });
         }
 
@@ -84,7 +85,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 if (red0 > red1)
                 {
                     index -= 1;
-                    red = (red0 * (7 - index) + red1 * index) / 7.0f;
+                    red = ((red0 * (7 - index)) + (red1 * index)) / 7.0f;
                 }
                 else
                 {
@@ -99,11 +100,12 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                     else
                     {
                         index -= 1;
-                        red = (red0 * (5 - index) + red1 * index) / 5.0f;
+                        red = ((red0 * (5 - index)) + (red1 * index)) / 5.0f;
                     }
                 }
             }
-            return (byte)((red + 127) * Multiplier + 0.5f);
+
+            return (byte)(((red + 127) * Multiplier) + 0.5f);
         }
     }
 }

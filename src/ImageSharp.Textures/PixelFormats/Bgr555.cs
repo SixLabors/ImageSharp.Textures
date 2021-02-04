@@ -1,10 +1,9 @@
+// Copyright (c) Six Labors and contributors.
+// Licensed under the Apache License, Version 2.0.
+
 using System;
-using System.Collections.Generic;
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.Text;
-using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 
 namespace SixLabors.ImageSharp.Textures.PixelFormats
@@ -24,7 +23,6 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         /// <param name="x">The x-component</param>
         /// <param name="y">The y-component</param>
         /// <param name="z">The z-component</param>
-        /// <param name="w">The w-component</param>
         public Bgr555(float x, float y, float z)
             : this(new Vector3(x, y, z))
         {

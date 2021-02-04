@@ -11,7 +11,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds
         /// <inheritdoc/>
         public void Configure(Configuration configuration)
         {
-            //configuration.ImageFormatsManager.SetEncoder(DdsFormat.Instance, new DdsEncoder());
+            // configuration.ImageFormatsManager.SetEncoder(DdsFormat.Instance, new DdsEncoder());
             configuration.ImageFormatsManager.SetDecoder(DdsFormat.Instance, new DdsDecoder());
             configuration.ImageFormatsManager.AddImageFormatDetector(new DdsImageFormatDetector());
         }

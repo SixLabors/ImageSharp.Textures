@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Copyright (c) Six Labors and contributors.
+// Licensed under the Apache License, Version 2.0.
+
+using System;
 using System.Numerics;
 using ImGuiNET;
 
@@ -7,16 +10,23 @@ namespace Phoenix.Import.Application.UI
     public class Wizard
     {
         public int Pages { get; set; }
+
         public int CurrentPageIndex { get; set; }
 
         public Action OnCancel { get; set; }
+
         public Action OnValidate { get; set; }
+
         public Func<int, bool> OnPrevious { get; set; }
+
         public Func<int, bool> OnNext { get; set; }
 
         public Button CancelButton { get; private set; }
+
         public Button ValidateButton { get; private set; }
+
         public Button PreviousButton { get; private set; }
+
         public Button NextButton { get; private set; }
 
         public Wizard()
@@ -93,6 +103,7 @@ namespace Phoenix.Import.Application.UI
             {
                 pageIndex -= 1;
             }
+
             if (this.OnPrevious?.Invoke(pageIndex) ?? false)
             {
                 this.CurrentPageIndex = pageIndex;
@@ -106,6 +117,7 @@ namespace Phoenix.Import.Application.UI
             {
                 pageIndex += 1;
             }
+
             if (this.OnNext?.Invoke(pageIndex) ?? false)
             {
                 this.CurrentPageIndex = pageIndex;

@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Copyright (c) Six Labors and contributors.
+// Licensed under the Apache License, Version 2.0.
+
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -31,7 +34,8 @@ namespace Phoenix.Import.Application.UI.WizardPages
         private ImageInfo expectedImageInfo;
         private ImageInfo actualImageInfo;
 
-        public Preview(Wizard wizard) : base(wizard)
+        public Preview(Wizard wizard)
+            : base(wizard)
         {
             this.rootFolder = Path.Combine(TestEnvironment.InputImagesDirectoryFullPath, "Dds", "Flat");
             this.currentFolder = this.rootFolder;
@@ -60,6 +64,7 @@ namespace Phoenix.Import.Application.UI.WizardPages
             {
                 throw new Exception(process.StandardOutput.ReadToEnd());
             }
+
             string saveFilePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.png");
             File.Move(sourceFile, saveFilePath);
             return saveFilePath;
@@ -117,27 +122,29 @@ namespace Phoenix.Import.Application.UI.WizardPages
 
         private static void GenerateFolderIcon(Vector2 location, float size)
         {
-            Vector2[] points = new[] {
-                new Vector2(0.0f,0.0f), new Vector2(45.0f, 0.0f),
-                new Vector2(45.0f,0.0f), new Vector2(55.0f, 22.5f),
-                new Vector2(55.0f,22.5f), new Vector2(100.0f, 22.5f),
-                new Vector2(100.0f,22.5f), new Vector2(100.0f, 87.5f),
-                new Vector2(100.0f,87.5f), new Vector2(0.0f, 87.5f),
-                new Vector2(0.0f,87.5f), new Vector2(0.0f, 0.0f)
+            Vector2[] points = new[]
+            {
+                new Vector2(0.0f, 0.0f), new Vector2(45.0f, 0.0f),
+                new Vector2(45.0f, 0.0f), new Vector2(55.0f, 22.5f),
+                new Vector2(55.0f, 22.5f), new Vector2(100.0f, 22.5f),
+                new Vector2(100.0f, 22.5f), new Vector2(100.0f, 87.5f),
+                new Vector2(100.0f, 87.5f), new Vector2(0.0f, 87.5f),
+                new Vector2(0.0f, 87.5f), new Vector2(0.0f, 0.0f)
             };
             DrawLines(points, location, size);
         }
 
         private static void GenerateFileIcon(Vector2 location, float size)
         {
-            Vector2[] points = new[] {
-                new Vector2(12.5f,0.0f), new Vector2(62.5f, 0.0f),
-                new Vector2(62.5f,0.0f), new Vector2(87.5f, 50.0f),
-                new Vector2(87.5f,50.0f), new Vector2(87.5f, 100.0f),
-                new Vector2(87.5f,100.0f), new Vector2(12.5f, 100.0f),
-                new Vector2(12.5f,100.0f), new Vector2(12.5f, 0.0f),
-                new Vector2(62.5f,0.0f), new Vector2(62.5f, 50.0f),
-                new Vector2(62.5f,50.0f), new Vector2(87.5f, 50.0f)
+            Vector2[] points = new[]
+            {
+                new Vector2(12.5f, 0.0f), new Vector2(62.5f, 0.0f),
+                new Vector2(62.5f, 0.0f), new Vector2(87.5f, 50.0f),
+                new Vector2(87.5f, 50.0f), new Vector2(87.5f, 100.0f),
+                new Vector2(87.5f, 100.0f), new Vector2(12.5f, 100.0f),
+                new Vector2(12.5f, 100.0f), new Vector2(12.5f, 0.0f),
+                new Vector2(62.5f, 0.0f), new Vector2(62.5f, 50.0f),
+                new Vector2(62.5f, 50.0f), new Vector2(87.5f, 50.0f)
             };
             DrawLines(points, location, size);
         }
@@ -161,6 +168,7 @@ namespace Phoenix.Import.Application.UI.WizardPages
                 {
                     directories.Add("..");
                 }
+
                 directories.AddRange(Directory.GetDirectories(this.currentFolder));
                 foreach (string directory in directories)
                 {
@@ -173,6 +181,7 @@ namespace Phoenix.Import.Application.UI.WizardPages
                         this.currentFile = null;
                         this.currentFolder = directory.Equals("..") ? Path.GetFullPath(Path.Combine(this.currentFolder, "..")) : directory;
                     }
+
                     GenerateFolderIcon(iconPosition, lineHeight);
                 }
 
@@ -190,8 +199,10 @@ namespace Phoenix.Import.Application.UI.WizardPages
                         this.expectedImageInfo = this.LoadExpected(file);
                         this.actualImageInfo = this.LoadActualImage(file);
                     }
+
                     GenerateFileIcon(iconPosition, lineHeight);
                 }
+
                 ImGui.EndChildFrame();
             }
 
@@ -223,13 +234,14 @@ namespace Phoenix.Import.Application.UI.WizardPages
                     ImGui.TextWrapped(this.actualImageInfo.ErrorMessage);
                     ImGui.PopStyleColor();
                 }
-                
+
                 ImGui.Spacing();
 
                 if (ImGui.Button("Compare"))
                 {
                     this.OpenCompare(this.expectedImageInfo.TempFilePath, this.actualImageInfo.TempFilePath);
                 }
+
                 ImGui.EndChildFrame();
             }
         }

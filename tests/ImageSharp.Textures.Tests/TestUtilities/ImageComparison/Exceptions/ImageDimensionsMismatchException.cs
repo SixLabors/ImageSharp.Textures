@@ -13,6 +13,7 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.ImageComparison.Exce
         }
 
         public Size ExpectedSize { get; }
+
         public Size ActualSize { get; }
     }
 }

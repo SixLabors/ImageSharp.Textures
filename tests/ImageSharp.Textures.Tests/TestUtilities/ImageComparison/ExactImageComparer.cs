@@ -1,3 +1,6 @@
+// Copyright (c) Six Labors and contributors.
+// Licensed under the Apache License, Version 2.0.
+
 using System;
 using System.Collections.Generic;
 using System.Numerics;
@@ -22,7 +25,6 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.ImageComparison
             int width = actual.Width;
 
             // TODO: Comparing through Rgba64 may not be robust enough because of the existence of super high precision pixel types.
-
             var aBuffer = new Vector4[width];
             var bBuffer = new Vector4[width];
 

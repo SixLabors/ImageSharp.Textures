@@ -21,6 +21,5 @@ namespace SixLabors.ImageSharp.Textures.Formats
         /// Gets color depth, in number of bits per pixel.
         /// </summary>
         public int BitsPerPixel { get; }
-
     }
 }

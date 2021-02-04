@@ -1,5 +1,8 @@
-﻿using ImGuiNET;
+﻿// Copyright (c) Six Labors and contributors.
+// Licensed under the Apache License, Version 2.0.
+
 using System;
+using ImGuiNET;
 using Veldrid;
 using Veldrid.Sdl2;
 using Veldrid.StartupUtilities;
@@ -17,7 +20,7 @@ namespace Phoenix.Import.Application
             uiManager = new UiManager();
 
             window = VeldridStartup.CreateWindow(new WindowCreateInfo(50, 50, 1280, 720, WindowState.Normal, $"ImageSharp.Textures.InteractiveTest"));
-            ApplicationManager.GraphicsDevice = VeldridStartup.CreateGraphicsDevice(window, GraphicsBackend.OpenGL);      
+            ApplicationManager.GraphicsDevice = VeldridStartup.CreateGraphicsDevice(window, GraphicsBackend.OpenGL);
 
             window.Resized += Window_Resized;
 
@@ -40,14 +43,16 @@ namespace Phoenix.Import.Application
                 {
                     prevUpdateTime = curUpdateTime;
                 }
+
                 float dt = (float)(curUpdateTime - prevUpdateTime).TotalSeconds;
                 if (dt <= 0)
                 {
                     dt = float.Epsilon;
                 }
+
                 prevUpdateTime = curUpdateTime;
 
-                ApplicationManager.Controller.Update(dt, snapshot); 
+                ApplicationManager.Controller.Update(dt, snapshot);
 
                 SubmitUi();
 
@@ -60,8 +65,9 @@ namespace Phoenix.Import.Application
                 }
                 catch (Exception)
                 {
-                    // do nothing
+                    // do nothing.
                 }
+
                 ApplicationManager.CommandList.End();
                 ApplicationManager.GraphicsDevice.SubmitCommands(ApplicationManager.CommandList);
                 ApplicationManager.GraphicsDevice.SwapBuffers(ApplicationManager.GraphicsDevice.MainSwapchain);

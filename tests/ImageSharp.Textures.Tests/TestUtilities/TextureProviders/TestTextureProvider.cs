@@ -1,7 +1,6 @@
 // Copyright (c) Six Labors and contributors.
 // Licensed under the Apache License, Version 2.0.
 
-using System;
 using System.IO;
 using System.Text;
 using SixLabors.ImageSharp.PixelFormats;
@@ -13,14 +12,18 @@ using Xunit;
 
 namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.TextureProviders
 {
-
     public class TestTextureProvider : ITestTextureProvider
     {
         public string MethodName { get; private set; }
+
         public TestTextureFormat TextureFormat { get; private set; }
+
         public TestTextureType TextureType { get; private set; }
+
         public TestTextureTool TextureTool { get; private set; }
+
         public string InputFile { get; private set; }
+
         public bool IsRegex { get; private set; }
 
         public virtual Texture GetTexture(ITextureDecoder decoder)

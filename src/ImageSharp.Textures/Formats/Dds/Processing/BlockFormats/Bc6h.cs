@@ -1,18 +1,17 @@
 // Copyright (c) Six Labors and contributors.
 // Licensed under the Apache License, Version 2.0.
 
+using System;
+using System.Diagnostics;
+using SixLabors.ImageSharp.Textures.Common.Helpers;
+using SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats;
+using SixLabors.ImageSharp.Textures.Formats.Dds.Processing.PixelFormats;
+
 namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
 {
-    using System;
-    using System.Diagnostics;
-    using SixLabors.ImageSharp.Textures.Common.Helpers;
-    using SixLabors.ImageSharp.Textures.Formats.Dds;
-    using SixLabors.ImageSharp.Textures.Formats.Dds.Emums;
-    using SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats;
-    using SixLabors.ImageSharp.Textures.Formats.Dds.Processing.PixelFormats;
-
     public struct Bc6h : IBlock<Bc6h>
-    { // Code based on commit 138efff1b9c53fd9a5dd34b8c865e8f5ae798030 2019/10/24 in DirectXTex C++ library
+    {
+        // Code based on commit 138efff1b9c53fd9a5dd34b8c865e8f5ae798030 2019/10/24 in DirectXTex C++ library
         private enum EField : byte
         {
             NA, // N/A
@@ -31,7 +30,6 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
             BY,
             BZ,
         }
-;
 
         private struct ModeDescriptor
         {
@@ -40,11 +38,10 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
 
             public ModeDescriptor(EField eF, byte uB)
             {
-                m_eField = eF;
-                m_uBit = uB;
+                this.m_eField = eF;
+                this.m_uBit = uB;
             }
         }
-;
 
         private struct ModeInfo
         {
@@ -52,22 +49,23 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
             public byte uPartitions;
             public bool bTransformed;
             public byte uIndexPrec;
-            public readonly LdrColorA[][] RGBAPrec;//[Constants.BC6H_MAX_REGIONS][2];
+            public readonly LdrColorA[][] RGBAPrec; // [Constants.BC6H_MAX_REGIONS][2];
 
             public ModeInfo(byte uM, byte uP, bool bT, byte uI, LdrColorA[][] prec)
             {
-                uMode = uM;
-                uPartitions = uP;
-                bTransformed = bT;
-                uIndexPrec = uI;
-                RGBAPrec = prec;
+                this.uMode = uM;
+                this.uPartitions = uP;
+                this.bTransformed = bT;
+                this.uIndexPrec = uI;
+                this.RGBAPrec = prec;
             }
         }
-;
 
         private static readonly ModeDescriptor[][] ms_aDesc = new ModeDescriptor[14][]
         {
-            new ModeDescriptor[82] { // Mode 1 (0x00) - 10 5 5 5
+            new ModeDescriptor[82]
+            {
+                // Mode 1 (0x00) - 10 5 5 5
                 new ModeDescriptor(EField.M, 0), new ModeDescriptor(EField.M, 1), new ModeDescriptor(EField.GY, 4), new ModeDescriptor(EField.BY, 4), new ModeDescriptor(EField.BZ, 4), new ModeDescriptor(EField.RW, 0), new ModeDescriptor(EField.RW, 1), new ModeDescriptor(EField.RW, 2), new ModeDescriptor(EField.RW, 3), new ModeDescriptor(EField.RW, 4),
                 new ModeDescriptor(EField.RW, 5), new ModeDescriptor(EField.RW, 6), new ModeDescriptor(EField.RW, 7), new ModeDescriptor(EField.RW, 8), new ModeDescriptor(EField.RW, 9), new ModeDescriptor(EField.GW, 0), new ModeDescriptor(EField.GW, 1), new ModeDescriptor(EField.GW, 2), new ModeDescriptor(EField.GW, 3), new ModeDescriptor(EField.GW, 4),
                 new ModeDescriptor(EField.GW, 5), new ModeDescriptor(EField.GW, 6), new ModeDescriptor(EField.GW, 7), new ModeDescriptor(EField.GW, 8), new ModeDescriptor(EField.GW, 9), new ModeDescriptor(EField.BW, 0), new ModeDescriptor(EField.BW, 1), new ModeDescriptor(EField.BW, 2), new ModeDescriptor(EField.BW, 3), new ModeDescriptor(EField.BW, 4),
@@ -79,7 +77,9 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 new ModeDescriptor(EField.D, 3), new ModeDescriptor(EField.D, 4)
             },
 
-            new ModeDescriptor[82] { // Mode 2 (0x01) - 7 6 6 6
+            new ModeDescriptor[82]
+            {
+                // Mode 2 (0x01) - 7 6 6 6
                 new ModeDescriptor(EField.M, 0), new ModeDescriptor(EField.M, 1), new ModeDescriptor(EField.GY, 5), new ModeDescriptor(EField.GZ, 4), new ModeDescriptor(EField.GZ, 5), new ModeDescriptor(EField.RW, 0), new ModeDescriptor(EField.RW, 1), new ModeDescriptor(EField.RW, 2), new ModeDescriptor(EField.RW, 3), new ModeDescriptor(EField.RW, 4),
                 new ModeDescriptor(EField.RW, 5), new ModeDescriptor(EField.RW, 6), new ModeDescriptor(EField.BZ, 0), new ModeDescriptor(EField.BZ, 1), new ModeDescriptor(EField.BY, 4), new ModeDescriptor(EField.GW, 0), new ModeDescriptor(EField.GW, 1), new ModeDescriptor(EField.GW, 2), new ModeDescriptor(EField.GW, 3), new ModeDescriptor(EField.GW, 4),
                 new ModeDescriptor(EField.GW, 5), new ModeDescriptor(EField.GW, 6), new ModeDescriptor(EField.BY, 5), new ModeDescriptor(EField.BZ, 2), new ModeDescriptor(EField.GY, 4), new ModeDescriptor(EField.BW, 0), new ModeDescriptor(EField.BW, 1), new ModeDescriptor(EField.BW, 2), new ModeDescriptor(EField.BW, 3), new ModeDescriptor(EField.BW, 4),
@@ -91,7 +91,9 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 new ModeDescriptor(EField.D, 3), new ModeDescriptor(EField.D, 4)
             },
 
-            new ModeDescriptor[82] { // Mode 3 (0x02) - 11 5 4 4
+            new ModeDescriptor[82]
+            {
+                // Mode 3 (0x02) - 11 5 4 4
                 new ModeDescriptor(EField.M, 0), new ModeDescriptor(EField.M, 1), new ModeDescriptor(EField.M, 2), new ModeDescriptor(EField.M, 3), new ModeDescriptor(EField.M, 4), new ModeDescriptor(EField.RW, 0), new ModeDescriptor(EField.RW, 1), new ModeDescriptor(EField.RW, 2), new ModeDescriptor(EField.RW, 3), new ModeDescriptor(EField.RW, 4),
                 new ModeDescriptor(EField.RW, 5), new ModeDescriptor(EField.RW, 6), new ModeDescriptor(EField.RW, 7), new ModeDescriptor(EField.RW, 8), new ModeDescriptor(EField.RW, 9), new ModeDescriptor(EField.GW, 0), new ModeDescriptor(EField.GW, 1), new ModeDescriptor(EField.GW, 2), new ModeDescriptor(EField.GW, 3), new ModeDescriptor(EField.GW, 4),
                 new ModeDescriptor(EField.GW, 5), new ModeDescriptor(EField.GW, 6), new ModeDescriptor(EField.GW, 7), new ModeDescriptor(EField.GW, 8), new ModeDescriptor(EField.GW, 9), new ModeDescriptor(EField.BW, 0), new ModeDescriptor(EField.BW, 1), new ModeDescriptor(EField.BW, 2), new ModeDescriptor(EField.BW, 3), new ModeDescriptor(EField.BW, 4),
@@ -103,7 +105,9 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 new ModeDescriptor(EField.D, 3), new ModeDescriptor(EField.D, 4)
             },
 
-            new ModeDescriptor[82] { // Mode 4 (0x06) - 11 4 5 4
+            new ModeDescriptor[82]
+            {
+                // Mode 4 (0x06) - 11 4 5 4
                 new ModeDescriptor(EField.M, 0), new ModeDescriptor(EField.M, 1), new ModeDescriptor(EField.M, 2), new ModeDescriptor(EField.M, 3), new ModeDescriptor(EField.M, 4), new ModeDescriptor(EField.RW, 0), new ModeDescriptor(EField.RW, 1), new ModeDescriptor(EField.RW, 2), new ModeDescriptor(EField.RW, 3), new ModeDescriptor(EField.RW, 4),
                 new ModeDescriptor(EField.RW, 5), new ModeDescriptor(EField.RW, 6), new ModeDescriptor(EField.RW, 7), new ModeDescriptor(EField.RW, 8), new ModeDescriptor(EField.RW, 9), new ModeDescriptor(EField.GW, 0), new ModeDescriptor(EField.GW, 1), new ModeDescriptor(EField.GW, 2), new ModeDescriptor(EField.GW, 3), new ModeDescriptor(EField.GW, 4),
                 new ModeDescriptor(EField.GW, 5), new ModeDescriptor(EField.GW, 6), new ModeDescriptor(EField.GW, 7), new ModeDescriptor(EField.GW, 8), new ModeDescriptor(EField.GW, 9), new ModeDescriptor(EField.BW, 0), new ModeDescriptor(EField.BW, 1), new ModeDescriptor(EField.BW, 2), new ModeDescriptor(EField.BW, 3), new ModeDescriptor(EField.BW, 4),
@@ -115,7 +119,9 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 new ModeDescriptor(EField.D, 3), new ModeDescriptor(EField.D, 4)
             },
 
-            new ModeDescriptor[82] { // Mode 5 (0x0a) - 11 4 4 5
+            new ModeDescriptor[82]
+            {
+                // Mode 5 (0x0a) - 11 4 4 5
                 new ModeDescriptor(EField.M, 0), new ModeDescriptor(EField.M, 1), new ModeDescriptor(EField.M, 2), new ModeDescriptor(EField.M, 3), new ModeDescriptor(EField.M, 4), new ModeDescriptor(EField.RW, 0), new ModeDescriptor(EField.RW, 1), new ModeDescriptor(EField.RW, 2), new ModeDescriptor(EField.RW, 3), new ModeDescriptor(EField.RW, 4),
                 new ModeDescriptor(EField.RW, 5), new ModeDescriptor(EField.RW, 6), new ModeDescriptor(EField.RW, 7), new ModeDescriptor(EField.RW, 8), new ModeDescriptor(EField.RW, 9), new ModeDescriptor(EField.GW, 0), new ModeDescriptor(EField.GW, 1), new ModeDescriptor(EField.GW, 2), new ModeDescriptor(EField.GW, 3), new ModeDescriptor(EField.GW, 4),
                 new ModeDescriptor(EField.GW, 5), new ModeDescriptor(EField.GW, 6), new ModeDescriptor(EField.GW, 7), new ModeDescriptor(EField.GW, 8), new ModeDescriptor(EField.GW, 9), new ModeDescriptor(EField.BW, 0), new ModeDescriptor(EField.BW, 1), new ModeDescriptor(EField.BW, 2), new ModeDescriptor(EField.BW, 3), new ModeDescriptor(EField.BW, 4),
@@ -127,7 +133,9 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 new ModeDescriptor(EField.D, 3), new ModeDescriptor(EField.D, 4)
             },
 
-            new ModeDescriptor[82] { // Mode 6 (0x0e) - 9 5 5 5
+            new ModeDescriptor[82]
+            {
+                // Mode 6 (0x0e) - 9 5 5 5
                 new ModeDescriptor(EField.M, 0), new ModeDescriptor(EField.M, 1), new ModeDescriptor(EField.M, 2), new ModeDescriptor(EField.M, 3), new ModeDescriptor(EField.M, 4), new ModeDescriptor(EField.RW, 0), new ModeDescriptor(EField.RW, 1), new ModeDescriptor(EField.RW, 2), new ModeDescriptor(EField.RW, 3), new ModeDescriptor(EField.RW, 4),
                 new ModeDescriptor(EField.RW, 5), new ModeDescriptor(EField.RW, 6), new ModeDescriptor(EField.RW, 7), new ModeDescriptor(EField.RW, 8), new ModeDescriptor(EField.BY, 4), new ModeDescriptor(EField.GW, 0), new ModeDescriptor(EField.GW, 1), new ModeDescriptor(EField.GW, 2), new ModeDescriptor(EField.GW, 3), new ModeDescriptor(EField.GW, 4),
                 new ModeDescriptor(EField.GW, 5), new ModeDescriptor(EField.GW, 6), new ModeDescriptor(EField.GW, 7), new ModeDescriptor(EField.GW, 8), new ModeDescriptor(EField.GY, 4), new ModeDescriptor(EField.BW, 0), new ModeDescriptor(EField.BW, 1), new ModeDescriptor(EField.BW, 2), new ModeDescriptor(EField.BW, 3), new ModeDescriptor(EField.BW, 4),
@@ -139,7 +147,9 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 new ModeDescriptor(EField.D, 3), new ModeDescriptor(EField.D, 4)
             },
 
-            new ModeDescriptor[82] { // Mode 7 (0x12) - 8 6 5 5
+            new ModeDescriptor[82]
+            {
+                // Mode 7 (0x12) - 8 6 5 5
                 new ModeDescriptor(EField.M, 0), new ModeDescriptor(EField.M, 1), new ModeDescriptor(EField.M, 2), new ModeDescriptor(EField.M, 3), new ModeDescriptor(EField.M, 4), new ModeDescriptor(EField.RW, 0), new ModeDescriptor(EField.RW, 1), new ModeDescriptor(EField.RW, 2), new ModeDescriptor(EField.RW, 3), new ModeDescriptor(EField.RW, 4),
                 new ModeDescriptor(EField.RW, 5), new ModeDescriptor(EField.RW, 6), new ModeDescriptor(EField.RW, 7), new ModeDescriptor(EField.GZ, 4), new ModeDescriptor(EField.BY, 4), new ModeDescriptor(EField.GW, 0), new ModeDescriptor(EField.GW, 1), new ModeDescriptor(EField.GW, 2), new ModeDescriptor(EField.GW, 3), new ModeDescriptor(EField.GW, 4),
                 new ModeDescriptor(EField.GW, 5), new ModeDescriptor(EField.GW, 6), new ModeDescriptor(EField.GW, 7), new ModeDescriptor(EField.BZ, 2), new ModeDescriptor(EField.GY, 4), new ModeDescriptor(EField.BW, 0), new ModeDescriptor(EField.BW, 1), new ModeDescriptor(EField.BW, 2), new ModeDescriptor(EField.BW, 3), new ModeDescriptor(EField.BW, 4),
@@ -151,7 +161,9 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 new ModeDescriptor(EField.D, 3), new ModeDescriptor(EField.D, 4)
             },
 
-            new ModeDescriptor[82] { // Mode 8 (0x16) - 8 5 6 5
+            new ModeDescriptor[82]
+            {
+                // Mode 8 (0x16) - 8 5 6 5
                 new ModeDescriptor(EField.M, 0), new ModeDescriptor(EField.M, 1), new ModeDescriptor(EField.M, 2), new ModeDescriptor(EField.M, 3), new ModeDescriptor(EField.M, 4), new ModeDescriptor(EField.RW, 0), new ModeDescriptor(EField.RW, 1), new ModeDescriptor(EField.RW, 2), new ModeDescriptor(EField.RW, 3), new ModeDescriptor(EField.RW, 4),
                 new ModeDescriptor(EField.RW, 5), new ModeDescriptor(EField.RW, 6), new ModeDescriptor(EField.RW, 7), new ModeDescriptor(EField.BZ, 0), new ModeDescriptor(EField.BY, 4), new ModeDescriptor(EField.GW, 0), new ModeDescriptor(EField.GW, 1), new ModeDescriptor(EField.GW, 2), new ModeDescriptor(EField.GW, 3), new ModeDescriptor(EField.GW, 4),
                 new ModeDescriptor(EField.GW, 5), new ModeDescriptor(EField.GW, 6), new ModeDescriptor(EField.GW, 7), new ModeDescriptor(EField.GY, 5), new ModeDescriptor(EField.GY, 4), new ModeDescriptor(EField.BW, 0), new ModeDescriptor(EField.BW, 1), new ModeDescriptor(EField.BW, 2), new ModeDescriptor(EField.BW, 3), new ModeDescriptor(EField.BW, 4),
@@ -163,7 +175,9 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 new ModeDescriptor(EField.D, 3), new ModeDescriptor(EField.D, 4)
             },
 
-            new ModeDescriptor[82] { // Mode 9 (0x1a) - 8 5 5 6
+            new ModeDescriptor[82]
+            {
+                // Mode 9 (0x1a) - 8 5 5 6
                 new ModeDescriptor(EField.M, 0), new ModeDescriptor(EField.M, 1), new ModeDescriptor(EField.M, 2), new ModeDescriptor(EField.M, 3), new ModeDescriptor(EField.M, 4), new ModeDescriptor(EField.RW, 0), new ModeDescriptor(EField.RW, 1), new ModeDescriptor(EField.RW, 2), new ModeDescriptor(EField.RW, 3), new ModeDescriptor(EField.RW, 4),
                 new ModeDescriptor(EField.RW, 5), new ModeDescriptor(EField.RW, 6), new ModeDescriptor(EField.RW, 7), new ModeDescriptor(EField.BZ, 1), new ModeDescriptor(EField.BY, 4), new ModeDescriptor(EField.GW, 0), new ModeDescriptor(EField.GW, 1), new ModeDescriptor(EField.GW, 2), new ModeDescriptor(EField.GW, 3), new ModeDescriptor(EField.GW, 4),
                 new ModeDescriptor(EField.GW, 5), new ModeDescriptor(EField.GW, 6), new ModeDescriptor(EField.GW, 7), new ModeDescriptor(EField.BY, 5), new ModeDescriptor(EField.GY, 4), new ModeDescriptor(EField.BW, 0), new ModeDescriptor(EField.BW, 1), new ModeDescriptor(EField.BW, 2), new ModeDescriptor(EField.BW, 3), new ModeDescriptor(EField.BW, 4),
@@ -175,7 +189,9 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 new ModeDescriptor(EField.D, 3), new ModeDescriptor(EField.D, 4)
             },
 
-            new ModeDescriptor[82] { // Mode 10 (0x1e) - 6 6 6 6
+            new ModeDescriptor[82]
+            {
+                // Mode 10 (0x1e) - 6 6 6 6
                 new ModeDescriptor(EField.M, 0), new ModeDescriptor(EField.M, 1), new ModeDescriptor(EField.M, 2), new ModeDescriptor(EField.M, 3), new ModeDescriptor(EField.M, 4), new ModeDescriptor(EField.RW, 0), new ModeDescriptor(EField.RW, 1), new ModeDescriptor(EField.RW, 2), new ModeDescriptor(EField.RW, 3), new ModeDescriptor(EField.RW, 4),
                 new ModeDescriptor(EField.RW, 5), new ModeDescriptor(EField.GZ, 4), new ModeDescriptor(EField.BZ, 0), new ModeDescriptor(EField.BZ, 1), new ModeDescriptor(EField.BY, 4), new ModeDescriptor(EField.GW, 0), new ModeDescriptor(EField.GW, 1), new ModeDescriptor(EField.GW, 2), new ModeDescriptor(EField.GW, 3), new ModeDescriptor(EField.GW, 4),
                 new ModeDescriptor(EField.GW, 5), new ModeDescriptor(EField.GY, 5), new ModeDescriptor(EField.BY, 5), new ModeDescriptor(EField.BZ, 2), new ModeDescriptor(EField.GY, 4), new ModeDescriptor(EField.BW, 0), new ModeDescriptor(EField.BW, 1), new ModeDescriptor(EField.BW, 2), new ModeDescriptor(EField.BW, 3), new ModeDescriptor(EField.BW, 4),
@@ -187,7 +203,9 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 new ModeDescriptor(EField.D, 3), new ModeDescriptor(EField.D, 4)
             },
 
-            new ModeDescriptor[82] { // Mode 11 (0x03) - 10 10
+            new ModeDescriptor[82]
+            {
+                // Mode 11 (0x03) - 10 10
                 new ModeDescriptor(EField.M, 0), new ModeDescriptor(EField.M, 1), new ModeDescriptor(EField.M, 2), new ModeDescriptor(EField.M, 3), new ModeDescriptor(EField.M, 4), new ModeDescriptor(EField.RW, 0), new ModeDescriptor(EField.RW, 1), new ModeDescriptor(EField.RW, 2), new ModeDescriptor(EField.RW, 3), new ModeDescriptor(EField.RW, 4),
                 new ModeDescriptor(EField.RW, 5), new ModeDescriptor(EField.RW, 6), new ModeDescriptor(EField.RW, 7), new ModeDescriptor(EField.RW, 8), new ModeDescriptor(EField.RW, 9), new ModeDescriptor(EField.GW, 0), new ModeDescriptor(EField.GW, 1), new ModeDescriptor(EField.GW, 2), new ModeDescriptor(EField.GW, 3), new ModeDescriptor(EField.GW, 4),
                 new ModeDescriptor(EField.GW, 5), new ModeDescriptor(EField.GW, 6), new ModeDescriptor(EField.GW, 7), new ModeDescriptor(EField.GW, 8), new ModeDescriptor(EField.GW, 9), new ModeDescriptor(EField.BW, 0), new ModeDescriptor(EField.BW, 1), new ModeDescriptor(EField.BW, 2), new ModeDescriptor(EField.BW, 3), new ModeDescriptor(EField.BW, 4),
@@ -199,7 +217,9 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 new ModeDescriptor(EField.NA, 0), new ModeDescriptor(EField.NA, 0)
             },
 
-            new ModeDescriptor[82] { // Mode 12 (0x07) - 11 9
+            new ModeDescriptor[82]
+            {
+                // Mode 12 (0x07) - 11 9
                 new ModeDescriptor(EField.M, 0), new ModeDescriptor(EField.M, 1), new ModeDescriptor(EField.M, 2), new ModeDescriptor(EField.M, 3), new ModeDescriptor(EField.M, 4), new ModeDescriptor(EField.RW, 0), new ModeDescriptor(EField.RW, 1), new ModeDescriptor(EField.RW, 2), new ModeDescriptor(EField.RW, 3), new ModeDescriptor(EField.RW, 4),
                 new ModeDescriptor(EField.RW, 5), new ModeDescriptor(EField.RW, 6), new ModeDescriptor(EField.RW, 7), new ModeDescriptor(EField.RW, 8), new ModeDescriptor(EField.RW, 9), new ModeDescriptor(EField.GW, 0), new ModeDescriptor(EField.GW, 1), new ModeDescriptor(EField.GW, 2), new ModeDescriptor(EField.GW, 3), new ModeDescriptor(EField.GW, 4),
                 new ModeDescriptor(EField.GW, 5), new ModeDescriptor(EField.GW, 6), new ModeDescriptor(EField.GW, 7), new ModeDescriptor(EField.GW, 8), new ModeDescriptor(EField.GW, 9), new ModeDescriptor(EField.BW, 0), new ModeDescriptor(EField.BW, 1), new ModeDescriptor(EField.BW, 2), new ModeDescriptor(EField.BW, 3), new ModeDescriptor(EField.BW, 4),
@@ -211,7 +231,9 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 new ModeDescriptor(EField.NA, 0), new ModeDescriptor(EField.NA, 0)
             },
 
-            new ModeDescriptor[82] { // Mode 13 (0x0b) - 12 8
+            new ModeDescriptor[82]
+            {
+                // Mode 13 (0x0b) - 12 8
                 new ModeDescriptor(EField.M, 0), new ModeDescriptor(EField.M, 1), new ModeDescriptor(EField.M, 2), new ModeDescriptor(EField.M, 3), new ModeDescriptor(EField.M, 4), new ModeDescriptor(EField.RW, 0), new ModeDescriptor(EField.RW, 1), new ModeDescriptor(EField.RW, 2), new ModeDescriptor(EField.RW, 3), new ModeDescriptor(EField.RW, 4),
                 new ModeDescriptor(EField.RW, 5), new ModeDescriptor(EField.RW, 6), new ModeDescriptor(EField.RW, 7), new ModeDescriptor(EField.RW, 8), new ModeDescriptor(EField.RW, 9), new ModeDescriptor(EField.GW, 0), new ModeDescriptor(EField.GW, 1), new ModeDescriptor(EField.GW, 2), new ModeDescriptor(EField.GW, 3), new ModeDescriptor(EField.GW, 4),
                 new ModeDescriptor(EField.GW, 5), new ModeDescriptor(EField.GW, 6), new ModeDescriptor(EField.GW, 7), new ModeDescriptor(EField.GW, 8), new ModeDescriptor(EField.GW, 9), new ModeDescriptor(EField.BW, 0), new ModeDescriptor(EField.BW, 1), new ModeDescriptor(EField.BW, 2), new ModeDescriptor(EField.BW, 3), new ModeDescriptor(EField.BW, 4),
@@ -223,7 +245,9 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 new ModeDescriptor(EField.NA, 0), new ModeDescriptor(EField.NA, 0)
             },
 
-            new ModeDescriptor[82] { // Mode 14 (0x0f) - 16 4
+            new ModeDescriptor[82]
+            {
+                // Mode 14 (0x0f) - 16 4
                 new ModeDescriptor(EField.M, 0), new ModeDescriptor(EField.M, 1), new ModeDescriptor(EField.M, 2), new ModeDescriptor(EField.M, 3), new ModeDescriptor(EField.M, 4), new ModeDescriptor(EField.RW, 0), new ModeDescriptor(EField.RW, 1), new ModeDescriptor(EField.RW, 2), new ModeDescriptor(EField.RW, 3), new ModeDescriptor(EField.RW, 4),
                 new ModeDescriptor(EField.RW, 5), new ModeDescriptor(EField.RW, 6), new ModeDescriptor(EField.RW, 7), new ModeDescriptor(EField.RW, 8), new ModeDescriptor(EField.RW, 9), new ModeDescriptor(EField.GW, 0), new ModeDescriptor(EField.GW, 1), new ModeDescriptor(EField.GW, 2), new ModeDescriptor(EField.GW, 3), new ModeDescriptor(EField.GW, 4),
                 new ModeDescriptor(EField.GW, 5), new ModeDescriptor(EField.GW, 6), new ModeDescriptor(EField.GW, 7), new ModeDescriptor(EField.GW, 8), new ModeDescriptor(EField.GW, 9), new ModeDescriptor(EField.BW, 0), new ModeDescriptor(EField.BW, 1), new ModeDescriptor(EField.BW, 2), new ModeDescriptor(EField.BW, 3), new ModeDescriptor(EField.BW, 4),
@@ -259,53 +283,60 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
              0, // Mode 1   - 0x00
              1, // Mode 2   - 0x01
              2, // Mode 3   - 0x02
-            10, // Mode 11  - 0x03
-            -1, // Invalid  - 0x04
-            -1, // Invalid  - 0x05
+             10, // Mode 11  - 0x03
+             -1, // Invalid  - 0x04
+             -1, // Invalid  - 0x05
              3, // Mode 4   - 0x06
-            11, // Mode 12  - 0x07
-            -1, // Invalid  - 0x08
-            -1, // Invalid  - 0x09
+             11, // Mode 12  - 0x07
+             -1, // Invalid  - 0x08
+             -1, // Invalid  - 0x09
              4, // Mode 5   - 0x0a
-            12, // Mode 13  - 0x0b
-            -1, // Invalid  - 0x0c
-            -1, // Invalid  - 0x0d
+             12, // Mode 13  - 0x0b
+             -1, // Invalid  - 0x0c
+             -1, // Invalid  - 0x0d
              5, // Mode 6   - 0x0e
-            13, // Mode 14  - 0x0f
-            -1, // Invalid  - 0x10
-            -1, // Invalid  - 0x11
+             13, // Mode 14  - 0x0f
+             -1, // Invalid  - 0x10
+             -1, // Invalid  - 0x11
              6, // Mode 7   - 0x12
-            -1, // Reserved - 0x13
-            -1, // Invalid  - 0x14
-            -1, // Invalid  - 0x15
+             -1, // Reserved - 0x13
+             -1, // Invalid  - 0x14
+             -1, // Invalid  - 0x15
              7, // Mode 8   - 0x16
-            -1, // Reserved - 0x17
-            -1, // Invalid  - 0x18
-            -1, // Invalid  - 0x19
+             -1, // Reserved - 0x17
+             -1, // Invalid  - 0x18
+             -1, // Invalid  - 0x19
              8, // Mode 9   - 0x1a
-            -1, // Reserved - 0x1b
-            -1, // Invalid  - 0x1c
-            -1, // Invalid  - 0x1d
+             -1, // Reserved - 0x1b
+             -1, // Invalid  - 0x1c
+             -1, // Invalid  - 0x1d
              9, // Mode 10  - 0x1e
-            -1, // Resreved - 0x1f
+             -1, // Resreved - 0x1f
         };
 
+        /// <inheritdoc/>
         public int BitsPerPixel => 32;
 
+        /// <inheritdoc/>
         public byte PixelDepthBytes => 4;
 
+        /// <inheritdoc/>
         public byte DivSize => 4;
 
+        /// <inheritdoc/>
         public byte CompressedBytesPerBlock => 16;
 
+        /// <inheritdoc/>
         public bool Compressed => true;
 
+        /// <inheritdoc/>
         public Image GetImage(byte[] blockData, int width, int height)
         {
             byte[] decompressedData = this.Decompress(blockData, width, height);
             return Image.LoadPixelData<ImageSharp.PixelFormats.Rgba32>(decompressedData, width, height);
         }
 
+        /// <inheritdoc/>
         public byte[] Decompress(byte[] blockData, int width, int height)
         {
             IBlock self = this;
@@ -313,7 +344,6 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
 
             return Helper.InMemoryDecode<Bc6h>(blockData, width, height, (byte[] stream, byte[] data, int streamIndex, int dataIndex, int stride) =>
             {
-
                 // I would prefer to use Span, but not sure if I should reference System.Memory in this project
                 // copy data instead
                 Buffer.BlockCopy(blockData, streamIndex, currentBlock, 0, currentBlock.Length);
@@ -525,7 +555,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
         {
             int s = 0;
             int unq;
-            
+
             if (uBitsPerComp >= 15)
             {
                 unq = comp;
@@ -542,14 +572,13 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
             {
                 unq = ((comp << 16) + 0x8000) >> uBitsPerComp;
             }
- 
 
             return unq;
         }
 
         private static int FinishUnquantize(int comp)
         {
-            return (comp * 31) >> 6;                                        // scale the magnitude by 31/64
+            return (comp * 31) >> 6; // scale the magnitude by 31/64
         }
     }
 }

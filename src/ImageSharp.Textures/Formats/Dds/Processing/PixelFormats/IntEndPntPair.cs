@@ -10,8 +10,8 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.PixelFormats
 
         public IntEndPntPair(IntColor a, IntColor b)
         {
-            A = a;
-            B = b;
+            this.A = a;
+            this.B = b;
         }
-    };
+    }
 }

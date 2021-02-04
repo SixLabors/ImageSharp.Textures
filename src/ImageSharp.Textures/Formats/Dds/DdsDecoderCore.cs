@@ -1,20 +1,17 @@
 // Copyright (c) Six Labors and contributors.
 // Licensed under the Apache License, Version 2.0.
 
+using System;
+using System.Buffers.Binary;
+using System.IO;
+using SixLabors.ImageSharp.Memory;
+using SixLabors.ImageSharp.Textures.Formats.Dds.Emums;
+using SixLabors.ImageSharp.Textures.Formats.Dds.Extensions;
+using SixLabors.ImageSharp.Textures.Formats.Dds.Processing;
+using SixLabors.ImageSharp.Textures.TextureFormats;
+
 namespace SixLabors.ImageSharp.Textures.Formats.Dds
 {
-    using System;
-    using System.Buffers.Binary;
-    using System.Collections.Generic;
-    using System.IO;
-    using System.Text;
-    using SixLabors.ImageSharp.Textures.Common.Extensions;
-    using SixLabors.ImageSharp.Textures.Formats.Dds.Emums;
-    using SixLabors.ImageSharp.Textures.Formats.Dds.Extensions;
-    using SixLabors.ImageSharp.Textures.Formats.Dds.Processing;
-    using SixLabors.ImageSharp.Textures.TextureFormats;
-    using SixLabors.ImageSharp.Memory;
-
     internal sealed class DdsDecoderCore
     {
         /// <summary>
@@ -62,11 +59,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds
         /// <summary>
         /// Decodes the image from the specified stream.
         /// </summary>
-        /// <typeparam name="TPixel">The pixel format.</typeparam>
         /// <param name="stream">The stream, where the image should be decoded from. Cannot be null.</param>
-        /// <exception cref="System.ArgumentNullException">
-        ///    <para><paramref name="stream"/> is null.</para>
-        /// </exception>
         /// <returns>The decoded image.</returns>
         public Texture DecodeTexture(Stream stream)
         {
@@ -87,12 +80,9 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds
 
                 if (this.ddsHeader.IsVolumeTexture())
                 {
-                    var depths = this.ddsHeader.ComputeDepth();
-
+                    int depths = this.ddsHeader.ComputeDepth();
 
                     var texture = new VolumeTexture();
-
-
                     var surfaces = new FlatTexture[depths];
 
                     for (int i = 0; i < count; i++)
@@ -104,9 +94,8 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds
                                 surfaces[depth] = new FlatTexture();
                             }
 
-                            var mipMaps = ddsProcessor.DecodeDds(stream, width, height, 1);
+                            MipMap[] mipMaps = ddsProcessor.DecodeDds(stream, width, height, 1);
                             surfaces[depth].MipMaps.AddRange(mipMaps);
-                     
                         }
 
                         depths >>= 1;
@@ -124,27 +113,32 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds
                     var texture = new CubemapTexture();
                     for (int face = 0; face < faces.Length; face++)
                     {
-                        var mipMaps = ddsProcessor.DecodeDds(stream, width, height, count);
+                        MipMap[] mipMaps = ddsProcessor.DecodeDds(stream, width, height, count);
                         if (faces[face] == DdsSurfaceType.CubemapPositiveX)
                         {
                             texture.PositiveX.MipMaps.AddRange(mipMaps);
                         }
+
                         if (faces[face] == DdsSurfaceType.CubemapNegativeX)
                         {
                             texture.NegativeX.MipMaps.AddRange(mipMaps);
                         }
+
                         if (faces[face] == DdsSurfaceType.CubemapPositiveY)
                         {
                             texture.PositiveY.MipMaps.AddRange(mipMaps);
                         }
+
                         if (faces[face] == DdsSurfaceType.CubemapNegativeY)
                         {
                             texture.NegativeY.MipMaps.AddRange(mipMaps);
                         }
+
                         if (faces[face] == DdsSurfaceType.CubemapPositiveZ)
                         {
                             texture.PositiveZ.MipMaps.AddRange(mipMaps);
                         }
+
                         if (faces[face] == DdsSurfaceType.CubemapNegativeZ)
                         {
                             texture.NegativeZ.MipMaps.AddRange(mipMaps);
@@ -156,7 +150,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds
                 else
                 {
                     var texture = new FlatTexture();
-                    var mipMaps = ddsProcessor.DecodeDds(stream, width, height, count);
+                    MipMap[] mipMaps = ddsProcessor.DecodeDds(stream, width, height, count);
                     texture.MipMaps.AddRange(mipMaps);
                     return texture;
                 }
@@ -193,23 +187,15 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds
         {
             this.currentStream = stream;
 
-#if NETCOREAPP2_1 || NETCOREAPP3_1
             Span<byte> magicBuffer = stackalloc byte[4];
-#else
-            var magicBuffer = new byte[4];
-#endif
             this.currentStream.Read(magicBuffer, 0, 4);
             uint magicValue = BinaryPrimitives.ReadUInt32LittleEndian(magicBuffer);
             if (magicValue != DdsFourCC.DdsMagicWord)
             {
-                throw new NotSupportedException($"Invalid DDS magic value.");
+                throw new NotSupportedException("Invalid DDS magic value.");
             }
 
-#if NETCOREAPP2_1 || NETCOREAPP3_1
-            Span<byte> ddsHeaderBuffer = stackalloc byte[DdsConstants.DdsHeaderSize];
-#else
-            var ddsHeaderBuffer = new byte[DdsConstants.DdsHeaderSize];
-#endif
+            byte[] ddsHeaderBuffer = new byte[DdsConstants.DdsHeaderSize];
 
             this.currentStream.Read(ddsHeaderBuffer, 0, DdsConstants.DdsHeaderSize);
             this.ddsHeader = DdsHeader.Parse(ddsHeaderBuffer);
@@ -217,11 +203,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds
 
             if (this.ddsHeader.ShouldHaveDxt10Header())
             {
-#if NETCOREAPP2_1 || NETCOREAPP3_1
-                Span<byte> ddsDxt10headerBuffer = stackalloc byte[DdsConstants.DdsDxt10HeaderSize];
-#else
-                var ddsDxt10headerBuffer = new byte[DdsConstants.DdsDxt10HeaderSize];
-#endif
+                byte[] ddsDxt10headerBuffer = new byte[DdsConstants.DdsDxt10HeaderSize];
                 this.currentStream.Read(ddsDxt10headerBuffer, 0, DdsConstants.DdsDxt10HeaderSize);
                 this.ddsDxt10header = DdsHeaderDxt10.Parse(ddsDxt10headerBuffer);
             }

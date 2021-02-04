@@ -1,15 +1,15 @@
 // Copyright (c) Six Labors and contributors.
 // Licensed under the Apache License, Version 2.0.
 
+using System;
+using System.Collections.Generic;
+using SixLabors.ImageSharp.Memory;
+using SixLabors.ImageSharp.Textures.Formats;
+using SixLabors.ImageSharp.Textures.Formats.Dds;
+using SixLabors.ImageSharp.Textures.IO;
+
 namespace SixLabors.ImageSharp.Textures
 {
-    using System;
-    using System.Collections.Generic;
-    using SixLabors.ImageSharp.Textures.Formats;
-    using SixLabors.ImageSharp.Textures.Formats.Dds;
-    using SixLabors.ImageSharp.Textures.IO;
-    using SixLabors.ImageSharp.Memory;
-
     /// <summary>
     /// Provides configuration code which allows altering default behaviour or extending the library.
     /// </summary>
@@ -69,7 +69,7 @@ namespace SixLabors.ImageSharp.Textures
         }
 
         /// <summary>
-        /// Gets the currently registered <see cref="IImageFormat"/>s.
+        /// Gets the currently registered <see cref="ITextureFormat"/>s.
         /// </summary>
         public IEnumerable<ITextureFormat> ImageFormats => this.ImageFormatsManager.ImageFormats;
 

@@ -1,72 +1,69 @@
 // Copyright (c) Six Labors and contributors.
 // Licensed under the Apache License, Version 2.0.
 
+using System;
+using System.IO;
+using SixLabors.ImageSharp.Textures.Common.Extensions;
+using SixLabors.ImageSharp.Textures.Formats.Dds.Emums;
+using SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats;
+
 namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
 {
-    using System;
-    using System.IO;
-    using SixLabors.ImageSharp.Textures.Common.Extensions;
-    using SixLabors.ImageSharp.Textures.Formats.Dds;
-    using SixLabors.ImageSharp.Textures.Formats.Dds.Emums;
-    using SixLabors.ImageSharp.Textures.Formats.Dds.Extensions;
-    using SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats;
-    using SixLabors.ImageSharp.Textures.TextureFormats;
-
     /// <summary>
     /// Class that represents direct draw surfaces
     /// </summary>
     internal class DdsProcessor
     {
-        public DdsHeader DdsHeader { get; }
-
-        public DdsHeaderDxt10 DdsHeaderDxt10 { get; }
-
         public DdsProcessor(DdsHeader ddsHeader, DdsHeaderDxt10 ddsHeaderDxt10)
         {
             this.DdsHeader = ddsHeader;
             this.DdsHeaderDxt10 = ddsHeaderDxt10;
         }
 
+        public DdsHeader DdsHeader { get; }
 
+        public DdsHeaderDxt10 DdsHeaderDxt10 { get; }
 
-        //private void AllocateMipMaps(Stream stream)
-        //{
-        //    if (this.DdsHeader.TextureCount() <= 1)
-        //    {
-        //        int width = (int)Math.Max(BlockInfo.DivSize, (int)this.DdsHeader.Width);
-        //        int height = (int)Math.Max(BlockInfo.DivSize, this.DdsHeader.Height);
-        //        int bytesPerPixel = (BlockInfo.BitsPerPixel + 7) / 8;
-        //        int stride = CalcStride(width, BlockInfo.BitsPerPixel);
-        //        int len = stride * height;
+        /*
+        private void AllocateMipMaps(Stream stream)
+         {
+            if (this.DdsHeader.TextureCount() <= 1)
+            {
+                int width = (int)Math.Max(BlockInfo.DivSize, (int)this.DdsHeader.Width);
+                int height = (int)Math.Max(BlockInfo.DivSize, this.DdsHeader.Height);
+                int bytesPerPixel = (BlockInfo.BitsPerPixel + 7) / 8;
+                int stride = CalcStride(width, BlockInfo.BitsPerPixel);
+                int len = stride * height;
 
-        //        var mipData = new byte[len];
-        //        stream.Read(mipData, 0, len);
+                var mipData = new byte[len];
+                stream.Read(mipData, 0, len);
 
-        //        var mipMap = new MipMap(BlockInfo, mipData, false, width, height, stride / bytesPerPixel);
-        //        Swap(mipMap);
-        //        this.mipMaps = new[] { mipMap };
-        //        return;
-        //    }
+                var mipMap = new MipMap(BlockInfo, mipData, false, width, height, stride / bytesPerPixel);
+                Swap(mipMap);
+                this.mipMaps = new[] { mipMap };
+                return;
+            }
 
-        //    mipMaps = new MipMap[this.DdsHeader.TextureCount() - 1];
+            mipMaps = new MipMap[this.DdsHeader.TextureCount() - 1];
 
-        //    for (int i = 0; i < this.DdsHeader.TextureCount() - 1; i++)
-        //    {
-        //        int width = (int)Math.Max(BlockInfo.DivSize, (int)(this.DdsHeader.Width / Math.Pow(2, i + 1)));
-        //        int height = (int)Math.Max(BlockInfo.DivSize, this.DdsHeader.Height / Math.Pow(2, i + 1));
+            for (int i = 0; i < this.DdsHeader.TextureCount() - 1; i++)
+            {
+                int width = (int)Math.Max(BlockInfo.DivSize, (int)(this.DdsHeader.Width / Math.Pow(2, i + 1)));
+                int height = (int)Math.Max(BlockInfo.DivSize, this.DdsHeader.Height / Math.Pow(2, i + 1));
 
-        //        int bytesPerPixel = (BlockInfo.BitsPerPixel + 7) / 8;
-        //        int stride = CalcStride(width, BlockInfo.BitsPerPixel);
-        //        int len = stride * height;
+                int bytesPerPixel = (BlockInfo.BitsPerPixel + 7) / 8;
+                int stride = CalcStride(width, BlockInfo.BitsPerPixel);
+                int len = stride * height;
 
-        //        var mipData = new byte[len];
-        //        stream.Read(mipData, 0, len);
+                var mipData = new byte[len];
+                stream.Read(mipData, 0, len);
 
-        //        var mipMap = new MipMap(BlockInfo, mipData, false, width, height, stride / bytesPerPixel);
-        //        Swap(mipMap);
-        //        mipMaps[i] = mipMap;
-        //    }
-        //}
+                var mipMap = new MipMap(BlockInfo, mipData, false, width, height, stride / bytesPerPixel);
+                Swap(mipMap);
+                mipMaps[i] = mipMap;
+            }
+         }
+        */
 
         private MipMap[] AllocateMipMaps<TBlock>(Stream stream, int width, int height, int count)
             where TBlock : struct, IBlock<TBlock>
@@ -250,13 +247,14 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 return this.AllocateMipMaps<Rg32>(stream, width, height, count);
             }
 
-            //R11G11B10_Float
-
-            throw new Exception($"Unsupported 32 bit format");
+            // R11G11B10_Float
+            throw new Exception("Unsupported 32 bit format");
         }
 
-        //https://docs.microsoft.com/en-us/windows/win32/direct3ddds/dx-graphics-dds-pguide
-        //https://docs.microsoft.com/en-us/windows/win32/api/dxgiformat/ne-dxgiformat-dxgi_format
+        /*
+         https://docs.microsoft.com/en-us/windows/win32/direct3ddds/dx-graphics-dds-pguide
+         https://docs.microsoft.com/en-us/windows/win32/api/dxgiformat/ne-dxgiformat-dxgi_format
+        */
 
         private MipMap[] GetDx10Dds(Stream stream, int width, int height, int count)
         {

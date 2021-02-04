@@ -1,4 +1,7 @@
-﻿namespace Phoenix.Import.Application.UI
+﻿// Copyright (c) Six Labors and contributors.
+// Licensed under the Apache License, Version 2.0.
+
+namespace Phoenix.Import.Application.UI
 {
     public abstract class WizardPage
     {
@@ -29,6 +32,7 @@
         }
 
         public abstract void Initialize();
+
         public abstract void Render();
     }
 }

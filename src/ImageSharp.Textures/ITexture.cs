@@ -7,6 +7,5 @@ namespace SixLabors.ImageSharp.Textures
 
     public interface ITexture : IDisposable
     {
-
     }
 }

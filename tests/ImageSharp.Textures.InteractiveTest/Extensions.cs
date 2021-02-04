@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Copyright (c) Six Labors and contributors.
+// Licensed under the Apache License, Version 2.0.
+
+using System;
 using System.Collections.Generic;
 
 namespace Phoenix.Import.Application
@@ -11,6 +14,7 @@ namespace Phoenix.Import.Application
             {
                 dictionary.Remove(key);
             }
+
             dictionary.Add(key, value);
         }
     }

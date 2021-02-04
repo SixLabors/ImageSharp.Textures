@@ -34,7 +34,9 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.PixelFormats
         // Partition, Shape, Pixel (index into 4x4 block)
         public static readonly byte[][][] g_aPartitionTable = new byte[3][][]
     {
-        new byte[64][] {   // 1 Region case has no subsets (all 0)
+        new byte[64][]
+        {
+            // 1 Region case has no subsets (all 0)
             new byte[16] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
             new byte[16] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
             new byte[16] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
@@ -101,7 +103,9 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.PixelFormats
             new byte[16] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
         },
 
-        new byte[64][] {   // BC6H/BC7 Partition Set for 2 Subsets
+        new byte[64][]
+        {
+            // BC6H/BC7 Partition Set for 2 Subsets
             new byte[16] { 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1 }, // Shape 0
             new byte[16] { 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1 }, // Shape 1
             new byte[16] { 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1 }, // Shape 2
@@ -167,10 +171,12 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.PixelFormats
             new byte[16] { 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1 }, // Shape 60
             new byte[16] { 0, 0, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0 }, // Shape 61
             new byte[16] { 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0 }, // Shape 62
-            new byte[16] { 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 0, 1, 1, 1 }  // Shape 63
+            new byte[16] { 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 0, 1, 1, 1 } // Shape 63
         },
 
-        new byte[64][] {   // BC7 Partition Set for 3 Subsets
+        new byte[64][]
+        {
+            // BC7 Partition Set for 3 Subsets
             new byte[16] { 0, 0, 1, 1, 0, 0, 1, 1, 0, 2, 2, 1, 2, 2, 2, 2 }, // Shape 0
             new byte[16] { 0, 0, 0, 1, 0, 0, 1, 1, 2, 2, 1, 1, 2, 2, 2, 1 }, // Shape 1
             new byte[16] { 0, 0, 0, 0, 2, 0, 0, 1, 2, 2, 1, 1, 2, 2, 1, 1 }, // Shape 2
@@ -234,70 +240,76 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.PixelFormats
             new byte[16] { 0, 0, 0, 2, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 1 }, // Shape 60
             new byte[16] { 0, 2, 2, 2, 1, 2, 2, 2, 0, 2, 2, 2, 1, 2, 2, 2 }, // Shape 61
             new byte[16] { 0, 1, 0, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2 }, // Shape 62
-            new byte[16] { 0, 1, 1, 1, 2, 0, 1, 1, 2, 2, 0, 1, 2, 2, 2, 0 }  // Shape 63
+            new byte[16] { 0, 1, 1, 1, 2, 0, 1, 1, 2, 2, 0, 1, 2, 2, 2, 0 } // Shape 63
         }
     };
 
         // Partition, Shape, Fixup
         public static readonly byte[][][] g_aFixUp = new byte[3][][]
         {
-        new byte[64][] {   // No fix-ups for 1st subset for BC6H or BC7
-            new byte[] { 0, 0, 0 },new byte[] { 0, 0, 0 },new byte[] { 0, 0, 0 },new byte[] { 0, 0, 0 },
-            new byte[] { 0, 0, 0 },new byte[] { 0, 0, 0 },new byte[] { 0, 0, 0 },new byte[] { 0, 0, 0 },
-            new byte[] { 0, 0, 0 },new byte[] { 0, 0, 0 },new byte[] { 0, 0, 0 },new byte[] { 0, 0, 0 },
-            new byte[] { 0, 0, 0 },new byte[] { 0, 0, 0 },new byte[] { 0, 0, 0 },new byte[] { 0, 0, 0 },
-            new byte[] { 0, 0, 0 },new byte[] { 0, 0, 0 },new byte[] { 0, 0, 0 },new byte[] { 0, 0, 0 },
-            new byte[] { 0, 0, 0 },new byte[] { 0, 0, 0 },new byte[] { 0, 0, 0 },new byte[] { 0, 0, 0 },
-            new byte[] { 0, 0, 0 },new byte[] { 0, 0, 0 },new byte[] { 0, 0, 0 },new byte[] { 0, 0, 0 },
-            new byte[] { 0, 0, 0 },new byte[] { 0, 0, 0 },new byte[] { 0, 0, 0 },new byte[] { 0, 0, 0 },
-            new byte[] { 0, 0, 0 },new byte[] { 0, 0, 0 },new byte[] { 0, 0, 0 },new byte[] { 0, 0, 0 },
-            new byte[] { 0, 0, 0 },new byte[] { 0, 0, 0 },new byte[] { 0, 0, 0 },new byte[] { 0, 0, 0 },
-            new byte[] { 0, 0, 0 },new byte[] { 0, 0, 0 },new byte[] { 0, 0, 0 },new byte[] { 0, 0, 0 },
-            new byte[] { 0, 0, 0 },new byte[] { 0, 0, 0 },new byte[] { 0, 0, 0 },new byte[] { 0, 0, 0 },
-            new byte[] { 0, 0, 0 },new byte[] { 0, 0, 0 },new byte[] { 0, 0, 0 },new byte[] { 0, 0, 0 },
-            new byte[] { 0, 0, 0 },new byte[] { 0, 0, 0 },new byte[] { 0, 0, 0 },new byte[] { 0, 0, 0 },
-            new byte[] { 0, 0, 0 },new byte[] { 0, 0, 0 },new byte[] { 0, 0, 0 },new byte[] { 0, 0, 0 },
-            new byte[] { 0, 0, 0 },new byte[] { 0, 0, 0 },new byte[] { 0, 0, 0 },new byte[] { 0, 0, 0 }
+        new byte[64][]
+        {
+            // No fix-ups for 1st subset for BC6H or BC7
+            new byte[] { 0, 0, 0 }, new byte[] { 0, 0, 0 }, new byte[] { 0, 0, 0 }, new byte[] { 0, 0, 0 },
+            new byte[] { 0, 0, 0 }, new byte[] { 0, 0, 0 }, new byte[] { 0, 0, 0 }, new byte[] { 0, 0, 0 },
+            new byte[] { 0, 0, 0 }, new byte[] { 0, 0, 0 }, new byte[] { 0, 0, 0 }, new byte[] { 0, 0, 0 },
+            new byte[] { 0, 0, 0 }, new byte[] { 0, 0, 0 }, new byte[] { 0, 0, 0 }, new byte[] { 0, 0, 0 },
+            new byte[] { 0, 0, 0 }, new byte[] { 0, 0, 0 }, new byte[] { 0, 0, 0 }, new byte[] { 0, 0, 0 },
+            new byte[] { 0, 0, 0 }, new byte[] { 0, 0, 0 }, new byte[] { 0, 0, 0 }, new byte[] { 0, 0, 0 },
+            new byte[] { 0, 0, 0 }, new byte[] { 0, 0, 0 }, new byte[] { 0, 0, 0 }, new byte[] { 0, 0, 0 },
+            new byte[] { 0, 0, 0 }, new byte[] { 0, 0, 0 }, new byte[] { 0, 0, 0 }, new byte[] { 0, 0, 0 },
+            new byte[] { 0, 0, 0 }, new byte[] { 0, 0, 0 }, new byte[] { 0, 0, 0 }, new byte[] { 0, 0, 0 },
+            new byte[] { 0, 0, 0 }, new byte[] { 0, 0, 0 }, new byte[] { 0, 0, 0 }, new byte[] { 0, 0, 0 },
+            new byte[] { 0, 0, 0 }, new byte[] { 0, 0, 0 }, new byte[] { 0, 0, 0 }, new byte[] { 0, 0, 0 },
+            new byte[] { 0, 0, 0 }, new byte[] { 0, 0, 0 }, new byte[] { 0, 0, 0 }, new byte[] { 0, 0, 0 },
+            new byte[] { 0, 0, 0 }, new byte[] { 0, 0, 0 }, new byte[] { 0, 0, 0 }, new byte[] { 0, 0, 0 },
+            new byte[] { 0, 0, 0 }, new byte[] { 0, 0, 0 }, new byte[] { 0, 0, 0 }, new byte[] { 0, 0, 0 },
+            new byte[] { 0, 0, 0 }, new byte[] { 0, 0, 0 }, new byte[] { 0, 0, 0 }, new byte[] { 0, 0, 0 },
+            new byte[] { 0, 0, 0 }, new byte[] { 0, 0, 0 }, new byte[] { 0, 0, 0 }, new byte[] { 0, 0, 0 }
         },
 
-        new byte[64][] {   // BC6H/BC7 Partition Set Fixups for 2 Subsets
-            new byte[] { 0,15, 0 },new byte[] { 0,15, 0 },new byte[] { 0,15, 0 },new byte[] { 0,15, 0 },
-            new byte[] { 0,15, 0 },new byte[] { 0,15, 0 },new byte[] { 0,15, 0 },new byte[] { 0,15, 0 },
-            new byte[] { 0,15, 0 },new byte[] { 0,15, 0 },new byte[] { 0,15, 0 },new byte[] { 0,15, 0 },
-            new byte[] { 0,15, 0 },new byte[] { 0,15, 0 },new byte[] { 0,15, 0 },new byte[] { 0,15, 0 },
-            new byte[] { 0,15, 0 },new byte[] { 0, 2, 0 },new byte[] { 0, 8, 0 },new byte[] { 0, 2, 0 },
-            new byte[] { 0, 2, 0 },new byte[] { 0, 8, 0 },new byte[] { 0, 8, 0 },new byte[] { 0,15, 0 },
-            new byte[] { 0, 2, 0 },new byte[] { 0, 8, 0 },new byte[] { 0, 2, 0 },new byte[] { 0, 2, 0 },
-            new byte[] { 0, 8, 0 },new byte[] { 0, 8, 0 },new byte[] { 0, 2, 0 },new byte[] { 0, 2, 0 },
+        new byte[64][]
+        {
+            // BC6H/BC7 Partition Set Fixups for 2 Subsets
+            new byte[] { 0, 15, 0 }, new byte[] { 0, 15, 0 }, new byte[] { 0, 15, 0 }, new byte[] { 0, 15, 0 },
+            new byte[] { 0, 15, 0 }, new byte[] { 0, 15, 0 }, new byte[] { 0, 15, 0 }, new byte[] { 0, 15, 0 },
+            new byte[] { 0, 15, 0 }, new byte[] { 0, 15, 0 }, new byte[] { 0, 15, 0 }, new byte[] { 0, 15, 0 },
+            new byte[] { 0, 15, 0 }, new byte[] { 0, 15, 0 }, new byte[] { 0, 15, 0 }, new byte[] { 0, 15, 0 },
+            new byte[] { 0, 15, 0 }, new byte[] { 0, 2, 0 }, new byte[] { 0, 8, 0 }, new byte[] { 0, 2, 0 },
+            new byte[] { 0, 2, 0 }, new byte[] { 0, 8, 0 }, new byte[] { 0, 8, 0 }, new byte[] { 0, 15, 0 },
+            new byte[] { 0, 2, 0 }, new byte[] { 0, 8, 0 }, new byte[] { 0, 2, 0 }, new byte[] { 0, 2, 0 },
+            new byte[] { 0, 8, 0 }, new byte[] { 0, 8, 0 }, new byte[] { 0, 2, 0 }, new byte[] { 0, 2, 0 },
 
             // BC7 Partition Set Fixups for 2 Subsets (second-half)
-            new byte[] { 0,15, 0 },new byte[] { 0,15, 0 },new byte[] { 0, 6, 0 },new byte[] { 0, 8, 0 },
-            new byte[] { 0, 2, 0 },new byte[] { 0, 8, 0 },new byte[] { 0,15, 0 },new byte[] { 0,15, 0 },
-            new byte[] { 0, 2, 0 },new byte[] { 0, 8, 0 },new byte[] { 0, 2, 0 },new byte[] { 0, 2, 0 },
-            new byte[] { 0, 2, 0 },new byte[] { 0,15, 0 },new byte[] { 0,15, 0 },new byte[] { 0, 6, 0 },
-            new byte[] { 0, 6, 0 },new byte[] { 0, 2, 0 },new byte[] { 0, 6, 0 },new byte[] { 0, 8, 0 },
-            new byte[] { 0,15, 0 },new byte[] { 0,15, 0 },new byte[] { 0, 2, 0 },new byte[] { 0, 2, 0 },
-            new byte[] { 0,15, 0 },new byte[] { 0,15, 0 },new byte[] { 0,15, 0 },new byte[] { 0,15, 0 },
-            new byte[] { 0,15, 0 },new byte[] { 0, 2, 0 },new byte[] { 0, 2, 0 },new byte[] { 0,15, 0 }
+            new byte[] { 0, 15, 0 }, new byte[] { 0, 15, 0 }, new byte[] { 0, 6, 0 }, new byte[] { 0, 8, 0 },
+            new byte[] { 0, 2, 0 }, new byte[] { 0, 8, 0 }, new byte[] { 0, 15, 0 }, new byte[] { 0, 15, 0 },
+            new byte[] { 0, 2, 0 }, new byte[] { 0, 8, 0 }, new byte[] { 0, 2, 0 }, new byte[] { 0, 2, 0 },
+            new byte[] { 0, 2, 0 }, new byte[] { 0, 15, 0 }, new byte[] { 0, 15, 0 }, new byte[] { 0, 6, 0 },
+            new byte[] { 0, 6, 0 }, new byte[] { 0, 2, 0 }, new byte[] { 0, 6, 0 }, new byte[] { 0, 8, 0 },
+            new byte[] { 0, 15, 0 }, new byte[] { 0, 15, 0 }, new byte[] { 0, 2, 0 }, new byte[] { 0, 2, 0 },
+            new byte[] { 0, 15, 0 }, new byte[] { 0, 15, 0 }, new byte[] { 0, 15, 0 }, new byte[] { 0, 15, 0 },
+            new byte[] { 0, 15, 0 }, new byte[] { 0, 2, 0 }, new byte[] { 0, 2, 0 }, new byte[] { 0, 15, 0 }
         },
 
-        new byte[64][] {   // BC7 Partition Set Fixups for 3 Subsets
-            new byte[] { 0, 3,15 },new byte[] { 0, 3, 8 },new byte[] { 0,15, 8 },new byte[] { 0,15, 3 },
-            new byte[] { 0, 8,15 },new byte[] { 0, 3,15 },new byte[] { 0,15, 3 },new byte[] { 0,15, 8 },
-            new byte[] { 0, 8,15 },new byte[] { 0, 8,15 },new byte[] { 0, 6,15 },new byte[] { 0, 6,15 },
-            new byte[] { 0, 6,15 },new byte[] { 0, 5,15 },new byte[] { 0, 3,15 },new byte[] { 0, 3, 8 },
-            new byte[] { 0, 3,15 },new byte[] { 0, 3, 8 },new byte[] { 0, 8,15 },new byte[] { 0,15, 3 },
-            new byte[] { 0, 3,15 },new byte[] { 0, 3, 8 },new byte[] { 0, 6,15 },new byte[] { 0,10, 8 },
-            new byte[] { 0, 5, 3 },new byte[] { 0, 8,15 },new byte[] { 0, 8, 6 },new byte[] { 0, 6,10 },
-            new byte[] { 0, 8,15 },new byte[] { 0, 5,15 },new byte[] { 0,15,10 },new byte[] { 0,15, 8 },
-            new byte[] { 0, 8,15 },new byte[] { 0,15, 3 },new byte[] { 0, 3,15 },new byte[] { 0, 5,10 },
-            new byte[] { 0, 6,10 },new byte[] { 0,10, 8 },new byte[] { 0, 8, 9 },new byte[] { 0,15,10 },
-            new byte[] { 0,15, 6 },new byte[] { 0, 3,15 },new byte[] { 0,15, 8 },new byte[] { 0, 5,15 },
-            new byte[] { 0,15, 3 },new byte[] { 0,15, 6 },new byte[] { 0,15, 6 },new byte[] { 0,15, 8 },
-            new byte[] { 0, 3,15 },new byte[] { 0,15, 3 },new byte[] { 0, 5,15 },new byte[] { 0, 5,15 },
-            new byte[] { 0, 5,15 },new byte[] { 0, 8,15 },new byte[] { 0, 5,15 },new byte[] { 0,10,15 },
-            new byte[] { 0, 5,15 },new byte[] { 0,10,15 },new byte[] { 0, 8,15 },new byte[] { 0,13,15 },
-            new byte[] { 0,15, 3 },new byte[] { 0,12,15 },new byte[] { 0, 3,15 },new byte[] { 0, 3, 8 }
+        new byte[64][]
+        {
+            // BC7 Partition Set Fixups for 3 Subsets
+            new byte[] { 0, 3, 15 }, new byte[] { 0, 3, 8 }, new byte[] { 0, 15, 8 }, new byte[] { 0, 15, 3 },
+            new byte[] { 0, 8, 15 }, new byte[] { 0, 3, 15 }, new byte[] { 0, 15, 3 }, new byte[] { 0, 15, 8 },
+            new byte[] { 0, 8, 15 }, new byte[] { 0, 8, 15 }, new byte[] { 0, 6, 15 }, new byte[] { 0, 6, 15 },
+            new byte[] { 0, 6, 15 }, new byte[] { 0, 5, 15 }, new byte[] { 0, 3, 15 }, new byte[] { 0, 3, 8 },
+            new byte[] { 0, 3, 15 }, new byte[] { 0, 3, 8 }, new byte[] { 0, 8, 15 }, new byte[] { 0, 15, 3 },
+            new byte[] { 0, 3, 15 }, new byte[] { 0, 3, 8 }, new byte[] { 0, 6, 15 }, new byte[] { 0, 10, 8 },
+            new byte[] { 0, 5, 3 }, new byte[] { 0, 8, 15 }, new byte[] { 0, 8, 6 }, new byte[] { 0, 6, 10 },
+            new byte[] { 0, 8, 15 }, new byte[] { 0, 5, 15 }, new byte[] { 0, 15, 10 }, new byte[] { 0, 15, 8 },
+            new byte[] { 0, 8, 15 }, new byte[] { 0, 15, 3 }, new byte[] { 0, 3, 15 }, new byte[] { 0, 5, 10 },
+            new byte[] { 0, 6, 10 }, new byte[] { 0, 10, 8 }, new byte[] { 0, 8, 9 }, new byte[] { 0, 15, 10 },
+            new byte[] { 0, 15, 6 }, new byte[] { 0, 3, 15 }, new byte[] { 0, 15, 8 }, new byte[] { 0, 5, 15 },
+            new byte[] { 0, 15, 3 }, new byte[] { 0, 15, 6 }, new byte[] { 0, 15, 6 }, new byte[] { 0, 15, 8 },
+            new byte[] { 0, 3, 15 }, new byte[] { 0, 15, 3 }, new byte[] { 0, 5, 15 }, new byte[] { 0, 5, 15 },
+            new byte[] { 0, 5, 15 }, new byte[] { 0, 8, 15 }, new byte[] { 0, 5, 15 }, new byte[] { 0, 10, 15 },
+            new byte[] { 0, 5, 15 }, new byte[] { 0, 10, 15 }, new byte[] { 0, 8, 15 }, new byte[] { 0, 13, 15 },
+            new byte[] { 0, 15, 3 }, new byte[] { 0, 12, 15 }, new byte[] { 0, 3, 15 }, new byte[] { 0, 3, 8 }
         }
         };
 

@@ -1,9 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
-using SixLabors.ImageSharp.Processing;
+// Copyright (c) Six Labors and contributors.
+// Licensed under the Apache License, Version 2.0.
+
 using SixLabors.ImageSharp.Textures.PixelFormats;
-using SixLabors.ImageSharp.Textures.Tests.TestUtilities.Attributes;
 using Xunit;
 
 namespace SixLabors.ImageSharp.Textures.Tests.Formats.PixelFormat

@@ -1,4 +1,6 @@
-﻿using System;
+﻿// Copyright (c) Six Labors and contributors.
+// Licensed under the Apache License, Version 2.0.
+
 using ImGuiNET;
 
 namespace Phoenix.Import.Application.UI
@@ -6,6 +8,7 @@ namespace Phoenix.Import.Application.UI
     public class MenuBar
     {
         public bool DarkMode { get; private set; }
+
         public bool DemoMode { get; private set; }
 
         public MenuBar()
@@ -30,20 +33,23 @@ namespace Phoenix.Import.Application.UI
             {
                 if (ImGui.BeginMenu("Theme"))
                 {
-                    if (ImGui.MenuItem("Light", "", !this.DarkMode, this.DarkMode))
+                    if (ImGui.MenuItem("Light", string.Empty, !this.DarkMode, this.DarkMode))
                     {
                         this.DarkMode = false;
                     }
-                    if (ImGui.MenuItem("Dark", "", this.DarkMode, !this.DarkMode))
+
+                    if (ImGui.MenuItem("Dark", string.Empty, this.DarkMode, !this.DarkMode))
                     {
                         this.DarkMode = true;
                     }
-                    //if (ImGui.MenuItem("Demo", "", DemoMode))
-                    //{
-                    //    DemoMode = !DemoMode;
-                    //}
+
+                    // if (ImGui.MenuItem("Demo", "", DemoMode))
+                    // {
+                    //     DemoMode = !DemoMode;
+                    // }
                     ImGui.EndMenu();
                 }
+
                 menuHeight = ImGui.GetWindowHeight();
                 ImGui.EndMainMenuBar();
             }

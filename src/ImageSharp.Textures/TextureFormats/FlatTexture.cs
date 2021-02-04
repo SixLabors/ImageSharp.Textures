@@ -1,21 +1,24 @@
 // Copyright (c) Six Labors and contributors.
 // Licensed under the Apache License, Version 2.0.
 
+using System;
+using System.Collections.Generic;
+
 namespace SixLabors.ImageSharp.Textures.TextureFormats
 {
-    using System;
-    using System.Collections.Generic;
-
     public class FlatTexture : Texture
     {
         private bool isDisposed;
 
-        public List<MipMap> MipMaps { get; }
-
+        /// <summary>
+        /// Initializes a new instance of the <see cref="FlatTexture"/> class.
+        /// </summary>
         public FlatTexture()
         {
-            MipMaps = new List<MipMap>();
+            this.MipMaps = new List<MipMap>();
         }
+
+        public List<MipMap> MipMaps { get; }
 
         /// <inheritdoc/>
         protected override void Dispose(bool disposing)
@@ -29,7 +32,7 @@ namespace SixLabors.ImageSharp.Textures.TextureFormats
             {
                 foreach (MipMap mipMap in this.MipMaps)
                 {
-                    //mipMap.Dispose();
+                    // mipMap.Dispose();
                 }
             }
 

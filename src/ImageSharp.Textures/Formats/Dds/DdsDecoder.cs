@@ -4,10 +4,10 @@
 namespace SixLabors.ImageSharp.Textures.Formats.Dds
 {
     /* Notes:
-https://github.com/toji/texture
-https://docs.microsoft.com/en-us/windows/win32/direct3ddds/dx-graphics-dds-pguide
-https://docs.microsoft.com/en-us/windows/uwp/gaming/complete-code-for-ddstextureloader
-*/
+    https://github.com/toji/texture
+    https://docs.microsoft.com/en-us/windows/win32/direct3ddds/dx-graphics-dds-pguide
+    https://docs.microsoft.com/en-us/windows/uwp/gaming/complete-code-for-ddstextureloader
+    */
 
     using System;
     using System.IO;
@@ -38,7 +38,7 @@ https://docs.microsoft.com/en-us/windows/uwp/gaming/complete-code-for-ddstexture
 
             return new DdsDecoderCore(configuration, this).DecodeTexture(stream);
         }
-        
+
         /// <inheritdoc/>
         public ITextueInfo Identify(Configuration configuration, Stream stream)
         {
