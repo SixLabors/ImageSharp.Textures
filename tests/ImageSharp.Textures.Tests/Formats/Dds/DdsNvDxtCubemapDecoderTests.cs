@@ -16,8 +16,8 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.Dds
         public void DdsDecoder_CanDecode_Cubemap_NvDxt_Has_Mips(TestTextureProvider provider)
         {
             using Texture texture = provider.GetTexture(new DdsDecoder());
-            provider.CompareTextures(texture);
             provider.SaveTextures(texture);
+            provider.CompareTextures(texture);
         }
 
         [Theory]
@@ -25,8 +25,8 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.Dds
         public void DdsDecoder_CanDecode_Cubemap_NvDxt_No_Mips(TestTextureProvider provider)
         {
             using Texture texture = provider.GetTexture(new DdsDecoder());
-            provider.CompareTextures(texture);
             provider.SaveTextures(texture);
+            provider.CompareTextures(texture);
         }
     }
 }

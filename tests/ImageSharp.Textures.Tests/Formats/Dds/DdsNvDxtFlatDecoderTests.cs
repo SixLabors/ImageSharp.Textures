@@ -16,8 +16,8 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.Dds
         public void DdsDecoder_CanDecode_Flat_NvDxt_Has_Mips_3DC(TestTextureProvider provider)
         {
             using Texture texture = provider.GetTexture(new DdsDecoder());
-            provider.CompareTextures(texture);
             provider.SaveTextures(texture);
+            provider.CompareTextures(texture);
         }
 
         [Theory]
@@ -25,8 +25,8 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.Dds
         public void DdsDecoder_CanDecode_Flat_NvDxt_No_Mips_3DC(TestTextureProvider provider)
         {
             using Texture texture = provider.GetTexture(new DdsDecoder());
-            provider.CompareTextures(texture);
             provider.SaveTextures(texture);
+            provider.CompareTextures(texture);
         }
 
         [Theory]
@@ -34,8 +34,8 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.Dds
         public void DdsDecoder_CanDecode_Flat_NvDxt_Has_Mips_A8(TestTextureProvider provider)
         {
             using Texture texture = provider.GetTexture(new DdsDecoder());
-            provider.CompareTextures(texture);
             provider.SaveTextures(texture);
+            provider.CompareTextures(texture);
         }
 
         [Theory]
@@ -43,8 +43,8 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.Dds
         public void DdsDecoder_CanDecode_Flat_NvDxt_No_Mips_A8(TestTextureProvider provider)
         {
             using Texture texture = provider.GetTexture(new DdsDecoder());
-            provider.CompareTextures(texture);
             provider.SaveTextures(texture);
+            provider.CompareTextures(texture);
         }
 
         [Theory]
@@ -52,8 +52,8 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.Dds
         public void DdsDecoder_CanDecode_Flat_NvDxt_Has_Mips_A8L8(TestTextureProvider provider)
         {
             using Texture texture = provider.GetTexture(new DdsDecoder());
-            provider.CompareTextures(texture);
             provider.SaveTextures(texture);
+            provider.CompareTextures(texture);
         }
 
         [Theory]
@@ -61,8 +61,8 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.Dds
         public void DdsDecoder_CanDecode_Flat_NvDxt_No_Mips_A8L8(TestTextureProvider provider)
         {
             using Texture texture = provider.GetTexture(new DdsDecoder());
-            provider.CompareTextures(texture);
             provider.SaveTextures(texture);
+            provider.CompareTextures(texture);
         }
 
         [Theory]
@@ -70,8 +70,8 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.Dds
         public void DdsDecoder_CanDecode_Flat_NvDxt_Has_Mips_CXV8U8(TestTextureProvider provider)
         {
             using Texture texture = provider.GetTexture(new DdsDecoder());
-            provider.CompareTextures(texture);
             provider.SaveTextures(texture);
+            provider.CompareTextures(texture);
         }
 
         [Theory]
@@ -79,8 +79,8 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.Dds
         public void DdsDecoder_CanDecode_Flat_NvDxt_No_Mips_CXV8U8(TestTextureProvider provider)
         {
             using Texture texture = provider.GetTexture(new DdsDecoder());
-            provider.CompareTextures(texture);
             provider.SaveTextures(texture);
+            provider.CompareTextures(texture);
         }
 
         [Theory]
@@ -88,8 +88,8 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.Dds
         public void DdsDecoder_CanDecode_Flat_NvDxt_Has_Mips_DXT1A(TestTextureProvider provider)
         {
             using Texture texture = provider.GetTexture(new DdsDecoder());
-            provider.CompareTextures(texture);
             provider.SaveTextures(texture);
+            provider.CompareTextures(texture);
         }
 
         [Theory]
@@ -97,8 +97,8 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.Dds
         public void DdsDecoder_CanDecode_Flat_NvDxt_No_Mips_DXT1A(TestTextureProvider provider)
         {
             using Texture texture = provider.GetTexture(new DdsDecoder());
-            provider.CompareTextures(texture);
             provider.SaveTextures(texture);
+            provider.CompareTextures(texture);
         }
 
         [Theory]
@@ -106,8 +106,8 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.Dds
         public void DdsDecoder_CanDecode_Flat_NvDxt_Has_Mips_DXT1C(TestTextureProvider provider)
         {
             using Texture texture = provider.GetTexture(new DdsDecoder());
-            provider.CompareTextures(texture);
             provider.SaveTextures(texture);
+            provider.CompareTextures(texture);
         }
 
         [Theory]
@@ -115,8 +115,8 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.Dds
         public void DdsDecoder_CanDecode_Flat_NvDxt_No_Mips_DXT1C(TestTextureProvider provider)
         {
             using Texture texture = provider.GetTexture(new DdsDecoder());
-            provider.CompareTextures(texture);
             provider.SaveTextures(texture);
+            provider.CompareTextures(texture);
         }
 
         [Theory]
@@ -124,8 +124,8 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.Dds
         public void DdsDecoder_CanDecode_Flat_NvDxt_Has_Mips_DXT3(TestTextureProvider provider)
         {
             using Texture texture = provider.GetTexture(new DdsDecoder());
-            provider.CompareTextures(texture);
             provider.SaveTextures(texture);
+            provider.CompareTextures(texture);
         }
 
         [Theory]
@@ -133,8 +133,8 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.Dds
         public void DdsDecoder_CanDecode_Flat_NvDxt_No_Mips_DXT3(TestTextureProvider provider)
         {
             using Texture texture = provider.GetTexture(new DdsDecoder());
-            provider.CompareTextures(texture);
             provider.SaveTextures(texture);
+            provider.CompareTextures(texture);
         }
 
         [Theory]
@@ -142,8 +142,8 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.Dds
         public void DdsDecoder_CanDecode_Flat_NvDxt_Has_Mips_DXT5(TestTextureProvider provider)
         {
             using Texture texture = provider.GetTexture(new DdsDecoder());
-            provider.CompareTextures(texture);
             provider.SaveTextures(texture);
+            provider.CompareTextures(texture);
         }
 
         [Theory]
@@ -151,8 +151,8 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.Dds
         public void DdsDecoder_CanDecode_Flat_NvDxt_No_Mips_DXT5(TestTextureProvider provider)
         {
             using Texture texture = provider.GetTexture(new DdsDecoder());
-            provider.CompareTextures(texture);
             provider.SaveTextures(texture);
+            provider.CompareTextures(texture);
         }
 
         [Theory]
@@ -160,8 +160,8 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.Dds
         public void DdsDecoder_CanDecode_Flat_NvDxt_Has_Mips_DXT5NM(TestTextureProvider provider)
         {
             using Texture texture = provider.GetTexture(new DdsDecoder());
-            provider.CompareTextures(texture);
             provider.SaveTextures(texture);
+            provider.CompareTextures(texture);
         }
 
         [Theory]
@@ -169,8 +169,8 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.Dds
         public void DdsDecoder_CanDecode_Flat_NvDxt_No_Mips_DXT5NM(TestTextureProvider provider)
         {
             using Texture texture = provider.GetTexture(new DdsDecoder());
-            provider.CompareTextures(texture);
             provider.SaveTextures(texture);
+            provider.CompareTextures(texture);
         }
 
         [Theory]
@@ -178,8 +178,8 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.Dds
         public void DdsDecoder_CanDecode_Flat_NvDxt_Has_Mips_FP16X4(TestTextureProvider provider)
         {
             using Texture texture = provider.GetTexture(new DdsDecoder());
-            provider.CompareTextures(texture);
             provider.SaveTextures(texture);
+            provider.CompareTextures(texture);
         }
 
         [Theory]
@@ -187,8 +187,8 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.Dds
         public void DdsDecoder_CanDecode_Flat_NvDxt_No_Mips_FP16X4(TestTextureProvider provider)
         {
             using Texture texture = provider.GetTexture(new DdsDecoder());
-            provider.CompareTextures(texture);
             provider.SaveTextures(texture);
+            provider.CompareTextures(texture);
         }
 
         [Theory]
@@ -196,8 +196,8 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.Dds
         public void DdsDecoder_CanDecode_Flat_NvDxt_Has_Mips_FP32(TestTextureProvider provider)
         {
             using Texture texture = provider.GetTexture(new DdsDecoder());
-            provider.CompareTextures(texture);
             provider.SaveTextures(texture);
+            provider.CompareTextures(texture);
         }
 
         [Theory]
@@ -205,8 +205,8 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.Dds
         public void DdsDecoder_CanDecode_Flat_NvDxt_No_Mips_FP32(TestTextureProvider provider)
         {
             using Texture texture = provider.GetTexture(new DdsDecoder());
-            provider.CompareTextures(texture);
             provider.SaveTextures(texture);
+            provider.CompareTextures(texture);
         }
 
         [Theory]
@@ -214,8 +214,8 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.Dds
         public void DdsDecoder_CanDecode_Flat_NvDxt_Has_Mips_FP32X4(TestTextureProvider provider)
         {
             using Texture texture = provider.GetTexture(new DdsDecoder());
-            provider.CompareTextures(texture);
             provider.SaveTextures(texture);
+            provider.CompareTextures(texture);
         }
 
         [Theory]
@@ -223,8 +223,8 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.Dds
         public void DdsDecoder_CanDecode_Flat_NvDxt_No_Mips_FP32X4(TestTextureProvider provider)
         {
             using Texture texture = provider.GetTexture(new DdsDecoder());
-            provider.CompareTextures(texture);
             provider.SaveTextures(texture);
+            provider.CompareTextures(texture);
         }
 
         [Theory]
@@ -232,8 +232,8 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.Dds
         public void DdsDecoder_CanDecode_Flat_NvDxt_Has_Mips_G16R16(TestTextureProvider provider)
         {
             using Texture texture = provider.GetTexture(new DdsDecoder());
-            provider.CompareTextures(texture);
             provider.SaveTextures(texture);
+            provider.CompareTextures(texture);
         }
 
         [Theory]
@@ -241,8 +241,8 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.Dds
         public void DdsDecoder_CanDecode_Flat_NvDxt_No_Mips_G16R16(TestTextureProvider provider)
         {
             using Texture texture = provider.GetTexture(new DdsDecoder());
-            provider.CompareTextures(texture);
             provider.SaveTextures(texture);
+            provider.CompareTextures(texture);
         }
 
         [Theory]
@@ -250,8 +250,8 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.Dds
         public void DdsDecoder_CanDecode_Flat_NvDxt_Has_Mips_G16R16F(TestTextureProvider provider)
         {
             using Texture texture = provider.GetTexture(new DdsDecoder());
-            provider.CompareTextures(texture);
             provider.SaveTextures(texture);
+            provider.CompareTextures(texture);
         }
 
         [Theory]
@@ -259,8 +259,8 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.Dds
         public void DdsDecoder_CanDecode_Flat_NvDxt_No_Mips_G16R16F(TestTextureProvider provider)
         {
             using Texture texture = provider.GetTexture(new DdsDecoder());
-            provider.CompareTextures(texture);
             provider.SaveTextures(texture);
+            provider.CompareTextures(texture);
         }
 
         [Theory]
@@ -268,8 +268,8 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.Dds
         public void DdsDecoder_CanDecode_Flat_NvDxt_Has_Mips_U1555(TestTextureProvider provider)
         {
             using Texture texture = provider.GetTexture(new DdsDecoder());
-            provider.CompareTextures(texture);
             provider.SaveTextures(texture);
+            provider.CompareTextures(texture);
         }
 
         [Theory]
@@ -277,8 +277,8 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.Dds
         public void DdsDecoder_CanDecode_Flat_NvDxt_No_Mips_U1555(TestTextureProvider provider)
         {
             using Texture texture = provider.GetTexture(new DdsDecoder());
-            provider.CompareTextures(texture);
             provider.SaveTextures(texture);
+            provider.CompareTextures(texture);
         }
 
         [Theory]
@@ -286,8 +286,8 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.Dds
         public void DdsDecoder_CanDecode_Flat_NvDxt_Has_Mips_U4444(TestTextureProvider provider)
         {
             using Texture texture = provider.GetTexture(new DdsDecoder());
-            provider.CompareTextures(texture);
             provider.SaveTextures(texture);
+            provider.CompareTextures(texture);
         }
 
         [Theory]
@@ -295,8 +295,8 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.Dds
         public void DdsDecoder_CanDecode_Flat_NvDxt_No_Mips_U4444(TestTextureProvider provider)
         {
             using Texture texture = provider.GetTexture(new DdsDecoder());
-            provider.CompareTextures(texture);
             provider.SaveTextures(texture);
+            provider.CompareTextures(texture);
         }
 
         [Theory]
@@ -304,8 +304,8 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.Dds
         public void DdsDecoder_CanDecode_Flat_NvDxt_Has_Mips_U555(TestTextureProvider provider)
         {
             using Texture texture = provider.GetTexture(new DdsDecoder());
-            provider.CompareTextures(texture);
             provider.SaveTextures(texture);
+            provider.CompareTextures(texture);
         }
 
         [Theory]
@@ -313,8 +313,8 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.Dds
         public void DdsDecoder_CanDecode_Flat_NvDxt_No_Mips_U555(TestTextureProvider provider)
         {
             using Texture texture = provider.GetTexture(new DdsDecoder());
-            provider.CompareTextures(texture);
             provider.SaveTextures(texture);
+            provider.CompareTextures(texture);
         }
 
         [Theory]
@@ -322,8 +322,8 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.Dds
         public void DdsDecoder_CanDecode_Flat_NvDxt_Has_Mips_U565(TestTextureProvider provider)
         {
             using Texture texture = provider.GetTexture(new DdsDecoder());
-            provider.CompareTextures(texture);
             provider.SaveTextures(texture);
+            provider.CompareTextures(texture);
         }
 
         [Theory]
@@ -331,8 +331,8 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.Dds
         public void DdsDecoder_CanDecode_Flat_NvDxt_No_Mips_U565(TestTextureProvider provider)
         {
             using Texture texture = provider.GetTexture(new DdsDecoder());
-            provider.CompareTextures(texture);
             provider.SaveTextures(texture);
+            provider.CompareTextures(texture);
         }
 
         [Theory]
@@ -340,8 +340,8 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.Dds
         public void DdsDecoder_CanDecode_Flat_NvDxt_Has_Mips_U888(TestTextureProvider provider)
         {
             using Texture texture = provider.GetTexture(new DdsDecoder());
-            provider.CompareTextures(texture);
             provider.SaveTextures(texture);
+            provider.CompareTextures(texture);
         }
 
         [Theory]
@@ -349,8 +349,8 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.Dds
         public void DdsDecoder_CanDecode_Flat_NvDxt_No_Mips_U888(TestTextureProvider provider)
         {
             using Texture texture = provider.GetTexture(new DdsDecoder());
-            provider.CompareTextures(texture);
             provider.SaveTextures(texture);
+            provider.CompareTextures(texture);
         }
 
         [Theory]
@@ -358,8 +358,8 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.Dds
         public void DdsDecoder_CanDecode_Flat_NvDxt_Has_Mips_U8888(TestTextureProvider provider)
         {
             using Texture texture = provider.GetTexture(new DdsDecoder());
-            provider.CompareTextures(texture);
             provider.SaveTextures(texture);
+            provider.CompareTextures(texture);
         }
 
         [Theory]
@@ -367,8 +367,8 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.Dds
         public void DdsDecoder_CanDecode_Flat_NvDxt_No_Mips_U8888(TestTextureProvider provider)
         {
             using Texture texture = provider.GetTexture(new DdsDecoder());
-            provider.CompareTextures(texture);
             provider.SaveTextures(texture);
+            provider.CompareTextures(texture);
         }
 
         [Theory]
@@ -376,8 +376,8 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.Dds
         public void DdsDecoder_CanDecode_Flat_NvDxt_Has_Mips_V8U8(TestTextureProvider provider)
         {
             using Texture texture = provider.GetTexture(new DdsDecoder());
-            provider.CompareTextures(texture);
             provider.SaveTextures(texture);
+            provider.CompareTextures(texture);
         }
 
         [Theory]
@@ -385,8 +385,8 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.Dds
         public void DdsDecoder_CanDecode_Flat_NvDxt_No_Mips_V8U8(TestTextureProvider provider)
         {
             using Texture texture = provider.GetTexture(new DdsDecoder());
-            provider.CompareTextures(texture);
             provider.SaveTextures(texture);
+            provider.CompareTextures(texture);
         }
     }
 }
