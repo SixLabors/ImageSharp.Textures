@@ -329,8 +329,9 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 case DxgiFormat.R10G10B10A2_UNorm:
                 case DxgiFormat.R10G10B10A2_UInt:
                     return this.AllocateMipMaps<Rgba1010102>(stream, width, height, count);
-                case DxgiFormat.R16G16_Typeless:
                 case DxgiFormat.R16G16_Float:
+                    throw new Exception("not implemented");
+                case DxgiFormat.R16G16_Typeless:
                 case DxgiFormat.R16G16_UNorm:
                 case DxgiFormat.R16G16_UInt:
                 case DxgiFormat.R16G16_SNorm:
@@ -347,19 +348,22 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 case DxgiFormat.R8G8_SNorm:
                 case DxgiFormat.R8G8_SInt:
                     throw new Exception("not implemented");
-                case DxgiFormat.R16_Typeless:
                 case DxgiFormat.R16_Float:
+                    throw new Exception("not implemented");
+                case DxgiFormat.R16_Typeless:
                 case DxgiFormat.R16_UNorm:
                 case DxgiFormat.R16_UInt:
                 case DxgiFormat.R16_SNorm:
                 case DxgiFormat.R16_SInt:
-                    throw new Exception("not implemented");
+                    // Treating single channel format as 16 bit gray image.
+                    return this.AllocateMipMaps<L16>(stream, width, height, count);
                 case DxgiFormat.R8_Typeless:
                 case DxgiFormat.R8_UNorm:
                 case DxgiFormat.R8_UInt:
                 case DxgiFormat.R8_SNorm:
                 case DxgiFormat.R8_SInt:
-                    throw new Exception("not implemented");
+                    // Treating single channel format as 8 bit gray image.
+                    return this.AllocateMipMaps<L8>(stream, width, height, count);
                 case DxgiFormat.A8_UNorm:
                     throw new Exception("not implemented");
                 case DxgiFormat.R1_UNorm:

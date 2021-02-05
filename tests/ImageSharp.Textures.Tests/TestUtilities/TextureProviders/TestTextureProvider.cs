@@ -32,7 +32,7 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.TextureProviders
 
             Texture result = decoder.DecodeTexture(Configuration.Default, fileStream);
 
-            Assert.Equal(fileStream.Length, fileStream.Position);
+            Assert.True(fileStream.Length == fileStream.Position, "The texture file stream was not read to the end");
 
             return result;
         }
