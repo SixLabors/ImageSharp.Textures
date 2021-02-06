@@ -161,12 +161,12 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
 
             bool hasAlpha = pixelFormat.Flags.HasFlag(DdsPixelFormatFlags.AlphaPixels);
 
-            if (hasAlpha && pixelFormat.RBitMask == 0x0 && pixelFormat.GBitMask == 0x00 && pixelFormat.BBitMask == 0x00)
+            if (pixelFormat.RBitMask == 0x0 && pixelFormat.GBitMask == 0x0 && pixelFormat.BBitMask == 0x0)
             {
                 return this.AllocateMipMaps<A8>(stream, width, height, count);
             }
 
-            if (!hasAlpha && pixelFormat.RBitMask == 0xFF && pixelFormat.GBitMask == 0x00 && pixelFormat.BBitMask == 0x00)
+            if (!hasAlpha && pixelFormat.RBitMask == 0xFF && pixelFormat.GBitMask == 0x0 && pixelFormat.BBitMask == 0x0)
             {
                 return this.AllocateMipMaps<L8>(stream, width, height, count);
             }
@@ -201,6 +201,11 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
             }
 
             if (hasAlpha && pixelFormat.RBitMask == 0xFF && pixelFormat.GBitMask == 0x0 && pixelFormat.BBitMask == 0x0)
+            {
+                return this.AllocateMipMaps<La16>(stream, width, height, count);
+            }
+
+            if (!hasAlpha && pixelFormat.RBitMask == 0xFFFF && pixelFormat.GBitMask == 0x0 && pixelFormat.BBitMask == 0x0)
             {
                 return this.AllocateMipMaps<La16>(stream, width, height, count);
             }
@@ -263,9 +268,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
         }
 
         private MipMap[] SixtyFourBitImageFormat(Stream stream, int width, int height, int count)
-        {
-            DdsPixelFormat pixelFormat = this.DdsHeader.PixelFormat;
-
+        { 
             return this.AllocateMipMaps<Rgba64>(stream, width, height, count);
         }
 
@@ -315,6 +318,9 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 case DxgiFormat.R8G8B8A8_UInt:
                 case DxgiFormat.R8G8B8A8_SNorm:
                 case DxgiFormat.R8G8B8A8_SInt:
+                case DxgiFormat.B8G8R8X8_Typeless:
+                case DxgiFormat.B8G8R8X8_UNorm:
+                case DxgiFormat.B8G8R8X8_UNorm_SRGB:
                     return this.AllocateMipMaps<Rgba32>(stream, width, height, count);
                 case DxgiFormat.B8G8R8A8_Typeless:
                 case DxgiFormat.B8G8R8A8_UNorm:
@@ -354,8 +360,8 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 case DxgiFormat.R16G16_SNorm:
                 case DxgiFormat.R16G16_SInt:
                     return this.AllocateMipMaps<Rg16>(stream, width, height, count);
-                case DxgiFormat.R32_Typeless:
                 case DxgiFormat.R32_Float:
+                case DxgiFormat.R32_Typeless:
                 case DxgiFormat.R32_UInt:
                 case DxgiFormat.R32_SInt:
                     throw new Exception("not implemented");
@@ -382,7 +388,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                     // Treating single channel format as 8 bit gray image.
                     return this.AllocateMipMaps<L8>(stream, width, height, count);
                 case DxgiFormat.A8_UNorm:
-                    throw new Exception("not implemented");
+                    return this.AllocateMipMaps<A8>(stream, width, height, count);
                 case DxgiFormat.R1_UNorm:
                     throw new Exception("not implemented");
                 case DxgiFormat.R32G8X24_Typeless:
@@ -399,10 +405,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 case DxgiFormat.R9G9B9E5_SharedExp:
                 case DxgiFormat.R8G8_B8G8_UNorm:
                 case DxgiFormat.G8R8_G8B8_UNorm:
-                case DxgiFormat.B8G8R8X8_UNorm:
                 case DxgiFormat.R10G10B10_XR_BIAS_A2_UNorm:
-                case DxgiFormat.B8G8R8X8_Typeless:
-                case DxgiFormat.B8G8R8X8_UNorm_SRGB:
                 case DxgiFormat.NV12:
                 case DxgiFormat.P010:
                 case DxgiFormat.P016:
