@@ -45,5 +45,11 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds
         public const uint ATI1 = 'A' | 'T' << 8 | 'I' << 16 | '1' << 24;
 
         public const uint ATI2 = 'A' | 'T' << 8 | 'I' << 16 | '2' << 24;
+
+        // DXGI_FORMAT_R16G16B16A16_UNORM
+        public const uint R16G16B16A16_UNORM = 36;
+
+        // DXGI_FORMAT_R16G16B16A16_SNORM
+        public const uint R16G16B16A16_SNORM = 110;
     }
 }

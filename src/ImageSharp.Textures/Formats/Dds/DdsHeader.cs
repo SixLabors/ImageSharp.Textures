@@ -1,13 +1,13 @@
 // Copyright (c) Six Labors and contributors.
 // Licensed under the Apache License, Version 2.0.
 
+using System;
+using System.Buffers.Binary;
+using System.Runtime.InteropServices;
+using SixLabors.ImageSharp.Textures.Formats.Dds.Emums;
+
 namespace SixLabors.ImageSharp.Textures.Formats.Dds
 {
-    using System;
-    using System.Buffers.Binary;
-    using System.Runtime.InteropServices;
-    using SixLabors.ImageSharp.Textures.Formats.Dds.Emums;
-
     /// <summary>
     /// Describes a DDS file header.
     /// </summary>
@@ -155,19 +155,19 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds
             bool incorrectSize = (this.Size != DdsConstants.DdsHeaderSize) || (this.PixelFormat.Size != DdsConstants.DdsPixelFormatSize);
             if (incorrectSize)
             {
-                throw new NotSupportedException($"Invalid structure size.");
+                throw new NotSupportedException("Invalid structure size.");
             }
 
             bool requiredFlagsMissing = (this.Flags & DdsFlags.Caps) == 0 || (this.Flags & DdsFlags.PixelFormat) == 0 || (this.Caps1 & DdsCaps1.Texture) == 0;
             if (requiredFlagsMissing)
             {
-                throw new NotSupportedException($"Required flags missing.");
+                throw new NotSupportedException("Required flags missing.");
             }
 
             bool hasInvalidCompression = (this.Flags & DdsFlags.Pitch) != 0 && (this.Flags & DdsFlags.LinearSize) != 0;
             if (hasInvalidCompression)
             {
-                throw new NotSupportedException($"Invalid compression.");
+                throw new NotSupportedException("Invalid compression.");
             }
         }
 
@@ -201,7 +201,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds
 
         public static DdsHeader Parse(Span<byte> data)
         {
-            uint[] reserved1 = new uint[]
+            uint[] reserved1 =
             {
                 BinaryPrimitives.ReadUInt32LittleEndian(data.Slice(28, 4)),
                 BinaryPrimitives.ReadUInt32LittleEndian(data.Slice(32, 4)),

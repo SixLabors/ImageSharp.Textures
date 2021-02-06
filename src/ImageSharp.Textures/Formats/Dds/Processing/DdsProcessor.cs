@@ -99,6 +99,10 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
         {
             switch (this.DdsHeader.PixelFormat.FourCC)
             {
+                case DdsFourCC.None:
+                case DdsFourCC.R16G16B16A16_SNORM:
+                case DdsFourCC.R16G16B16A16_UNORM:
+                    return this.ProcessUncompressed(stream, width, height, count);
                 case DdsFourCC.DXT1:
                     return this.AllocateMipMaps<Dxt1>(stream, width, height, count);
                 case DdsFourCC.DXT2:
@@ -108,8 +112,6 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                     return this.AllocateMipMaps<Dxt3>(stream, width, height, count);
                 case DdsFourCC.DXT5:
                     return this.AllocateMipMaps<Dxt5>(stream, width, height, count);
-                case DdsFourCC.None:
-                    return this.ProcessUncompressed(stream, width, height, count);
                 case DdsFourCC.DX10:
                     return this.GetDx10Dds(stream, width, height, count);
                 case DdsFourCC.ATI1:
@@ -141,6 +143,14 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 case 32:
                     return this.ThirtyTwoBitImageFormat(stream, width, height, count);
                 default:
+                    // For some reason, some 64 bit format do not have the bitsPerPixel set in the header (its zero).
+                    switch (this.DdsHeader.PixelFormat.FourCC)
+                    {
+                        case DdsFourCC.R16G16B16A16_SNORM:
+                        case DdsFourCC.R16G16B16A16_UNORM:
+                            return this.SixtyFourBitImageFormat(stream, width, height, count);
+                    }
+
                     throw new Exception($"Unrecognized rgb bit count: {this.DdsHeader.PixelFormat.RGBBitCount}");
             }
         }
@@ -252,6 +262,13 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
             throw new Exception("Unsupported 32 bit format");
         }
 
+        private MipMap[] SixtyFourBitImageFormat(Stream stream, int width, int height, int count)
+        {
+            DdsPixelFormat pixelFormat = this.DdsHeader.PixelFormat;
+
+            return this.AllocateMipMaps<Rgba64>(stream, width, height, count);
+        }
+
         /*
          https://docs.microsoft.com/en-us/windows/win32/direct3ddds/dx-graphics-dds-pguide
          https://docs.microsoft.com/en-us/windows/win32/api/dxgiformat/ne-dxgiformat-dxgi_format
@@ -319,7 +336,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 case DxgiFormat.R16G16B16A16_UInt:
                 case DxgiFormat.R16G16B16A16_SNorm:
                 case DxgiFormat.R16G16B16A16_SInt:
-                    throw new Exception("not implemented");
+                    return this.AllocateMipMaps<Rgba64>(stream, width, height, count);
                 case DxgiFormat.R32G32_Typeless:
                 case DxgiFormat.R32G32_Float:
                 case DxgiFormat.R32G32_UInt:
