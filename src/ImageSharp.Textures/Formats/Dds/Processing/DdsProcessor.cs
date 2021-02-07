@@ -359,7 +359,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 case DxgiFormat.R16G16_UInt:
                 case DxgiFormat.R16G16_SNorm:
                 case DxgiFormat.R16G16_SInt:
-                    return this.AllocateMipMaps<Rg16>(stream, width, height, count);
+                    return this.AllocateMipMaps<Rg32>(stream, width, height, count);
                 case DxgiFormat.R32_Float:
                 case DxgiFormat.R32_Typeless:
                 case DxgiFormat.R32_UInt:
@@ -370,7 +370,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 case DxgiFormat.R8G8_UInt:
                 case DxgiFormat.R8G8_SNorm:
                 case DxgiFormat.R8G8_SInt:
-                    throw new Exception("not implemented");
+                    return this.AllocateMipMaps<Rg16>(stream, width, height, count);
                 case DxgiFormat.R16_Float:
                     throw new Exception("not implemented");
                 case DxgiFormat.R16_Typeless:

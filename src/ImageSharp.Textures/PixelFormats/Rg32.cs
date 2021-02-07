@@ -1,10 +1,12 @@
-// Copyright (c) Six Labors and contributors.
+﻿// Copyright (c) Six Labors and contributors.
 // Licensed under the Apache License, Version 2.0.
 
 using System;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using SixLabors.ImageSharp.PixelFormats;
+using L16 = SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats.L16;
+using Rgba64 = SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats.Rgba64;
 
 namespace SixLabors.ImageSharp.Textures.PixelFormats
 {
@@ -14,53 +16,53 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
     /// Ranges from [0, 0, 0, 1] to [1, 1, 0, 1] in vector form.
     /// </para>
     /// </summary>
-    public struct Rg16 : IPixel<Rg16>, IPackedVector<ushort>
+    public struct Rg32 : IPixel<Rg32>, IPackedVector<uint>
     {
         private static readonly Vector2 Max = new Vector2(byte.MaxValue);
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="Rg16"/> struct.
+        /// Initializes a new instance of the <see cref="Rg32"/> struct.
         /// </summary>
         /// <param name="x">The x-component</param>
         /// <param name="y">The y-component</param>
-        public Rg16(float x, float y)
+        public Rg32(float x, float y)
             : this(new Vector2(x, y))
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="Rg16"/> struct.
+        /// Initializes a new instance of the <see cref="Rg32"/> struct.
         /// </summary>
         /// <param name="vector">The vector containing the component values.</param>
-        public Rg16(Vector2 vector) => this.PackedValue = (ushort)Pack(vector);
+        public Rg32(Vector2 vector) => this.PackedValue = Pack(vector);
 
         /// <inheritdoc/>
-        public ushort PackedValue { get; set; }
+        public uint PackedValue { get; set; }
 
         /// <summary>
-        /// Compares two <see cref="Rg16"/> objects for equality.
+        /// Compares two <see cref="Rg32"/> objects for equality.
         /// </summary>
-        /// <param name="left">The <see cref="Rg16"/> on the left side of the operand.</param>
-        /// <param name="right">The <see cref="Rg16"/> on the right side of the operand.</param>
+        /// <param name="left">The <see cref="Rg32"/> on the left side of the operand.</param>
+        /// <param name="right">The <see cref="Rg32"/> on the right side of the operand.</param>
         /// <returns>
         /// True if the <paramref name="left"/> parameter is equal to the <paramref name="right"/> parameter; otherwise, false.
         /// </returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool operator ==(Rg16 left, Rg16 right) => left.Equals(right);
+        public static bool operator ==(Rg32 left, Rg32 right) => left.Equals(right);
 
         /// <summary>
-        /// Compares two <see cref="Rg16"/> objects for equality.
+        /// Compares two <see cref="Rg32"/> objects for equality.
         /// </summary>
-        /// <param name="left">The <see cref="Rg16"/> on the left side of the operand.</param>
-        /// <param name="right">The <see cref="Rg16"/> on the right side of the operand.</param>
+        /// <param name="left">The <see cref="Rg32"/> on the left side of the operand.</param>
+        /// <param name="right">The <see cref="Rg32"/> on the right side of the operand.</param>
         /// <returns>
         /// True if the <paramref name="left"/> parameter is not equal to the <paramref name="right"/> parameter; otherwise, false.
         /// </returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool operator !=(Rg16 left, Rg16 right) => !left.Equals(right);
+        public static bool operator !=(Rg32 left, Rg32 right) => !left.Equals(right);
 
         /// <inheritdoc />
-        public PixelOperations<Rg16> CreatePixelOperations() => new PixelOperations<Rg16>();
+        public PixelOperations<Rg32> CreatePixelOperations() => new PixelOperations<Rg32>();
 
         /// <inheritdoc/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -104,7 +106,7 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
 
         /// <inheritdoc/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void FromL16(L16 source) => this.FromScaledVector4(source.ToScaledVector4());
+        public void FromL16(ImageSharp.PixelFormats.L16 source) => this.FromScaledVector4(source.ToScaledVector4());
 
         /// <inheritdoc/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -135,7 +137,7 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
 
         /// <inheritdoc/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void FromRgba64(Rgba64 source) => this.FromScaledVector4(source.ToScaledVector4());
+        public void FromRgba64(ImageSharp.PixelFormats.Rgba64 source) => this.FromScaledVector4(source.ToScaledVector4());
 
         /// <summary>
         /// Expands the packed representation into a <see cref="Vector2"/>.
@@ -146,17 +148,17 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         public Vector2 ToVector2() => new Vector2(this.PackedValue & 0xFF, (this.PackedValue >> 8) & 0xFF) / Max;
 
         /// <inheritdoc />
-        public override bool Equals(object obj) => obj is Rg16 other && this.Equals(other);
+        public override bool Equals(object obj) => obj is Rg32 other && this.Equals(other);
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool Equals(Rg16 other) => this.PackedValue.Equals(other.PackedValue);
+        public bool Equals(Rg32 other) => this.PackedValue.Equals(other.PackedValue);
 
         /// <inheritdoc />
         public override string ToString()
         {
             var vector = this.ToVector2();
-            return FormattableString.Invariant($"Rg16({vector.X:#0.##}, {vector.Y:#0.##})");
+            return FormattableString.Invariant($"Rg32({vector.X:#0.##}, {vector.Y:#0.##})");
         }
 
         /// <inheritdoc />
