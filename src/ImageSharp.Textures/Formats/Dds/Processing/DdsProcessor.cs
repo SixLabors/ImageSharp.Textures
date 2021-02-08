@@ -361,10 +361,12 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 case DxgiFormat.R16G16_SInt:
                     return this.AllocateMipMaps<Rg32>(stream, width, height, count);
                 case DxgiFormat.R32_Float:
+                    throw new Exception("not implemented");
                 case DxgiFormat.R32_Typeless:
                 case DxgiFormat.R32_UInt:
                 case DxgiFormat.R32_SInt:
-                    throw new Exception("not implemented");
+                    // Treating single channel format as 32 bit gray image.
+                    return this.AllocateMipMaps<L32>(stream, width, height, count);
                 case DxgiFormat.R8G8_Typeless:
                 case DxgiFormat.R8G8_UNorm:
                 case DxgiFormat.R8G8_UInt:
