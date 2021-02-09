@@ -51,5 +51,11 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds
 
         // DXGI_FORMAT_R16G16B16A16_SNORM
         public const uint R16G16B16A16_SNORM = 110;
+
+        // DXGI_FORMAT_R32_FLOAT
+        public const uint R32_FLOAT = 114;
+
+        // DXGI_FORMAT_R32G32B32A32_FLOAT
+        public const uint F32_FLOAT = 116;
     }
 }

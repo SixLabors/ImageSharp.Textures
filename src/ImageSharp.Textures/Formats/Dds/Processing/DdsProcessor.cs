@@ -102,6 +102,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 case DdsFourCC.None:
                 case DdsFourCC.R16G16B16A16_SNORM:
                 case DdsFourCC.R16G16B16A16_UNORM:
+                case DdsFourCC.R32_FLOAT:
                     return this.ProcessUncompressed(stream, width, height, count);
                 case DdsFourCC.DXT1:
                     return this.AllocateMipMaps<Dxt1>(stream, width, height, count);
@@ -143,9 +144,11 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 case 32:
                     return this.ThirtyTwoBitImageFormat(stream, width, height, count);
                 default:
-                    // For some reason, some 64 bit format do not have the bitsPerPixel set in the header (its zero).
+                    // For unknown reason some formats do not have the bitsPerPixel set in the header (its zero).
                     switch (this.DdsHeader.PixelFormat.FourCC)
                     {
+                        case DdsFourCC.R32_FLOAT:
+                            return this.ThirtyTwoBitImageFormat(stream, width, height, count);
                         case DdsFourCC.R16G16B16A16_SNORM:
                         case DdsFourCC.R16G16B16A16_UNORM:
                             return this.SixtyFourBitImageFormat(stream, width, height, count);
@@ -263,6 +266,11 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 return this.AllocateMipMaps<Rg32>(stream, width, height, count);
             }
 
+            if (pixelFormat.FourCC == DdsFourCC.R32_FLOAT)
+            {
+                return this.AllocateMipMaps<Fp32>(stream, width, height, count);
+            }
+
             // R11G11B10_Float
             throw new Exception("Unsupported 32 bit format");
         }
@@ -361,7 +369,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 case DxgiFormat.R16G16_SInt:
                     return this.AllocateMipMaps<Rg32>(stream, width, height, count);
                 case DxgiFormat.R32_Float:
-                    throw new Exception("not implemented");
+                    return this.AllocateMipMaps<Fp32>(stream, width, height, count);
                 case DxgiFormat.R32_Typeless:
                 case DxgiFormat.R32_UInt:
                 case DxgiFormat.R32_SInt:
