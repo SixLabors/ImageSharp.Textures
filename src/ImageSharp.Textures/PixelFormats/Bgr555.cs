@@ -15,7 +15,7 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
     /// Ranges from [0, 0, 0, 0] to [1, 1, 1, 1] in vector form.
     /// </para>
     /// </summary>
-    public partial struct Bgr555 : IPixel<Bgr555>, IPackedVector<ushort>
+    public struct Bgr555 : IPixel<Bgr555>, IPackedVector<ushort>
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="Bgr555"/> struct.

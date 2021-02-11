@@ -1,50 +1,51 @@
 // Copyright (c) Six Labors and contributors.
 // Licensed under the Apache License, Version 2.0.
 
-using System.Diagnostics;
-
 namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.PixelFormats
 {
     internal class IntColor
     {
-        public int r;
-        public int g;
-        public int b;
-        public int pad;
-
         public IntColor()
         {
         }
 
         public IntColor(int nr, int ng, int nb)
         {
-            this.r = nr;
-            this.g = ng;
-            this.b = nb;
-            this.pad = 0;
+            this.R = nr;
+            this.G = ng;
+            this.B = nb;
+            this.Pad = 0;
         }
+
+        public int R { get; set; }
+
+        public int G { get; set; }
+
+        public int B { get; set; }
+
+        public int Pad { get; }
 
         public static IntColor operator +(IntColor a, IntColor c)
         {
-            a.r += c.r;
-            a.g += c.g;
-            a.b += c.b;
+            a.R += c.R;
+            a.G += c.G;
+            a.B += c.B;
             return a;
         }
 
         public static IntColor operator &(IntColor a, IntColor c)
         {
-            a.r &= c.r;
-            a.g &= c.g;
-            a.b &= c.b;
+            a.R &= c.R;
+            a.G &= c.G;
+            a.B &= c.B;
             return a;
         }
 
-        public IntColor SignExtend(LdrColorA Prec)
+        public IntColor SignExtend(LdrColorA prec)
         {
-            this.r = SIGN_EXTEND(this.r, Prec.r);
-            this.g = SIGN_EXTEND(this.g, Prec.g);
-            this.b = SIGN_EXTEND(this.b, Prec.b);
+            this.R = SIGN_EXTEND(this.R, prec.R);
+            this.G = SIGN_EXTEND(this.G, prec.G);
+            this.B = SIGN_EXTEND(this.B, prec.B);
             return this;
         }
 
@@ -55,32 +56,29 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.PixelFormats
 
         public void ToF16Signed(ushort[] aF16)
         {
-            aF16[0] = INT2F16Signed(this.r);
-            aF16[1] = INT2F16Signed(this.g);
-            aF16[2] = INT2F16Signed(this.b);
+            aF16[0] = Int2F16Signed(this.R);
+            aF16[1] = Int2F16Signed(this.G);
+            aF16[2] = Int2F16Signed(this.B);
         }
 
         public void ToF16Unsigned(ushort[] aF16)
         {
-            aF16[0] = INT2F16Unsigned(this.r);
-            aF16[1] = INT2F16Unsigned(this.g);
-            aF16[2] = INT2F16Unsigned(this.b);
+            aF16[0] = Int2F16Unsigned(this.R);
+            aF16[1] = Int2F16Unsigned(this.G);
+            aF16[2] = Int2F16Unsigned(this.B);
         }
 
-        private static ushort INT2F16Unsigned(int input)
+        private static ushort Int2F16Unsigned(int input)
         {
-            ushort res;
+            Guard.MustBeBetweenOrEqualTo(input, 0, Constants.F16MAX, nameof(input));
 
-            Debug.Assert(input >= 0 && input <= Constants.F16MAX);
-            res = (ushort)input;
+            ushort res = (ushort)input;
 
             return res;
         }
 
-        private static ushort INT2F16Signed(int input)
+        private static ushort Int2F16Signed(int input)
         {
-            ushort res;
-
             int s = 0;
             if (input < 0)
             {
@@ -88,7 +86,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.PixelFormats
                 input = -input;
             }
 
-            res = (ushort)(s | input);
+            ushort res = (ushort)(s | input);
 
             return res;
         }

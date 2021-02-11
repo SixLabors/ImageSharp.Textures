@@ -11,60 +11,32 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
     public struct Bc7 : IBlock<Bc7>
     {
         // Code based on commit 138efff1b9c53fd9a5dd34b8c865e8f5ae798030 2019/10/24 in DirectXTex C++ library
-        private struct ModeInfo
-        {
-            public byte uPartitions;
-            public byte uPartitionBits;
-            public byte uPBits;
-            public byte uRotationBits;
-            public byte uIndexModeBits;
-            public byte uIndexPrec;
-            public byte uIndexPrec2;
-            public LdrColorA RGBAPrec;
-            public LdrColorA RGBAPrecWithP;
-
-            public ModeInfo(byte uParts, byte uPartBits, byte upBits, byte uRotBits, byte uIndModeBits, byte uIndPrec, byte uIndPrec2, LdrColorA rgbaPrec, LdrColorA rgbaPrecWithP)
-            {
-                this.uPartitions = uParts;
-                this.uPartitionBits = uPartBits;
-                this.uPBits = upBits;
-                this.uRotationBits = uRotBits;
-                this.uIndexModeBits = uIndModeBits;
-                this.uIndexPrec = uIndPrec;
-                this.uIndexPrec2 = uIndPrec2;
-                this.RGBAPrec = rgbaPrec;
-                this.RGBAPrecWithP = rgbaPrecWithP;
-            }
-        }
-
-        private static readonly ModeInfo[] ms_aInfo = new ModeInfo[]
+        private static readonly Bc7ModeInfo[] msAInfo =
         {
             // Mode 0: Color only, 3 Subsets, RGBP 4441 (unique P-bit), 3-bit indecies, 16 partitions
-            new ModeInfo(2, 4, 6, 0, 0, 3, 0, new LdrColorA(4, 4, 4, 0), new LdrColorA(5, 5, 5, 0)),
+            new Bc7ModeInfo(2, 4, 6, 0, 0, 3, 0, new LdrColorA(4, 4, 4, 0), new LdrColorA(5, 5, 5, 0)),
 
             // Mode 1: Color only, 2 Subsets, RGBP 6661 (shared P-bit), 3-bit indecies, 64 partitions
-            new ModeInfo(1, 6, 2, 0, 0, 3, 0, new LdrColorA(6, 6, 6, 0), new LdrColorA(7, 7, 7, 0)),
+            new Bc7ModeInfo(1, 6, 2, 0, 0, 3, 0, new LdrColorA(6, 6, 6, 0), new LdrColorA(7, 7, 7, 0)),
 
             // Mode 2: Color only, 3 Subsets, RGB 555, 2-bit indecies, 64 partitions
-            new ModeInfo(2, 6, 0, 0, 0, 2, 0, new LdrColorA(5, 5, 5, 0), new LdrColorA(5, 5, 5, 0)),
+            new Bc7ModeInfo(2, 6, 0, 0, 0, 2, 0, new LdrColorA(5, 5, 5, 0), new LdrColorA(5, 5, 5, 0)),
 
             // Mode 3: Color only, 2 Subsets, RGBP 7771 (unique P-bit), 2-bits indecies, 64 partitions
-            new ModeInfo(1, 6, 4, 0, 0, 2, 0, new LdrColorA(7, 7, 7, 0), new LdrColorA(8, 8, 8, 0)),
+            new Bc7ModeInfo(1, 6, 4, 0, 0, 2, 0, new LdrColorA(7, 7, 7, 0), new LdrColorA(8, 8, 8, 0)),
 
             // Mode 4: Color w/ Separate Alpha, 1 Subset, RGB 555, A6, 16x2/16x3-bit indices, 2-bit rotation, 1-bit index selector
-            new ModeInfo(0, 0, 0, 2, 1, 2, 3, new LdrColorA(5, 5, 5, 6), new LdrColorA(5, 5, 5, 6)),
+            new Bc7ModeInfo(0, 0, 0, 2, 1, 2, 3, new LdrColorA(5, 5, 5, 6), new LdrColorA(5, 5, 5, 6)),
 
             // Mode 5: Color w/ Separate Alpha, 1 Subset, RGB 777, A8, 16x2/16x2-bit indices, 2-bit rotation
-            new ModeInfo(0, 0, 0, 2, 0, 2, 2, new LdrColorA(7, 7, 7, 8), new LdrColorA(7, 7, 7, 8)),
+            new Bc7ModeInfo(0, 0, 0, 2, 0, 2, 2, new LdrColorA(7, 7, 7, 8), new LdrColorA(7, 7, 7, 8)),
 
             // Mode 6: Color+Alpha, 1 Subset, RGBAP 77771 (unique P-bit), 16x4-bit indecies
-            new ModeInfo(0, 0, 2, 0, 0, 4, 0, new LdrColorA(7, 7, 7, 7), new LdrColorA(8, 8, 8, 8)),
+            new Bc7ModeInfo(0, 0, 2, 0, 0, 4, 0, new LdrColorA(7, 7, 7, 7), new LdrColorA(8, 8, 8, 8)),
 
             // Mode 7: Color+Alpha, 2 Subsets, RGBAP 55551 (unique P-bit), 2-bit indices, 64 partitions
-            new ModeInfo(1, 6, 4, 0, 0, 2, 0, new LdrColorA(5, 5, 5, 5), new LdrColorA(6, 6, 6, 6))
+            new Bc7ModeInfo(1, 6, 4, 0, 0, 2, 0, new LdrColorA(5, 5, 5, 5), new LdrColorA(6, 6, 6, 6))
         };
-
-        private readonly byte[] currentBlock;
 
         /// <inheritdoc/>
         public int BitsPerPixel => 32;
@@ -96,8 +68,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
 
             return Helper.InMemoryDecode<Bc7>(blockData, width, height, (byte[] stream, byte[] data, int streamIndex, int dataIndex, int stride) =>
             {
-                // I would prefer to use Span, but not sure if I should reference System.Memory in this project
-                // copy data instead
+                // I would prefer to use Span, but not sure if I should reference System.Memory in this project copy data instead.
                 Buffer.BlockCopy(blockData, streamIndex, currentBlock, 0, currentBlock.Length);
                 streamIndex += currentBlock.Length;
 
@@ -110,22 +81,22 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
 
                 if (uMode < 8)
                 {
-                    byte uPartitions = ms_aInfo[uMode].uPartitions;
+                    byte uPartitions = msAInfo[uMode].UPartitions;
                     Debug.Assert(uPartitions < Constants.BC7_MAX_REGIONS);
 
-                    var uNumEndPts = (byte)((uPartitions + 1u) << 1);
-                    byte uIndexPrec = ms_aInfo[uMode].uIndexPrec;
-                    byte uIndexPrec2 = ms_aInfo[uMode].uIndexPrec2;
+                    byte uNumEndPts = (byte)((uPartitions + 1u) << 1);
+                    byte uIndexPrec = msAInfo[uMode].UIndexPrec;
+                    byte uIndexPrec2 = msAInfo[uMode].UIndexPrec2;
                     int i;
                     uint uStartBit = uMode + 1u;
-                    int[] P = new int[6];
-                    byte uShape = GetBits(currentBlock, ref uStartBit, ms_aInfo[uMode].uPartitionBits);
+                    int[] p = new int[6];
+                    byte uShape = GetBits(currentBlock, ref uStartBit, msAInfo[uMode].UPartitionBits);
                     Debug.Assert(uShape < Constants.BC7_MAX_SHAPES);
 
-                    byte uRotation = GetBits(currentBlock, ref uStartBit, ms_aInfo[uMode].uRotationBits);
+                    byte uRotation = GetBits(currentBlock, ref uStartBit, msAInfo[uMode].URotationBits);
                     Debug.Assert(uRotation < 4);
 
-                    byte uIndexMode = GetBits(currentBlock, ref uStartBit, ms_aInfo[uMode].uIndexModeBits);
+                    byte uIndexMode = GetBits(currentBlock, ref uStartBit, msAInfo[uMode].UIndexModeBits);
                     Debug.Assert(uIndexMode < 2);
 
                     var c = new LdrColorA[Constants.BC7_MAX_REGIONS << 1];
@@ -134,87 +105,87 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                         c[i] = new LdrColorA();
                     }
 
-                    LdrColorA RGBAPrec = ms_aInfo[uMode].RGBAPrec;
-                    LdrColorA RGBAPrecWithP = ms_aInfo[uMode].RGBAPrecWithP;
+                    LdrColorA rgbaPrec = msAInfo[uMode].RgbaPrec;
+                    LdrColorA rgbaPrecWithP = msAInfo[uMode].RgbaPrecWithP;
 
                     Debug.Assert(uNumEndPts <= (Constants.BC7_MAX_REGIONS << 1));
 
                     // Red channel
                     for (i = 0; i < uNumEndPts; i++)
                     {
-                        if (uStartBit + RGBAPrec.r > 128)
+                        if (uStartBit + rgbaPrec.R > 128)
                         {
                             Debug.WriteLine("BC7: Invalid block encountered during decoding");
-                            Helpers.FillWithErrorColors(data, ref dataIndex, Constants.NUM_PIXELS_PER_BLOCK, self.DivSize, stride);
+                            Helpers.FillWithErrorColors(data, ref dataIndex, Constants.NumPixelsPerBlock, self.DivSize, stride);
                             return dataIndex;
                         }
 
-                        c[i].r = GetBits(currentBlock, ref uStartBit, RGBAPrec.r);
+                        c[i].R = GetBits(currentBlock, ref uStartBit, rgbaPrec.R);
                     }
 
                     // Green channel
                     for (i = 0; i < uNumEndPts; i++)
                     {
-                        if (uStartBit + RGBAPrec.g > 128)
+                        if (uStartBit + rgbaPrec.G > 128)
                         {
                             Debug.WriteLine("BC7: Invalid block encountered during decoding");
-                            Helpers.FillWithErrorColors(data, ref dataIndex, Constants.NUM_PIXELS_PER_BLOCK, self.DivSize, stride);
+                            Helpers.FillWithErrorColors(data, ref dataIndex, Constants.NumPixelsPerBlock, self.DivSize, stride);
                             return dataIndex;
                         }
 
-                        c[i].g = GetBits(currentBlock, ref uStartBit, RGBAPrec.g);
+                        c[i].G = GetBits(currentBlock, ref uStartBit, rgbaPrec.G);
                     }
 
                     // Blue channel
                     for (i = 0; i < uNumEndPts; i++)
                     {
-                        if (uStartBit + RGBAPrec.b > 128)
+                        if (uStartBit + rgbaPrec.B > 128)
                         {
                             Debug.WriteLine("BC7: Invalid block encountered during decoding");
-                            Helpers.FillWithErrorColors(data, ref dataIndex, Constants.NUM_PIXELS_PER_BLOCK, self.DivSize, stride);
+                            Helpers.FillWithErrorColors(data, ref dataIndex, Constants.NumPixelsPerBlock, self.DivSize, stride);
                             return dataIndex;
                         }
 
-                        c[i].b = GetBits(currentBlock, ref uStartBit, RGBAPrec.b);
+                        c[i].B = GetBits(currentBlock, ref uStartBit, rgbaPrec.B);
                     }
 
                     // Alpha channel
                     for (i = 0; i < uNumEndPts; i++)
                     {
-                        if (uStartBit + RGBAPrec.a > 128)
+                        if (uStartBit + rgbaPrec.A > 128)
                         {
                             Debug.WriteLine("BC7: Invalid block encountered during decoding");
-                            Helpers.FillWithErrorColors(data, ref dataIndex, Constants.NUM_PIXELS_PER_BLOCK, self.DivSize, stride);
+                            Helpers.FillWithErrorColors(data, ref dataIndex, Constants.NumPixelsPerBlock, self.DivSize, stride);
                             return dataIndex;
                         }
 
-                        c[i].a = (byte)(RGBAPrec.a != 0 ? GetBits(currentBlock, ref uStartBit, RGBAPrec.a) : 255u);
+                        c[i].A = (byte)(rgbaPrec.A != 0 ? GetBits(currentBlock, ref uStartBit, rgbaPrec.A) : 255u);
                     }
 
                     // P-bits
-                    Debug.Assert(ms_aInfo[uMode].uPBits <= 6);
-                    for (i = 0; i < ms_aInfo[uMode].uPBits; i++)
+                    Debug.Assert(msAInfo[uMode].UPBits <= 6);
+                    for (i = 0; i < msAInfo[uMode].UPBits; i++)
                     {
                         if (uStartBit > 127)
                         {
                             Debug.WriteLine("BC7: Invalid block encountered during decoding");
-                            Helpers.FillWithErrorColors(data, ref dataIndex, Constants.NUM_PIXELS_PER_BLOCK, self.DivSize, stride);
+                            Helpers.FillWithErrorColors(data, ref dataIndex, Constants.NumPixelsPerBlock, self.DivSize, stride);
                             return dataIndex;
                         }
 
-                        P[i] = GetBit(currentBlock, ref uStartBit);
+                        p[i] = GetBit(currentBlock, ref uStartBit);
                     }
 
-                    if (ms_aInfo[uMode].uPBits != 0)
+                    if (msAInfo[uMode].UPBits != 0)
                     {
                         for (i = 0; i < uNumEndPts; i++)
                         {
-                            int pi = i * ms_aInfo[uMode].uPBits / uNumEndPts;
+                            int pi = i * msAInfo[uMode].UPBits / uNumEndPts;
                             for (byte ch = 0; ch < Constants.BC7_NUM_CHANNELS; ch++)
                             {
-                                if (RGBAPrec[ch] != RGBAPrecWithP[ch])
+                                if (rgbaPrec[ch] != rgbaPrecWithP[ch])
                                 {
-                                    c[i][ch] = (byte)((c[i][ch] << 1) | P[pi]);
+                                    c[i][ch] = (byte)((c[i][ch] << 1) | p[pi]);
                                 }
                             }
                         }
@@ -222,19 +193,19 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
 
                     for (i = 0; i < uNumEndPts; i++)
                     {
-                        c[i] = Unquantize(c[i], RGBAPrecWithP);
+                        c[i] = Unquantize(c[i], rgbaPrecWithP);
                     }
 
-                    byte[] w1 = new byte[Constants.NUM_PIXELS_PER_BLOCK], w2 = new byte[Constants.NUM_PIXELS_PER_BLOCK];
+                    byte[] w1 = new byte[Constants.NumPixelsPerBlock], w2 = new byte[Constants.NumPixelsPerBlock];
 
                     // read color indices
-                    for (i = 0; i < Constants.NUM_PIXELS_PER_BLOCK; i++)
+                    for (i = 0; i < Constants.NumPixelsPerBlock; i++)
                     {
-                        uint uNumBits = Helpers.IsFixUpOffset(ms_aInfo[uMode].uPartitions, uShape, i) ? uIndexPrec - 1u : uIndexPrec;
+                        uint uNumBits = Helpers.IsFixUpOffset(msAInfo[uMode].UPartitions, uShape, i) ? uIndexPrec - 1u : uIndexPrec;
                         if (uStartBit + uNumBits > 128)
                         {
                             Debug.WriteLine("BC7: Invalid block encountered during decoding");
-                            Helpers.FillWithErrorColors(data, ref dataIndex, Constants.NUM_PIXELS_PER_BLOCK, self.DivSize, stride);
+                            Helpers.FillWithErrorColors(data, ref dataIndex, Constants.NumPixelsPerBlock, self.DivSize, stride);
                             return dataIndex;
                         }
 
@@ -244,13 +215,13 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                     // read alpha indices
                     if (uIndexPrec2 != 0)
                     {
-                        for (i = 0; i < Constants.NUM_PIXELS_PER_BLOCK; i++)
+                        for (i = 0; i < Constants.NumPixelsPerBlock; i++)
                         {
                             uint uNumBits = i != 0 ? uIndexPrec2 : uIndexPrec2 - 1u;
                             if (uStartBit + uNumBits > 128)
                             {
                                 Debug.WriteLine("BC7: Invalid block encountered during decoding");
-                                Helpers.FillWithErrorColors(data, ref dataIndex, Constants.NUM_PIXELS_PER_BLOCK, self.DivSize, stride);
+                                Helpers.FillWithErrorColors(data, ref dataIndex, Constants.NumPixelsPerBlock, self.DivSize, stride);
                                 return dataIndex;
                             }
 
@@ -258,7 +229,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                         }
                     }
 
-                    for (i = 0; i < Constants.NUM_PIXELS_PER_BLOCK; ++i)
+                    for (i = 0; i < Constants.NumPixelsPerBlock; ++i)
                     {
                         byte uRegion = Constants.g_aPartitionTable[uPartitions][uShape][i];
                         var outPixel = new LdrColorA();
@@ -280,18 +251,18 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
 
                         switch (uRotation)
                         {
-                            case 1: ByteSwap(ref outPixel.r, ref outPixel.a); break;
-                            case 2: ByteSwap(ref outPixel.g, ref outPixel.a); break;
-                            case 3: ByteSwap(ref outPixel.b, ref outPixel.a); break;
+                            case 1: ByteSwap(ref outPixel.R, ref outPixel.A); break;
+                            case 2: ByteSwap(ref outPixel.G, ref outPixel.A); break;
+                            case 3: ByteSwap(ref outPixel.B, ref outPixel.A); break;
                         }
 
                         // Note: whether it's sRGB is not taken into consideration
                         // we're returning data that could be either/or depending
                         // on the input BC7 format
-                        data[dataIndex++] = outPixel.b;
-                        data[dataIndex++] = outPixel.g;
-                        data[dataIndex++] = outPixel.r;
-                        data[dataIndex++] = outPixel.a;
+                        data[dataIndex++] = outPixel.B;
+                        data[dataIndex++] = outPixel.G;
+                        data[dataIndex++] = outPixel.R;
+                        data[dataIndex++] = outPixel.A;
 
                         // Is mult 4?
                         if (((i + 1) & 0x3) == 0)
@@ -305,7 +276,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                     Debug.WriteLine("BC7: Reserved mode 8 encountered during decoding");
 
                     // Per the BC7 format spec, we must return transparent black
-                    for (int i = 0; i < Constants.NUM_PIXELS_PER_BLOCK; ++i)
+                    for (int i = 0; i < Constants.NumPixelsPerBlock; ++i)
                     {
                         data[dataIndex++] = 0;
                         data[dataIndex++] = 0;
@@ -326,7 +297,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
 
         public static byte GetBit(byte[] currentBlock, ref uint uStartBit)
         {
-            Debug.Assert(uStartBit < 128);
+            Guard.MustBeLessThan<uint>(uStartBit, 128, nameof(uStartBit));
             uint uIndex = uStartBit >> 3;
             byte ret = (byte)((currentBlock[uIndex] >> (int)(uStartBit - (uIndex << 3))) & 0x01);
             uStartBit++;
@@ -362,18 +333,21 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
 
         private static byte Unquantize(byte comp, uint uPrec)
         {
-            Debug.Assert(0 < uPrec && uPrec <= 8);
+            Guard.MustBeBetweenOrEqualTo<uint>(uPrec, 1, 8, nameof(uPrec));
             comp = (byte)(comp << (int)(8u - uPrec));
             return (byte)(comp | (comp >> (int)uPrec));
         }
 
-        private static LdrColorA Unquantize(LdrColorA c, LdrColorA RGBAPrec)
+        private static LdrColorA Unquantize(LdrColorA c, LdrColorA rgbaPrec)
         {
-            var q = new LdrColorA();
-            q.r = Unquantize(c.r, RGBAPrec.r);
-            q.g = Unquantize(c.g, RGBAPrec.g);
-            q.b = Unquantize(c.b, RGBAPrec.b);
-            q.a = RGBAPrec.a > 0 ? Unquantize(c.a, RGBAPrec.a) : (byte)255u;
+            var q = new LdrColorA
+            {
+                R = Unquantize(c.R, rgbaPrec.R),
+                G = Unquantize(c.G, rgbaPrec.G),
+                B = Unquantize(c.B, rgbaPrec.B),
+                A = rgbaPrec.A > 0 ? Unquantize(c.A, rgbaPrec.A) : (byte)255u
+            };
+
             return q;
         }
 

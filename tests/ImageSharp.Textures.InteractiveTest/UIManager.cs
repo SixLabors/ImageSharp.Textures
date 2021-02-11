@@ -1,9 +1,7 @@
 ﻿// Copyright (c) Six Labors and contributors.
 // Licensed under the Apache License, Version 2.0.
 
-using System;
 using System.Numerics;
-using System.Threading;
 using ImGuiNET;
 using Phoenix.Import.Application.UI;
 using Phoenix.Import.Application.UI.WizardPages;
@@ -39,12 +37,12 @@ namespace Phoenix.Import.Application
 
         public void Render(float width, float height)
         {
-            var backgroundColor = ImGui.GetColorU32(ImGuiCol.WindowBg);
-            var newBackgroundColor = ImGui.ColorConvertU32ToFloat4(backgroundColor);
+            uint backgroundColor = ImGui.GetColorU32(ImGuiCol.WindowBg);
+            Vector4 newBackgroundColor = ImGui.ColorConvertU32ToFloat4(backgroundColor);
             newBackgroundColor.W = 1.0f;
             ImGui.PushStyleColor(ImGuiCol.WindowBg, newBackgroundColor);
 
-            _menuBar.Render(out var menuHeight);
+            _menuBar.Render(out float menuHeight);
             if (_menuBar.DemoMode)
             {
                 ImGui.ShowDemoWindow();
@@ -111,7 +109,7 @@ namespace Phoenix.Import.Application
 
         private bool NextButton_Action(int newPageIndex)
         {
-            var value = _wizardPages[_wizard.CurrentPageIndex].Next(_wizardPages[newPageIndex]);
+            bool value = _wizardPages[_wizard.CurrentPageIndex].Next(_wizardPages[newPageIndex]);
             if (value)
             {
                 _wizardPages[newPageIndex].Initialize();

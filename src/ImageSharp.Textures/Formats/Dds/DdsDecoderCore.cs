@@ -190,7 +190,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds
             Span<byte> magicBuffer = stackalloc byte[4];
             this.currentStream.Read(magicBuffer, 0, 4);
             uint magicValue = BinaryPrimitives.ReadUInt32LittleEndian(magicBuffer);
-            if (magicValue != DdsFourCC.DdsMagicWord)
+            if (magicValue != DdsFourCc.DdsMagicWord)
             {
                 throw new NotSupportedException("Invalid DDS magic value.");
             }

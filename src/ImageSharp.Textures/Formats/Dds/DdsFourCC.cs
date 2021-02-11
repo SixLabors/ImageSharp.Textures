@@ -1,12 +1,13 @@
 // Copyright (c) Six Labors and contributors.
 // Licensed under the Apache License, Version 2.0.
 
+// ReSharper disable InconsistentNaming
 namespace SixLabors.ImageSharp.Textures.Formats.Dds
 {
     /// <summary>
     /// Four character codes constants used in DDS files.
     /// </summary>
-    internal static class DdsFourCC
+    internal static class DdsFourCc
     {
         public const uint DdsMagicWord = 'D' | 'D' << 8 | 'S' << 16 | ' ' << 24;
 
@@ -56,6 +57,6 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds
         public const uint R32_FLOAT = 114;
 
         // DXGI_FORMAT_R32G32B32A32_FLOAT
-        public const uint F32_FLOAT = 116;
+        public const uint F32FLOAT = 116;
     }
 }

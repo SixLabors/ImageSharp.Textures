@@ -99,31 +99,31 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
         {
             switch (this.DdsHeader.PixelFormat.FourCC)
             {
-                case DdsFourCC.None:
-                case DdsFourCC.R16G16B16A16_SNORM:
-                case DdsFourCC.R16G16B16A16_UNORM:
-                case DdsFourCC.R32_FLOAT:
+                case DdsFourCc.None:
+                case DdsFourCc.R16G16B16A16_SNORM:
+                case DdsFourCc.R16G16B16A16_UNORM:
+                case DdsFourCc.R32_FLOAT:
                     return this.ProcessUncompressed(stream, width, height, count);
-                case DdsFourCC.DXT1:
+                case DdsFourCc.DXT1:
                     return this.AllocateMipMaps<Dxt1>(stream, width, height, count);
-                case DdsFourCC.DXT2:
-                case DdsFourCC.DXT4:
+                case DdsFourCc.DXT2:
+                case DdsFourCc.DXT4:
                     throw new ArgumentException("Can not support DXT2 or DXT4 due to patents.");
-                case DdsFourCC.DXT3:
+                case DdsFourCc.DXT3:
                     return this.AllocateMipMaps<Dxt3>(stream, width, height, count);
-                case DdsFourCC.DXT5:
+                case DdsFourCc.DXT5:
                     return this.AllocateMipMaps<Dxt5>(stream, width, height, count);
-                case DdsFourCC.DX10:
+                case DdsFourCc.DX10:
                     return this.GetDx10Dds(stream, width, height, count);
-                case DdsFourCC.ATI1:
-                case DdsFourCC.BC4U:
+                case DdsFourCc.ATI1:
+                case DdsFourCc.BC4U:
                     return this.AllocateMipMaps<Bc4>(stream, width, height, count);
-                case DdsFourCC.BC4S:
+                case DdsFourCc.BC4S:
                     return this.AllocateMipMaps<Bc4s>(stream, width, height, count);
-                case DdsFourCC.ATI2:
-                case DdsFourCC.BC5U:
+                case DdsFourCc.ATI2:
+                case DdsFourCc.BC5U:
                     return this.AllocateMipMaps<Bc5>(stream, width, height, count);
-                case DdsFourCC.BC5S:
+                case DdsFourCc.BC5S:
                     return this.AllocateMipMaps<Bc5s>(stream, width, height, count);
                 default:
                     throw new ArgumentException($"FourCC: {this.DdsHeader.PixelFormat.FourCC.FourCcToString()} not supported.");
@@ -147,10 +147,10 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                     // For unknown reason some formats do not have the bitsPerPixel set in the header (its zero).
                     switch (this.DdsHeader.PixelFormat.FourCC)
                     {
-                        case DdsFourCC.R32_FLOAT:
+                        case DdsFourCc.R32_FLOAT:
                             return this.ThirtyTwoBitImageFormat(stream, width, height, count);
-                        case DdsFourCC.R16G16B16A16_SNORM:
-                        case DdsFourCC.R16G16B16A16_UNORM:
+                        case DdsFourCc.R16G16B16A16_SNORM:
+                        case DdsFourCc.R16G16B16A16_UNORM:
                             return this.SixtyFourBitImageFormat(stream, width, height, count);
                     }
 
@@ -266,7 +266,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 return this.AllocateMipMaps<Rg32>(stream, width, height, count);
             }
 
-            if (pixelFormat.FourCC == DdsFourCC.R32_FLOAT)
+            if (pixelFormat.FourCC == DdsFourCc.R32_FLOAT)
             {
                 return this.AllocateMipMaps<Fp32>(stream, width, height, count);
             }
@@ -276,7 +276,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
         }
 
         private MipMap[] SixtyFourBitImageFormat(Stream stream, int width, int height, int count)
-        { 
+        {
             return this.AllocateMipMaps<Rgba64>(stream, width, height, count);
         }
 

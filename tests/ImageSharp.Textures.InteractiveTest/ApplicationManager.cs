@@ -18,12 +18,11 @@ namespace Phoenix.Import.Application
 
         public static ImGuiRenderer Controller { get; set; }
 
-
-        private static readonly object lockObject = new object();
+        private static readonly object LockObject = new object();
 
         public static unsafe IntPtr Create(Image<Rgba32> image)
         {
-            lock (lockObject)
+            lock (LockObject)
             {
                 Texture texture = GraphicsDevice.ResourceFactory.CreateTexture(TextureDescription.Texture2D((uint)image.Width, (uint)image.Height, 1, 1, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.Sampled));
                 fixed (void* pin = &MemoryMarshal.GetReference(image.GetPixelRowSpan(0)))

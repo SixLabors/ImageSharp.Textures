@@ -17,7 +17,7 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
     /// </para>
     /// </summary>
     [StructLayout(LayoutKind.Sequential)]
-    public partial struct R32g32b32a32 : IPixel<R32g32b32a32>
+    public struct R32g32b32a32 : IPixel<R32g32b32a32>
     {
         /// <summary>
         /// Gets or sets the red component.

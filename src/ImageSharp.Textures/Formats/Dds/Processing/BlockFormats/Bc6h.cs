@@ -12,270 +12,221 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
     public struct Bc6h : IBlock<Bc6h>
     {
         // Code based on commit 138efff1b9c53fd9a5dd34b8c865e8f5ae798030 2019/10/24 in DirectXTex C++ library
-        private enum EField : byte
+        private static readonly Bc6hModeDescriptor[][] msADesc = new Bc6hModeDescriptor[14][]
         {
-            NA, // N/A
-            M,  // Mode
-            D,  // Shape
-            RW,
-            RX,
-            RY,
-            RZ,
-            GW,
-            GX,
-            GY,
-            GZ,
-            BW,
-            BX,
-            BY,
-            BZ,
-        }
-
-        private struct ModeDescriptor
-        {
-            public EField m_eField;
-            public byte m_uBit;
-
-            public ModeDescriptor(EField eF, byte uB)
-            {
-                this.m_eField = eF;
-                this.m_uBit = uB;
-            }
-        }
-
-        private struct ModeInfo
-        {
-            public byte uMode;
-            public byte uPartitions;
-            public bool bTransformed;
-            public byte uIndexPrec;
-            public readonly LdrColorA[][] RGBAPrec; // [Constants.BC6H_MAX_REGIONS][2];
-
-            public ModeInfo(byte uM, byte uP, bool bT, byte uI, LdrColorA[][] prec)
-            {
-                this.uMode = uM;
-                this.uPartitions = uP;
-                this.bTransformed = bT;
-                this.uIndexPrec = uI;
-                this.RGBAPrec = prec;
-            }
-        }
-
-        private static readonly ModeDescriptor[][] ms_aDesc = new ModeDescriptor[14][]
-        {
-            new ModeDescriptor[82]
+            new Bc6hModeDescriptor[82]
             {
                 // Mode 1 (0x00) - 10 5 5 5
-                new ModeDescriptor(EField.M, 0), new ModeDescriptor(EField.M, 1), new ModeDescriptor(EField.GY, 4), new ModeDescriptor(EField.BY, 4), new ModeDescriptor(EField.BZ, 4), new ModeDescriptor(EField.RW, 0), new ModeDescriptor(EField.RW, 1), new ModeDescriptor(EField.RW, 2), new ModeDescriptor(EField.RW, 3), new ModeDescriptor(EField.RW, 4),
-                new ModeDescriptor(EField.RW, 5), new ModeDescriptor(EField.RW, 6), new ModeDescriptor(EField.RW, 7), new ModeDescriptor(EField.RW, 8), new ModeDescriptor(EField.RW, 9), new ModeDescriptor(EField.GW, 0), new ModeDescriptor(EField.GW, 1), new ModeDescriptor(EField.GW, 2), new ModeDescriptor(EField.GW, 3), new ModeDescriptor(EField.GW, 4),
-                new ModeDescriptor(EField.GW, 5), new ModeDescriptor(EField.GW, 6), new ModeDescriptor(EField.GW, 7), new ModeDescriptor(EField.GW, 8), new ModeDescriptor(EField.GW, 9), new ModeDescriptor(EField.BW, 0), new ModeDescriptor(EField.BW, 1), new ModeDescriptor(EField.BW, 2), new ModeDescriptor(EField.BW, 3), new ModeDescriptor(EField.BW, 4),
-                new ModeDescriptor(EField.BW, 5), new ModeDescriptor(EField.BW, 6), new ModeDescriptor(EField.BW, 7), new ModeDescriptor(EField.BW, 8), new ModeDescriptor(EField.BW, 9), new ModeDescriptor(EField.RX, 0), new ModeDescriptor(EField.RX, 1), new ModeDescriptor(EField.RX, 2), new ModeDescriptor(EField.RX, 3), new ModeDescriptor(EField.RX, 4),
-                new ModeDescriptor(EField.GZ, 4), new ModeDescriptor(EField.GY, 0), new ModeDescriptor(EField.GY, 1), new ModeDescriptor(EField.GY, 2), new ModeDescriptor(EField.GY, 3), new ModeDescriptor(EField.GX, 0), new ModeDescriptor(EField.GX, 1), new ModeDescriptor(EField.GX, 2), new ModeDescriptor(EField.GX, 3), new ModeDescriptor(EField.GX, 4),
-                new ModeDescriptor(EField.BZ, 0), new ModeDescriptor(EField.GZ, 0), new ModeDescriptor(EField.GZ, 1), new ModeDescriptor(EField.GZ, 2), new ModeDescriptor(EField.GZ, 3), new ModeDescriptor(EField.BX, 0), new ModeDescriptor(EField.BX, 1), new ModeDescriptor(EField.BX, 2), new ModeDescriptor(EField.BX, 3), new ModeDescriptor(EField.BX, 4),
-                new ModeDescriptor(EField.BZ, 1), new ModeDescriptor(EField.BY, 0), new ModeDescriptor(EField.BY, 1), new ModeDescriptor(EField.BY, 2), new ModeDescriptor(EField.BY, 3), new ModeDescriptor(EField.RY, 0), new ModeDescriptor(EField.RY, 1), new ModeDescriptor(EField.RY, 2), new ModeDescriptor(EField.RY, 3), new ModeDescriptor(EField.RY, 4),
-                new ModeDescriptor(EField.BZ, 2), new ModeDescriptor(EField.RZ, 0), new ModeDescriptor(EField.RZ, 1), new ModeDescriptor(EField.RZ, 2), new ModeDescriptor(EField.RZ, 3), new ModeDescriptor(EField.RZ, 4), new ModeDescriptor(EField.BZ, 3), new ModeDescriptor(EField.D, 0), new ModeDescriptor(EField.D, 1), new ModeDescriptor(EField.D, 2),
-                new ModeDescriptor(EField.D, 3), new ModeDescriptor(EField.D, 4)
+                new Bc6hModeDescriptor(Bc6hEField.M, 0), new Bc6hModeDescriptor(Bc6hEField.M, 1), new Bc6hModeDescriptor(Bc6hEField.GY, 4), new Bc6hModeDescriptor(Bc6hEField.BY, 4), new Bc6hModeDescriptor(Bc6hEField.BZ, 4), new Bc6hModeDescriptor(Bc6hEField.RW, 0), new Bc6hModeDescriptor(Bc6hEField.RW, 1), new Bc6hModeDescriptor(Bc6hEField.RW, 2), new Bc6hModeDescriptor(Bc6hEField.RW, 3), new Bc6hModeDescriptor(Bc6hEField.RW, 4),
+                new Bc6hModeDescriptor(Bc6hEField.RW, 5), new Bc6hModeDescriptor(Bc6hEField.RW, 6), new Bc6hModeDescriptor(Bc6hEField.RW, 7), new Bc6hModeDescriptor(Bc6hEField.RW, 8), new Bc6hModeDescriptor(Bc6hEField.RW, 9), new Bc6hModeDescriptor(Bc6hEField.GW, 0), new Bc6hModeDescriptor(Bc6hEField.GW, 1), new Bc6hModeDescriptor(Bc6hEField.GW, 2), new Bc6hModeDescriptor(Bc6hEField.GW, 3), new Bc6hModeDescriptor(Bc6hEField.GW, 4),
+                new Bc6hModeDescriptor(Bc6hEField.GW, 5), new Bc6hModeDescriptor(Bc6hEField.GW, 6), new Bc6hModeDescriptor(Bc6hEField.GW, 7), new Bc6hModeDescriptor(Bc6hEField.GW, 8), new Bc6hModeDescriptor(Bc6hEField.GW, 9), new Bc6hModeDescriptor(Bc6hEField.BW, 0), new Bc6hModeDescriptor(Bc6hEField.BW, 1), new Bc6hModeDescriptor(Bc6hEField.BW, 2), new Bc6hModeDescriptor(Bc6hEField.BW, 3), new Bc6hModeDescriptor(Bc6hEField.BW, 4),
+                new Bc6hModeDescriptor(Bc6hEField.BW, 5), new Bc6hModeDescriptor(Bc6hEField.BW, 6), new Bc6hModeDescriptor(Bc6hEField.BW, 7), new Bc6hModeDescriptor(Bc6hEField.BW, 8), new Bc6hModeDescriptor(Bc6hEField.BW, 9), new Bc6hModeDescriptor(Bc6hEField.RX, 0), new Bc6hModeDescriptor(Bc6hEField.RX, 1), new Bc6hModeDescriptor(Bc6hEField.RX, 2), new Bc6hModeDescriptor(Bc6hEField.RX, 3), new Bc6hModeDescriptor(Bc6hEField.RX, 4),
+                new Bc6hModeDescriptor(Bc6hEField.GZ, 4), new Bc6hModeDescriptor(Bc6hEField.GY, 0), new Bc6hModeDescriptor(Bc6hEField.GY, 1), new Bc6hModeDescriptor(Bc6hEField.GY, 2), new Bc6hModeDescriptor(Bc6hEField.GY, 3), new Bc6hModeDescriptor(Bc6hEField.GX, 0), new Bc6hModeDescriptor(Bc6hEField.GX, 1), new Bc6hModeDescriptor(Bc6hEField.GX, 2), new Bc6hModeDescriptor(Bc6hEField.GX, 3), new Bc6hModeDescriptor(Bc6hEField.GX, 4),
+                new Bc6hModeDescriptor(Bc6hEField.BZ, 0), new Bc6hModeDescriptor(Bc6hEField.GZ, 0), new Bc6hModeDescriptor(Bc6hEField.GZ, 1), new Bc6hModeDescriptor(Bc6hEField.GZ, 2), new Bc6hModeDescriptor(Bc6hEField.GZ, 3), new Bc6hModeDescriptor(Bc6hEField.BX, 0), new Bc6hModeDescriptor(Bc6hEField.BX, 1), new Bc6hModeDescriptor(Bc6hEField.BX, 2), new Bc6hModeDescriptor(Bc6hEField.BX, 3), new Bc6hModeDescriptor(Bc6hEField.BX, 4),
+                new Bc6hModeDescriptor(Bc6hEField.BZ, 1), new Bc6hModeDescriptor(Bc6hEField.BY, 0), new Bc6hModeDescriptor(Bc6hEField.BY, 1), new Bc6hModeDescriptor(Bc6hEField.BY, 2), new Bc6hModeDescriptor(Bc6hEField.BY, 3), new Bc6hModeDescriptor(Bc6hEField.RY, 0), new Bc6hModeDescriptor(Bc6hEField.RY, 1), new Bc6hModeDescriptor(Bc6hEField.RY, 2), new Bc6hModeDescriptor(Bc6hEField.RY, 3), new Bc6hModeDescriptor(Bc6hEField.RY, 4),
+                new Bc6hModeDescriptor(Bc6hEField.BZ, 2), new Bc6hModeDescriptor(Bc6hEField.RZ, 0), new Bc6hModeDescriptor(Bc6hEField.RZ, 1), new Bc6hModeDescriptor(Bc6hEField.RZ, 2), new Bc6hModeDescriptor(Bc6hEField.RZ, 3), new Bc6hModeDescriptor(Bc6hEField.RZ, 4), new Bc6hModeDescriptor(Bc6hEField.BZ, 3), new Bc6hModeDescriptor(Bc6hEField.D, 0), new Bc6hModeDescriptor(Bc6hEField.D, 1), new Bc6hModeDescriptor(Bc6hEField.D, 2),
+                new Bc6hModeDescriptor(Bc6hEField.D, 3), new Bc6hModeDescriptor(Bc6hEField.D, 4)
             },
 
-            new ModeDescriptor[82]
+            new Bc6hModeDescriptor[82]
             {
                 // Mode 2 (0x01) - 7 6 6 6
-                new ModeDescriptor(EField.M, 0), new ModeDescriptor(EField.M, 1), new ModeDescriptor(EField.GY, 5), new ModeDescriptor(EField.GZ, 4), new ModeDescriptor(EField.GZ, 5), new ModeDescriptor(EField.RW, 0), new ModeDescriptor(EField.RW, 1), new ModeDescriptor(EField.RW, 2), new ModeDescriptor(EField.RW, 3), new ModeDescriptor(EField.RW, 4),
-                new ModeDescriptor(EField.RW, 5), new ModeDescriptor(EField.RW, 6), new ModeDescriptor(EField.BZ, 0), new ModeDescriptor(EField.BZ, 1), new ModeDescriptor(EField.BY, 4), new ModeDescriptor(EField.GW, 0), new ModeDescriptor(EField.GW, 1), new ModeDescriptor(EField.GW, 2), new ModeDescriptor(EField.GW, 3), new ModeDescriptor(EField.GW, 4),
-                new ModeDescriptor(EField.GW, 5), new ModeDescriptor(EField.GW, 6), new ModeDescriptor(EField.BY, 5), new ModeDescriptor(EField.BZ, 2), new ModeDescriptor(EField.GY, 4), new ModeDescriptor(EField.BW, 0), new ModeDescriptor(EField.BW, 1), new ModeDescriptor(EField.BW, 2), new ModeDescriptor(EField.BW, 3), new ModeDescriptor(EField.BW, 4),
-                new ModeDescriptor(EField.BW, 5), new ModeDescriptor(EField.BW, 6), new ModeDescriptor(EField.BZ, 3), new ModeDescriptor(EField.BZ, 5), new ModeDescriptor(EField.BZ, 4), new ModeDescriptor(EField.RX, 0), new ModeDescriptor(EField.RX, 1), new ModeDescriptor(EField.RX, 2), new ModeDescriptor(EField.RX, 3), new ModeDescriptor(EField.RX, 4),
-                new ModeDescriptor(EField.RX, 5), new ModeDescriptor(EField.GY, 0), new ModeDescriptor(EField.GY, 1), new ModeDescriptor(EField.GY, 2), new ModeDescriptor(EField.GY, 3), new ModeDescriptor(EField.GX, 0), new ModeDescriptor(EField.GX, 1), new ModeDescriptor(EField.GX, 2), new ModeDescriptor(EField.GX, 3), new ModeDescriptor(EField.GX, 4),
-                new ModeDescriptor(EField.GX, 5), new ModeDescriptor(EField.GZ, 0), new ModeDescriptor(EField.GZ, 1), new ModeDescriptor(EField.GZ, 2), new ModeDescriptor(EField.GZ, 3), new ModeDescriptor(EField.BX, 0), new ModeDescriptor(EField.BX, 1), new ModeDescriptor(EField.BX, 2), new ModeDescriptor(EField.BX, 3), new ModeDescriptor(EField.BX, 4),
-                new ModeDescriptor(EField.BX, 5), new ModeDescriptor(EField.BY, 0), new ModeDescriptor(EField.BY, 1), new ModeDescriptor(EField.BY, 2), new ModeDescriptor(EField.BY, 3), new ModeDescriptor(EField.RY, 0), new ModeDescriptor(EField.RY, 1), new ModeDescriptor(EField.RY, 2), new ModeDescriptor(EField.RY, 3), new ModeDescriptor(EField.RY, 4),
-                new ModeDescriptor(EField.RY, 5), new ModeDescriptor(EField.RZ, 0), new ModeDescriptor(EField.RZ, 1), new ModeDescriptor(EField.RZ, 2), new ModeDescriptor(EField.RZ, 3), new ModeDescriptor(EField.RZ, 4), new ModeDescriptor(EField.RZ, 5), new ModeDescriptor(EField.D, 0), new ModeDescriptor(EField.D, 1), new ModeDescriptor(EField.D, 2),
-                new ModeDescriptor(EField.D, 3), new ModeDescriptor(EField.D, 4)
+                new Bc6hModeDescriptor(Bc6hEField.M, 0), new Bc6hModeDescriptor(Bc6hEField.M, 1), new Bc6hModeDescriptor(Bc6hEField.GY, 5), new Bc6hModeDescriptor(Bc6hEField.GZ, 4), new Bc6hModeDescriptor(Bc6hEField.GZ, 5), new Bc6hModeDescriptor(Bc6hEField.RW, 0), new Bc6hModeDescriptor(Bc6hEField.RW, 1), new Bc6hModeDescriptor(Bc6hEField.RW, 2), new Bc6hModeDescriptor(Bc6hEField.RW, 3), new Bc6hModeDescriptor(Bc6hEField.RW, 4),
+                new Bc6hModeDescriptor(Bc6hEField.RW, 5), new Bc6hModeDescriptor(Bc6hEField.RW, 6), new Bc6hModeDescriptor(Bc6hEField.BZ, 0), new Bc6hModeDescriptor(Bc6hEField.BZ, 1), new Bc6hModeDescriptor(Bc6hEField.BY, 4), new Bc6hModeDescriptor(Bc6hEField.GW, 0), new Bc6hModeDescriptor(Bc6hEField.GW, 1), new Bc6hModeDescriptor(Bc6hEField.GW, 2), new Bc6hModeDescriptor(Bc6hEField.GW, 3), new Bc6hModeDescriptor(Bc6hEField.GW, 4),
+                new Bc6hModeDescriptor(Bc6hEField.GW, 5), new Bc6hModeDescriptor(Bc6hEField.GW, 6), new Bc6hModeDescriptor(Bc6hEField.BY, 5), new Bc6hModeDescriptor(Bc6hEField.BZ, 2), new Bc6hModeDescriptor(Bc6hEField.GY, 4), new Bc6hModeDescriptor(Bc6hEField.BW, 0), new Bc6hModeDescriptor(Bc6hEField.BW, 1), new Bc6hModeDescriptor(Bc6hEField.BW, 2), new Bc6hModeDescriptor(Bc6hEField.BW, 3), new Bc6hModeDescriptor(Bc6hEField.BW, 4),
+                new Bc6hModeDescriptor(Bc6hEField.BW, 5), new Bc6hModeDescriptor(Bc6hEField.BW, 6), new Bc6hModeDescriptor(Bc6hEField.BZ, 3), new Bc6hModeDescriptor(Bc6hEField.BZ, 5), new Bc6hModeDescriptor(Bc6hEField.BZ, 4), new Bc6hModeDescriptor(Bc6hEField.RX, 0), new Bc6hModeDescriptor(Bc6hEField.RX, 1), new Bc6hModeDescriptor(Bc6hEField.RX, 2), new Bc6hModeDescriptor(Bc6hEField.RX, 3), new Bc6hModeDescriptor(Bc6hEField.RX, 4),
+                new Bc6hModeDescriptor(Bc6hEField.RX, 5), new Bc6hModeDescriptor(Bc6hEField.GY, 0), new Bc6hModeDescriptor(Bc6hEField.GY, 1), new Bc6hModeDescriptor(Bc6hEField.GY, 2), new Bc6hModeDescriptor(Bc6hEField.GY, 3), new Bc6hModeDescriptor(Bc6hEField.GX, 0), new Bc6hModeDescriptor(Bc6hEField.GX, 1), new Bc6hModeDescriptor(Bc6hEField.GX, 2), new Bc6hModeDescriptor(Bc6hEField.GX, 3), new Bc6hModeDescriptor(Bc6hEField.GX, 4),
+                new Bc6hModeDescriptor(Bc6hEField.GX, 5), new Bc6hModeDescriptor(Bc6hEField.GZ, 0), new Bc6hModeDescriptor(Bc6hEField.GZ, 1), new Bc6hModeDescriptor(Bc6hEField.GZ, 2), new Bc6hModeDescriptor(Bc6hEField.GZ, 3), new Bc6hModeDescriptor(Bc6hEField.BX, 0), new Bc6hModeDescriptor(Bc6hEField.BX, 1), new Bc6hModeDescriptor(Bc6hEField.BX, 2), new Bc6hModeDescriptor(Bc6hEField.BX, 3), new Bc6hModeDescriptor(Bc6hEField.BX, 4),
+                new Bc6hModeDescriptor(Bc6hEField.BX, 5), new Bc6hModeDescriptor(Bc6hEField.BY, 0), new Bc6hModeDescriptor(Bc6hEField.BY, 1), new Bc6hModeDescriptor(Bc6hEField.BY, 2), new Bc6hModeDescriptor(Bc6hEField.BY, 3), new Bc6hModeDescriptor(Bc6hEField.RY, 0), new Bc6hModeDescriptor(Bc6hEField.RY, 1), new Bc6hModeDescriptor(Bc6hEField.RY, 2), new Bc6hModeDescriptor(Bc6hEField.RY, 3), new Bc6hModeDescriptor(Bc6hEField.RY, 4),
+                new Bc6hModeDescriptor(Bc6hEField.RY, 5), new Bc6hModeDescriptor(Bc6hEField.RZ, 0), new Bc6hModeDescriptor(Bc6hEField.RZ, 1), new Bc6hModeDescriptor(Bc6hEField.RZ, 2), new Bc6hModeDescriptor(Bc6hEField.RZ, 3), new Bc6hModeDescriptor(Bc6hEField.RZ, 4), new Bc6hModeDescriptor(Bc6hEField.RZ, 5), new Bc6hModeDescriptor(Bc6hEField.D, 0), new Bc6hModeDescriptor(Bc6hEField.D, 1), new Bc6hModeDescriptor(Bc6hEField.D, 2),
+                new Bc6hModeDescriptor(Bc6hEField.D, 3), new Bc6hModeDescriptor(Bc6hEField.D, 4)
             },
 
-            new ModeDescriptor[82]
+            new Bc6hModeDescriptor[82]
             {
                 // Mode 3 (0x02) - 11 5 4 4
-                new ModeDescriptor(EField.M, 0), new ModeDescriptor(EField.M, 1), new ModeDescriptor(EField.M, 2), new ModeDescriptor(EField.M, 3), new ModeDescriptor(EField.M, 4), new ModeDescriptor(EField.RW, 0), new ModeDescriptor(EField.RW, 1), new ModeDescriptor(EField.RW, 2), new ModeDescriptor(EField.RW, 3), new ModeDescriptor(EField.RW, 4),
-                new ModeDescriptor(EField.RW, 5), new ModeDescriptor(EField.RW, 6), new ModeDescriptor(EField.RW, 7), new ModeDescriptor(EField.RW, 8), new ModeDescriptor(EField.RW, 9), new ModeDescriptor(EField.GW, 0), new ModeDescriptor(EField.GW, 1), new ModeDescriptor(EField.GW, 2), new ModeDescriptor(EField.GW, 3), new ModeDescriptor(EField.GW, 4),
-                new ModeDescriptor(EField.GW, 5), new ModeDescriptor(EField.GW, 6), new ModeDescriptor(EField.GW, 7), new ModeDescriptor(EField.GW, 8), new ModeDescriptor(EField.GW, 9), new ModeDescriptor(EField.BW, 0), new ModeDescriptor(EField.BW, 1), new ModeDescriptor(EField.BW, 2), new ModeDescriptor(EField.BW, 3), new ModeDescriptor(EField.BW, 4),
-                new ModeDescriptor(EField.BW, 5), new ModeDescriptor(EField.BW, 6), new ModeDescriptor(EField.BW, 7), new ModeDescriptor(EField.BW, 8), new ModeDescriptor(EField.BW, 9), new ModeDescriptor(EField.RX, 0), new ModeDescriptor(EField.RX, 1), new ModeDescriptor(EField.RX, 2), new ModeDescriptor(EField.RX, 3), new ModeDescriptor(EField.RX, 4),
-                new ModeDescriptor(EField.RW, 10), new ModeDescriptor(EField.GY, 0), new ModeDescriptor(EField.GY, 1), new ModeDescriptor(EField.GY, 2), new ModeDescriptor(EField.GY, 3), new ModeDescriptor(EField.GX, 0), new ModeDescriptor(EField.GX, 1), new ModeDescriptor(EField.GX, 2), new ModeDescriptor(EField.GX, 3), new ModeDescriptor(EField.GW, 10),
-                new ModeDescriptor(EField.BZ, 0), new ModeDescriptor(EField.GZ, 0), new ModeDescriptor(EField.GZ, 1), new ModeDescriptor(EField.GZ, 2), new ModeDescriptor(EField.GZ, 3), new ModeDescriptor(EField.BX, 0), new ModeDescriptor(EField.BX, 1), new ModeDescriptor(EField.BX, 2), new ModeDescriptor(EField.BX, 3), new ModeDescriptor(EField.BW, 10),
-                new ModeDescriptor(EField.BZ, 1), new ModeDescriptor(EField.BY, 0), new ModeDescriptor(EField.BY, 1), new ModeDescriptor(EField.BY, 2), new ModeDescriptor(EField.BY, 3), new ModeDescriptor(EField.RY, 0), new ModeDescriptor(EField.RY, 1), new ModeDescriptor(EField.RY, 2), new ModeDescriptor(EField.RY, 3), new ModeDescriptor(EField.RY, 4),
-                new ModeDescriptor(EField.BZ, 2), new ModeDescriptor(EField.RZ, 0), new ModeDescriptor(EField.RZ, 1), new ModeDescriptor(EField.RZ, 2), new ModeDescriptor(EField.RZ, 3), new ModeDescriptor(EField.RZ, 4), new ModeDescriptor(EField.BZ, 3), new ModeDescriptor(EField.D, 0), new ModeDescriptor(EField.D, 1), new ModeDescriptor(EField.D, 2),
-                new ModeDescriptor(EField.D, 3), new ModeDescriptor(EField.D, 4)
+                new Bc6hModeDescriptor(Bc6hEField.M, 0), new Bc6hModeDescriptor(Bc6hEField.M, 1), new Bc6hModeDescriptor(Bc6hEField.M, 2), new Bc6hModeDescriptor(Bc6hEField.M, 3), new Bc6hModeDescriptor(Bc6hEField.M, 4), new Bc6hModeDescriptor(Bc6hEField.RW, 0), new Bc6hModeDescriptor(Bc6hEField.RW, 1), new Bc6hModeDescriptor(Bc6hEField.RW, 2), new Bc6hModeDescriptor(Bc6hEField.RW, 3), new Bc6hModeDescriptor(Bc6hEField.RW, 4),
+                new Bc6hModeDescriptor(Bc6hEField.RW, 5), new Bc6hModeDescriptor(Bc6hEField.RW, 6), new Bc6hModeDescriptor(Bc6hEField.RW, 7), new Bc6hModeDescriptor(Bc6hEField.RW, 8), new Bc6hModeDescriptor(Bc6hEField.RW, 9), new Bc6hModeDescriptor(Bc6hEField.GW, 0), new Bc6hModeDescriptor(Bc6hEField.GW, 1), new Bc6hModeDescriptor(Bc6hEField.GW, 2), new Bc6hModeDescriptor(Bc6hEField.GW, 3), new Bc6hModeDescriptor(Bc6hEField.GW, 4),
+                new Bc6hModeDescriptor(Bc6hEField.GW, 5), new Bc6hModeDescriptor(Bc6hEField.GW, 6), new Bc6hModeDescriptor(Bc6hEField.GW, 7), new Bc6hModeDescriptor(Bc6hEField.GW, 8), new Bc6hModeDescriptor(Bc6hEField.GW, 9), new Bc6hModeDescriptor(Bc6hEField.BW, 0), new Bc6hModeDescriptor(Bc6hEField.BW, 1), new Bc6hModeDescriptor(Bc6hEField.BW, 2), new Bc6hModeDescriptor(Bc6hEField.BW, 3), new Bc6hModeDescriptor(Bc6hEField.BW, 4),
+                new Bc6hModeDescriptor(Bc6hEField.BW, 5), new Bc6hModeDescriptor(Bc6hEField.BW, 6), new Bc6hModeDescriptor(Bc6hEField.BW, 7), new Bc6hModeDescriptor(Bc6hEField.BW, 8), new Bc6hModeDescriptor(Bc6hEField.BW, 9), new Bc6hModeDescriptor(Bc6hEField.RX, 0), new Bc6hModeDescriptor(Bc6hEField.RX, 1), new Bc6hModeDescriptor(Bc6hEField.RX, 2), new Bc6hModeDescriptor(Bc6hEField.RX, 3), new Bc6hModeDescriptor(Bc6hEField.RX, 4),
+                new Bc6hModeDescriptor(Bc6hEField.RW, 10), new Bc6hModeDescriptor(Bc6hEField.GY, 0), new Bc6hModeDescriptor(Bc6hEField.GY, 1), new Bc6hModeDescriptor(Bc6hEField.GY, 2), new Bc6hModeDescriptor(Bc6hEField.GY, 3), new Bc6hModeDescriptor(Bc6hEField.GX, 0), new Bc6hModeDescriptor(Bc6hEField.GX, 1), new Bc6hModeDescriptor(Bc6hEField.GX, 2), new Bc6hModeDescriptor(Bc6hEField.GX, 3), new Bc6hModeDescriptor(Bc6hEField.GW, 10),
+                new Bc6hModeDescriptor(Bc6hEField.BZ, 0), new Bc6hModeDescriptor(Bc6hEField.GZ, 0), new Bc6hModeDescriptor(Bc6hEField.GZ, 1), new Bc6hModeDescriptor(Bc6hEField.GZ, 2), new Bc6hModeDescriptor(Bc6hEField.GZ, 3), new Bc6hModeDescriptor(Bc6hEField.BX, 0), new Bc6hModeDescriptor(Bc6hEField.BX, 1), new Bc6hModeDescriptor(Bc6hEField.BX, 2), new Bc6hModeDescriptor(Bc6hEField.BX, 3), new Bc6hModeDescriptor(Bc6hEField.BW, 10),
+                new Bc6hModeDescriptor(Bc6hEField.BZ, 1), new Bc6hModeDescriptor(Bc6hEField.BY, 0), new Bc6hModeDescriptor(Bc6hEField.BY, 1), new Bc6hModeDescriptor(Bc6hEField.BY, 2), new Bc6hModeDescriptor(Bc6hEField.BY, 3), new Bc6hModeDescriptor(Bc6hEField.RY, 0), new Bc6hModeDescriptor(Bc6hEField.RY, 1), new Bc6hModeDescriptor(Bc6hEField.RY, 2), new Bc6hModeDescriptor(Bc6hEField.RY, 3), new Bc6hModeDescriptor(Bc6hEField.RY, 4),
+                new Bc6hModeDescriptor(Bc6hEField.BZ, 2), new Bc6hModeDescriptor(Bc6hEField.RZ, 0), new Bc6hModeDescriptor(Bc6hEField.RZ, 1), new Bc6hModeDescriptor(Bc6hEField.RZ, 2), new Bc6hModeDescriptor(Bc6hEField.RZ, 3), new Bc6hModeDescriptor(Bc6hEField.RZ, 4), new Bc6hModeDescriptor(Bc6hEField.BZ, 3), new Bc6hModeDescriptor(Bc6hEField.D, 0), new Bc6hModeDescriptor(Bc6hEField.D, 1), new Bc6hModeDescriptor(Bc6hEField.D, 2),
+                new Bc6hModeDescriptor(Bc6hEField.D, 3), new Bc6hModeDescriptor(Bc6hEField.D, 4)
             },
 
-            new ModeDescriptor[82]
+            new Bc6hModeDescriptor[82]
             {
                 // Mode 4 (0x06) - 11 4 5 4
-                new ModeDescriptor(EField.M, 0), new ModeDescriptor(EField.M, 1), new ModeDescriptor(EField.M, 2), new ModeDescriptor(EField.M, 3), new ModeDescriptor(EField.M, 4), new ModeDescriptor(EField.RW, 0), new ModeDescriptor(EField.RW, 1), new ModeDescriptor(EField.RW, 2), new ModeDescriptor(EField.RW, 3), new ModeDescriptor(EField.RW, 4),
-                new ModeDescriptor(EField.RW, 5), new ModeDescriptor(EField.RW, 6), new ModeDescriptor(EField.RW, 7), new ModeDescriptor(EField.RW, 8), new ModeDescriptor(EField.RW, 9), new ModeDescriptor(EField.GW, 0), new ModeDescriptor(EField.GW, 1), new ModeDescriptor(EField.GW, 2), new ModeDescriptor(EField.GW, 3), new ModeDescriptor(EField.GW, 4),
-                new ModeDescriptor(EField.GW, 5), new ModeDescriptor(EField.GW, 6), new ModeDescriptor(EField.GW, 7), new ModeDescriptor(EField.GW, 8), new ModeDescriptor(EField.GW, 9), new ModeDescriptor(EField.BW, 0), new ModeDescriptor(EField.BW, 1), new ModeDescriptor(EField.BW, 2), new ModeDescriptor(EField.BW, 3), new ModeDescriptor(EField.BW, 4),
-                new ModeDescriptor(EField.BW, 5), new ModeDescriptor(EField.BW, 6), new ModeDescriptor(EField.BW, 7), new ModeDescriptor(EField.BW, 8), new ModeDescriptor(EField.BW, 9), new ModeDescriptor(EField.RX, 0), new ModeDescriptor(EField.RX, 1), new ModeDescriptor(EField.RX, 2), new ModeDescriptor(EField.RX, 3), new ModeDescriptor(EField.RW, 10),
-                new ModeDescriptor(EField.GZ, 4), new ModeDescriptor(EField.GY, 0), new ModeDescriptor(EField.GY, 1), new ModeDescriptor(EField.GY, 2), new ModeDescriptor(EField.GY, 3), new ModeDescriptor(EField.GX, 0), new ModeDescriptor(EField.GX, 1), new ModeDescriptor(EField.GX, 2), new ModeDescriptor(EField.GX, 3), new ModeDescriptor(EField.GX, 4),
-                new ModeDescriptor(EField.GW, 10), new ModeDescriptor(EField.GZ, 0), new ModeDescriptor(EField.GZ, 1), new ModeDescriptor(EField.GZ, 2), new ModeDescriptor(EField.GZ, 3), new ModeDescriptor(EField.BX, 0), new ModeDescriptor(EField.BX, 1), new ModeDescriptor(EField.BX, 2), new ModeDescriptor(EField.BX, 3), new ModeDescriptor(EField.BW, 10),
-                new ModeDescriptor(EField.BZ, 1), new ModeDescriptor(EField.BY, 0), new ModeDescriptor(EField.BY, 1), new ModeDescriptor(EField.BY, 2), new ModeDescriptor(EField.BY, 3), new ModeDescriptor(EField.RY, 0), new ModeDescriptor(EField.RY, 1), new ModeDescriptor(EField.RY, 2), new ModeDescriptor(EField.RY, 3), new ModeDescriptor(EField.BZ, 0),
-                new ModeDescriptor(EField.BZ, 2), new ModeDescriptor(EField.RZ, 0), new ModeDescriptor(EField.RZ, 1), new ModeDescriptor(EField.RZ, 2), new ModeDescriptor(EField.RZ, 3), new ModeDescriptor(EField.GY, 4), new ModeDescriptor(EField.BZ, 3), new ModeDescriptor(EField.D, 0), new ModeDescriptor(EField.D, 1), new ModeDescriptor(EField.D, 2),
-                new ModeDescriptor(EField.D, 3), new ModeDescriptor(EField.D, 4)
+                new Bc6hModeDescriptor(Bc6hEField.M, 0), new Bc6hModeDescriptor(Bc6hEField.M, 1), new Bc6hModeDescriptor(Bc6hEField.M, 2), new Bc6hModeDescriptor(Bc6hEField.M, 3), new Bc6hModeDescriptor(Bc6hEField.M, 4), new Bc6hModeDescriptor(Bc6hEField.RW, 0), new Bc6hModeDescriptor(Bc6hEField.RW, 1), new Bc6hModeDescriptor(Bc6hEField.RW, 2), new Bc6hModeDescriptor(Bc6hEField.RW, 3), new Bc6hModeDescriptor(Bc6hEField.RW, 4),
+                new Bc6hModeDescriptor(Bc6hEField.RW, 5), new Bc6hModeDescriptor(Bc6hEField.RW, 6), new Bc6hModeDescriptor(Bc6hEField.RW, 7), new Bc6hModeDescriptor(Bc6hEField.RW, 8), new Bc6hModeDescriptor(Bc6hEField.RW, 9), new Bc6hModeDescriptor(Bc6hEField.GW, 0), new Bc6hModeDescriptor(Bc6hEField.GW, 1), new Bc6hModeDescriptor(Bc6hEField.GW, 2), new Bc6hModeDescriptor(Bc6hEField.GW, 3), new Bc6hModeDescriptor(Bc6hEField.GW, 4),
+                new Bc6hModeDescriptor(Bc6hEField.GW, 5), new Bc6hModeDescriptor(Bc6hEField.GW, 6), new Bc6hModeDescriptor(Bc6hEField.GW, 7), new Bc6hModeDescriptor(Bc6hEField.GW, 8), new Bc6hModeDescriptor(Bc6hEField.GW, 9), new Bc6hModeDescriptor(Bc6hEField.BW, 0), new Bc6hModeDescriptor(Bc6hEField.BW, 1), new Bc6hModeDescriptor(Bc6hEField.BW, 2), new Bc6hModeDescriptor(Bc6hEField.BW, 3), new Bc6hModeDescriptor(Bc6hEField.BW, 4),
+                new Bc6hModeDescriptor(Bc6hEField.BW, 5), new Bc6hModeDescriptor(Bc6hEField.BW, 6), new Bc6hModeDescriptor(Bc6hEField.BW, 7), new Bc6hModeDescriptor(Bc6hEField.BW, 8), new Bc6hModeDescriptor(Bc6hEField.BW, 9), new Bc6hModeDescriptor(Bc6hEField.RX, 0), new Bc6hModeDescriptor(Bc6hEField.RX, 1), new Bc6hModeDescriptor(Bc6hEField.RX, 2), new Bc6hModeDescriptor(Bc6hEField.RX, 3), new Bc6hModeDescriptor(Bc6hEField.RW, 10),
+                new Bc6hModeDescriptor(Bc6hEField.GZ, 4), new Bc6hModeDescriptor(Bc6hEField.GY, 0), new Bc6hModeDescriptor(Bc6hEField.GY, 1), new Bc6hModeDescriptor(Bc6hEField.GY, 2), new Bc6hModeDescriptor(Bc6hEField.GY, 3), new Bc6hModeDescriptor(Bc6hEField.GX, 0), new Bc6hModeDescriptor(Bc6hEField.GX, 1), new Bc6hModeDescriptor(Bc6hEField.GX, 2), new Bc6hModeDescriptor(Bc6hEField.GX, 3), new Bc6hModeDescriptor(Bc6hEField.GX, 4),
+                new Bc6hModeDescriptor(Bc6hEField.GW, 10), new Bc6hModeDescriptor(Bc6hEField.GZ, 0), new Bc6hModeDescriptor(Bc6hEField.GZ, 1), new Bc6hModeDescriptor(Bc6hEField.GZ, 2), new Bc6hModeDescriptor(Bc6hEField.GZ, 3), new Bc6hModeDescriptor(Bc6hEField.BX, 0), new Bc6hModeDescriptor(Bc6hEField.BX, 1), new Bc6hModeDescriptor(Bc6hEField.BX, 2), new Bc6hModeDescriptor(Bc6hEField.BX, 3), new Bc6hModeDescriptor(Bc6hEField.BW, 10),
+                new Bc6hModeDescriptor(Bc6hEField.BZ, 1), new Bc6hModeDescriptor(Bc6hEField.BY, 0), new Bc6hModeDescriptor(Bc6hEField.BY, 1), new Bc6hModeDescriptor(Bc6hEField.BY, 2), new Bc6hModeDescriptor(Bc6hEField.BY, 3), new Bc6hModeDescriptor(Bc6hEField.RY, 0), new Bc6hModeDescriptor(Bc6hEField.RY, 1), new Bc6hModeDescriptor(Bc6hEField.RY, 2), new Bc6hModeDescriptor(Bc6hEField.RY, 3), new Bc6hModeDescriptor(Bc6hEField.BZ, 0),
+                new Bc6hModeDescriptor(Bc6hEField.BZ, 2), new Bc6hModeDescriptor(Bc6hEField.RZ, 0), new Bc6hModeDescriptor(Bc6hEField.RZ, 1), new Bc6hModeDescriptor(Bc6hEField.RZ, 2), new Bc6hModeDescriptor(Bc6hEField.RZ, 3), new Bc6hModeDescriptor(Bc6hEField.GY, 4), new Bc6hModeDescriptor(Bc6hEField.BZ, 3), new Bc6hModeDescriptor(Bc6hEField.D, 0), new Bc6hModeDescriptor(Bc6hEField.D, 1), new Bc6hModeDescriptor(Bc6hEField.D, 2),
+                new Bc6hModeDescriptor(Bc6hEField.D, 3), new Bc6hModeDescriptor(Bc6hEField.D, 4)
             },
 
-            new ModeDescriptor[82]
+            new Bc6hModeDescriptor[82]
             {
                 // Mode 5 (0x0a) - 11 4 4 5
-                new ModeDescriptor(EField.M, 0), new ModeDescriptor(EField.M, 1), new ModeDescriptor(EField.M, 2), new ModeDescriptor(EField.M, 3), new ModeDescriptor(EField.M, 4), new ModeDescriptor(EField.RW, 0), new ModeDescriptor(EField.RW, 1), new ModeDescriptor(EField.RW, 2), new ModeDescriptor(EField.RW, 3), new ModeDescriptor(EField.RW, 4),
-                new ModeDescriptor(EField.RW, 5), new ModeDescriptor(EField.RW, 6), new ModeDescriptor(EField.RW, 7), new ModeDescriptor(EField.RW, 8), new ModeDescriptor(EField.RW, 9), new ModeDescriptor(EField.GW, 0), new ModeDescriptor(EField.GW, 1), new ModeDescriptor(EField.GW, 2), new ModeDescriptor(EField.GW, 3), new ModeDescriptor(EField.GW, 4),
-                new ModeDescriptor(EField.GW, 5), new ModeDescriptor(EField.GW, 6), new ModeDescriptor(EField.GW, 7), new ModeDescriptor(EField.GW, 8), new ModeDescriptor(EField.GW, 9), new ModeDescriptor(EField.BW, 0), new ModeDescriptor(EField.BW, 1), new ModeDescriptor(EField.BW, 2), new ModeDescriptor(EField.BW, 3), new ModeDescriptor(EField.BW, 4),
-                new ModeDescriptor(EField.BW, 5), new ModeDescriptor(EField.BW, 6), new ModeDescriptor(EField.BW, 7), new ModeDescriptor(EField.BW, 8), new ModeDescriptor(EField.BW, 9), new ModeDescriptor(EField.RX, 0), new ModeDescriptor(EField.RX, 1), new ModeDescriptor(EField.RX, 2), new ModeDescriptor(EField.RX, 3), new ModeDescriptor(EField.RW, 10),
-                new ModeDescriptor(EField.BY, 4), new ModeDescriptor(EField.GY, 0), new ModeDescriptor(EField.GY, 1), new ModeDescriptor(EField.GY, 2), new ModeDescriptor(EField.GY, 3), new ModeDescriptor(EField.GX, 0), new ModeDescriptor(EField.GX, 1), new ModeDescriptor(EField.GX, 2), new ModeDescriptor(EField.GX, 3), new ModeDescriptor(EField.GW, 10),
-                new ModeDescriptor(EField.BZ, 0), new ModeDescriptor(EField.GZ, 0), new ModeDescriptor(EField.GZ, 1), new ModeDescriptor(EField.GZ, 2), new ModeDescriptor(EField.GZ, 3), new ModeDescriptor(EField.BX, 0), new ModeDescriptor(EField.BX, 1), new ModeDescriptor(EField.BX, 2), new ModeDescriptor(EField.BX, 3), new ModeDescriptor(EField.BX, 4),
-                new ModeDescriptor(EField.BW, 10), new ModeDescriptor(EField.BY, 0), new ModeDescriptor(EField.BY, 1), new ModeDescriptor(EField.BY, 2), new ModeDescriptor(EField.BY, 3), new ModeDescriptor(EField.RY, 0), new ModeDescriptor(EField.RY, 1), new ModeDescriptor(EField.RY, 2), new ModeDescriptor(EField.RY, 3), new ModeDescriptor(EField.BZ, 1),
-                new ModeDescriptor(EField.BZ, 2), new ModeDescriptor(EField.RZ, 0), new ModeDescriptor(EField.RZ, 1), new ModeDescriptor(EField.RZ, 2), new ModeDescriptor(EField.RZ, 3), new ModeDescriptor(EField.BZ, 4), new ModeDescriptor(EField.BZ, 3), new ModeDescriptor(EField.D, 0), new ModeDescriptor(EField.D, 1), new ModeDescriptor(EField.D, 2),
-                new ModeDescriptor(EField.D, 3), new ModeDescriptor(EField.D, 4)
+                new Bc6hModeDescriptor(Bc6hEField.M, 0), new Bc6hModeDescriptor(Bc6hEField.M, 1), new Bc6hModeDescriptor(Bc6hEField.M, 2), new Bc6hModeDescriptor(Bc6hEField.M, 3), new Bc6hModeDescriptor(Bc6hEField.M, 4), new Bc6hModeDescriptor(Bc6hEField.RW, 0), new Bc6hModeDescriptor(Bc6hEField.RW, 1), new Bc6hModeDescriptor(Bc6hEField.RW, 2), new Bc6hModeDescriptor(Bc6hEField.RW, 3), new Bc6hModeDescriptor(Bc6hEField.RW, 4),
+                new Bc6hModeDescriptor(Bc6hEField.RW, 5), new Bc6hModeDescriptor(Bc6hEField.RW, 6), new Bc6hModeDescriptor(Bc6hEField.RW, 7), new Bc6hModeDescriptor(Bc6hEField.RW, 8), new Bc6hModeDescriptor(Bc6hEField.RW, 9), new Bc6hModeDescriptor(Bc6hEField.GW, 0), new Bc6hModeDescriptor(Bc6hEField.GW, 1), new Bc6hModeDescriptor(Bc6hEField.GW, 2), new Bc6hModeDescriptor(Bc6hEField.GW, 3), new Bc6hModeDescriptor(Bc6hEField.GW, 4),
+                new Bc6hModeDescriptor(Bc6hEField.GW, 5), new Bc6hModeDescriptor(Bc6hEField.GW, 6), new Bc6hModeDescriptor(Bc6hEField.GW, 7), new Bc6hModeDescriptor(Bc6hEField.GW, 8), new Bc6hModeDescriptor(Bc6hEField.GW, 9), new Bc6hModeDescriptor(Bc6hEField.BW, 0), new Bc6hModeDescriptor(Bc6hEField.BW, 1), new Bc6hModeDescriptor(Bc6hEField.BW, 2), new Bc6hModeDescriptor(Bc6hEField.BW, 3), new Bc6hModeDescriptor(Bc6hEField.BW, 4),
+                new Bc6hModeDescriptor(Bc6hEField.BW, 5), new Bc6hModeDescriptor(Bc6hEField.BW, 6), new Bc6hModeDescriptor(Bc6hEField.BW, 7), new Bc6hModeDescriptor(Bc6hEField.BW, 8), new Bc6hModeDescriptor(Bc6hEField.BW, 9), new Bc6hModeDescriptor(Bc6hEField.RX, 0), new Bc6hModeDescriptor(Bc6hEField.RX, 1), new Bc6hModeDescriptor(Bc6hEField.RX, 2), new Bc6hModeDescriptor(Bc6hEField.RX, 3), new Bc6hModeDescriptor(Bc6hEField.RW, 10),
+                new Bc6hModeDescriptor(Bc6hEField.BY, 4), new Bc6hModeDescriptor(Bc6hEField.GY, 0), new Bc6hModeDescriptor(Bc6hEField.GY, 1), new Bc6hModeDescriptor(Bc6hEField.GY, 2), new Bc6hModeDescriptor(Bc6hEField.GY, 3), new Bc6hModeDescriptor(Bc6hEField.GX, 0), new Bc6hModeDescriptor(Bc6hEField.GX, 1), new Bc6hModeDescriptor(Bc6hEField.GX, 2), new Bc6hModeDescriptor(Bc6hEField.GX, 3), new Bc6hModeDescriptor(Bc6hEField.GW, 10),
+                new Bc6hModeDescriptor(Bc6hEField.BZ, 0), new Bc6hModeDescriptor(Bc6hEField.GZ, 0), new Bc6hModeDescriptor(Bc6hEField.GZ, 1), new Bc6hModeDescriptor(Bc6hEField.GZ, 2), new Bc6hModeDescriptor(Bc6hEField.GZ, 3), new Bc6hModeDescriptor(Bc6hEField.BX, 0), new Bc6hModeDescriptor(Bc6hEField.BX, 1), new Bc6hModeDescriptor(Bc6hEField.BX, 2), new Bc6hModeDescriptor(Bc6hEField.BX, 3), new Bc6hModeDescriptor(Bc6hEField.BX, 4),
+                new Bc6hModeDescriptor(Bc6hEField.BW, 10), new Bc6hModeDescriptor(Bc6hEField.BY, 0), new Bc6hModeDescriptor(Bc6hEField.BY, 1), new Bc6hModeDescriptor(Bc6hEField.BY, 2), new Bc6hModeDescriptor(Bc6hEField.BY, 3), new Bc6hModeDescriptor(Bc6hEField.RY, 0), new Bc6hModeDescriptor(Bc6hEField.RY, 1), new Bc6hModeDescriptor(Bc6hEField.RY, 2), new Bc6hModeDescriptor(Bc6hEField.RY, 3), new Bc6hModeDescriptor(Bc6hEField.BZ, 1),
+                new Bc6hModeDescriptor(Bc6hEField.BZ, 2), new Bc6hModeDescriptor(Bc6hEField.RZ, 0), new Bc6hModeDescriptor(Bc6hEField.RZ, 1), new Bc6hModeDescriptor(Bc6hEField.RZ, 2), new Bc6hModeDescriptor(Bc6hEField.RZ, 3), new Bc6hModeDescriptor(Bc6hEField.BZ, 4), new Bc6hModeDescriptor(Bc6hEField.BZ, 3), new Bc6hModeDescriptor(Bc6hEField.D, 0), new Bc6hModeDescriptor(Bc6hEField.D, 1), new Bc6hModeDescriptor(Bc6hEField.D, 2),
+                new Bc6hModeDescriptor(Bc6hEField.D, 3), new Bc6hModeDescriptor(Bc6hEField.D, 4)
             },
 
-            new ModeDescriptor[82]
+            new Bc6hModeDescriptor[82]
             {
                 // Mode 6 (0x0e) - 9 5 5 5
-                new ModeDescriptor(EField.M, 0), new ModeDescriptor(EField.M, 1), new ModeDescriptor(EField.M, 2), new ModeDescriptor(EField.M, 3), new ModeDescriptor(EField.M, 4), new ModeDescriptor(EField.RW, 0), new ModeDescriptor(EField.RW, 1), new ModeDescriptor(EField.RW, 2), new ModeDescriptor(EField.RW, 3), new ModeDescriptor(EField.RW, 4),
-                new ModeDescriptor(EField.RW, 5), new ModeDescriptor(EField.RW, 6), new ModeDescriptor(EField.RW, 7), new ModeDescriptor(EField.RW, 8), new ModeDescriptor(EField.BY, 4), new ModeDescriptor(EField.GW, 0), new ModeDescriptor(EField.GW, 1), new ModeDescriptor(EField.GW, 2), new ModeDescriptor(EField.GW, 3), new ModeDescriptor(EField.GW, 4),
-                new ModeDescriptor(EField.GW, 5), new ModeDescriptor(EField.GW, 6), new ModeDescriptor(EField.GW, 7), new ModeDescriptor(EField.GW, 8), new ModeDescriptor(EField.GY, 4), new ModeDescriptor(EField.BW, 0), new ModeDescriptor(EField.BW, 1), new ModeDescriptor(EField.BW, 2), new ModeDescriptor(EField.BW, 3), new ModeDescriptor(EField.BW, 4),
-                new ModeDescriptor(EField.BW, 5), new ModeDescriptor(EField.BW, 6), new ModeDescriptor(EField.BW, 7), new ModeDescriptor(EField.BW, 8), new ModeDescriptor(EField.BZ, 4), new ModeDescriptor(EField.RX, 0), new ModeDescriptor(EField.RX, 1), new ModeDescriptor(EField.RX, 2), new ModeDescriptor(EField.RX, 3), new ModeDescriptor(EField.RX, 4),
-                new ModeDescriptor(EField.GZ, 4), new ModeDescriptor(EField.GY, 0), new ModeDescriptor(EField.GY, 1), new ModeDescriptor(EField.GY, 2), new ModeDescriptor(EField.GY, 3), new ModeDescriptor(EField.GX, 0), new ModeDescriptor(EField.GX, 1), new ModeDescriptor(EField.GX, 2), new ModeDescriptor(EField.GX, 3), new ModeDescriptor(EField.GX, 4),
-                new ModeDescriptor(EField.BZ, 0), new ModeDescriptor(EField.GZ, 0), new ModeDescriptor(EField.GZ, 1), new ModeDescriptor(EField.GZ, 2), new ModeDescriptor(EField.GZ, 3), new ModeDescriptor(EField.BX, 0), new ModeDescriptor(EField.BX, 1), new ModeDescriptor(EField.BX, 2), new ModeDescriptor(EField.BX, 3), new ModeDescriptor(EField.BX, 4),
-                new ModeDescriptor(EField.BZ, 1), new ModeDescriptor(EField.BY, 0), new ModeDescriptor(EField.BY, 1), new ModeDescriptor(EField.BY, 2), new ModeDescriptor(EField.BY, 3), new ModeDescriptor(EField.RY, 0), new ModeDescriptor(EField.RY, 1), new ModeDescriptor(EField.RY, 2), new ModeDescriptor(EField.RY, 3), new ModeDescriptor(EField.RY, 4),
-                new ModeDescriptor(EField.BZ, 2), new ModeDescriptor(EField.RZ, 0), new ModeDescriptor(EField.RZ, 1), new ModeDescriptor(EField.RZ, 2), new ModeDescriptor(EField.RZ, 3), new ModeDescriptor(EField.RZ, 4), new ModeDescriptor(EField.BZ, 3), new ModeDescriptor(EField.D, 0), new ModeDescriptor(EField.D, 1), new ModeDescriptor(EField.D, 2),
-                new ModeDescriptor(EField.D, 3), new ModeDescriptor(EField.D, 4)
+                new Bc6hModeDescriptor(Bc6hEField.M, 0), new Bc6hModeDescriptor(Bc6hEField.M, 1), new Bc6hModeDescriptor(Bc6hEField.M, 2), new Bc6hModeDescriptor(Bc6hEField.M, 3), new Bc6hModeDescriptor(Bc6hEField.M, 4), new Bc6hModeDescriptor(Bc6hEField.RW, 0), new Bc6hModeDescriptor(Bc6hEField.RW, 1), new Bc6hModeDescriptor(Bc6hEField.RW, 2), new Bc6hModeDescriptor(Bc6hEField.RW, 3), new Bc6hModeDescriptor(Bc6hEField.RW, 4),
+                new Bc6hModeDescriptor(Bc6hEField.RW, 5), new Bc6hModeDescriptor(Bc6hEField.RW, 6), new Bc6hModeDescriptor(Bc6hEField.RW, 7), new Bc6hModeDescriptor(Bc6hEField.RW, 8), new Bc6hModeDescriptor(Bc6hEField.BY, 4), new Bc6hModeDescriptor(Bc6hEField.GW, 0), new Bc6hModeDescriptor(Bc6hEField.GW, 1), new Bc6hModeDescriptor(Bc6hEField.GW, 2), new Bc6hModeDescriptor(Bc6hEField.GW, 3), new Bc6hModeDescriptor(Bc6hEField.GW, 4),
+                new Bc6hModeDescriptor(Bc6hEField.GW, 5), new Bc6hModeDescriptor(Bc6hEField.GW, 6), new Bc6hModeDescriptor(Bc6hEField.GW, 7), new Bc6hModeDescriptor(Bc6hEField.GW, 8), new Bc6hModeDescriptor(Bc6hEField.GY, 4), new Bc6hModeDescriptor(Bc6hEField.BW, 0), new Bc6hModeDescriptor(Bc6hEField.BW, 1), new Bc6hModeDescriptor(Bc6hEField.BW, 2), new Bc6hModeDescriptor(Bc6hEField.BW, 3), new Bc6hModeDescriptor(Bc6hEField.BW, 4),
+                new Bc6hModeDescriptor(Bc6hEField.BW, 5), new Bc6hModeDescriptor(Bc6hEField.BW, 6), new Bc6hModeDescriptor(Bc6hEField.BW, 7), new Bc6hModeDescriptor(Bc6hEField.BW, 8), new Bc6hModeDescriptor(Bc6hEField.BZ, 4), new Bc6hModeDescriptor(Bc6hEField.RX, 0), new Bc6hModeDescriptor(Bc6hEField.RX, 1), new Bc6hModeDescriptor(Bc6hEField.RX, 2), new Bc6hModeDescriptor(Bc6hEField.RX, 3), new Bc6hModeDescriptor(Bc6hEField.RX, 4),
+                new Bc6hModeDescriptor(Bc6hEField.GZ, 4), new Bc6hModeDescriptor(Bc6hEField.GY, 0), new Bc6hModeDescriptor(Bc6hEField.GY, 1), new Bc6hModeDescriptor(Bc6hEField.GY, 2), new Bc6hModeDescriptor(Bc6hEField.GY, 3), new Bc6hModeDescriptor(Bc6hEField.GX, 0), new Bc6hModeDescriptor(Bc6hEField.GX, 1), new Bc6hModeDescriptor(Bc6hEField.GX, 2), new Bc6hModeDescriptor(Bc6hEField.GX, 3), new Bc6hModeDescriptor(Bc6hEField.GX, 4),
+                new Bc6hModeDescriptor(Bc6hEField.BZ, 0), new Bc6hModeDescriptor(Bc6hEField.GZ, 0), new Bc6hModeDescriptor(Bc6hEField.GZ, 1), new Bc6hModeDescriptor(Bc6hEField.GZ, 2), new Bc6hModeDescriptor(Bc6hEField.GZ, 3), new Bc6hModeDescriptor(Bc6hEField.BX, 0), new Bc6hModeDescriptor(Bc6hEField.BX, 1), new Bc6hModeDescriptor(Bc6hEField.BX, 2), new Bc6hModeDescriptor(Bc6hEField.BX, 3), new Bc6hModeDescriptor(Bc6hEField.BX, 4),
+                new Bc6hModeDescriptor(Bc6hEField.BZ, 1), new Bc6hModeDescriptor(Bc6hEField.BY, 0), new Bc6hModeDescriptor(Bc6hEField.BY, 1), new Bc6hModeDescriptor(Bc6hEField.BY, 2), new Bc6hModeDescriptor(Bc6hEField.BY, 3), new Bc6hModeDescriptor(Bc6hEField.RY, 0), new Bc6hModeDescriptor(Bc6hEField.RY, 1), new Bc6hModeDescriptor(Bc6hEField.RY, 2), new Bc6hModeDescriptor(Bc6hEField.RY, 3), new Bc6hModeDescriptor(Bc6hEField.RY, 4),
+                new Bc6hModeDescriptor(Bc6hEField.BZ, 2), new Bc6hModeDescriptor(Bc6hEField.RZ, 0), new Bc6hModeDescriptor(Bc6hEField.RZ, 1), new Bc6hModeDescriptor(Bc6hEField.RZ, 2), new Bc6hModeDescriptor(Bc6hEField.RZ, 3), new Bc6hModeDescriptor(Bc6hEField.RZ, 4), new Bc6hModeDescriptor(Bc6hEField.BZ, 3), new Bc6hModeDescriptor(Bc6hEField.D, 0), new Bc6hModeDescriptor(Bc6hEField.D, 1), new Bc6hModeDescriptor(Bc6hEField.D, 2),
+                new Bc6hModeDescriptor(Bc6hEField.D, 3), new Bc6hModeDescriptor(Bc6hEField.D, 4)
             },
 
-            new ModeDescriptor[82]
+            new Bc6hModeDescriptor[82]
             {
                 // Mode 7 (0x12) - 8 6 5 5
-                new ModeDescriptor(EField.M, 0), new ModeDescriptor(EField.M, 1), new ModeDescriptor(EField.M, 2), new ModeDescriptor(EField.M, 3), new ModeDescriptor(EField.M, 4), new ModeDescriptor(EField.RW, 0), new ModeDescriptor(EField.RW, 1), new ModeDescriptor(EField.RW, 2), new ModeDescriptor(EField.RW, 3), new ModeDescriptor(EField.RW, 4),
-                new ModeDescriptor(EField.RW, 5), new ModeDescriptor(EField.RW, 6), new ModeDescriptor(EField.RW, 7), new ModeDescriptor(EField.GZ, 4), new ModeDescriptor(EField.BY, 4), new ModeDescriptor(EField.GW, 0), new ModeDescriptor(EField.GW, 1), new ModeDescriptor(EField.GW, 2), new ModeDescriptor(EField.GW, 3), new ModeDescriptor(EField.GW, 4),
-                new ModeDescriptor(EField.GW, 5), new ModeDescriptor(EField.GW, 6), new ModeDescriptor(EField.GW, 7), new ModeDescriptor(EField.BZ, 2), new ModeDescriptor(EField.GY, 4), new ModeDescriptor(EField.BW, 0), new ModeDescriptor(EField.BW, 1), new ModeDescriptor(EField.BW, 2), new ModeDescriptor(EField.BW, 3), new ModeDescriptor(EField.BW, 4),
-                new ModeDescriptor(EField.BW, 5), new ModeDescriptor(EField.BW, 6), new ModeDescriptor(EField.BW, 7), new ModeDescriptor(EField.BZ, 3), new ModeDescriptor(EField.BZ, 4), new ModeDescriptor(EField.RX, 0), new ModeDescriptor(EField.RX, 1), new ModeDescriptor(EField.RX, 2), new ModeDescriptor(EField.RX, 3), new ModeDescriptor(EField.RX, 4),
-                new ModeDescriptor(EField.RX, 5), new ModeDescriptor(EField.GY, 0), new ModeDescriptor(EField.GY, 1), new ModeDescriptor(EField.GY, 2), new ModeDescriptor(EField.GY, 3), new ModeDescriptor(EField.GX, 0), new ModeDescriptor(EField.GX, 1), new ModeDescriptor(EField.GX, 2), new ModeDescriptor(EField.GX, 3), new ModeDescriptor(EField.GX, 4),
-                new ModeDescriptor(EField.BZ, 0), new ModeDescriptor(EField.GZ, 0), new ModeDescriptor(EField.GZ, 1), new ModeDescriptor(EField.GZ, 2), new ModeDescriptor(EField.GZ, 3), new ModeDescriptor(EField.BX, 0), new ModeDescriptor(EField.BX, 1), new ModeDescriptor(EField.BX, 2), new ModeDescriptor(EField.BX, 3), new ModeDescriptor(EField.BX, 4),
-                new ModeDescriptor(EField.BZ, 1), new ModeDescriptor(EField.BY, 0), new ModeDescriptor(EField.BY, 1), new ModeDescriptor(EField.BY, 2), new ModeDescriptor(EField.BY, 3), new ModeDescriptor(EField.RY, 0), new ModeDescriptor(EField.RY, 1), new ModeDescriptor(EField.RY, 2), new ModeDescriptor(EField.RY, 3), new ModeDescriptor(EField.RY, 4),
-                new ModeDescriptor(EField.RY, 5), new ModeDescriptor(EField.RZ, 0), new ModeDescriptor(EField.RZ, 1), new ModeDescriptor(EField.RZ, 2), new ModeDescriptor(EField.RZ, 3), new ModeDescriptor(EField.RZ, 4), new ModeDescriptor(EField.RZ, 5), new ModeDescriptor(EField.D, 0), new ModeDescriptor(EField.D, 1), new ModeDescriptor(EField.D, 2),
-                new ModeDescriptor(EField.D, 3), new ModeDescriptor(EField.D, 4)
+                new Bc6hModeDescriptor(Bc6hEField.M, 0), new Bc6hModeDescriptor(Bc6hEField.M, 1), new Bc6hModeDescriptor(Bc6hEField.M, 2), new Bc6hModeDescriptor(Bc6hEField.M, 3), new Bc6hModeDescriptor(Bc6hEField.M, 4), new Bc6hModeDescriptor(Bc6hEField.RW, 0), new Bc6hModeDescriptor(Bc6hEField.RW, 1), new Bc6hModeDescriptor(Bc6hEField.RW, 2), new Bc6hModeDescriptor(Bc6hEField.RW, 3), new Bc6hModeDescriptor(Bc6hEField.RW, 4),
+                new Bc6hModeDescriptor(Bc6hEField.RW, 5), new Bc6hModeDescriptor(Bc6hEField.RW, 6), new Bc6hModeDescriptor(Bc6hEField.RW, 7), new Bc6hModeDescriptor(Bc6hEField.GZ, 4), new Bc6hModeDescriptor(Bc6hEField.BY, 4), new Bc6hModeDescriptor(Bc6hEField.GW, 0), new Bc6hModeDescriptor(Bc6hEField.GW, 1), new Bc6hModeDescriptor(Bc6hEField.GW, 2), new Bc6hModeDescriptor(Bc6hEField.GW, 3), new Bc6hModeDescriptor(Bc6hEField.GW, 4),
+                new Bc6hModeDescriptor(Bc6hEField.GW, 5), new Bc6hModeDescriptor(Bc6hEField.GW, 6), new Bc6hModeDescriptor(Bc6hEField.GW, 7), new Bc6hModeDescriptor(Bc6hEField.BZ, 2), new Bc6hModeDescriptor(Bc6hEField.GY, 4), new Bc6hModeDescriptor(Bc6hEField.BW, 0), new Bc6hModeDescriptor(Bc6hEField.BW, 1), new Bc6hModeDescriptor(Bc6hEField.BW, 2), new Bc6hModeDescriptor(Bc6hEField.BW, 3), new Bc6hModeDescriptor(Bc6hEField.BW, 4),
+                new Bc6hModeDescriptor(Bc6hEField.BW, 5), new Bc6hModeDescriptor(Bc6hEField.BW, 6), new Bc6hModeDescriptor(Bc6hEField.BW, 7), new Bc6hModeDescriptor(Bc6hEField.BZ, 3), new Bc6hModeDescriptor(Bc6hEField.BZ, 4), new Bc6hModeDescriptor(Bc6hEField.RX, 0), new Bc6hModeDescriptor(Bc6hEField.RX, 1), new Bc6hModeDescriptor(Bc6hEField.RX, 2), new Bc6hModeDescriptor(Bc6hEField.RX, 3), new Bc6hModeDescriptor(Bc6hEField.RX, 4),
+                new Bc6hModeDescriptor(Bc6hEField.RX, 5), new Bc6hModeDescriptor(Bc6hEField.GY, 0), new Bc6hModeDescriptor(Bc6hEField.GY, 1), new Bc6hModeDescriptor(Bc6hEField.GY, 2), new Bc6hModeDescriptor(Bc6hEField.GY, 3), new Bc6hModeDescriptor(Bc6hEField.GX, 0), new Bc6hModeDescriptor(Bc6hEField.GX, 1), new Bc6hModeDescriptor(Bc6hEField.GX, 2), new Bc6hModeDescriptor(Bc6hEField.GX, 3), new Bc6hModeDescriptor(Bc6hEField.GX, 4),
+                new Bc6hModeDescriptor(Bc6hEField.BZ, 0), new Bc6hModeDescriptor(Bc6hEField.GZ, 0), new Bc6hModeDescriptor(Bc6hEField.GZ, 1), new Bc6hModeDescriptor(Bc6hEField.GZ, 2), new Bc6hModeDescriptor(Bc6hEField.GZ, 3), new Bc6hModeDescriptor(Bc6hEField.BX, 0), new Bc6hModeDescriptor(Bc6hEField.BX, 1), new Bc6hModeDescriptor(Bc6hEField.BX, 2), new Bc6hModeDescriptor(Bc6hEField.BX, 3), new Bc6hModeDescriptor(Bc6hEField.BX, 4),
+                new Bc6hModeDescriptor(Bc6hEField.BZ, 1), new Bc6hModeDescriptor(Bc6hEField.BY, 0), new Bc6hModeDescriptor(Bc6hEField.BY, 1), new Bc6hModeDescriptor(Bc6hEField.BY, 2), new Bc6hModeDescriptor(Bc6hEField.BY, 3), new Bc6hModeDescriptor(Bc6hEField.RY, 0), new Bc6hModeDescriptor(Bc6hEField.RY, 1), new Bc6hModeDescriptor(Bc6hEField.RY, 2), new Bc6hModeDescriptor(Bc6hEField.RY, 3), new Bc6hModeDescriptor(Bc6hEField.RY, 4),
+                new Bc6hModeDescriptor(Bc6hEField.RY, 5), new Bc6hModeDescriptor(Bc6hEField.RZ, 0), new Bc6hModeDescriptor(Bc6hEField.RZ, 1), new Bc6hModeDescriptor(Bc6hEField.RZ, 2), new Bc6hModeDescriptor(Bc6hEField.RZ, 3), new Bc6hModeDescriptor(Bc6hEField.RZ, 4), new Bc6hModeDescriptor(Bc6hEField.RZ, 5), new Bc6hModeDescriptor(Bc6hEField.D, 0), new Bc6hModeDescriptor(Bc6hEField.D, 1), new Bc6hModeDescriptor(Bc6hEField.D, 2),
+                new Bc6hModeDescriptor(Bc6hEField.D, 3), new Bc6hModeDescriptor(Bc6hEField.D, 4)
             },
 
-            new ModeDescriptor[82]
+            new Bc6hModeDescriptor[82]
             {
                 // Mode 8 (0x16) - 8 5 6 5
-                new ModeDescriptor(EField.M, 0), new ModeDescriptor(EField.M, 1), new ModeDescriptor(EField.M, 2), new ModeDescriptor(EField.M, 3), new ModeDescriptor(EField.M, 4), new ModeDescriptor(EField.RW, 0), new ModeDescriptor(EField.RW, 1), new ModeDescriptor(EField.RW, 2), new ModeDescriptor(EField.RW, 3), new ModeDescriptor(EField.RW, 4),
-                new ModeDescriptor(EField.RW, 5), new ModeDescriptor(EField.RW, 6), new ModeDescriptor(EField.RW, 7), new ModeDescriptor(EField.BZ, 0), new ModeDescriptor(EField.BY, 4), new ModeDescriptor(EField.GW, 0), new ModeDescriptor(EField.GW, 1), new ModeDescriptor(EField.GW, 2), new ModeDescriptor(EField.GW, 3), new ModeDescriptor(EField.GW, 4),
-                new ModeDescriptor(EField.GW, 5), new ModeDescriptor(EField.GW, 6), new ModeDescriptor(EField.GW, 7), new ModeDescriptor(EField.GY, 5), new ModeDescriptor(EField.GY, 4), new ModeDescriptor(EField.BW, 0), new ModeDescriptor(EField.BW, 1), new ModeDescriptor(EField.BW, 2), new ModeDescriptor(EField.BW, 3), new ModeDescriptor(EField.BW, 4),
-                new ModeDescriptor(EField.BW, 5), new ModeDescriptor(EField.BW, 6), new ModeDescriptor(EField.BW, 7), new ModeDescriptor(EField.GZ, 5), new ModeDescriptor(EField.BZ, 4), new ModeDescriptor(EField.RX, 0), new ModeDescriptor(EField.RX, 1), new ModeDescriptor(EField.RX, 2), new ModeDescriptor(EField.RX, 3), new ModeDescriptor(EField.RX, 4),
-                new ModeDescriptor(EField.GZ, 4), new ModeDescriptor(EField.GY, 0), new ModeDescriptor(EField.GY, 1), new ModeDescriptor(EField.GY, 2), new ModeDescriptor(EField.GY, 3), new ModeDescriptor(EField.GX, 0), new ModeDescriptor(EField.GX, 1), new ModeDescriptor(EField.GX, 2), new ModeDescriptor(EField.GX, 3), new ModeDescriptor(EField.GX, 4),
-                new ModeDescriptor(EField.GX, 5), new ModeDescriptor(EField.GZ, 0), new ModeDescriptor(EField.GZ, 1), new ModeDescriptor(EField.GZ, 2), new ModeDescriptor(EField.GZ, 3), new ModeDescriptor(EField.BX, 0), new ModeDescriptor(EField.BX, 1), new ModeDescriptor(EField.BX, 2), new ModeDescriptor(EField.BX, 3), new ModeDescriptor(EField.BX, 4),
-                new ModeDescriptor(EField.BZ, 1), new ModeDescriptor(EField.BY, 0), new ModeDescriptor(EField.BY, 1), new ModeDescriptor(EField.BY, 2), new ModeDescriptor(EField.BY, 3), new ModeDescriptor(EField.RY, 0), new ModeDescriptor(EField.RY, 1), new ModeDescriptor(EField.RY, 2), new ModeDescriptor(EField.RY, 3), new ModeDescriptor(EField.RY, 4),
-                new ModeDescriptor(EField.BZ, 2), new ModeDescriptor(EField.RZ, 0), new ModeDescriptor(EField.RZ, 1), new ModeDescriptor(EField.RZ, 2), new ModeDescriptor(EField.RZ, 3), new ModeDescriptor(EField.RZ, 4), new ModeDescriptor(EField.BZ, 3), new ModeDescriptor(EField.D, 0), new ModeDescriptor(EField.D, 1), new ModeDescriptor(EField.D, 2),
-                new ModeDescriptor(EField.D, 3), new ModeDescriptor(EField.D, 4)
+                new Bc6hModeDescriptor(Bc6hEField.M, 0), new Bc6hModeDescriptor(Bc6hEField.M, 1), new Bc6hModeDescriptor(Bc6hEField.M, 2), new Bc6hModeDescriptor(Bc6hEField.M, 3), new Bc6hModeDescriptor(Bc6hEField.M, 4), new Bc6hModeDescriptor(Bc6hEField.RW, 0), new Bc6hModeDescriptor(Bc6hEField.RW, 1), new Bc6hModeDescriptor(Bc6hEField.RW, 2), new Bc6hModeDescriptor(Bc6hEField.RW, 3), new Bc6hModeDescriptor(Bc6hEField.RW, 4),
+                new Bc6hModeDescriptor(Bc6hEField.RW, 5), new Bc6hModeDescriptor(Bc6hEField.RW, 6), new Bc6hModeDescriptor(Bc6hEField.RW, 7), new Bc6hModeDescriptor(Bc6hEField.BZ, 0), new Bc6hModeDescriptor(Bc6hEField.BY, 4), new Bc6hModeDescriptor(Bc6hEField.GW, 0), new Bc6hModeDescriptor(Bc6hEField.GW, 1), new Bc6hModeDescriptor(Bc6hEField.GW, 2), new Bc6hModeDescriptor(Bc6hEField.GW, 3), new Bc6hModeDescriptor(Bc6hEField.GW, 4),
+                new Bc6hModeDescriptor(Bc6hEField.GW, 5), new Bc6hModeDescriptor(Bc6hEField.GW, 6), new Bc6hModeDescriptor(Bc6hEField.GW, 7), new Bc6hModeDescriptor(Bc6hEField.GY, 5), new Bc6hModeDescriptor(Bc6hEField.GY, 4), new Bc6hModeDescriptor(Bc6hEField.BW, 0), new Bc6hModeDescriptor(Bc6hEField.BW, 1), new Bc6hModeDescriptor(Bc6hEField.BW, 2), new Bc6hModeDescriptor(Bc6hEField.BW, 3), new Bc6hModeDescriptor(Bc6hEField.BW, 4),
+                new Bc6hModeDescriptor(Bc6hEField.BW, 5), new Bc6hModeDescriptor(Bc6hEField.BW, 6), new Bc6hModeDescriptor(Bc6hEField.BW, 7), new Bc6hModeDescriptor(Bc6hEField.GZ, 5), new Bc6hModeDescriptor(Bc6hEField.BZ, 4), new Bc6hModeDescriptor(Bc6hEField.RX, 0), new Bc6hModeDescriptor(Bc6hEField.RX, 1), new Bc6hModeDescriptor(Bc6hEField.RX, 2), new Bc6hModeDescriptor(Bc6hEField.RX, 3), new Bc6hModeDescriptor(Bc6hEField.RX, 4),
+                new Bc6hModeDescriptor(Bc6hEField.GZ, 4), new Bc6hModeDescriptor(Bc6hEField.GY, 0), new Bc6hModeDescriptor(Bc6hEField.GY, 1), new Bc6hModeDescriptor(Bc6hEField.GY, 2), new Bc6hModeDescriptor(Bc6hEField.GY, 3), new Bc6hModeDescriptor(Bc6hEField.GX, 0), new Bc6hModeDescriptor(Bc6hEField.GX, 1), new Bc6hModeDescriptor(Bc6hEField.GX, 2), new Bc6hModeDescriptor(Bc6hEField.GX, 3), new Bc6hModeDescriptor(Bc6hEField.GX, 4),
+                new Bc6hModeDescriptor(Bc6hEField.GX, 5), new Bc6hModeDescriptor(Bc6hEField.GZ, 0), new Bc6hModeDescriptor(Bc6hEField.GZ, 1), new Bc6hModeDescriptor(Bc6hEField.GZ, 2), new Bc6hModeDescriptor(Bc6hEField.GZ, 3), new Bc6hModeDescriptor(Bc6hEField.BX, 0), new Bc6hModeDescriptor(Bc6hEField.BX, 1), new Bc6hModeDescriptor(Bc6hEField.BX, 2), new Bc6hModeDescriptor(Bc6hEField.BX, 3), new Bc6hModeDescriptor(Bc6hEField.BX, 4),
+                new Bc6hModeDescriptor(Bc6hEField.BZ, 1), new Bc6hModeDescriptor(Bc6hEField.BY, 0), new Bc6hModeDescriptor(Bc6hEField.BY, 1), new Bc6hModeDescriptor(Bc6hEField.BY, 2), new Bc6hModeDescriptor(Bc6hEField.BY, 3), new Bc6hModeDescriptor(Bc6hEField.RY, 0), new Bc6hModeDescriptor(Bc6hEField.RY, 1), new Bc6hModeDescriptor(Bc6hEField.RY, 2), new Bc6hModeDescriptor(Bc6hEField.RY, 3), new Bc6hModeDescriptor(Bc6hEField.RY, 4),
+                new Bc6hModeDescriptor(Bc6hEField.BZ, 2), new Bc6hModeDescriptor(Bc6hEField.RZ, 0), new Bc6hModeDescriptor(Bc6hEField.RZ, 1), new Bc6hModeDescriptor(Bc6hEField.RZ, 2), new Bc6hModeDescriptor(Bc6hEField.RZ, 3), new Bc6hModeDescriptor(Bc6hEField.RZ, 4), new Bc6hModeDescriptor(Bc6hEField.BZ, 3), new Bc6hModeDescriptor(Bc6hEField.D, 0), new Bc6hModeDescriptor(Bc6hEField.D, 1), new Bc6hModeDescriptor(Bc6hEField.D, 2),
+                new Bc6hModeDescriptor(Bc6hEField.D, 3), new Bc6hModeDescriptor(Bc6hEField.D, 4)
             },
 
-            new ModeDescriptor[82]
+            new Bc6hModeDescriptor[82]
             {
                 // Mode 9 (0x1a) - 8 5 5 6
-                new ModeDescriptor(EField.M, 0), new ModeDescriptor(EField.M, 1), new ModeDescriptor(EField.M, 2), new ModeDescriptor(EField.M, 3), new ModeDescriptor(EField.M, 4), new ModeDescriptor(EField.RW, 0), new ModeDescriptor(EField.RW, 1), new ModeDescriptor(EField.RW, 2), new ModeDescriptor(EField.RW, 3), new ModeDescriptor(EField.RW, 4),
-                new ModeDescriptor(EField.RW, 5), new ModeDescriptor(EField.RW, 6), new ModeDescriptor(EField.RW, 7), new ModeDescriptor(EField.BZ, 1), new ModeDescriptor(EField.BY, 4), new ModeDescriptor(EField.GW, 0), new ModeDescriptor(EField.GW, 1), new ModeDescriptor(EField.GW, 2), new ModeDescriptor(EField.GW, 3), new ModeDescriptor(EField.GW, 4),
-                new ModeDescriptor(EField.GW, 5), new ModeDescriptor(EField.GW, 6), new ModeDescriptor(EField.GW, 7), new ModeDescriptor(EField.BY, 5), new ModeDescriptor(EField.GY, 4), new ModeDescriptor(EField.BW, 0), new ModeDescriptor(EField.BW, 1), new ModeDescriptor(EField.BW, 2), new ModeDescriptor(EField.BW, 3), new ModeDescriptor(EField.BW, 4),
-                new ModeDescriptor(EField.BW, 5), new ModeDescriptor(EField.BW, 6), new ModeDescriptor(EField.BW, 7), new ModeDescriptor(EField.BZ, 5), new ModeDescriptor(EField.BZ, 4), new ModeDescriptor(EField.RX, 0), new ModeDescriptor(EField.RX, 1), new ModeDescriptor(EField.RX, 2), new ModeDescriptor(EField.RX, 3), new ModeDescriptor(EField.RX, 4),
-                new ModeDescriptor(EField.GZ, 4), new ModeDescriptor(EField.GY, 0), new ModeDescriptor(EField.GY, 1), new ModeDescriptor(EField.GY, 2), new ModeDescriptor(EField.GY, 3), new ModeDescriptor(EField.GX, 0), new ModeDescriptor(EField.GX, 1), new ModeDescriptor(EField.GX, 2), new ModeDescriptor(EField.GX, 3), new ModeDescriptor(EField.GX, 4),
-                new ModeDescriptor(EField.BZ, 0), new ModeDescriptor(EField.GZ, 0), new ModeDescriptor(EField.GZ, 1), new ModeDescriptor(EField.GZ, 2), new ModeDescriptor(EField.GZ, 3), new ModeDescriptor(EField.BX, 0), new ModeDescriptor(EField.BX, 1), new ModeDescriptor(EField.BX, 2), new ModeDescriptor(EField.BX, 3), new ModeDescriptor(EField.BX, 4),
-                new ModeDescriptor(EField.BX, 5), new ModeDescriptor(EField.BY, 0), new ModeDescriptor(EField.BY, 1), new ModeDescriptor(EField.BY, 2), new ModeDescriptor(EField.BY, 3), new ModeDescriptor(EField.RY, 0), new ModeDescriptor(EField.RY, 1), new ModeDescriptor(EField.RY, 2), new ModeDescriptor(EField.RY, 3), new ModeDescriptor(EField.RY, 4),
-                new ModeDescriptor(EField.BZ, 2), new ModeDescriptor(EField.RZ, 0), new ModeDescriptor(EField.RZ, 1), new ModeDescriptor(EField.RZ, 2), new ModeDescriptor(EField.RZ, 3), new ModeDescriptor(EField.RZ, 4), new ModeDescriptor(EField.BZ, 3), new ModeDescriptor(EField.D, 0), new ModeDescriptor(EField.D, 1), new ModeDescriptor(EField.D, 2),
-                new ModeDescriptor(EField.D, 3), new ModeDescriptor(EField.D, 4)
+                new Bc6hModeDescriptor(Bc6hEField.M, 0), new Bc6hModeDescriptor(Bc6hEField.M, 1), new Bc6hModeDescriptor(Bc6hEField.M, 2), new Bc6hModeDescriptor(Bc6hEField.M, 3), new Bc6hModeDescriptor(Bc6hEField.M, 4), new Bc6hModeDescriptor(Bc6hEField.RW, 0), new Bc6hModeDescriptor(Bc6hEField.RW, 1), new Bc6hModeDescriptor(Bc6hEField.RW, 2), new Bc6hModeDescriptor(Bc6hEField.RW, 3), new Bc6hModeDescriptor(Bc6hEField.RW, 4),
+                new Bc6hModeDescriptor(Bc6hEField.RW, 5), new Bc6hModeDescriptor(Bc6hEField.RW, 6), new Bc6hModeDescriptor(Bc6hEField.RW, 7), new Bc6hModeDescriptor(Bc6hEField.BZ, 1), new Bc6hModeDescriptor(Bc6hEField.BY, 4), new Bc6hModeDescriptor(Bc6hEField.GW, 0), new Bc6hModeDescriptor(Bc6hEField.GW, 1), new Bc6hModeDescriptor(Bc6hEField.GW, 2), new Bc6hModeDescriptor(Bc6hEField.GW, 3), new Bc6hModeDescriptor(Bc6hEField.GW, 4),
+                new Bc6hModeDescriptor(Bc6hEField.GW, 5), new Bc6hModeDescriptor(Bc6hEField.GW, 6), new Bc6hModeDescriptor(Bc6hEField.GW, 7), new Bc6hModeDescriptor(Bc6hEField.BY, 5), new Bc6hModeDescriptor(Bc6hEField.GY, 4), new Bc6hModeDescriptor(Bc6hEField.BW, 0), new Bc6hModeDescriptor(Bc6hEField.BW, 1), new Bc6hModeDescriptor(Bc6hEField.BW, 2), new Bc6hModeDescriptor(Bc6hEField.BW, 3), new Bc6hModeDescriptor(Bc6hEField.BW, 4),
+                new Bc6hModeDescriptor(Bc6hEField.BW, 5), new Bc6hModeDescriptor(Bc6hEField.BW, 6), new Bc6hModeDescriptor(Bc6hEField.BW, 7), new Bc6hModeDescriptor(Bc6hEField.BZ, 5), new Bc6hModeDescriptor(Bc6hEField.BZ, 4), new Bc6hModeDescriptor(Bc6hEField.RX, 0), new Bc6hModeDescriptor(Bc6hEField.RX, 1), new Bc6hModeDescriptor(Bc6hEField.RX, 2), new Bc6hModeDescriptor(Bc6hEField.RX, 3), new Bc6hModeDescriptor(Bc6hEField.RX, 4),
+                new Bc6hModeDescriptor(Bc6hEField.GZ, 4), new Bc6hModeDescriptor(Bc6hEField.GY, 0), new Bc6hModeDescriptor(Bc6hEField.GY, 1), new Bc6hModeDescriptor(Bc6hEField.GY, 2), new Bc6hModeDescriptor(Bc6hEField.GY, 3), new Bc6hModeDescriptor(Bc6hEField.GX, 0), new Bc6hModeDescriptor(Bc6hEField.GX, 1), new Bc6hModeDescriptor(Bc6hEField.GX, 2), new Bc6hModeDescriptor(Bc6hEField.GX, 3), new Bc6hModeDescriptor(Bc6hEField.GX, 4),
+                new Bc6hModeDescriptor(Bc6hEField.BZ, 0), new Bc6hModeDescriptor(Bc6hEField.GZ, 0), new Bc6hModeDescriptor(Bc6hEField.GZ, 1), new Bc6hModeDescriptor(Bc6hEField.GZ, 2), new Bc6hModeDescriptor(Bc6hEField.GZ, 3), new Bc6hModeDescriptor(Bc6hEField.BX, 0), new Bc6hModeDescriptor(Bc6hEField.BX, 1), new Bc6hModeDescriptor(Bc6hEField.BX, 2), new Bc6hModeDescriptor(Bc6hEField.BX, 3), new Bc6hModeDescriptor(Bc6hEField.BX, 4),
+                new Bc6hModeDescriptor(Bc6hEField.BX, 5), new Bc6hModeDescriptor(Bc6hEField.BY, 0), new Bc6hModeDescriptor(Bc6hEField.BY, 1), new Bc6hModeDescriptor(Bc6hEField.BY, 2), new Bc6hModeDescriptor(Bc6hEField.BY, 3), new Bc6hModeDescriptor(Bc6hEField.RY, 0), new Bc6hModeDescriptor(Bc6hEField.RY, 1), new Bc6hModeDescriptor(Bc6hEField.RY, 2), new Bc6hModeDescriptor(Bc6hEField.RY, 3), new Bc6hModeDescriptor(Bc6hEField.RY, 4),
+                new Bc6hModeDescriptor(Bc6hEField.BZ, 2), new Bc6hModeDescriptor(Bc6hEField.RZ, 0), new Bc6hModeDescriptor(Bc6hEField.RZ, 1), new Bc6hModeDescriptor(Bc6hEField.RZ, 2), new Bc6hModeDescriptor(Bc6hEField.RZ, 3), new Bc6hModeDescriptor(Bc6hEField.RZ, 4), new Bc6hModeDescriptor(Bc6hEField.BZ, 3), new Bc6hModeDescriptor(Bc6hEField.D, 0), new Bc6hModeDescriptor(Bc6hEField.D, 1), new Bc6hModeDescriptor(Bc6hEField.D, 2),
+                new Bc6hModeDescriptor(Bc6hEField.D, 3), new Bc6hModeDescriptor(Bc6hEField.D, 4)
             },
 
-            new ModeDescriptor[82]
+            new Bc6hModeDescriptor[82]
             {
                 // Mode 10 (0x1e) - 6 6 6 6
-                new ModeDescriptor(EField.M, 0), new ModeDescriptor(EField.M, 1), new ModeDescriptor(EField.M, 2), new ModeDescriptor(EField.M, 3), new ModeDescriptor(EField.M, 4), new ModeDescriptor(EField.RW, 0), new ModeDescriptor(EField.RW, 1), new ModeDescriptor(EField.RW, 2), new ModeDescriptor(EField.RW, 3), new ModeDescriptor(EField.RW, 4),
-                new ModeDescriptor(EField.RW, 5), new ModeDescriptor(EField.GZ, 4), new ModeDescriptor(EField.BZ, 0), new ModeDescriptor(EField.BZ, 1), new ModeDescriptor(EField.BY, 4), new ModeDescriptor(EField.GW, 0), new ModeDescriptor(EField.GW, 1), new ModeDescriptor(EField.GW, 2), new ModeDescriptor(EField.GW, 3), new ModeDescriptor(EField.GW, 4),
-                new ModeDescriptor(EField.GW, 5), new ModeDescriptor(EField.GY, 5), new ModeDescriptor(EField.BY, 5), new ModeDescriptor(EField.BZ, 2), new ModeDescriptor(EField.GY, 4), new ModeDescriptor(EField.BW, 0), new ModeDescriptor(EField.BW, 1), new ModeDescriptor(EField.BW, 2), new ModeDescriptor(EField.BW, 3), new ModeDescriptor(EField.BW, 4),
-                new ModeDescriptor(EField.BW, 5), new ModeDescriptor(EField.GZ, 5), new ModeDescriptor(EField.BZ, 3), new ModeDescriptor(EField.BZ, 5), new ModeDescriptor(EField.BZ, 4), new ModeDescriptor(EField.RX, 0), new ModeDescriptor(EField.RX, 1), new ModeDescriptor(EField.RX, 2), new ModeDescriptor(EField.RX, 3), new ModeDescriptor(EField.RX, 4),
-                new ModeDescriptor(EField.RX, 5), new ModeDescriptor(EField.GY, 0), new ModeDescriptor(EField.GY, 1), new ModeDescriptor(EField.GY, 2), new ModeDescriptor(EField.GY, 3), new ModeDescriptor(EField.GX, 0), new ModeDescriptor(EField.GX, 1), new ModeDescriptor(EField.GX, 2), new ModeDescriptor(EField.GX, 3), new ModeDescriptor(EField.GX, 4),
-                new ModeDescriptor(EField.GX, 5), new ModeDescriptor(EField.GZ, 0), new ModeDescriptor(EField.GZ, 1), new ModeDescriptor(EField.GZ, 2), new ModeDescriptor(EField.GZ, 3), new ModeDescriptor(EField.BX, 0), new ModeDescriptor(EField.BX, 1), new ModeDescriptor(EField.BX, 2), new ModeDescriptor(EField.BX, 3), new ModeDescriptor(EField.BX, 4),
-                new ModeDescriptor(EField.BX, 5), new ModeDescriptor(EField.BY, 0), new ModeDescriptor(EField.BY, 1), new ModeDescriptor(EField.BY, 2), new ModeDescriptor(EField.BY, 3), new ModeDescriptor(EField.RY, 0), new ModeDescriptor(EField.RY, 1), new ModeDescriptor(EField.RY, 2), new ModeDescriptor(EField.RY, 3), new ModeDescriptor(EField.RY, 4),
-                new ModeDescriptor(EField.RY, 5), new ModeDescriptor(EField.RZ, 0), new ModeDescriptor(EField.RZ, 1), new ModeDescriptor(EField.RZ, 2), new ModeDescriptor(EField.RZ, 3), new ModeDescriptor(EField.RZ, 4), new ModeDescriptor(EField.RZ, 5), new ModeDescriptor(EField.D, 0), new ModeDescriptor(EField.D, 1), new ModeDescriptor(EField.D, 2),
-                new ModeDescriptor(EField.D, 3), new ModeDescriptor(EField.D, 4)
+                new Bc6hModeDescriptor(Bc6hEField.M, 0), new Bc6hModeDescriptor(Bc6hEField.M, 1), new Bc6hModeDescriptor(Bc6hEField.M, 2), new Bc6hModeDescriptor(Bc6hEField.M, 3), new Bc6hModeDescriptor(Bc6hEField.M, 4), new Bc6hModeDescriptor(Bc6hEField.RW, 0), new Bc6hModeDescriptor(Bc6hEField.RW, 1), new Bc6hModeDescriptor(Bc6hEField.RW, 2), new Bc6hModeDescriptor(Bc6hEField.RW, 3), new Bc6hModeDescriptor(Bc6hEField.RW, 4),
+                new Bc6hModeDescriptor(Bc6hEField.RW, 5), new Bc6hModeDescriptor(Bc6hEField.GZ, 4), new Bc6hModeDescriptor(Bc6hEField.BZ, 0), new Bc6hModeDescriptor(Bc6hEField.BZ, 1), new Bc6hModeDescriptor(Bc6hEField.BY, 4), new Bc6hModeDescriptor(Bc6hEField.GW, 0), new Bc6hModeDescriptor(Bc6hEField.GW, 1), new Bc6hModeDescriptor(Bc6hEField.GW, 2), new Bc6hModeDescriptor(Bc6hEField.GW, 3), new Bc6hModeDescriptor(Bc6hEField.GW, 4),
+                new Bc6hModeDescriptor(Bc6hEField.GW, 5), new Bc6hModeDescriptor(Bc6hEField.GY, 5), new Bc6hModeDescriptor(Bc6hEField.BY, 5), new Bc6hModeDescriptor(Bc6hEField.BZ, 2), new Bc6hModeDescriptor(Bc6hEField.GY, 4), new Bc6hModeDescriptor(Bc6hEField.BW, 0), new Bc6hModeDescriptor(Bc6hEField.BW, 1), new Bc6hModeDescriptor(Bc6hEField.BW, 2), new Bc6hModeDescriptor(Bc6hEField.BW, 3), new Bc6hModeDescriptor(Bc6hEField.BW, 4),
+                new Bc6hModeDescriptor(Bc6hEField.BW, 5), new Bc6hModeDescriptor(Bc6hEField.GZ, 5), new Bc6hModeDescriptor(Bc6hEField.BZ, 3), new Bc6hModeDescriptor(Bc6hEField.BZ, 5), new Bc6hModeDescriptor(Bc6hEField.BZ, 4), new Bc6hModeDescriptor(Bc6hEField.RX, 0), new Bc6hModeDescriptor(Bc6hEField.RX, 1), new Bc6hModeDescriptor(Bc6hEField.RX, 2), new Bc6hModeDescriptor(Bc6hEField.RX, 3), new Bc6hModeDescriptor(Bc6hEField.RX, 4),
+                new Bc6hModeDescriptor(Bc6hEField.RX, 5), new Bc6hModeDescriptor(Bc6hEField.GY, 0), new Bc6hModeDescriptor(Bc6hEField.GY, 1), new Bc6hModeDescriptor(Bc6hEField.GY, 2), new Bc6hModeDescriptor(Bc6hEField.GY, 3), new Bc6hModeDescriptor(Bc6hEField.GX, 0), new Bc6hModeDescriptor(Bc6hEField.GX, 1), new Bc6hModeDescriptor(Bc6hEField.GX, 2), new Bc6hModeDescriptor(Bc6hEField.GX, 3), new Bc6hModeDescriptor(Bc6hEField.GX, 4),
+                new Bc6hModeDescriptor(Bc6hEField.GX, 5), new Bc6hModeDescriptor(Bc6hEField.GZ, 0), new Bc6hModeDescriptor(Bc6hEField.GZ, 1), new Bc6hModeDescriptor(Bc6hEField.GZ, 2), new Bc6hModeDescriptor(Bc6hEField.GZ, 3), new Bc6hModeDescriptor(Bc6hEField.BX, 0), new Bc6hModeDescriptor(Bc6hEField.BX, 1), new Bc6hModeDescriptor(Bc6hEField.BX, 2), new Bc6hModeDescriptor(Bc6hEField.BX, 3), new Bc6hModeDescriptor(Bc6hEField.BX, 4),
+                new Bc6hModeDescriptor(Bc6hEField.BX, 5), new Bc6hModeDescriptor(Bc6hEField.BY, 0), new Bc6hModeDescriptor(Bc6hEField.BY, 1), new Bc6hModeDescriptor(Bc6hEField.BY, 2), new Bc6hModeDescriptor(Bc6hEField.BY, 3), new Bc6hModeDescriptor(Bc6hEField.RY, 0), new Bc6hModeDescriptor(Bc6hEField.RY, 1), new Bc6hModeDescriptor(Bc6hEField.RY, 2), new Bc6hModeDescriptor(Bc6hEField.RY, 3), new Bc6hModeDescriptor(Bc6hEField.RY, 4),
+                new Bc6hModeDescriptor(Bc6hEField.RY, 5), new Bc6hModeDescriptor(Bc6hEField.RZ, 0), new Bc6hModeDescriptor(Bc6hEField.RZ, 1), new Bc6hModeDescriptor(Bc6hEField.RZ, 2), new Bc6hModeDescriptor(Bc6hEField.RZ, 3), new Bc6hModeDescriptor(Bc6hEField.RZ, 4), new Bc6hModeDescriptor(Bc6hEField.RZ, 5), new Bc6hModeDescriptor(Bc6hEField.D, 0), new Bc6hModeDescriptor(Bc6hEField.D, 1), new Bc6hModeDescriptor(Bc6hEField.D, 2),
+                new Bc6hModeDescriptor(Bc6hEField.D, 3), new Bc6hModeDescriptor(Bc6hEField.D, 4)
             },
 
-            new ModeDescriptor[82]
+            new Bc6hModeDescriptor[82]
             {
                 // Mode 11 (0x03) - 10 10
-                new ModeDescriptor(EField.M, 0), new ModeDescriptor(EField.M, 1), new ModeDescriptor(EField.M, 2), new ModeDescriptor(EField.M, 3), new ModeDescriptor(EField.M, 4), new ModeDescriptor(EField.RW, 0), new ModeDescriptor(EField.RW, 1), new ModeDescriptor(EField.RW, 2), new ModeDescriptor(EField.RW, 3), new ModeDescriptor(EField.RW, 4),
-                new ModeDescriptor(EField.RW, 5), new ModeDescriptor(EField.RW, 6), new ModeDescriptor(EField.RW, 7), new ModeDescriptor(EField.RW, 8), new ModeDescriptor(EField.RW, 9), new ModeDescriptor(EField.GW, 0), new ModeDescriptor(EField.GW, 1), new ModeDescriptor(EField.GW, 2), new ModeDescriptor(EField.GW, 3), new ModeDescriptor(EField.GW, 4),
-                new ModeDescriptor(EField.GW, 5), new ModeDescriptor(EField.GW, 6), new ModeDescriptor(EField.GW, 7), new ModeDescriptor(EField.GW, 8), new ModeDescriptor(EField.GW, 9), new ModeDescriptor(EField.BW, 0), new ModeDescriptor(EField.BW, 1), new ModeDescriptor(EField.BW, 2), new ModeDescriptor(EField.BW, 3), new ModeDescriptor(EField.BW, 4),
-                new ModeDescriptor(EField.BW, 5), new ModeDescriptor(EField.BW, 6), new ModeDescriptor(EField.BW, 7), new ModeDescriptor(EField.BW, 8), new ModeDescriptor(EField.BW, 9), new ModeDescriptor(EField.RX, 0), new ModeDescriptor(EField.RX, 1), new ModeDescriptor(EField.RX, 2), new ModeDescriptor(EField.RX, 3), new ModeDescriptor(EField.RX, 4),
-                new ModeDescriptor(EField.RX, 5), new ModeDescriptor(EField.RX, 6), new ModeDescriptor(EField.RX, 7), new ModeDescriptor(EField.RX, 8), new ModeDescriptor(EField.RX, 9), new ModeDescriptor(EField.GX, 0), new ModeDescriptor(EField.GX, 1), new ModeDescriptor(EField.GX, 2), new ModeDescriptor(EField.GX, 3), new ModeDescriptor(EField.GX, 4),
-                new ModeDescriptor(EField.GX, 5), new ModeDescriptor(EField.GX, 6), new ModeDescriptor(EField.GX, 7), new ModeDescriptor(EField.GX, 8), new ModeDescriptor(EField.GX, 9), new ModeDescriptor(EField.BX, 0), new ModeDescriptor(EField.BX, 1), new ModeDescriptor(EField.BX, 2), new ModeDescriptor(EField.BX, 3), new ModeDescriptor(EField.BX, 4),
-                new ModeDescriptor(EField.BX, 5), new ModeDescriptor(EField.BX, 6), new ModeDescriptor(EField.BX, 7), new ModeDescriptor(EField.BX, 8), new ModeDescriptor(EField.BX, 9), new ModeDescriptor(EField.NA, 0), new ModeDescriptor(EField.NA, 0), new ModeDescriptor(EField.NA, 0), new ModeDescriptor(EField.NA, 0), new ModeDescriptor(EField.NA, 0),
-                new ModeDescriptor(EField.NA, 0), new ModeDescriptor(EField.NA, 0), new ModeDescriptor(EField.NA, 0), new ModeDescriptor(EField.NA, 0), new ModeDescriptor(EField.NA, 0), new ModeDescriptor(EField.NA, 0), new ModeDescriptor(EField.NA, 0), new ModeDescriptor(EField.NA, 0), new ModeDescriptor(EField.NA, 0), new ModeDescriptor(EField.NA, 0),
-                new ModeDescriptor(EField.NA, 0), new ModeDescriptor(EField.NA, 0)
+                new Bc6hModeDescriptor(Bc6hEField.M, 0), new Bc6hModeDescriptor(Bc6hEField.M, 1), new Bc6hModeDescriptor(Bc6hEField.M, 2), new Bc6hModeDescriptor(Bc6hEField.M, 3), new Bc6hModeDescriptor(Bc6hEField.M, 4), new Bc6hModeDescriptor(Bc6hEField.RW, 0), new Bc6hModeDescriptor(Bc6hEField.RW, 1), new Bc6hModeDescriptor(Bc6hEField.RW, 2), new Bc6hModeDescriptor(Bc6hEField.RW, 3), new Bc6hModeDescriptor(Bc6hEField.RW, 4),
+                new Bc6hModeDescriptor(Bc6hEField.RW, 5), new Bc6hModeDescriptor(Bc6hEField.RW, 6), new Bc6hModeDescriptor(Bc6hEField.RW, 7), new Bc6hModeDescriptor(Bc6hEField.RW, 8), new Bc6hModeDescriptor(Bc6hEField.RW, 9), new Bc6hModeDescriptor(Bc6hEField.GW, 0), new Bc6hModeDescriptor(Bc6hEField.GW, 1), new Bc6hModeDescriptor(Bc6hEField.GW, 2), new Bc6hModeDescriptor(Bc6hEField.GW, 3), new Bc6hModeDescriptor(Bc6hEField.GW, 4),
+                new Bc6hModeDescriptor(Bc6hEField.GW, 5), new Bc6hModeDescriptor(Bc6hEField.GW, 6), new Bc6hModeDescriptor(Bc6hEField.GW, 7), new Bc6hModeDescriptor(Bc6hEField.GW, 8), new Bc6hModeDescriptor(Bc6hEField.GW, 9), new Bc6hModeDescriptor(Bc6hEField.BW, 0), new Bc6hModeDescriptor(Bc6hEField.BW, 1), new Bc6hModeDescriptor(Bc6hEField.BW, 2), new Bc6hModeDescriptor(Bc6hEField.BW, 3), new Bc6hModeDescriptor(Bc6hEField.BW, 4),
+                new Bc6hModeDescriptor(Bc6hEField.BW, 5), new Bc6hModeDescriptor(Bc6hEField.BW, 6), new Bc6hModeDescriptor(Bc6hEField.BW, 7), new Bc6hModeDescriptor(Bc6hEField.BW, 8), new Bc6hModeDescriptor(Bc6hEField.BW, 9), new Bc6hModeDescriptor(Bc6hEField.RX, 0), new Bc6hModeDescriptor(Bc6hEField.RX, 1), new Bc6hModeDescriptor(Bc6hEField.RX, 2), new Bc6hModeDescriptor(Bc6hEField.RX, 3), new Bc6hModeDescriptor(Bc6hEField.RX, 4),
+                new Bc6hModeDescriptor(Bc6hEField.RX, 5), new Bc6hModeDescriptor(Bc6hEField.RX, 6), new Bc6hModeDescriptor(Bc6hEField.RX, 7), new Bc6hModeDescriptor(Bc6hEField.RX, 8), new Bc6hModeDescriptor(Bc6hEField.RX, 9), new Bc6hModeDescriptor(Bc6hEField.GX, 0), new Bc6hModeDescriptor(Bc6hEField.GX, 1), new Bc6hModeDescriptor(Bc6hEField.GX, 2), new Bc6hModeDescriptor(Bc6hEField.GX, 3), new Bc6hModeDescriptor(Bc6hEField.GX, 4),
+                new Bc6hModeDescriptor(Bc6hEField.GX, 5), new Bc6hModeDescriptor(Bc6hEField.GX, 6), new Bc6hModeDescriptor(Bc6hEField.GX, 7), new Bc6hModeDescriptor(Bc6hEField.GX, 8), new Bc6hModeDescriptor(Bc6hEField.GX, 9), new Bc6hModeDescriptor(Bc6hEField.BX, 0), new Bc6hModeDescriptor(Bc6hEField.BX, 1), new Bc6hModeDescriptor(Bc6hEField.BX, 2), new Bc6hModeDescriptor(Bc6hEField.BX, 3), new Bc6hModeDescriptor(Bc6hEField.BX, 4),
+                new Bc6hModeDescriptor(Bc6hEField.BX, 5), new Bc6hModeDescriptor(Bc6hEField.BX, 6), new Bc6hModeDescriptor(Bc6hEField.BX, 7), new Bc6hModeDescriptor(Bc6hEField.BX, 8), new Bc6hModeDescriptor(Bc6hEField.BX, 9), new Bc6hModeDescriptor(Bc6hEField.NA, 0), new Bc6hModeDescriptor(Bc6hEField.NA, 0), new Bc6hModeDescriptor(Bc6hEField.NA, 0), new Bc6hModeDescriptor(Bc6hEField.NA, 0), new Bc6hModeDescriptor(Bc6hEField.NA, 0),
+                new Bc6hModeDescriptor(Bc6hEField.NA, 0), new Bc6hModeDescriptor(Bc6hEField.NA, 0), new Bc6hModeDescriptor(Bc6hEField.NA, 0), new Bc6hModeDescriptor(Bc6hEField.NA, 0), new Bc6hModeDescriptor(Bc6hEField.NA, 0), new Bc6hModeDescriptor(Bc6hEField.NA, 0), new Bc6hModeDescriptor(Bc6hEField.NA, 0), new Bc6hModeDescriptor(Bc6hEField.NA, 0), new Bc6hModeDescriptor(Bc6hEField.NA, 0), new Bc6hModeDescriptor(Bc6hEField.NA, 0),
+                new Bc6hModeDescriptor(Bc6hEField.NA, 0), new Bc6hModeDescriptor(Bc6hEField.NA, 0)
             },
 
-            new ModeDescriptor[82]
+            new Bc6hModeDescriptor[82]
             {
                 // Mode 12 (0x07) - 11 9
-                new ModeDescriptor(EField.M, 0), new ModeDescriptor(EField.M, 1), new ModeDescriptor(EField.M, 2), new ModeDescriptor(EField.M, 3), new ModeDescriptor(EField.M, 4), new ModeDescriptor(EField.RW, 0), new ModeDescriptor(EField.RW, 1), new ModeDescriptor(EField.RW, 2), new ModeDescriptor(EField.RW, 3), new ModeDescriptor(EField.RW, 4),
-                new ModeDescriptor(EField.RW, 5), new ModeDescriptor(EField.RW, 6), new ModeDescriptor(EField.RW, 7), new ModeDescriptor(EField.RW, 8), new ModeDescriptor(EField.RW, 9), new ModeDescriptor(EField.GW, 0), new ModeDescriptor(EField.GW, 1), new ModeDescriptor(EField.GW, 2), new ModeDescriptor(EField.GW, 3), new ModeDescriptor(EField.GW, 4),
-                new ModeDescriptor(EField.GW, 5), new ModeDescriptor(EField.GW, 6), new ModeDescriptor(EField.GW, 7), new ModeDescriptor(EField.GW, 8), new ModeDescriptor(EField.GW, 9), new ModeDescriptor(EField.BW, 0), new ModeDescriptor(EField.BW, 1), new ModeDescriptor(EField.BW, 2), new ModeDescriptor(EField.BW, 3), new ModeDescriptor(EField.BW, 4),
-                new ModeDescriptor(EField.BW, 5), new ModeDescriptor(EField.BW, 6), new ModeDescriptor(EField.BW, 7), new ModeDescriptor(EField.BW, 8), new ModeDescriptor(EField.BW, 9), new ModeDescriptor(EField.RX, 0), new ModeDescriptor(EField.RX, 1), new ModeDescriptor(EField.RX, 2), new ModeDescriptor(EField.RX, 3), new ModeDescriptor(EField.RX, 4),
-                new ModeDescriptor(EField.RX, 5), new ModeDescriptor(EField.RX, 6), new ModeDescriptor(EField.RX, 7), new ModeDescriptor(EField.RX, 8), new ModeDescriptor(EField.RW, 10), new ModeDescriptor(EField.GX, 0), new ModeDescriptor(EField.GX, 1), new ModeDescriptor(EField.GX, 2), new ModeDescriptor(EField.GX, 3), new ModeDescriptor(EField.GX, 4),
-                new ModeDescriptor(EField.GX, 5), new ModeDescriptor(EField.GX, 6), new ModeDescriptor(EField.GX, 7), new ModeDescriptor(EField.GX, 8), new ModeDescriptor(EField.GW, 10), new ModeDescriptor(EField.BX, 0), new ModeDescriptor(EField.BX, 1), new ModeDescriptor(EField.BX, 2), new ModeDescriptor(EField.BX, 3), new ModeDescriptor(EField.BX, 4),
-                new ModeDescriptor(EField.BX, 5), new ModeDescriptor(EField.BX, 6), new ModeDescriptor(EField.BX, 7), new ModeDescriptor(EField.BX, 8), new ModeDescriptor(EField.BW, 10), new ModeDescriptor(EField.NA, 0), new ModeDescriptor(EField.NA, 0), new ModeDescriptor(EField.NA, 0), new ModeDescriptor(EField.NA, 0), new ModeDescriptor(EField.NA, 0),
-                new ModeDescriptor(EField.NA, 0), new ModeDescriptor(EField.NA, 0), new ModeDescriptor(EField.NA, 0), new ModeDescriptor(EField.NA, 0), new ModeDescriptor(EField.NA, 0), new ModeDescriptor(EField.NA, 0), new ModeDescriptor(EField.NA, 0), new ModeDescriptor(EField.NA, 0), new ModeDescriptor(EField.NA, 0), new ModeDescriptor(EField.NA, 0),
-                new ModeDescriptor(EField.NA, 0), new ModeDescriptor(EField.NA, 0)
+                new Bc6hModeDescriptor(Bc6hEField.M, 0), new Bc6hModeDescriptor(Bc6hEField.M, 1), new Bc6hModeDescriptor(Bc6hEField.M, 2), new Bc6hModeDescriptor(Bc6hEField.M, 3), new Bc6hModeDescriptor(Bc6hEField.M, 4), new Bc6hModeDescriptor(Bc6hEField.RW, 0), new Bc6hModeDescriptor(Bc6hEField.RW, 1), new Bc6hModeDescriptor(Bc6hEField.RW, 2), new Bc6hModeDescriptor(Bc6hEField.RW, 3), new Bc6hModeDescriptor(Bc6hEField.RW, 4),
+                new Bc6hModeDescriptor(Bc6hEField.RW, 5), new Bc6hModeDescriptor(Bc6hEField.RW, 6), new Bc6hModeDescriptor(Bc6hEField.RW, 7), new Bc6hModeDescriptor(Bc6hEField.RW, 8), new Bc6hModeDescriptor(Bc6hEField.RW, 9), new Bc6hModeDescriptor(Bc6hEField.GW, 0), new Bc6hModeDescriptor(Bc6hEField.GW, 1), new Bc6hModeDescriptor(Bc6hEField.GW, 2), new Bc6hModeDescriptor(Bc6hEField.GW, 3), new Bc6hModeDescriptor(Bc6hEField.GW, 4),
+                new Bc6hModeDescriptor(Bc6hEField.GW, 5), new Bc6hModeDescriptor(Bc6hEField.GW, 6), new Bc6hModeDescriptor(Bc6hEField.GW, 7), new Bc6hModeDescriptor(Bc6hEField.GW, 8), new Bc6hModeDescriptor(Bc6hEField.GW, 9), new Bc6hModeDescriptor(Bc6hEField.BW, 0), new Bc6hModeDescriptor(Bc6hEField.BW, 1), new Bc6hModeDescriptor(Bc6hEField.BW, 2), new Bc6hModeDescriptor(Bc6hEField.BW, 3), new Bc6hModeDescriptor(Bc6hEField.BW, 4),
+                new Bc6hModeDescriptor(Bc6hEField.BW, 5), new Bc6hModeDescriptor(Bc6hEField.BW, 6), new Bc6hModeDescriptor(Bc6hEField.BW, 7), new Bc6hModeDescriptor(Bc6hEField.BW, 8), new Bc6hModeDescriptor(Bc6hEField.BW, 9), new Bc6hModeDescriptor(Bc6hEField.RX, 0), new Bc6hModeDescriptor(Bc6hEField.RX, 1), new Bc6hModeDescriptor(Bc6hEField.RX, 2), new Bc6hModeDescriptor(Bc6hEField.RX, 3), new Bc6hModeDescriptor(Bc6hEField.RX, 4),
+                new Bc6hModeDescriptor(Bc6hEField.RX, 5), new Bc6hModeDescriptor(Bc6hEField.RX, 6), new Bc6hModeDescriptor(Bc6hEField.RX, 7), new Bc6hModeDescriptor(Bc6hEField.RX, 8), new Bc6hModeDescriptor(Bc6hEField.RW, 10), new Bc6hModeDescriptor(Bc6hEField.GX, 0), new Bc6hModeDescriptor(Bc6hEField.GX, 1), new Bc6hModeDescriptor(Bc6hEField.GX, 2), new Bc6hModeDescriptor(Bc6hEField.GX, 3), new Bc6hModeDescriptor(Bc6hEField.GX, 4),
+                new Bc6hModeDescriptor(Bc6hEField.GX, 5), new Bc6hModeDescriptor(Bc6hEField.GX, 6), new Bc6hModeDescriptor(Bc6hEField.GX, 7), new Bc6hModeDescriptor(Bc6hEField.GX, 8), new Bc6hModeDescriptor(Bc6hEField.GW, 10), new Bc6hModeDescriptor(Bc6hEField.BX, 0), new Bc6hModeDescriptor(Bc6hEField.BX, 1), new Bc6hModeDescriptor(Bc6hEField.BX, 2), new Bc6hModeDescriptor(Bc6hEField.BX, 3), new Bc6hModeDescriptor(Bc6hEField.BX, 4),
+                new Bc6hModeDescriptor(Bc6hEField.BX, 5), new Bc6hModeDescriptor(Bc6hEField.BX, 6), new Bc6hModeDescriptor(Bc6hEField.BX, 7), new Bc6hModeDescriptor(Bc6hEField.BX, 8), new Bc6hModeDescriptor(Bc6hEField.BW, 10), new Bc6hModeDescriptor(Bc6hEField.NA, 0), new Bc6hModeDescriptor(Bc6hEField.NA, 0), new Bc6hModeDescriptor(Bc6hEField.NA, 0), new Bc6hModeDescriptor(Bc6hEField.NA, 0), new Bc6hModeDescriptor(Bc6hEField.NA, 0),
+                new Bc6hModeDescriptor(Bc6hEField.NA, 0), new Bc6hModeDescriptor(Bc6hEField.NA, 0), new Bc6hModeDescriptor(Bc6hEField.NA, 0), new Bc6hModeDescriptor(Bc6hEField.NA, 0), new Bc6hModeDescriptor(Bc6hEField.NA, 0), new Bc6hModeDescriptor(Bc6hEField.NA, 0), new Bc6hModeDescriptor(Bc6hEField.NA, 0), new Bc6hModeDescriptor(Bc6hEField.NA, 0), new Bc6hModeDescriptor(Bc6hEField.NA, 0), new Bc6hModeDescriptor(Bc6hEField.NA, 0),
+                new Bc6hModeDescriptor(Bc6hEField.NA, 0), new Bc6hModeDescriptor(Bc6hEField.NA, 0)
             },
 
-            new ModeDescriptor[82]
+            new Bc6hModeDescriptor[82]
             {
                 // Mode 13 (0x0b) - 12 8
-                new ModeDescriptor(EField.M, 0), new ModeDescriptor(EField.M, 1), new ModeDescriptor(EField.M, 2), new ModeDescriptor(EField.M, 3), new ModeDescriptor(EField.M, 4), new ModeDescriptor(EField.RW, 0), new ModeDescriptor(EField.RW, 1), new ModeDescriptor(EField.RW, 2), new ModeDescriptor(EField.RW, 3), new ModeDescriptor(EField.RW, 4),
-                new ModeDescriptor(EField.RW, 5), new ModeDescriptor(EField.RW, 6), new ModeDescriptor(EField.RW, 7), new ModeDescriptor(EField.RW, 8), new ModeDescriptor(EField.RW, 9), new ModeDescriptor(EField.GW, 0), new ModeDescriptor(EField.GW, 1), new ModeDescriptor(EField.GW, 2), new ModeDescriptor(EField.GW, 3), new ModeDescriptor(EField.GW, 4),
-                new ModeDescriptor(EField.GW, 5), new ModeDescriptor(EField.GW, 6), new ModeDescriptor(EField.GW, 7), new ModeDescriptor(EField.GW, 8), new ModeDescriptor(EField.GW, 9), new ModeDescriptor(EField.BW, 0), new ModeDescriptor(EField.BW, 1), new ModeDescriptor(EField.BW, 2), new ModeDescriptor(EField.BW, 3), new ModeDescriptor(EField.BW, 4),
-                new ModeDescriptor(EField.BW, 5), new ModeDescriptor(EField.BW, 6), new ModeDescriptor(EField.BW, 7), new ModeDescriptor(EField.BW, 8), new ModeDescriptor(EField.BW, 9), new ModeDescriptor(EField.RX, 0), new ModeDescriptor(EField.RX, 1), new ModeDescriptor(EField.RX, 2), new ModeDescriptor(EField.RX, 3), new ModeDescriptor(EField.RX, 4),
-                new ModeDescriptor(EField.RX, 5), new ModeDescriptor(EField.RX, 6), new ModeDescriptor(EField.RX, 7), new ModeDescriptor(EField.RW, 11), new ModeDescriptor(EField.RW, 10), new ModeDescriptor(EField.GX, 0), new ModeDescriptor(EField.GX, 1), new ModeDescriptor(EField.GX, 2), new ModeDescriptor(EField.GX, 3), new ModeDescriptor(EField.GX, 4),
-                new ModeDescriptor(EField.GX, 5), new ModeDescriptor(EField.GX, 6), new ModeDescriptor(EField.GX, 7), new ModeDescriptor(EField.GW, 11), new ModeDescriptor(EField.GW, 10), new ModeDescriptor(EField.BX, 0), new ModeDescriptor(EField.BX, 1), new ModeDescriptor(EField.BX, 2), new ModeDescriptor(EField.BX, 3), new ModeDescriptor(EField.BX, 4),
-                new ModeDescriptor(EField.BX, 5), new ModeDescriptor(EField.BX, 6), new ModeDescriptor(EField.BX, 7), new ModeDescriptor(EField.BW, 11), new ModeDescriptor(EField.BW, 10), new ModeDescriptor(EField.NA, 0), new ModeDescriptor(EField.NA, 0), new ModeDescriptor(EField.NA, 0), new ModeDescriptor(EField.NA, 0), new ModeDescriptor(EField.NA, 0),
-                new ModeDescriptor(EField.NA, 0), new ModeDescriptor(EField.NA, 0), new ModeDescriptor(EField.NA, 0), new ModeDescriptor(EField.NA, 0), new ModeDescriptor(EField.NA, 0), new ModeDescriptor(EField.NA, 0), new ModeDescriptor(EField.NA, 0), new ModeDescriptor(EField.NA, 0), new ModeDescriptor(EField.NA, 0), new ModeDescriptor(EField.NA, 0),
-                new ModeDescriptor(EField.NA, 0), new ModeDescriptor(EField.NA, 0)
+                new Bc6hModeDescriptor(Bc6hEField.M, 0), new Bc6hModeDescriptor(Bc6hEField.M, 1), new Bc6hModeDescriptor(Bc6hEField.M, 2), new Bc6hModeDescriptor(Bc6hEField.M, 3), new Bc6hModeDescriptor(Bc6hEField.M, 4), new Bc6hModeDescriptor(Bc6hEField.RW, 0), new Bc6hModeDescriptor(Bc6hEField.RW, 1), new Bc6hModeDescriptor(Bc6hEField.RW, 2), new Bc6hModeDescriptor(Bc6hEField.RW, 3), new Bc6hModeDescriptor(Bc6hEField.RW, 4),
+                new Bc6hModeDescriptor(Bc6hEField.RW, 5), new Bc6hModeDescriptor(Bc6hEField.RW, 6), new Bc6hModeDescriptor(Bc6hEField.RW, 7), new Bc6hModeDescriptor(Bc6hEField.RW, 8), new Bc6hModeDescriptor(Bc6hEField.RW, 9), new Bc6hModeDescriptor(Bc6hEField.GW, 0), new Bc6hModeDescriptor(Bc6hEField.GW, 1), new Bc6hModeDescriptor(Bc6hEField.GW, 2), new Bc6hModeDescriptor(Bc6hEField.GW, 3), new Bc6hModeDescriptor(Bc6hEField.GW, 4),
+                new Bc6hModeDescriptor(Bc6hEField.GW, 5), new Bc6hModeDescriptor(Bc6hEField.GW, 6), new Bc6hModeDescriptor(Bc6hEField.GW, 7), new Bc6hModeDescriptor(Bc6hEField.GW, 8), new Bc6hModeDescriptor(Bc6hEField.GW, 9), new Bc6hModeDescriptor(Bc6hEField.BW, 0), new Bc6hModeDescriptor(Bc6hEField.BW, 1), new Bc6hModeDescriptor(Bc6hEField.BW, 2), new Bc6hModeDescriptor(Bc6hEField.BW, 3), new Bc6hModeDescriptor(Bc6hEField.BW, 4),
+                new Bc6hModeDescriptor(Bc6hEField.BW, 5), new Bc6hModeDescriptor(Bc6hEField.BW, 6), new Bc6hModeDescriptor(Bc6hEField.BW, 7), new Bc6hModeDescriptor(Bc6hEField.BW, 8), new Bc6hModeDescriptor(Bc6hEField.BW, 9), new Bc6hModeDescriptor(Bc6hEField.RX, 0), new Bc6hModeDescriptor(Bc6hEField.RX, 1), new Bc6hModeDescriptor(Bc6hEField.RX, 2), new Bc6hModeDescriptor(Bc6hEField.RX, 3), new Bc6hModeDescriptor(Bc6hEField.RX, 4),
+                new Bc6hModeDescriptor(Bc6hEField.RX, 5), new Bc6hModeDescriptor(Bc6hEField.RX, 6), new Bc6hModeDescriptor(Bc6hEField.RX, 7), new Bc6hModeDescriptor(Bc6hEField.RW, 11), new Bc6hModeDescriptor(Bc6hEField.RW, 10), new Bc6hModeDescriptor(Bc6hEField.GX, 0), new Bc6hModeDescriptor(Bc6hEField.GX, 1), new Bc6hModeDescriptor(Bc6hEField.GX, 2), new Bc6hModeDescriptor(Bc6hEField.GX, 3), new Bc6hModeDescriptor(Bc6hEField.GX, 4),
+                new Bc6hModeDescriptor(Bc6hEField.GX, 5), new Bc6hModeDescriptor(Bc6hEField.GX, 6), new Bc6hModeDescriptor(Bc6hEField.GX, 7), new Bc6hModeDescriptor(Bc6hEField.GW, 11), new Bc6hModeDescriptor(Bc6hEField.GW, 10), new Bc6hModeDescriptor(Bc6hEField.BX, 0), new Bc6hModeDescriptor(Bc6hEField.BX, 1), new Bc6hModeDescriptor(Bc6hEField.BX, 2), new Bc6hModeDescriptor(Bc6hEField.BX, 3), new Bc6hModeDescriptor(Bc6hEField.BX, 4),
+                new Bc6hModeDescriptor(Bc6hEField.BX, 5), new Bc6hModeDescriptor(Bc6hEField.BX, 6), new Bc6hModeDescriptor(Bc6hEField.BX, 7), new Bc6hModeDescriptor(Bc6hEField.BW, 11), new Bc6hModeDescriptor(Bc6hEField.BW, 10), new Bc6hModeDescriptor(Bc6hEField.NA, 0), new Bc6hModeDescriptor(Bc6hEField.NA, 0), new Bc6hModeDescriptor(Bc6hEField.NA, 0), new Bc6hModeDescriptor(Bc6hEField.NA, 0), new Bc6hModeDescriptor(Bc6hEField.NA, 0),
+                new Bc6hModeDescriptor(Bc6hEField.NA, 0), new Bc6hModeDescriptor(Bc6hEField.NA, 0), new Bc6hModeDescriptor(Bc6hEField.NA, 0), new Bc6hModeDescriptor(Bc6hEField.NA, 0), new Bc6hModeDescriptor(Bc6hEField.NA, 0), new Bc6hModeDescriptor(Bc6hEField.NA, 0), new Bc6hModeDescriptor(Bc6hEField.NA, 0), new Bc6hModeDescriptor(Bc6hEField.NA, 0), new Bc6hModeDescriptor(Bc6hEField.NA, 0), new Bc6hModeDescriptor(Bc6hEField.NA, 0),
+                new Bc6hModeDescriptor(Bc6hEField.NA, 0), new Bc6hModeDescriptor(Bc6hEField.NA, 0)
             },
 
-            new ModeDescriptor[82]
+            new Bc6hModeDescriptor[82]
             {
                 // Mode 14 (0x0f) - 16 4
-                new ModeDescriptor(EField.M, 0), new ModeDescriptor(EField.M, 1), new ModeDescriptor(EField.M, 2), new ModeDescriptor(EField.M, 3), new ModeDescriptor(EField.M, 4), new ModeDescriptor(EField.RW, 0), new ModeDescriptor(EField.RW, 1), new ModeDescriptor(EField.RW, 2), new ModeDescriptor(EField.RW, 3), new ModeDescriptor(EField.RW, 4),
-                new ModeDescriptor(EField.RW, 5), new ModeDescriptor(EField.RW, 6), new ModeDescriptor(EField.RW, 7), new ModeDescriptor(EField.RW, 8), new ModeDescriptor(EField.RW, 9), new ModeDescriptor(EField.GW, 0), new ModeDescriptor(EField.GW, 1), new ModeDescriptor(EField.GW, 2), new ModeDescriptor(EField.GW, 3), new ModeDescriptor(EField.GW, 4),
-                new ModeDescriptor(EField.GW, 5), new ModeDescriptor(EField.GW, 6), new ModeDescriptor(EField.GW, 7), new ModeDescriptor(EField.GW, 8), new ModeDescriptor(EField.GW, 9), new ModeDescriptor(EField.BW, 0), new ModeDescriptor(EField.BW, 1), new ModeDescriptor(EField.BW, 2), new ModeDescriptor(EField.BW, 3), new ModeDescriptor(EField.BW, 4),
-                new ModeDescriptor(EField.BW, 5), new ModeDescriptor(EField.BW, 6), new ModeDescriptor(EField.BW, 7), new ModeDescriptor(EField.BW, 8), new ModeDescriptor(EField.BW, 9), new ModeDescriptor(EField.RX, 0), new ModeDescriptor(EField.RX, 1), new ModeDescriptor(EField.RX, 2), new ModeDescriptor(EField.RX, 3), new ModeDescriptor(EField.RW, 15),
-                new ModeDescriptor(EField.RW, 14), new ModeDescriptor(EField.RW, 13), new ModeDescriptor(EField.RW, 12), new ModeDescriptor(EField.RW, 11), new ModeDescriptor(EField.RW, 10), new ModeDescriptor(EField.GX, 0), new ModeDescriptor(EField.GX, 1), new ModeDescriptor(EField.GX, 2), new ModeDescriptor(EField.GX, 3), new ModeDescriptor(EField.GW, 15),
-                new ModeDescriptor(EField.GW, 14), new ModeDescriptor(EField.GW, 13), new ModeDescriptor(EField.GW, 12), new ModeDescriptor(EField.GW, 11), new ModeDescriptor(EField.GW, 10), new ModeDescriptor(EField.BX, 0), new ModeDescriptor(EField.BX, 1), new ModeDescriptor(EField.BX, 2), new ModeDescriptor(EField.BX, 3), new ModeDescriptor(EField.BW, 15),
-                new ModeDescriptor(EField.BW, 14), new ModeDescriptor(EField.BW, 13), new ModeDescriptor(EField.BW, 12), new ModeDescriptor(EField.BW, 11), new ModeDescriptor(EField.BW, 10), new ModeDescriptor(EField.NA, 0), new ModeDescriptor(EField.NA, 0), new ModeDescriptor(EField.NA, 0), new ModeDescriptor(EField.NA, 0), new ModeDescriptor(EField.NA, 0),
-                new ModeDescriptor(EField.NA, 0), new ModeDescriptor(EField.NA, 0), new ModeDescriptor(EField.NA, 0), new ModeDescriptor(EField.NA, 0), new ModeDescriptor(EField.NA, 0), new ModeDescriptor(EField.NA, 0), new ModeDescriptor(EField.NA, 0), new ModeDescriptor(EField.NA, 0), new ModeDescriptor(EField.NA, 0), new ModeDescriptor(EField.NA, 0),
-                new ModeDescriptor(EField.NA, 0), new ModeDescriptor(EField.NA, 0)
+                new Bc6hModeDescriptor(Bc6hEField.M, 0), new Bc6hModeDescriptor(Bc6hEField.M, 1), new Bc6hModeDescriptor(Bc6hEField.M, 2), new Bc6hModeDescriptor(Bc6hEField.M, 3), new Bc6hModeDescriptor(Bc6hEField.M, 4), new Bc6hModeDescriptor(Bc6hEField.RW, 0), new Bc6hModeDescriptor(Bc6hEField.RW, 1), new Bc6hModeDescriptor(Bc6hEField.RW, 2), new Bc6hModeDescriptor(Bc6hEField.RW, 3), new Bc6hModeDescriptor(Bc6hEField.RW, 4),
+                new Bc6hModeDescriptor(Bc6hEField.RW, 5), new Bc6hModeDescriptor(Bc6hEField.RW, 6), new Bc6hModeDescriptor(Bc6hEField.RW, 7), new Bc6hModeDescriptor(Bc6hEField.RW, 8), new Bc6hModeDescriptor(Bc6hEField.RW, 9), new Bc6hModeDescriptor(Bc6hEField.GW, 0), new Bc6hModeDescriptor(Bc6hEField.GW, 1), new Bc6hModeDescriptor(Bc6hEField.GW, 2), new Bc6hModeDescriptor(Bc6hEField.GW, 3), new Bc6hModeDescriptor(Bc6hEField.GW, 4),
+                new Bc6hModeDescriptor(Bc6hEField.GW, 5), new Bc6hModeDescriptor(Bc6hEField.GW, 6), new Bc6hModeDescriptor(Bc6hEField.GW, 7), new Bc6hModeDescriptor(Bc6hEField.GW, 8), new Bc6hModeDescriptor(Bc6hEField.GW, 9), new Bc6hModeDescriptor(Bc6hEField.BW, 0), new Bc6hModeDescriptor(Bc6hEField.BW, 1), new Bc6hModeDescriptor(Bc6hEField.BW, 2), new Bc6hModeDescriptor(Bc6hEField.BW, 3), new Bc6hModeDescriptor(Bc6hEField.BW, 4),
+                new Bc6hModeDescriptor(Bc6hEField.BW, 5), new Bc6hModeDescriptor(Bc6hEField.BW, 6), new Bc6hModeDescriptor(Bc6hEField.BW, 7), new Bc6hModeDescriptor(Bc6hEField.BW, 8), new Bc6hModeDescriptor(Bc6hEField.BW, 9), new Bc6hModeDescriptor(Bc6hEField.RX, 0), new Bc6hModeDescriptor(Bc6hEField.RX, 1), new Bc6hModeDescriptor(Bc6hEField.RX, 2), new Bc6hModeDescriptor(Bc6hEField.RX, 3), new Bc6hModeDescriptor(Bc6hEField.RW, 15),
+                new Bc6hModeDescriptor(Bc6hEField.RW, 14), new Bc6hModeDescriptor(Bc6hEField.RW, 13), new Bc6hModeDescriptor(Bc6hEField.RW, 12), new Bc6hModeDescriptor(Bc6hEField.RW, 11), new Bc6hModeDescriptor(Bc6hEField.RW, 10), new Bc6hModeDescriptor(Bc6hEField.GX, 0), new Bc6hModeDescriptor(Bc6hEField.GX, 1), new Bc6hModeDescriptor(Bc6hEField.GX, 2), new Bc6hModeDescriptor(Bc6hEField.GX, 3), new Bc6hModeDescriptor(Bc6hEField.GW, 15),
+                new Bc6hModeDescriptor(Bc6hEField.GW, 14), new Bc6hModeDescriptor(Bc6hEField.GW, 13), new Bc6hModeDescriptor(Bc6hEField.GW, 12), new Bc6hModeDescriptor(Bc6hEField.GW, 11), new Bc6hModeDescriptor(Bc6hEField.GW, 10), new Bc6hModeDescriptor(Bc6hEField.BX, 0), new Bc6hModeDescriptor(Bc6hEField.BX, 1), new Bc6hModeDescriptor(Bc6hEField.BX, 2), new Bc6hModeDescriptor(Bc6hEField.BX, 3), new Bc6hModeDescriptor(Bc6hEField.BW, 15),
+                new Bc6hModeDescriptor(Bc6hEField.BW, 14), new Bc6hModeDescriptor(Bc6hEField.BW, 13), new Bc6hModeDescriptor(Bc6hEField.BW, 12), new Bc6hModeDescriptor(Bc6hEField.BW, 11), new Bc6hModeDescriptor(Bc6hEField.BW, 10), new Bc6hModeDescriptor(Bc6hEField.NA, 0), new Bc6hModeDescriptor(Bc6hEField.NA, 0), new Bc6hModeDescriptor(Bc6hEField.NA, 0), new Bc6hModeDescriptor(Bc6hEField.NA, 0), new Bc6hModeDescriptor(Bc6hEField.NA, 0),
+                new Bc6hModeDescriptor(Bc6hEField.NA, 0), new Bc6hModeDescriptor(Bc6hEField.NA, 0), new Bc6hModeDescriptor(Bc6hEField.NA, 0), new Bc6hModeDescriptor(Bc6hEField.NA, 0), new Bc6hModeDescriptor(Bc6hEField.NA, 0), new Bc6hModeDescriptor(Bc6hEField.NA, 0), new Bc6hModeDescriptor(Bc6hEField.NA, 0), new Bc6hModeDescriptor(Bc6hEField.NA, 0), new Bc6hModeDescriptor(Bc6hEField.NA, 0), new Bc6hModeDescriptor(Bc6hEField.NA, 0),
+                new Bc6hModeDescriptor(Bc6hEField.NA, 0), new Bc6hModeDescriptor(Bc6hEField.NA, 0)
             },
         };
 
-        private static readonly ModeInfo[] ms_aInfo =
+        private static readonly Bc6hModeInfo[] ms_aInfo =
         {
-            new ModeInfo(0x00, 1, true,  3, new LdrColorA[][] { new LdrColorA[] { new LdrColorA(10, 10, 10, 0), new LdrColorA(5, 5, 5, 0) }, new LdrColorA[] { new LdrColorA(5, 5, 5, 0), new LdrColorA(5, 5, 5, 0) } }), // Mode 1
-            new ModeInfo(0x01, 1, true,  3, new LdrColorA[][] { new LdrColorA[] { new LdrColorA(7, 7, 7, 0), new LdrColorA(6, 6, 6, 0) }, new LdrColorA[] { new LdrColorA(6, 6, 6, 0), new LdrColorA(6, 6, 6, 0) } }), // Mode 2
-            new ModeInfo(0x02, 1, true,  3, new LdrColorA[][] { new LdrColorA[] { new LdrColorA(11, 11, 11, 0), new LdrColorA(5, 4, 4, 0) }, new LdrColorA[] { new LdrColorA(5, 4, 4, 0), new LdrColorA(5, 4, 4, 0) } }), // Mode 3
-            new ModeInfo(0x06, 1, true,  3, new LdrColorA[][] { new LdrColorA[] { new LdrColorA(11, 11, 11, 0), new LdrColorA(4, 5, 4, 0) }, new LdrColorA[] { new LdrColorA(4, 5, 4, 0), new LdrColorA(4, 5, 4, 0) } }), // Mode 4
-            new ModeInfo(0x0a, 1, true,  3, new LdrColorA[][] { new LdrColorA[] { new LdrColorA(11, 11, 11, 0), new LdrColorA(4, 4, 5, 0) }, new LdrColorA[] { new LdrColorA(4, 4, 5, 0), new LdrColorA(4, 4, 5, 0) } }), // Mode 5
-            new ModeInfo(0x0e, 1, true,  3, new LdrColorA[][] { new LdrColorA[] { new LdrColorA(9, 9, 9, 0), new LdrColorA(5, 5, 5, 0) }, new LdrColorA[] { new LdrColorA(5, 5, 5, 0), new LdrColorA(5, 5, 5, 0) } }), // Mode 6
-            new ModeInfo(0x12, 1, true,  3, new LdrColorA[][] { new LdrColorA[] { new LdrColorA(8, 8, 8, 0), new LdrColorA(6, 5, 5, 0) }, new LdrColorA[] { new LdrColorA(6, 5, 5, 0), new LdrColorA(6, 5, 5, 0) } }), // Mode 7
-            new ModeInfo(0x16, 1, true,  3, new LdrColorA[][] { new LdrColorA[] { new LdrColorA(8, 8, 8, 0), new LdrColorA(5, 6, 5, 0) }, new LdrColorA[] { new LdrColorA(5, 6, 5, 0), new LdrColorA(5, 6, 5, 0) } }), // Mode 8
-            new ModeInfo(0x1a, 1, true,  3, new LdrColorA[][] { new LdrColorA[] { new LdrColorA(8, 8, 8, 0), new LdrColorA(5, 5, 6, 0) }, new LdrColorA[] { new LdrColorA(5, 5, 6, 0), new LdrColorA(5, 5, 6, 0) } }), // Mode 9
-            new ModeInfo(0x1e, 1, false, 3, new LdrColorA[][] { new LdrColorA[] { new LdrColorA(6, 6, 6, 0), new LdrColorA(6, 6, 6, 0) }, new LdrColorA[] { new LdrColorA(6, 6, 6, 0), new LdrColorA(6, 6, 6, 0) } }), // Mode 10
-            new ModeInfo(0x03, 0, false, 4, new LdrColorA[][] { new LdrColorA[] { new LdrColorA(10, 10, 10, 0), new LdrColorA(10, 10, 10, 0) }, new LdrColorA[] { new LdrColorA(0, 0, 0, 0), new LdrColorA(0, 0, 0, 0) } }), // Mode 11
-            new ModeInfo(0x07, 0, true,  4, new LdrColorA[][] { new LdrColorA[] { new LdrColorA(11, 11, 11, 0), new LdrColorA(9, 9, 9, 0) }, new LdrColorA[] { new LdrColorA(0, 0, 0, 0), new LdrColorA(0, 0, 0, 0) } }), // Mode 12
-            new ModeInfo(0x0b, 0, true,  4, new LdrColorA[][] { new LdrColorA[] { new LdrColorA(12, 12, 12, 0), new LdrColorA(8, 8, 8, 0) }, new LdrColorA[] { new LdrColorA(0, 0, 0, 0), new LdrColorA(0, 0, 0, 0) } }), // Mode 13
-            new ModeInfo(0x0f, 0, true,  4, new LdrColorA[][] { new LdrColorA[] { new LdrColorA(16, 16, 16, 0), new LdrColorA(4, 4, 4, 0) }, new LdrColorA[] { new LdrColorA(0, 0, 0, 0), new LdrColorA(0, 0, 0, 0) } }), // Mode 14
+            new Bc6hModeInfo(0x00, 1, true,  3, new LdrColorA[][] { new LdrColorA[] { new LdrColorA(10, 10, 10, 0), new LdrColorA(5, 5, 5, 0) }, new LdrColorA[] { new LdrColorA(5, 5, 5, 0), new LdrColorA(5, 5, 5, 0) } }), // Mode 1
+            new Bc6hModeInfo(0x01, 1, true,  3, new LdrColorA[][] { new LdrColorA[] { new LdrColorA(7, 7, 7, 0), new LdrColorA(6, 6, 6, 0) }, new LdrColorA[] { new LdrColorA(6, 6, 6, 0), new LdrColorA(6, 6, 6, 0) } }), // Mode 2
+            new Bc6hModeInfo(0x02, 1, true,  3, new LdrColorA[][] { new LdrColorA[] { new LdrColorA(11, 11, 11, 0), new LdrColorA(5, 4, 4, 0) }, new LdrColorA[] { new LdrColorA(5, 4, 4, 0), new LdrColorA(5, 4, 4, 0) } }), // Mode 3
+            new Bc6hModeInfo(0x06, 1, true,  3, new LdrColorA[][] { new LdrColorA[] { new LdrColorA(11, 11, 11, 0), new LdrColorA(4, 5, 4, 0) }, new LdrColorA[] { new LdrColorA(4, 5, 4, 0), new LdrColorA(4, 5, 4, 0) } }), // Mode 4
+            new Bc6hModeInfo(0x0a, 1, true,  3, new LdrColorA[][] { new LdrColorA[] { new LdrColorA(11, 11, 11, 0), new LdrColorA(4, 4, 5, 0) }, new LdrColorA[] { new LdrColorA(4, 4, 5, 0), new LdrColorA(4, 4, 5, 0) } }), // Mode 5
+            new Bc6hModeInfo(0x0e, 1, true,  3, new LdrColorA[][] { new LdrColorA[] { new LdrColorA(9, 9, 9, 0), new LdrColorA(5, 5, 5, 0) }, new LdrColorA[] { new LdrColorA(5, 5, 5, 0), new LdrColorA(5, 5, 5, 0) } }), // Mode 6
+            new Bc6hModeInfo(0x12, 1, true,  3, new LdrColorA[][] { new LdrColorA[] { new LdrColorA(8, 8, 8, 0), new LdrColorA(6, 5, 5, 0) }, new LdrColorA[] { new LdrColorA(6, 5, 5, 0), new LdrColorA(6, 5, 5, 0) } }), // Mode 7
+            new Bc6hModeInfo(0x16, 1, true,  3, new LdrColorA[][] { new LdrColorA[] { new LdrColorA(8, 8, 8, 0), new LdrColorA(5, 6, 5, 0) }, new LdrColorA[] { new LdrColorA(5, 6, 5, 0), new LdrColorA(5, 6, 5, 0) } }), // Mode 8
+            new Bc6hModeInfo(0x1a, 1, true,  3, new LdrColorA[][] { new LdrColorA[] { new LdrColorA(8, 8, 8, 0), new LdrColorA(5, 5, 6, 0) }, new LdrColorA[] { new LdrColorA(5, 5, 6, 0), new LdrColorA(5, 5, 6, 0) } }), // Mode 9
+            new Bc6hModeInfo(0x1e, 1, false, 3, new LdrColorA[][] { new LdrColorA[] { new LdrColorA(6, 6, 6, 0), new LdrColorA(6, 6, 6, 0) }, new LdrColorA[] { new LdrColorA(6, 6, 6, 0), new LdrColorA(6, 6, 6, 0) } }), // Mode 10
+            new Bc6hModeInfo(0x03, 0, false, 4, new LdrColorA[][] { new LdrColorA[] { new LdrColorA(10, 10, 10, 0), new LdrColorA(10, 10, 10, 0) }, new LdrColorA[] { new LdrColorA(0, 0, 0, 0), new LdrColorA(0, 0, 0, 0) } }), // Mode 11
+            new Bc6hModeInfo(0x07, 0, true,  4, new LdrColorA[][] { new LdrColorA[] { new LdrColorA(11, 11, 11, 0), new LdrColorA(9, 9, 9, 0) }, new LdrColorA[] { new LdrColorA(0, 0, 0, 0), new LdrColorA(0, 0, 0, 0) } }), // Mode 12
+            new Bc6hModeInfo(0x0b, 0, true,  4, new LdrColorA[][] { new LdrColorA[] { new LdrColorA(12, 12, 12, 0), new LdrColorA(8, 8, 8, 0) }, new LdrColorA[] { new LdrColorA(0, 0, 0, 0), new LdrColorA(0, 0, 0, 0) } }), // Mode 13
+            new Bc6hModeInfo(0x0f, 0, true,  4, new LdrColorA[][] { new LdrColorA[] { new LdrColorA(16, 16, 16, 0), new LdrColorA(4, 4, 4, 0) }, new LdrColorA[] { new LdrColorA(0, 0, 0, 0), new LdrColorA(0, 0, 0, 0) } }), // Mode 14
         };
 
         private static readonly int[] ms_aModeToInfo =
@@ -361,10 +312,10 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 if (ms_aModeToInfo[uMode] >= 0)
                 {
                     Debug.Assert(ms_aModeToInfo[uMode] < ms_aInfo.Length);
-                    ModeDescriptor[] desc = ms_aDesc[ms_aModeToInfo[uMode]];
+                    Bc6hModeDescriptor[] desc = msADesc[ms_aModeToInfo[uMode]];
 
-                    Debug.Assert(ms_aModeToInfo[uMode] < ms_aDesc.Length);
-                    ref ModeInfo info = ref ms_aInfo[ms_aModeToInfo[uMode]];
+                    Debug.Assert(ms_aModeToInfo[uMode] < msADesc.Length);
+                    ref Bc6hModeInfo info = ref ms_aInfo[ms_aModeToInfo[uMode]];
 
                     var aEndPts = new IntEndPntPair[Constants.BC6H_MAX_REGIONS];
                     for (int i = 0; i < aEndPts.Length; ++i)
@@ -375,31 +326,31 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                     uint uShape = 0;
 
                     // Read header
-                    uint uHeaderBits = info.uPartitions > 0 ? 82u : 65u;
+                    uint uHeaderBits = info.Partitions > 0 ? 82u : 65u;
                     while (uStartBit < uHeaderBits)
                     {
                         uint uCurBit = uStartBit;
                         if (GetBit(currentBlock, ref uStartBit) != 0)
                         {
-                            switch (desc[uCurBit].m_eField)
+                            switch (desc[uCurBit].MBc6HEField)
                             {
-                                case EField.D: uShape |= 1u << desc[uCurBit].m_uBit; break;
-                                case EField.RW: aEndPts[0].A.r |= 1 << desc[uCurBit].m_uBit; break;
-                                case EField.RX: aEndPts[0].B.r |= 1 << desc[uCurBit].m_uBit; break;
-                                case EField.RY: aEndPts[1].A.r |= 1 << desc[uCurBit].m_uBit; break;
-                                case EField.RZ: aEndPts[1].B.r |= 1 << desc[uCurBit].m_uBit; break;
-                                case EField.GW: aEndPts[0].A.g |= 1 << desc[uCurBit].m_uBit; break;
-                                case EField.GX: aEndPts[0].B.g |= 1 << desc[uCurBit].m_uBit; break;
-                                case EField.GY: aEndPts[1].A.g |= 1 << desc[uCurBit].m_uBit; break;
-                                case EField.GZ: aEndPts[1].B.g |= 1 << desc[uCurBit].m_uBit; break;
-                                case EField.BW: aEndPts[0].A.b |= 1 << desc[uCurBit].m_uBit; break;
-                                case EField.BX: aEndPts[0].B.b |= 1 << desc[uCurBit].m_uBit; break;
-                                case EField.BY: aEndPts[1].A.b |= 1 << desc[uCurBit].m_uBit; break;
-                                case EField.BZ: aEndPts[1].B.b |= 1 << desc[uCurBit].m_uBit; break;
+                                case Bc6hEField.D: uShape |= 1u << desc[uCurBit].m_uBit; break;
+                                case Bc6hEField.RW: aEndPts[0].A.R |= 1 << desc[uCurBit].m_uBit; break;
+                                case Bc6hEField.RX: aEndPts[0].B.R |= 1 << desc[uCurBit].m_uBit; break;
+                                case Bc6hEField.RY: aEndPts[1].A.R |= 1 << desc[uCurBit].m_uBit; break;
+                                case Bc6hEField.RZ: aEndPts[1].B.R |= 1 << desc[uCurBit].m_uBit; break;
+                                case Bc6hEField.GW: aEndPts[0].A.G |= 1 << desc[uCurBit].m_uBit; break;
+                                case Bc6hEField.GX: aEndPts[0].B.G |= 1 << desc[uCurBit].m_uBit; break;
+                                case Bc6hEField.GY: aEndPts[1].A.G |= 1 << desc[uCurBit].m_uBit; break;
+                                case Bc6hEField.GZ: aEndPts[1].B.G |= 1 << desc[uCurBit].m_uBit; break;
+                                case Bc6hEField.BW: aEndPts[0].A.B |= 1 << desc[uCurBit].m_uBit; break;
+                                case Bc6hEField.BX: aEndPts[0].B.B |= 1 << desc[uCurBit].m_uBit; break;
+                                case Bc6hEField.BY: aEndPts[1].A.B |= 1 << desc[uCurBit].m_uBit; break;
+                                case Bc6hEField.BZ: aEndPts[1].B.B |= 1 << desc[uCurBit].m_uBit; break;
                                 default:
                                 {
                                     Debug.WriteLine("BC6H: Invalid header bits encountered during decoding");
-                                    Helpers.FillWithErrorColors(data, ref dataIndex, Constants.NUM_PIXELS_PER_BLOCK, self.DivSize, stride);
+                                    Helpers.FillWithErrorColors(data, ref dataIndex, Constants.NumPixelsPerBlock, self.DivSize, stride);
                                     return dataIndex;
                                 }
                             }
@@ -408,62 +359,62 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
 
                     Debug.Assert(uShape < 64);
 
-                    if (info.bTransformed)
+                    if (info.Transformed)
                     {
-                        Debug.Assert(info.uPartitions < Constants.BC6H_MAX_REGIONS);
-                        for (int p = 0; p <= info.uPartitions; ++p)
+                        Debug.Assert(info.Partitions < Constants.BC6H_MAX_REGIONS);
+                        for (int p = 0; p <= info.Partitions; ++p)
                         {
                             if (p != 0)
                             {
-                                aEndPts[p].A.SignExtend(info.RGBAPrec[p][0]);
+                                aEndPts[p].A.SignExtend(info.RgbaPrec[p][0]);
                             }
 
-                            aEndPts[p].B.SignExtend(info.RGBAPrec[p][1]);
+                            aEndPts[p].B.SignExtend(info.RgbaPrec[p][1]);
                         }
                     }
 
                     // Inverse transform the end points
-                    if (info.bTransformed)
+                    if (info.Transformed)
                     {
-                        Helpers.TransformInverseUnsigned(aEndPts, info.RGBAPrec[0][0]);
+                        Helpers.TransformInverseUnsigned(aEndPts, info.RgbaPrec[0][0]);
                     }
 
                     // Read indices
-                    for (int i = 0; i < Constants.NUM_PIXELS_PER_BLOCK; ++i)
+                    for (int i = 0; i < Constants.NumPixelsPerBlock; ++i)
                     {
-                        uint uNumBits = Helpers.IsFixUpOffset(info.uPartitions, (byte)uShape, i) ? info.uIndexPrec - 1u : info.uIndexPrec;
+                        uint uNumBits = Helpers.IsFixUpOffset(info.Partitions, (byte)uShape, i) ? info.IndexPrec - 1u : info.IndexPrec;
                         if (uStartBit + uNumBits > 128)
                         {
                             Debug.WriteLine("BC6H: Invalid block encountered during decoding");
-                            Helpers.FillWithErrorColors(data, ref dataIndex, Constants.NUM_PIXELS_PER_BLOCK, self.DivSize, stride);
+                            Helpers.FillWithErrorColors(data, ref dataIndex, Constants.NumPixelsPerBlock, self.DivSize, stride);
                             return dataIndex;
                         }
 
                         uint uIndex = GetBits(currentBlock, ref uStartBit, uNumBits);
 
-                        if (uIndex >= ((info.uPartitions > 0) ? 8 : 16))
+                        if (uIndex >= ((info.Partitions > 0) ? 8 : 16))
                         {
                             Debug.WriteLine("BC6H: Invalid index encountered during decoding");
-                            Helpers.FillWithErrorColors(data, ref dataIndex, Constants.NUM_PIXELS_PER_BLOCK, self.DivSize, stride);
+                            Helpers.FillWithErrorColors(data, ref dataIndex, Constants.NumPixelsPerBlock, self.DivSize, stride);
                             return dataIndex;
                         }
 
-                        uint uRegion = Constants.g_aPartitionTable[info.uPartitions][uShape][i];
+                        uint uRegion = Constants.g_aPartitionTable[info.Partitions][uShape][i];
                         Debug.Assert(uRegion < Constants.BC6H_MAX_REGIONS);
 
                         // Unquantize endpoints and interpolate
-                        int r1 = Unquantize(aEndPts[uRegion].A.r, info.RGBAPrec[0][0].r);
-                        int g1 = Unquantize(aEndPts[uRegion].A.g, info.RGBAPrec[0][0].g);
-                        int b1 = Unquantize(aEndPts[uRegion].A.b, info.RGBAPrec[0][0].b);
-                        int r2 = Unquantize(aEndPts[uRegion].B.r, info.RGBAPrec[0][0].r);
-                        int g2 = Unquantize(aEndPts[uRegion].B.g, info.RGBAPrec[0][0].g);
-                        int b2 = Unquantize(aEndPts[uRegion].B.b, info.RGBAPrec[0][0].b);
-                        int[] aWeights = info.uPartitions > 0 ? Constants.g_aWeights3 : Constants.g_aWeights4;
+                        int r1 = Unquantize(aEndPts[uRegion].A.R, info.RgbaPrec[0][0].R);
+                        int g1 = Unquantize(aEndPts[uRegion].A.G, info.RgbaPrec[0][0].G);
+                        int b1 = Unquantize(aEndPts[uRegion].A.B, info.RgbaPrec[0][0].B);
+                        int r2 = Unquantize(aEndPts[uRegion].B.R, info.RgbaPrec[0][0].R);
+                        int g2 = Unquantize(aEndPts[uRegion].B.G, info.RgbaPrec[0][0].G);
+                        int b2 = Unquantize(aEndPts[uRegion].B.B, info.RgbaPrec[0][0].B);
+                        int[] aWeights = info.Partitions > 0 ? Constants.g_aWeights3 : Constants.g_aWeights4;
                         var fc = new IntColor
                         {
-                            r = FinishUnquantize(((r1 * (Constants.BC67_WEIGHT_MAX - aWeights[uIndex])) + (r2 * aWeights[uIndex]) + Constants.BC67_WEIGHT_ROUND) >> Constants.BC67_WEIGHT_SHIFT),
-                            g = FinishUnquantize(((g1 * (Constants.BC67_WEIGHT_MAX - aWeights[uIndex])) + (g2 * aWeights[uIndex]) + Constants.BC67_WEIGHT_ROUND) >> Constants.BC67_WEIGHT_SHIFT),
-                            b = FinishUnquantize(((b1 * (Constants.BC67_WEIGHT_MAX - aWeights[uIndex])) + (b2 * aWeights[uIndex]) + Constants.BC67_WEIGHT_ROUND) >> Constants.BC67_WEIGHT_SHIFT)
+                            R = FinishUnquantize(((r1 * (Constants.BC67_WEIGHT_MAX - aWeights[uIndex])) + (r2 * aWeights[uIndex]) + Constants.BC67_WEIGHT_ROUND) >> Constants.BC67_WEIGHT_SHIFT),
+                            G = FinishUnquantize(((g1 * (Constants.BC67_WEIGHT_MAX - aWeights[uIndex])) + (g2 * aWeights[uIndex]) + Constants.BC67_WEIGHT_ROUND) >> Constants.BC67_WEIGHT_SHIFT),
+                            B = FinishUnquantize(((b1 * (Constants.BC67_WEIGHT_MAX - aWeights[uIndex])) + (b2 * aWeights[uIndex]) + Constants.BC67_WEIGHT_ROUND) >> Constants.BC67_WEIGHT_SHIFT)
                         };
 
                         ushort[] rgb = new ushort[3];
@@ -496,7 +447,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                     Debug.WriteLine(warnstr);
 
                     // Per the BC6H format spec, we must return opaque black
-                    for (int i = 0; i < Constants.NUM_PIXELS_PER_BLOCK; ++i)
+                    for (int i = 0; i < Constants.NumPixelsPerBlock; ++i)
                     {
                         data[dataIndex++] = 0;
                         data[dataIndex++] = 0;
@@ -553,7 +504,6 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
 
         private static int Unquantize(int comp, byte uBitsPerComp)
         {
-            int s = 0;
             int unq;
 
             if (uBitsPerComp >= 15)

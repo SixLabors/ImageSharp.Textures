@@ -1,16 +1,18 @@
 // Copyright (c) Six Labors and contributors.
 // Licensed under the Apache License, Version 2.0.
 
+using System;
+
 namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.PixelFormats
 {
-    using System;
-    using System.Diagnostics;
-
     internal static class Helpers
     {
         public static bool IsFixUpOffset(byte uPartitions, byte uShape, int uOffset)
         {
-            Debug.Assert(uPartitions < 3 && uShape < 64 && uOffset < 16 && uOffset >= 0);
+            Guard.MustBeLessThan(uPartitions, 3, nameof(uPartitions));
+            Guard.MustBeLessThan(uShape, 64, nameof(uShape));
+            Guard.MustBeBetweenOrEqualTo(uOffset, 0, 15, nameof(uOffset));
+
             for (byte p = 0; p <= uPartitions; p++)
             {
                 if (uOffset == Constants.g_aFixUp[uPartitions][uShape][p])
@@ -22,29 +24,29 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.PixelFormats
             return false;
         }
 
-        public static void TransformInverseSigned(IntEndPntPair[] aEndPts, LdrColorA Prec)
+        public static void TransformInverseSigned(IntEndPntPair[] aEndPts, LdrColorA prec)
         {
-            var WrapMask = new IntColor((1 << Prec.r) - 1, (1 << Prec.g) - 1, (1 << Prec.b) - 1);
+            var wrapMask = new IntColor((1 << prec.R) - 1, (1 << prec.G) - 1, (1 << prec.B) - 1);
             aEndPts[0].B += aEndPts[0].A;
-            aEndPts[0].B &= WrapMask;
+            aEndPts[0].B &= wrapMask;
             aEndPts[1].A += aEndPts[0].A;
-            aEndPts[1].A &= WrapMask;
+            aEndPts[1].A &= wrapMask;
             aEndPts[1].B += aEndPts[0].A;
-            aEndPts[1].B &= WrapMask;
-            aEndPts[0].B.SignExtend(Prec);
-            aEndPts[1].A.SignExtend(Prec);
-            aEndPts[1].B.SignExtend(Prec);
+            aEndPts[1].B &= wrapMask;
+            aEndPts[0].B.SignExtend(prec);
+            aEndPts[1].A.SignExtend(prec);
+            aEndPts[1].B.SignExtend(prec);
         }
 
-        public static void TransformInverseUnsigned(IntEndPntPair[] aEndPts, LdrColorA Prec)
+        public static void TransformInverseUnsigned(IntEndPntPair[] aEndPts, LdrColorA prec)
         {
-            var WrapMask = new IntColor((1 << Prec.r) - 1, (1 << Prec.g) - 1, (1 << Prec.b) - 1);
+            var wrapMask = new IntColor((1 << prec.R) - 1, (1 << prec.G) - 1, (1 << prec.B) - 1);
             aEndPts[0].B += aEndPts[0].A;
-            aEndPts[0].B &= WrapMask;
+            aEndPts[0].B &= wrapMask;
             aEndPts[1].A += aEndPts[0].A;
-            aEndPts[1].A &= WrapMask;
+            aEndPts[1].A &= wrapMask;
             aEndPts[1].B += aEndPts[0].A;
-            aEndPts[1].B &= WrapMask;
+            aEndPts[1].B &= wrapMask;
         }
 
         public static int DivRem(int a, int b, out int result)
@@ -57,14 +59,13 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.PixelFormats
         // Fill colors where each pixel is 4 bytes (rgba)
         public static void FillWithErrorColors(Span<byte> pOut, ref int index, int numPixels, byte divSize, int stride)
         {
-            int rem;
             for (int i = 0; i < numPixels; ++i)
             {
-                pOut[(int)index++] = 0;
-                pOut[(int)index++] = 0;
-                pOut[(int)index++] = 0;
-                pOut[(int)index++] = 255;
-                DivRem(i + 1, divSize, out rem);
+                pOut[index++] = 0;
+                pOut[index++] = 0;
+                pOut[index++] = 0;
+                pOut[index++] = 255;
+                DivRem(i + 1, divSize, out int rem);
                 if (rem == 0)
                 {
                     index += 4 * (stride - divSize);

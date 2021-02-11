@@ -81,7 +81,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Extensions
         /// </returns>
         public static bool ShouldHaveDxt10Header(this DdsHeader ddsHeader)
         {
-            return (ddsHeader.PixelFormat.Flags == DdsPixelFormatFlags.FourCC) && (ddsHeader.PixelFormat.FourCC == DdsFourCC.DX10);
+            return (ddsHeader.PixelFormat.Flags == DdsPixelFormatFlags.FourCC) && (ddsHeader.PixelFormat.FourCC == DdsFourCc.DX10);
         }
 
         /// <summary>

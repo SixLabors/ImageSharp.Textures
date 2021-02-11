@@ -5,11 +5,6 @@ using SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats;
 
 namespace SixLabors.ImageSharp.Textures
 {
-    public abstract class MipMap
-    {
-        public abstract Image GetImage();
-    }
-
     public sealed class MipMap<TBlock> : MipMap
         where TBlock : struct, IBlock<TBlock>
     {
@@ -23,10 +18,19 @@ namespace SixLabors.ImageSharp.Textures
 
         public TBlock BlockFormat { get; }
 
+        /// <summary>
+        /// Gets or sets the byte data for the mipmap.
+        /// </summary>
         public byte[] BlockData { get; set; }
 
+        /// <summary>
+        /// Gets the width of the mipmap.
+        /// </summary>
         public int Width { get; }
 
+        /// <summary>
+        /// Gets the height of the mipmap.
+        /// </summary>
         public int Height { get; }
 
         /// <inheritdoc/>

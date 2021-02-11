@@ -15,15 +15,6 @@ namespace SixLabors.ImageSharp.Textures
     public abstract partial class Texture
     {
         /// <summary>
-        /// </summary>
-        /// <param name="textureType"><see cref="TextureType" /></param>
-        /// <returns>The result <see cref="Texture"/></returns>
-        // internal static Texture CreateUninitialized(TextureType textureType)
-        // {
-        //     return new Texture(textureType);
-        // }
-
-        /// <summary>
         /// By reading the header on the provided stream this calculates the images format.
         /// </summary>
         /// <param name="stream">The image stream to read the header from.</param>
@@ -75,9 +66,6 @@ namespace SixLabors.ImageSharp.Textures
         /// </summary>
         /// <param name="stream">The stream.</param>
         /// <param name="config">the configuration.</param>
-        /// <returns>
-        /// A new <see cref="Texture{TPixel}"/>.
-        /// </returns>
         private static (Texture texture, ITextureFormat format) DecodeTexture(Stream stream, Configuration config)
         {
             ITextureDecoder decoder = DiscoverDecoder(stream, config, out ITextureFormat format);

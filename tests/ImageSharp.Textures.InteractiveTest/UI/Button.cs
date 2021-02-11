@@ -9,7 +9,7 @@ namespace Phoenix.Import.Application.UI
 {
     public class Button
     {
-        public Vector2 Size  { get; set; } = new Vector2(100, 30);
+        public Vector2 Size { get; set; } = new Vector2(100, 30);
 
         public string Title { get; set; } = string.Empty;
 

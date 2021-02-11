@@ -25,7 +25,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds
             if (header.Length >= this.HeaderSize)
             {
                 uint magicValue = BinaryPrimitives.ReadUInt32LittleEndian(header);
-                return magicValue != DdsFourCC.DdsMagicWord;
+                return magicValue != DdsFourCc.DdsMagicWord;
             }
 
             return false;

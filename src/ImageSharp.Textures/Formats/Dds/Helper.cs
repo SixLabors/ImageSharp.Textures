@@ -18,8 +18,8 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds
             TBlock blockFormat = default;
             int heightBlocks = Helper.CalcBlocks(height);
             int widthBlocks = Helper.CalcBlocks(width);
-            int StridePixels = widthBlocks * blockFormat.DivSize;
-            int deflatedStrideBytes = StridePixels * blockFormat.PixelDepthBytes;
+            int stridePixels = widthBlocks * blockFormat.DivSize;
+            int deflatedStrideBytes = stridePixels * blockFormat.PixelDepthBytes;
             int dataLen = heightBlocks * blockFormat.DivSize * deflatedStrideBytes;
             byte[] data = new byte[dataLen];
 
@@ -27,7 +27,6 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds
             int dataIndex = 0;
             int bIndex = 0;
 
-            int stridePixels = widthBlocks * blockFormat.DivSize;
             int stride = stridePixels * blockFormat.PixelDepthBytes;
             int blocksPerStride = widthBlocks;
             int indexPixelsLeft = heightBlocks * blockFormat.DivSize * stride;

@@ -9,7 +9,7 @@ using SixLabors.ImageSharp.PixelFormats;
 namespace SixLabors.ImageSharp.Textures.PixelFormats
 {
     /// <summary>
-    /// Packed pixel type containing two 8-bit unsigned normalized values ranging from 0 to 1.
+    /// Packed pixel type containing two 16-bit unsigned normalized values ranging from 0 to 1.
     /// <para>
     /// Ranges from [0, 0, 0, 1] to [1, 1, 0, 1] in vector form.
     /// </para>
