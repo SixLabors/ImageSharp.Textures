@@ -80,6 +80,16 @@
 
         new PixelInfo
         {
+            Name = "R16G16_FLOAT",
+            PackedType = "uint",
+            ChannelInfos = new[] {
+                new ChannelInfo { Bits = 16, IsFloat = true, Channel = "r" },
+                new ChannelInfo { Bits = 16, IsFloat = true, Channel = "g" }
+            }
+        },
+
+        new PixelInfo
+        {
             Name = "R32G32_FLOAT",
             PackedType = "none",
             ChannelInfos = new[] {
@@ -107,10 +117,6 @@
                 new ChannelInfo { Bits = 8, IsFloat = false, Channel = "g" }
             }
         },
-
-
-
-
 
         new PixelInfo
         {

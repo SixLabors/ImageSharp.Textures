@@ -103,6 +103,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
             switch (this.DdsHeader.PixelFormat.FourCC)
             {
                 case DdsFourCc.None:
+                case DdsFourCc.R16G16_FLOAT:
                 case DdsFourCc.R16G16B16A16_SNORM:
                 case DdsFourCc.R16G16B16A16_UNORM:
                 case DdsFourCc.R16G16B16A16_FLOAT:
@@ -154,6 +155,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                     switch (this.DdsHeader.PixelFormat.FourCC)
                     {
                         case DdsFourCc.R32_FLOAT:
+                        case DdsFourCc.R16G16_FLOAT:
                             return this.ThirtyTwoBitImageFormat(stream, width, height, count);
                         case DdsFourCc.R16G16B16A16_SNORM:
                         case DdsFourCc.R16G16B16A16_UNORM:
@@ -281,7 +283,11 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 return this.AllocateMipMaps<Fp32>(stream, width, height, count);
             }
 
-            // R11G11B10_Float
+            if (pixelFormat.FourCC == DdsFourCc.R16G16_FLOAT)
+            {
+                return this.AllocateMipMaps<R16G16Float>(stream, width, height, count);
+            }
+
             throw new Exception("Unsupported 32 bit format");
         }
 
@@ -374,7 +380,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 case DxgiFormat.B8G8R8A8_UNorm_SRGB:
                     return this.AllocateMipMaps<Bgra32>(stream, width, height, count);
                 case DxgiFormat.R32G32B32A32_Float:
-                    throw new Exception("not implemented");
+                    return this.AllocateMipMaps<R32G32B32A32Float>(stream, width, height, count);
                 case DxgiFormat.R32G32B32A32_Typeless:
                 case DxgiFormat.R32G32B32A32_UInt:
                 case DxgiFormat.R32G32B32A32_SInt:
