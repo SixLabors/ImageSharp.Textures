@@ -2,21 +2,25 @@
 
   <PropertyGroup>
     <TargetFrameworks>netcoreapp3.1;net472</TargetFrameworks>
-
-    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
-    <LangVersion>latest</LangVersion>
-    <DebugType Condition="$(codecov) != ''">full</DebugType>
-    <DebugType Condition="$(codecov) == ''">portable</DebugType>
-    <DebugSymbols>True</DebugSymbols>
     <AssemblyName>SixLabors.ImageSharp.Textures.Tests</AssemblyName>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <LangVersion>8.0</LangVersion>
+    <DebugSymbols>True</DebugSymbols>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <RootNamespace>SixLabors.ImageSharp.Textures.Tests</RootNamespace>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.console" />
+    <PackageReference Include="xunit.runner.visualstudio" />
     <PackageReference Include="Magick.NET-Q16-AnyCPU" />
     <PackageReference Include="System.Drawing.Common" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\ImageSharp.Textures\ImageSharp.Textures.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -31,10 +35,6 @@
     <None Update="xunit.runner.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\..\src\ImageSharp.Textures\ImageSharp.Textures.csproj" />
   </ItemGroup>
 
   <Import Project="..\Images\Images.projitems" Label="Shared" />

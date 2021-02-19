@@ -40,6 +40,7 @@ namespace Phoenix.Import.Application
         }
 
         private static Dictionary<string, object> _datastore;
+
         public static Dictionary<string, object> DataStore
         {
             get
