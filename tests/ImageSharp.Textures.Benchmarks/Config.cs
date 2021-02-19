@@ -12,16 +12,16 @@ namespace SixLabors.ImageSharp.Textures.Benchmarks
     {
         public Config()
         {
-            this.Add(MemoryDiagnoser.Default);
+            this.AddDiagnoser(MemoryDiagnoser.Default);
         }
 
         public class ShortRun : Config
         {
             public ShortRun()
             {
-                this.Add(
-                    Job.Default.With(ClrRuntime.Net472).WithLaunchCount(1).WithWarmupCount(3).WithIterationCount(3),
-                    Job.Default.With(CoreRuntime.Core31).WithLaunchCount(1).WithWarmupCount(3).WithIterationCount(3));
+                this.AddJob(
+                    Job.Default.WithRuntime(ClrRuntime.Net472).WithLaunchCount(1).WithWarmupCount(3).WithIterationCount(3),
+                    Job.Default.WithRuntime(CoreRuntime.Core31).WithLaunchCount(1).WithWarmupCount(3).WithIterationCount(3));
             }
         }
     }
