@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
 
@@ -32,16 +32,16 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Templates\PixelGenerator.ignore">
+    <None Update="PixelFormats\Generated\PixelGenerator.ignore">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>PixelGenerator.tt</DependentUpon>
     </None>
-    <None Update="Templates\PixelGenerator.tt">
+    <None Update="PixelFormats\Generated\PixelGenerator.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>PixelGenerator.ignore</LastGenOutput>
     </None>
-    <None Update="Templates\MultipleOutputHelper.ttinclude">
+    <None Update="PixelFormats\Generated\MultipleOutputHelper.ttinclude">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>MultipleOutputHelper.cs</LastGenOutput>
     </None>
@@ -52,7 +52,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="Templates\MultipleOutputHelper.cs">
+    <Compile Update="PixelFormats\Generated\MultipleOutputHelper.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>MultipleOutputHelper.ttinclude</DependentUpon>
