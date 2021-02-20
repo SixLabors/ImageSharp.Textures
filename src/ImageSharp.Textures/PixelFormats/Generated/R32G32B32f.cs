@@ -4,65 +4,77 @@
 using System;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using SixLabors.ImageSharp.PixelFormats;
 
 namespace SixLabors.ImageSharp.Textures.PixelFormats
 {
     /// <summary>
-    /// Packed pixel type containing unsigned normalized values ranging from 0 to 1.
-    /// The x, y and z components use 5 bits.
+    /// Pixel type containing three 32-bit unsigned normalized values ranging from 0 to 4294967295.
+    /// The color components are stored in red, green, blue
     /// <para>
     /// Ranges from [0, 0, 0] to [1, 1, 1] in vector form.
     /// </para>
     /// </summary>
-    public partial struct BGR555_UINT : IPixel<BGR555_UINT>, IPackedVector<ushort>
+    [StructLayout(LayoutKind.Explicit)]
+    public partial struct R32G32B32f : IPixel<R32G32B32f>
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="BGR555_UINT"/> struct.
+        /// Gets or sets the red component.
         /// </summary>
-        /// <param name="x">The x-component</param>
-        /// <param name="y">The y-component</param>
-        /// <param name="z">The z-component</param>
-        public BGR555_UINT(float x, float y, float z)
-            : this(new Vector3(x, y, z))
+        [FieldOffset(0)]
+        public float R;
+
+        /// <summary>
+        /// Gets or sets the green component.
+        /// </summary>
+        [FieldOffset(4)]
+        public float G;
+
+        /// <summary>
+        /// Gets or sets the blue component.
+        /// </summary>
+        [FieldOffset(8)]
+        public float B;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="R32G32B32f"/> struct.
+        /// </summary>
+        /// <param name="r">The red component.</param>
+        /// <param name="g">The green component.</param>
+        /// <param name="b">The blue component.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public R32G32B32f(float r, float g, float b)
         {
+            this.R = r;
+            this.G = g;
+            this.B = b;
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="BGR555_UINT"/> struct.
+        /// Compares two <see cref="R32G32B32f"/> objects for equality.
         /// </summary>
-        /// <param name="vector">
-        /// The vector containing the components for the packed vector.
-        /// </param>
-        public BGR555_UINT(Vector3 vector) => this.PackedValue = Pack(ref vector);
-
-        /// <inheritdoc/>
-        public ushort PackedValue { get; set; }
-
-        /// <summary>
-        /// Compares two <see cref="BGR555_UINT"/> objects for equality.
-        /// </summary>
-        /// <param name="left">The <see cref="BGR555_UINT"/> on the left side of the operand.</param>
+        /// <param name="left">The <see cref="R32G32B32f"/> on the left side of the operand.</param>
         /// <returns>
         /// True if the <paramref name="left"/> parameter is equal to the <paramref name="right"/> parameter; otherwise, false.
         /// </returns>
-        /// <param name="right">The <see cref="BGR555_UINT"/> on the right side of the operand.</param>
+        /// <param name="right">The <see cref="R32G32B32f"/> on the right side of the operand.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool operator ==(BGR555_UINT left, BGR555_UINT right) => left.Equals(right);
+        public static bool operator ==(R32G32B32f left, R32G32B32f right) => left.Equals(right);
 
         /// <summary>
-        /// Compares two <see cref="BGR555_UINT"/> objects for equality.
+        /// Compares two <see cref="R32G32B32f"/> objects for equality.
         /// </summary>
-        /// <param name="left">The <see cref="BGR555_UINT"/> on the left side of the operand.</param>
-        /// <param name="right">The <see cref="BGR555_UINT"/> on the right side of the operand.</param>
+        /// <param name="left">The <see cref="R32G32B32f"/> on the left side of the operand.</param>
+        /// <param name="right">The <see cref="R32G32B32f"/> on the right side of the operand.</param>
         /// <returns>
         /// True if the <paramref name="left"/> parameter is not equal to the <paramref name="right"/> parameter; otherwise, false.
         /// </returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool operator !=(BGR555_UINT left, BGR555_UINT right) => !left.Equals(right);
+        public static bool operator !=(R32G32B32f left, R32G32B32f right) => !left.Equals(right);
 
         /// <inheritdoc />
-        public PixelOperations<BGR555_UINT> CreatePixelOperations() => new PixelOperations<BGR555_UINT>();
+        public PixelOperations<R32G32B32f> CreatePixelOperations() => new PixelOperations<R32G32B32f>();
 
         /// <inheritdoc/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -76,8 +88,9 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void FromVector4(Vector4 vector)
         {
-            var vector3 = new Vector3(vector.X, vector.Y, vector.Z);
-            this.PackedValue = Pack(ref vector3);
+            this.R = vector.X;
+            this.G = vector.Y;
+            this.B = vector.Z;
         }
 
         /// <inheritdoc />
@@ -85,9 +98,9 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         public Vector4 ToVector4()
         {
             return new Vector4(
-                ((this.PackedValue >> 10) & 31) / 31F,
-                ((this.PackedValue >> 5) & 31) / 31F,
-                (this.PackedValue & 31) / 31F,
+                this.R,
+                this.G,
+                this.B,
                 1.0f);
         }
 
@@ -147,31 +160,20 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         public void FromRgba64(Rgba64 source) => this.FromScaledVector4(source.ToScaledVector4());
 
         /// <inheritdoc />
-        public override bool Equals(object obj) => obj is BGR555_UINT other && this.Equals(other);
+        public override bool Equals(object obj) => obj is R32G32B32f other && this.Equals(other);
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool Equals(BGR555_UINT other) => this.PackedValue.Equals(other.PackedValue);
+        public bool Equals(R32G32B32f other) => this.R.Equals(other.R) && this.G.Equals(other.G) && this.B.Equals(other.B);
 
         /// <inheritdoc />
         public override string ToString()
         {
-            var vector = this.ToVector4();
-            return FormattableString.Invariant($"BGR555_UINT({vector.Z:#0.##}, {vector.Y:#0.##}, {vector.X:#0.##})");
+            return FormattableString.Invariant($"R32G32B32f({this.R}, {this.G}, {this.B})");
         }
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override int GetHashCode() => this.PackedValue.GetHashCode();
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static ushort Pack(ref Vector3 vector)
-        {
-            vector = Vector3.Clamp(vector, Vector3.Zero, Vector3.One);
-            return (ushort)(
-                (((uint)Math.Round(vector.X * 31F) & 31) << 10)
-                | (((uint)Math.Round(vector.Y * 31F) & 31) << 5)
-                | ((uint)Math.Round(vector.Z * 31F) & 31));
-        }
+        public override int GetHashCode() => HashCode.Combine(this.R, this.G, this.B);
     }
 }

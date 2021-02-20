@@ -15,54 +15,54 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
     /// Ranges from [0, 0, 0] to [1, 1, 1] in vector form.
     /// </para>
     /// </summary>
-    public partial struct RGB32_UINT : IPixel<RGB32_UINT>, IPackedVector<uint>
+    public partial struct Rgb32 : IPixel<Rgb32>, IPackedVector<uint>
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="RGB32_UINT"/> struct.
+        /// Initializes a new instance of the <see cref="Rgb32"/> struct.
         /// </summary>
         /// <param name="x">The x-component</param>
         /// <param name="y">The y-component</param>
         /// <param name="z">The z-component</param>
-        public RGB32_UINT(float x, float y, float z)
+        public Rgb32(float x, float y, float z)
             : this(new Vector3(x, y, z))
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="RGB32_UINT"/> struct.
+        /// Initializes a new instance of the <see cref="Rgb32"/> struct.
         /// </summary>
         /// <param name="vector">
         /// The vector containing the components for the packed vector.
         /// </param>
-        public RGB32_UINT(Vector3 vector) => this.PackedValue = Pack(ref vector);
+        public Rgb32(Vector3 vector) => this.PackedValue = Pack(ref vector);
 
         /// <inheritdoc/>
         public uint PackedValue { get; set; }
 
         /// <summary>
-        /// Compares two <see cref="RGB32_UINT"/> objects for equality.
+        /// Compares two <see cref="Rgb32"/> objects for equality.
         /// </summary>
-        /// <param name="left">The <see cref="RGB32_UINT"/> on the left side of the operand.</param>
+        /// <param name="left">The <see cref="Rgb32"/> on the left side of the operand.</param>
         /// <returns>
         /// True if the <paramref name="left"/> parameter is equal to the <paramref name="right"/> parameter; otherwise, false.
         /// </returns>
-        /// <param name="right">The <see cref="RGB32_UINT"/> on the right side of the operand.</param>
+        /// <param name="right">The <see cref="Rgb32"/> on the right side of the operand.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool operator ==(RGB32_UINT left, RGB32_UINT right) => left.Equals(right);
+        public static bool operator ==(Rgb32 left, Rgb32 right) => left.Equals(right);
 
         /// <summary>
-        /// Compares two <see cref="RGB32_UINT"/> objects for equality.
+        /// Compares two <see cref="Rgb32"/> objects for equality.
         /// </summary>
-        /// <param name="left">The <see cref="RGB32_UINT"/> on the left side of the operand.</param>
-        /// <param name="right">The <see cref="RGB32_UINT"/> on the right side of the operand.</param>
+        /// <param name="left">The <see cref="Rgb32"/> on the left side of the operand.</param>
+        /// <param name="right">The <see cref="Rgb32"/> on the right side of the operand.</param>
         /// <returns>
         /// True if the <paramref name="left"/> parameter is not equal to the <paramref name="right"/> parameter; otherwise, false.
         /// </returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool operator !=(RGB32_UINT left, RGB32_UINT right) => !left.Equals(right);
+        public static bool operator !=(Rgb32 left, Rgb32 right) => !left.Equals(right);
 
         /// <inheritdoc />
-        public PixelOperations<RGB32_UINT> CreatePixelOperations() => new PixelOperations<RGB32_UINT>();
+        public PixelOperations<Rgb32> CreatePixelOperations() => new PixelOperations<Rgb32>();
 
         /// <inheritdoc/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -147,17 +147,17 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         public void FromRgba64(Rgba64 source) => this.FromScaledVector4(source.ToScaledVector4());
 
         /// <inheritdoc />
-        public override bool Equals(object obj) => obj is RGB32_UINT other && this.Equals(other);
+        public override bool Equals(object obj) => obj is Rgb32 other && this.Equals(other);
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool Equals(RGB32_UINT other) => this.PackedValue.Equals(other.PackedValue);
+        public bool Equals(Rgb32 other) => this.PackedValue.Equals(other.PackedValue);
 
         /// <inheritdoc />
         public override string ToString()
         {
             var vector = this.ToVector4();
-            return FormattableString.Invariant($"RGB32_UINT({vector.X:#0.##}, {vector.Y:#0.##}, {vector.Z:#0.##})");
+            return FormattableString.Invariant($"Rgb32({vector.X:#0.##}, {vector.Y:#0.##}, {vector.Z:#0.##})");
         }
 
         /// <inheritdoc />

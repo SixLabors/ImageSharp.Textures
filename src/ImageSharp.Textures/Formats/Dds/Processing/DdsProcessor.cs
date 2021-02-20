@@ -7,7 +7,6 @@ using System.IO;
 using SixLabors.ImageSharp.Textures.Common.Extensions;
 using SixLabors.ImageSharp.Textures.Formats.Dds.Emums;
 using SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats;
-using SixLabors.ImageSharp.Textures.PixelFormats;
 using Fp32 = SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats.Fp32;
 using L32 = SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats.L32;
 

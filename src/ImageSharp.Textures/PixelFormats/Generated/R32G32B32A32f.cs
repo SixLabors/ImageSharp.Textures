@@ -10,14 +10,14 @@ using SixLabors.ImageSharp.PixelFormats;
 namespace SixLabors.ImageSharp.Textures.PixelFormats
 {
     /// <summary>
-    /// Pixel type containing two 32-bit unsigned normalized values ranging from 0 to 4294967295.
-    /// The color components are stored in red, green
+    /// Pixel type containing four 32-bit unsigned normalized values ranging from 0 to 4294967295.
+    /// The color components are stored in red, green, blue, alpha
     /// <para>
-    /// Ranges from [0, 0] to [1, 1] in vector form.
+    /// Ranges from [0, 0, 0, 0] to [1, 1, 1, 1] in vector form.
     /// </para>
     /// </summary>
     [StructLayout(LayoutKind.Explicit)]
-    public partial struct R32G32_FLOAT : IPixel<R32G32_FLOAT>
+    public partial struct R32G32B32A32f : IPixel<R32G32B32A32f>
     {
         /// <summary>
         /// Gets or sets the red component.
@@ -32,41 +32,57 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         public float G;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="R32G32_FLOAT"/> struct.
+        /// Gets or sets the blue component.
+        /// </summary>
+        [FieldOffset(8)]
+        public float B;
+
+        /// <summary>
+        /// Gets or sets the alpha component.
+        /// </summary>
+        [FieldOffset(12)]
+        public float A;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="R32G32B32A32f"/> struct.
         /// </summary>
         /// <param name="r">The red component.</param>
         /// <param name="g">The green component.</param>
+        /// <param name="b">The blue component.</param>
+        /// <param name="a">The alpha component.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public R32G32_FLOAT(float r, float g)
+        public R32G32B32A32f(float r, float g, float b, float a)
         {
             this.R = r;
             this.G = g;
+            this.B = b;
+            this.A = a;
         }
 
         /// <summary>
-        /// Compares two <see cref="R32G32_FLOAT"/> objects for equality.
+        /// Compares two <see cref="R32G32B32A32f"/> objects for equality.
         /// </summary>
-        /// <param name="left">The <see cref="R32G32_FLOAT"/> on the left side of the operand.</param>
+        /// <param name="left">The <see cref="R32G32B32A32f"/> on the left side of the operand.</param>
         /// <returns>
         /// True if the <paramref name="left"/> parameter is equal to the <paramref name="right"/> parameter; otherwise, false.
         /// </returns>
-        /// <param name="right">The <see cref="R32G32_FLOAT"/> on the right side of the operand.</param>
+        /// <param name="right">The <see cref="R32G32B32A32f"/> on the right side of the operand.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool operator ==(R32G32_FLOAT left, R32G32_FLOAT right) => left.Equals(right);
+        public static bool operator ==(R32G32B32A32f left, R32G32B32A32f right) => left.Equals(right);
 
         /// <summary>
-        /// Compares two <see cref="R32G32_FLOAT"/> objects for equality.
+        /// Compares two <see cref="R32G32B32A32f"/> objects for equality.
         /// </summary>
-        /// <param name="left">The <see cref="R32G32_FLOAT"/> on the left side of the operand.</param>
-        /// <param name="right">The <see cref="R32G32_FLOAT"/> on the right side of the operand.</param>
+        /// <param name="left">The <see cref="R32G32B32A32f"/> on the left side of the operand.</param>
+        /// <param name="right">The <see cref="R32G32B32A32f"/> on the right side of the operand.</param>
         /// <returns>
         /// True if the <paramref name="left"/> parameter is not equal to the <paramref name="right"/> parameter; otherwise, false.
         /// </returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool operator !=(R32G32_FLOAT left, R32G32_FLOAT right) => !left.Equals(right);
+        public static bool operator !=(R32G32B32A32f left, R32G32B32A32f right) => !left.Equals(right);
 
         /// <inheritdoc />
-        public PixelOperations<R32G32_FLOAT> CreatePixelOperations() => new PixelOperations<R32G32_FLOAT>();
+        public PixelOperations<R32G32B32A32f> CreatePixelOperations() => new PixelOperations<R32G32B32A32f>();
 
         /// <inheritdoc/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -82,6 +98,8 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         {
             this.R = vector.X;
             this.G = vector.Y;
+            this.B = vector.Z;
+            this.A = vector.W;
         }
 
         /// <inheritdoc />
@@ -91,8 +109,8 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
             return new Vector4(
                 this.R,
                 this.G,
-                0.0f,
-                1.0f);
+                this.B,
+                this.A);
         }
 
         /// <inheritdoc />
@@ -151,20 +169,20 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         public void FromRgba64(Rgba64 source) => this.FromScaledVector4(source.ToScaledVector4());
 
         /// <inheritdoc />
-        public override bool Equals(object obj) => obj is R32G32_FLOAT other && this.Equals(other);
+        public override bool Equals(object obj) => obj is R32G32B32A32f other && this.Equals(other);
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool Equals(R32G32_FLOAT other) => this.R.Equals(other.R) && this.G.Equals(other.G);
+        public bool Equals(R32G32B32A32f other) => this.R.Equals(other.R) && this.G.Equals(other.G) && this.B.Equals(other.B) && this.A.Equals(other.A);
 
         /// <inheritdoc />
         public override string ToString()
         {
-            return FormattableString.Invariant($"R32G32_FLOAT({this.R}, {this.G})");
+            return FormattableString.Invariant($"R32G32B32A32f({this.R}, {this.G}, {this.B}, {this.A})");
         }
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override int GetHashCode() => HashCode.Combine(this.R, this.G);
+        public override int GetHashCode() => HashCode.Combine(this.R, this.G, this.B, this.A);
     }
 }

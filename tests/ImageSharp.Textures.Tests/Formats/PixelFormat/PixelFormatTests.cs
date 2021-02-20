@@ -48,7 +48,7 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.PixelFormat
                 int y = i == 1 ? 1 : 0;
                 int z = i == 2 ? 1 : 0;
 
-                var testPixel = new BGR555_UINT(x, y, z);
+                var testPixel = new Bgr555(x, y, z);
 
                 var destPixel = new ImageSharp.PixelFormats.Rgba32(0);
                 testPixel.ToRgba32(ref destPixel);
@@ -76,7 +76,7 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.PixelFormat
                 int y = i == 1 ? 1 : 0;
                 int z = i == 2 ? 1 : 0;
 
-                var testPixel = new BGR32_UINT(x, y, z);
+                var testPixel = new Bgr32(x, y, z);
 
                 var destPixel = new ImageSharp.PixelFormats.Rgba32(0);
                 testPixel.ToRgba32(ref destPixel);
@@ -104,7 +104,7 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.PixelFormat
                 int y = i == 1 ? 1 : 0;
                 int z = i == 2 ? 1 : 0;
 
-                var testPixel = new RGB32_UINT(x, y, z);
+                var testPixel = new Rgb32(x, y, z);
 
                 var destPixel = new ImageSharp.PixelFormats.Rgba32(0);
                 testPixel.ToRgba32(ref destPixel);

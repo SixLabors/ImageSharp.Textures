@@ -5,64 +5,66 @@ using System;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Textures.Common.Helpers;
 
 namespace SixLabors.ImageSharp.Textures.PixelFormats
 {
     /// <summary>
     /// Packed pixel type containing unsigned normalized values ranging from 0 to 1.
-    /// The x, y and z components use 8 bits.
+    /// The x, y, z and w components use 16 bits.
     /// <para>
-    /// Ranges from [0, 0, 0] to [1, 1, 1] in vector form.
+    /// Ranges from [0, 0, 0, 0] to [1, 1, 1, 1] in vector form.
     /// </para>
     /// </summary>
-    public partial struct BGR32_UINT : IPixel<BGR32_UINT>, IPackedVector<uint>
+    public partial struct R16G16B16A16f : IPixel<R16G16B16A16f>, IPackedVector<ulong>
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="BGR32_UINT"/> struct.
+        /// Initializes a new instance of the <see cref="R16G16B16A16f"/> struct.
         /// </summary>
         /// <param name="x">The x-component</param>
         /// <param name="y">The y-component</param>
         /// <param name="z">The z-component</param>
-        public BGR32_UINT(float x, float y, float z)
-            : this(new Vector3(x, y, z))
+        /// <param name="w">The w-component</param>
+        public R16G16B16A16f(float x, float y, float z, float w)
+            : this(new Vector4(x, y, z, w))
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="BGR32_UINT"/> struct.
+        /// Initializes a new instance of the <see cref="R16G16B16A16f"/> struct.
         /// </summary>
         /// <param name="vector">
         /// The vector containing the components for the packed vector.
         /// </param>
-        public BGR32_UINT(Vector3 vector) => this.PackedValue = Pack(ref vector);
+        public R16G16B16A16f(Vector4 vector) => this.PackedValue = Pack(ref vector);
 
         /// <inheritdoc/>
-        public uint PackedValue { get; set; }
+        public ulong PackedValue { get; set; }
 
         /// <summary>
-        /// Compares two <see cref="BGR32_UINT"/> objects for equality.
+        /// Compares two <see cref="R16G16B16A16f"/> objects for equality.
         /// </summary>
-        /// <param name="left">The <see cref="BGR32_UINT"/> on the left side of the operand.</param>
+        /// <param name="left">The <see cref="R16G16B16A16f"/> on the left side of the operand.</param>
         /// <returns>
         /// True if the <paramref name="left"/> parameter is equal to the <paramref name="right"/> parameter; otherwise, false.
         /// </returns>
-        /// <param name="right">The <see cref="BGR32_UINT"/> on the right side of the operand.</param>
+        /// <param name="right">The <see cref="R16G16B16A16f"/> on the right side of the operand.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool operator ==(BGR32_UINT left, BGR32_UINT right) => left.Equals(right);
+        public static bool operator ==(R16G16B16A16f left, R16G16B16A16f right) => left.Equals(right);
 
         /// <summary>
-        /// Compares two <see cref="BGR32_UINT"/> objects for equality.
+        /// Compares two <see cref="R16G16B16A16f"/> objects for equality.
         /// </summary>
-        /// <param name="left">The <see cref="BGR32_UINT"/> on the left side of the operand.</param>
-        /// <param name="right">The <see cref="BGR32_UINT"/> on the right side of the operand.</param>
+        /// <param name="left">The <see cref="R16G16B16A16f"/> on the left side of the operand.</param>
+        /// <param name="right">The <see cref="R16G16B16A16f"/> on the right side of the operand.</param>
         /// <returns>
         /// True if the <paramref name="left"/> parameter is not equal to the <paramref name="right"/> parameter; otherwise, false.
         /// </returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool operator !=(BGR32_UINT left, BGR32_UINT right) => !left.Equals(right);
+        public static bool operator !=(R16G16B16A16f left, R16G16B16A16f right) => !left.Equals(right);
 
         /// <inheritdoc />
-        public PixelOperations<BGR32_UINT> CreatePixelOperations() => new PixelOperations<BGR32_UINT>();
+        public PixelOperations<R16G16B16A16f> CreatePixelOperations() => new PixelOperations<R16G16B16A16f>();
 
         /// <inheritdoc/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -76,8 +78,8 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void FromVector4(Vector4 vector)
         {
-            var vector3 = new Vector3(vector.X, vector.Y, vector.Z);
-            this.PackedValue = Pack(ref vector3);
+            var vector4 = new Vector4(vector.X, vector.Y, vector.Z, vector.W);
+            this.PackedValue = Pack(ref vector4);
         }
 
         /// <inheritdoc />
@@ -85,10 +87,10 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         public Vector4 ToVector4()
         {
             return new Vector4(
-                ((this.PackedValue >> 16) & 255) / 255F,
-                ((this.PackedValue >> 8) & 255) / 255F,
-                (this.PackedValue & 255) / 255F,
-                1.0f);
+                FloatHelper.UnpackFloat16ToFloat((ushort)(this.PackedValue & 65535)),
+                FloatHelper.UnpackFloat16ToFloat((ushort)((this.PackedValue >> 16) & 65535)),
+                FloatHelper.UnpackFloat16ToFloat((ushort)((this.PackedValue >> 32) & 65535)),
+                FloatHelper.UnpackFloat16ToFloat((ushort)((this.PackedValue >> 48) & 65535)));
         }
 
         /// <inheritdoc />
@@ -147,17 +149,17 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         public void FromRgba64(Rgba64 source) => this.FromScaledVector4(source.ToScaledVector4());
 
         /// <inheritdoc />
-        public override bool Equals(object obj) => obj is BGR32_UINT other && this.Equals(other);
+        public override bool Equals(object obj) => obj is R16G16B16A16f other && this.Equals(other);
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool Equals(BGR32_UINT other) => this.PackedValue.Equals(other.PackedValue);
+        public bool Equals(R16G16B16A16f other) => this.PackedValue.Equals(other.PackedValue);
 
         /// <inheritdoc />
         public override string ToString()
         {
             var vector = this.ToVector4();
-            return FormattableString.Invariant($"BGR32_UINT({vector.Z:#0.##}, {vector.Y:#0.##}, {vector.X:#0.##})");
+            return FormattableString.Invariant($"R16G16B16A16f({vector.X:#0.##}, {vector.Y:#0.##}, {vector.Z:#0.##}, {vector.W:#0.##})");
         }
 
         /// <inheritdoc />
@@ -165,13 +167,14 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         public override int GetHashCode() => this.PackedValue.GetHashCode();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static uint Pack(ref Vector3 vector)
+        private static ulong Pack(ref Vector4 vector)
         {
-            vector = Vector3.Clamp(vector, Vector3.Zero, Vector3.One);
-            return (uint)(
-                (((uint)Math.Round(vector.X * 255F) & 255) << 16)
-                | (((uint)Math.Round(vector.Y * 255F) & 255) << 8)
-                | ((uint)Math.Round(vector.Z * 255F) & 255));
+            vector = Vector4.Clamp(vector, Vector4.Zero, Vector4.One);
+            return (ulong)(
+                (uint)FloatHelper.PackFloatToFloat16(vector.X)
+                | ((uint)FloatHelper.PackFloatToFloat16(vector.Y) << 16)
+                | ((uint)FloatHelper.PackFloatToFloat16(vector.Z) << 32)
+                | ((uint)FloatHelper.PackFloatToFloat16(vector.W) << 48));
         }
     }
 }

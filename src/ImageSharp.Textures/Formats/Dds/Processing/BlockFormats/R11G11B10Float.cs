@@ -26,7 +26,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
         public Image GetImage(byte[] blockData, int width, int height)
         {
             byte[] decompressedData = this.Decompress(blockData, width, height);
-            return Image.LoadPixelData<R11G11B10_FLOAT>(decompressedData, width, height);
+            return Image.LoadPixelData<R11G11B10f>(decompressedData, width, height);
         }
 
         /// <inheritdoc/>
