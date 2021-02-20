@@ -15,7 +15,7 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
     /// Ranges from [0, 0, 0] to [1, 1, 1] in vector form.
     /// </para>
     /// </summary>
-    public partial struct BGR555_UINT : IPixel<BGR555_UINT>, IPackedVector<uint>
+    public partial struct BGR555_UINT : IPixel<BGR555_UINT>, IPackedVector<ushort>
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="BGR555_UINT"/> struct.
@@ -37,7 +37,7 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         public BGR555_UINT(Vector3 vector) => this.PackedValue = Pack(ref vector);
 
         /// <inheritdoc/>
-        public uint PackedValue { get; set; }
+        public ushort PackedValue { get; set; }
 
         /// <summary>
         /// Compares two <see cref="BGR555_UINT"/> objects for equality.
@@ -165,10 +165,10 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         public override int GetHashCode() => this.PackedValue.GetHashCode();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static uint Pack(ref Vector3 vector)
+        private static ushort Pack(ref Vector3 vector)
         {
             vector = Vector3.Clamp(vector, Vector3.Zero, Vector3.One);
-            return (uint)(
+            return (ushort)(
                 (((uint)Math.Round(vector.X * 31F) & 31) << 10)
                 | (((uint)Math.Round(vector.Y * 31F) & 31) << 5)
                 | ((uint)Math.Round(vector.Z * 31F) & 31));

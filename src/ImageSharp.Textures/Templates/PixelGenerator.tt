@@ -121,7 +121,7 @@
         new PixelInfo
         {
             Name = "BGR555_UINT",
-            PackedType = "uint",
+            PackedType = "ushort",
             ChannelInfos = new[] {
                 new ChannelInfo { Bits = 5, IsFloat = false, Channel = "b" },
                 new ChannelInfo { Bits = 5, IsFloat = false, Channel = "g" },

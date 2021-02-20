@@ -26,7 +26,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
         public Image GetImage(byte[] blockData, int width, int height)
         {
             byte[] decompressedData = this.Decompress(blockData, width, height);
-            return Image.LoadPixelData<Textures.PixelFormats.Bgr555>(decompressedData, width, height);
+            return Image.LoadPixelData<Textures.PixelFormats.BGR555_UINT>(decompressedData, width, height);
         }
 
         /// <inheritdoc/>
