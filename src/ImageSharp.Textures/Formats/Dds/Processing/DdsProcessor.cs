@@ -458,6 +458,10 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                     throw new Exception("not implemented");
                 case DxgiFormat.R11G11B10_Float:
                     return this.AllocateMipMaps<R11G11B10Float>(stream, width, height, count);
+                case DxgiFormat.Y410:
+                    return this.AllocateMipMaps<Y410>(stream, width, height, count);
+                case DxgiFormat.Y416:
+                    return this.AllocateMipMaps<Y416>(stream, width, height, count);
                 case DxgiFormat.R32G8X24_Typeless:
                 case DxgiFormat.D32_Float_S8X24_UInt:
                 case DxgiFormat.R32_Float_X8X24_Typeless:
