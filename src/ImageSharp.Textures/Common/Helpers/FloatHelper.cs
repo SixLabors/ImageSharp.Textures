@@ -7,16 +7,19 @@ namespace SixLabors.ImageSharp.Textures.Common.Helpers
 {
     internal static class FloatHelper
     {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float UnpackFloat32ToFloat(uint value)
         {
             return Unsafe.As<uint, float>(ref value);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static uint PackFloatToFloat32(float value)
         {
             return Unsafe.As<float, uint>(ref value);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float UnpackFloat16ToFloat(uint value)
         {
             uint result =
@@ -26,6 +29,7 @@ namespace SixLabors.ImageSharp.Textures.Common.Helpers
             return Unsafe.As<uint, float>(ref result);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static uint PackFloatToFloat16(float value)
         {
             uint temp = Unsafe.As<float, uint>(ref value);
@@ -35,6 +39,7 @@ namespace SixLabors.ImageSharp.Textures.Common.Helpers
                 (temp & 0x7fffff) >> 13;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float UnpackFloat10ToFloat(uint value)
         {
             uint result =
@@ -43,6 +48,7 @@ namespace SixLabors.ImageSharp.Textures.Common.Helpers
             return Unsafe.As<uint, float>(ref result);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static uint PackFloatToFloat10(float value)
         {
             uint temp = Unsafe.As<float, uint>(ref value);
@@ -51,6 +57,7 @@ namespace SixLabors.ImageSharp.Textures.Common.Helpers
                 (temp & 0x7fffff) >> 18;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float UnpackFloat11ToFloat(uint value)
         {
             uint result =
@@ -59,6 +66,7 @@ namespace SixLabors.ImageSharp.Textures.Common.Helpers
             return Unsafe.As<uint, float>(ref result);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static uint PackFloatToFloat11(float value)
         {
             uint temp = Unsafe.As<float, uint>(ref value);

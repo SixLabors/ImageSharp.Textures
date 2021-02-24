@@ -79,11 +79,17 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
             {
                 int widthBlocks = blockFormat.Compressed ? Helper.CalcBlocks(width) : width;
                 int heightBlocks = blockFormat.Compressed ? Helper.CalcBlocks(height) : height;
-                int len = heightBlocks * widthBlocks * blockFormat.CompressedBytesPerBlock;
+                int bytesToRead = heightBlocks * widthBlocks * blockFormat.CompressedBytesPerBlock;
 
-                byte[] mipData = new byte[len];
-                int read = stream.Read(mipData, 0, len);
-                if (read != len)
+                // Special case for yuv formats with a single pixel.
+                if (bytesToRead < blockFormat.BitsPerPixel / 8)
+                {
+                    bytesToRead = blockFormat.BitsPerPixel / 8;
+                }
+
+                byte[] mipData = new byte[bytesToRead];
+                int read = stream.Read(mipData, 0, bytesToRead);
+                if (read != bytesToRead)
                 {
                     throw new InvalidDataException();
                 }
@@ -462,6 +468,10 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                     return this.AllocateMipMaps<Y410>(stream, width, height, count);
                 case DxgiFormat.Y416:
                     return this.AllocateMipMaps<Y416>(stream, width, height, count);
+                case DxgiFormat.Y210:
+                    return this.AllocateMipMaps<Y210>(stream, width, height, count);
+                case DxgiFormat.Y216:
+                    return this.AllocateMipMaps<Y216>(stream, width, height, count);
                 case DxgiFormat.R32G8X24_Typeless:
                 case DxgiFormat.D32_Float_S8X24_UInt:
                 case DxgiFormat.R32_Float_X8X24_Typeless:
@@ -481,8 +491,6 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 case DxgiFormat.P016:
                 case DxgiFormat.Opaque_420:
                 case DxgiFormat.YUY2:
-                case DxgiFormat.Y210:
-                case DxgiFormat.Y216:
                 case DxgiFormat.NV11:
                 case DxgiFormat.AI44:
                 case DxgiFormat.IA44:

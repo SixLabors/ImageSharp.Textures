@@ -12,8 +12,6 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
     [StructLayout(LayoutKind.Sequential)]
     public struct Y416 : IPixel<Y416>, IPackedVector<ulong>
     {
-        private static readonly Vector4 Multiplier = new Vector4(65535F, 65535F, 65535F, 65535F);
-
         /// <inheritdoc/>
         public ulong PackedValue { get; set; }
 
@@ -115,11 +113,7 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
             u = u - 32768;
             v = v - 32768;
 
-            uint r = ((76607 * y) + (105006 * v) + 32768) >> 16;
-            uint g = ((76607 * y) - (25772 * u) - (53477 * v) + 32768) >> 16;
-            uint b = ((76607 * y) + (132718 * u) + 32768) >> 16;
-
-            return new Vector4(Math.Min(Math.Max(r, 0), 65535), Math.Min(Math.Max(g, 0), 65535), Math.Min(Math.Max(b, 0), 65535), Math.Min(Math.Max(a, 0), 65535)) / Multiplier;
+            return ColorSpaceConversion.YuvToRgba16Bit(y, u, v, a);
         }
     }
 }

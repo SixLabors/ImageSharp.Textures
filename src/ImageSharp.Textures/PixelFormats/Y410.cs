@@ -12,8 +12,6 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
     [StructLayout(LayoutKind.Sequential)]
     public struct Y410 : IPixel<Y410>, IPackedVector<uint>
     {
-        private static readonly Vector4 Multiplier = new Vector4(1023F, 1023F, 1023F, 3F);
-
         /// <inheritdoc/>
         public uint PackedValue { get; set; }
 
@@ -117,11 +115,7 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
             // R = 1.1678Y' + 1.6007Cr'
             // G = 1.1678Y' - 0.3929Cb' - 0.8152Cr'
             // B = 1.1678Y' + 2.0232Cb'
-            float r = ((76533 * y) + (104905 * v) + 32768) >> 16;
-            float g = ((76533 * y) - (25747 * u) - (53425 * v) + 32768) >> 16;
-            float b = ((76533 * y) + (132590 * u) + 32768) >> 16;
-
-            return new Vector4(Math.Min(Math.Max(r, 0), 1023), Math.Min(Math.Max(g, 0), 1023), Math.Min(Math.Max(b, 0), 1023), a) / Multiplier;
+            return ColorSpaceConversion.YuvToRgba10Bit(y, u , v, a);
         }
     }
 }
