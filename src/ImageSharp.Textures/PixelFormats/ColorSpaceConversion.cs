@@ -9,6 +9,8 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
 {
     internal static class ColorSpaceConversion
     {
+        private const float Max8Bit = 256F;
+
         private const float Max10Bit = 1023F;
 
         private const float Max16Bit = 65535F;
@@ -16,6 +18,8 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         private static readonly Vector4 Multiplier16Bit = new Vector4(Max16Bit, Max16Bit, Max16Bit, Max16Bit);
 
         private static readonly Vector4 Multiplier10Bit = new Vector4(Max10Bit, Max10Bit, Max10Bit, 3F);
+
+        private static readonly Vector4 Multiplier8Bit = new Vector4(Max8Bit, Max8Bit, Max8Bit, Max8Bit);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector4 YuvToRgba16Bit(uint y, uint u, uint v, uint a = ushort.MaxValue)
@@ -46,7 +50,27 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Vector4 YuvToRgba8Bit(int y, int u, int v, int a = 256)
+        {
+            // http://msdn.microsoft.com/en-us/library/windows/desktop/bb970578.aspx
+            // R = 1.1644Y' + 1.5960Cr'
+            // G = 1.1644Y' - 0.3917Cb' - 0.8128Cr'
+            // B = 1.1644Y' + 2.0172Cb'
+            int r = ((298 * y) + (409 * v) + 128) >> 8;
+            int g = ((298 * y) - (100 * u) - (208 * v) + 128) >> 8;
+            int b = ((298 * y) + (516 * u) + 128) >> 8;
+
+            return new Vector4(Clamp(r, 0, 256), Clamp(g, 0, 256), Clamp(b, 0, 256), Clamp(a, 0, 256)) / Multiplier8Bit;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static uint Clamp(uint val, uint min, uint max)
+        {
+            return Math.Min(Math.Max(val, min), max);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static int Clamp(int val, int min, int max)
         {
             return Math.Min(Math.Max(val, min), max);
         }

@@ -116,6 +116,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 case DdsFourCc.R32_FLOAT:
                 case DdsFourCc.R32G32_FLOAT:
                 case DdsFourCc.R32G32B32A32_FLOAT:
+                case DdsFourCc.YUY2:
                     return this.ProcessUncompressed(stream, width, height, count);
                 case DdsFourCc.DXT1:
                     return this.AllocateMipMaps<Dxt1>(stream, width, height, count);
@@ -164,6 +165,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                             return this.SixteenBitImageFormat(stream, width, height, count);
                         case DdsFourCc.R32_FLOAT:
                         case DdsFourCc.R16G16_FLOAT:
+                        case DdsFourCc.YUY2:
                             return this.ThirtyTwoBitImageFormat(stream, width, height, count);
                         case DdsFourCc.R16G16B16A16_SNORM:
                         case DdsFourCc.R16G16B16A16_UNORM:
@@ -299,6 +301,11 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
             if (pixelFormat.FourCC == DdsFourCc.R16G16_FLOAT)
             {
                 return this.AllocateMipMaps<R16G16Float>(stream, width, height, count);
+            }
+
+            if (pixelFormat.FourCC == DdsFourCc.YUY2)
+            {
+                return this.AllocateMipMaps<Yuy2>(stream, width, height, count);
             }
 
             throw new Exception("Unsupported 32 bit format");
@@ -472,6 +479,10 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                     return this.AllocateMipMaps<Y210>(stream, width, height, count);
                 case DxgiFormat.Y216:
                     return this.AllocateMipMaps<Y216>(stream, width, height, count);
+                case DxgiFormat.AYUV:
+                    return this.AllocateMipMaps<Ayuv>(stream, width, height, count);
+                case DxgiFormat.YUY2:
+                    return this.AllocateMipMaps<Yuy2>(stream, width, height, count);
                 case DxgiFormat.R32G8X24_Typeless:
                 case DxgiFormat.D32_Float_S8X24_UInt:
                 case DxgiFormat.R32_Float_X8X24_Typeless:
@@ -490,7 +501,6 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 case DxgiFormat.P010:
                 case DxgiFormat.P016:
                 case DxgiFormat.Opaque_420:
-                case DxgiFormat.YUY2:
                 case DxgiFormat.NV11:
                 case DxgiFormat.AI44:
                 case DxgiFormat.IA44:
