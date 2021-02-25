@@ -50,12 +50,12 @@ namespace Phoenix.Import.Application.UI.WizardPages
             }
         }
 
-        public string DecompressDDS(string filePath)
+        public string DecompressDds(string filePath)
         {
             string command = Path.Combine(TestEnvironment.ToolsDirectoryFullPath, "TexConv.exe");
             var process = new Process();
             process.StartInfo.FileName = command;
-            process.StartInfo.Arguments = $"-ft PNG \"{filePath}\" -o {Path.GetTempPath()}";
+            process.StartInfo.Arguments = $"-ft PNG \"{filePath}\" -f rgba -o {Path.GetTempPath()}";
             process.StartInfo.RedirectStandardOutput = true;
             process.Start();
             process.WaitForExit();
@@ -65,7 +65,7 @@ namespace Phoenix.Import.Application.UI.WizardPages
                 throw new Exception(process.StandardOutput.ReadToEnd());
             }
 
-            string saveFilePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.png");
+            string saveFilePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.png");
             File.Move(sourceFile, saveFilePath);
             return saveFilePath;
         }
@@ -74,7 +74,7 @@ namespace Phoenix.Import.Application.UI.WizardPages
         {
             try
             {
-                string ddsSaveFilePath = this.DecompressDDS(filePath);
+                string ddsSaveFilePath = this.DecompressDds(filePath);
                 using var clone = Image.Load<Rgba32>(ddsSaveFilePath);
                 return new ImageInfo { TexturePtr = ApplicationManager.Create(clone), Size = new Vector2(clone.Width, clone.Height), FilePath = filePath, TempFilePath = ddsSaveFilePath };
             }
@@ -152,7 +152,7 @@ namespace Phoenix.Import.Application.UI.WizardPages
         public override void Render()
         {
             this.Wizard.NextButton.Enabled = true;
-            this.Wizard.PreviousButton.Visble = false;
+            this.Wizard.PreviousButton.Visible = false;
             this.Wizard.NextButton.Title = "Home";
 
             Vector2 size = ImGui.GetWindowSize();
