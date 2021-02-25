@@ -117,6 +117,8 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 case DdsFourCc.R32G32_FLOAT:
                 case DdsFourCc.R32G32B32A32_FLOAT:
                 case DdsFourCc.YUY2:
+                case DdsFourCc.RGBG: 
+                case DdsFourCc.GRGB:
                     return this.ProcessUncompressed(stream, width, height, count);
                 case DdsFourCc.DXT1:
                     return this.AllocateMipMaps<Dxt1>(stream, width, height, count);
@@ -166,6 +168,8 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                         case DdsFourCc.R32_FLOAT:
                         case DdsFourCc.R16G16_FLOAT:
                         case DdsFourCc.YUY2:
+                        case DdsFourCc.RGBG:
+                        case DdsFourCc.GRGB:
                             return this.ThirtyTwoBitImageFormat(stream, width, height, count);
                         case DdsFourCc.R16G16B16A16_SNORM:
                         case DdsFourCc.R16G16B16A16_UNORM:
@@ -306,6 +310,16 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
             if (pixelFormat.FourCC == DdsFourCc.YUY2)
             {
                 return this.AllocateMipMaps<Yuy2>(stream, width, height, count);
+            }
+
+            if (pixelFormat.FourCC == DdsFourCc.RGBG)
+            {
+                return this.AllocateMipMaps<R8G8B8G8>(stream, width, height, count);
+            }
+
+            if (pixelFormat.FourCC == DdsFourCc.GRGB)
+            {
+                return this.AllocateMipMaps<G8R8G8B8>(stream, width, height, count);
             }
 
             throw new Exception("Unsupported 32 bit format");
@@ -483,6 +497,10 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                     return this.AllocateMipMaps<Ayuv>(stream, width, height, count);
                 case DxgiFormat.YUY2:
                     return this.AllocateMipMaps<Yuy2>(stream, width, height, count);
+                case DxgiFormat.R8G8_B8G8_UNorm:
+                    return this.AllocateMipMaps<R8G8B8G8>(stream, width, height, count);
+                case DxgiFormat.G8R8_G8B8_UNorm:
+                    return this.AllocateMipMaps<G8R8G8B8>(stream, width, height, count);
                 case DxgiFormat.R32G8X24_Typeless:
                 case DxgiFormat.D32_Float_S8X24_UInt:
                 case DxgiFormat.R32_Float_X8X24_Typeless:
@@ -494,8 +512,6 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 case DxgiFormat.X24_Typeless_G8_UInt:
                 case DxgiFormat.D16_UNorm:
                 case DxgiFormat.R9G9B9E5_SharedExp:
-                case DxgiFormat.R8G8_B8G8_UNorm:
-                case DxgiFormat.G8R8_G8B8_UNorm:
                 case DxgiFormat.R10G10B10_XR_BIAS_A2_UNorm:
                 case DxgiFormat.NV12:
                 case DxgiFormat.P010:
