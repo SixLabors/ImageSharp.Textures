@@ -35,7 +35,7 @@ namespace Phoenix.Import.Application.UI
             {
                 Title = "Cancel",
                 Enabled = true,
-                Visble = false,
+                Visible = false,
                 Size = new Vector2(100, 30)
             };
 
@@ -43,7 +43,7 @@ namespace Phoenix.Import.Application.UI
             {
                 Title = "Validate",
                 Enabled = true,
-                Visble = false,
+                Visible = false,
                 Size = new Vector2(100, 30)
             };
 
@@ -51,7 +51,7 @@ namespace Phoenix.Import.Application.UI
             {
                 Title = "Previous",
                 Enabled = true,
-                Visble = true,
+                Visible = true,
                 Size = new Vector2(100, 30)
             };
 
@@ -59,7 +59,7 @@ namespace Phoenix.Import.Application.UI
             {
                 Title = "Next",
                 Enabled = true,
-                Visble = true,
+                Visible = true,
                 Size = new Vector2(100, 30)
             };
 

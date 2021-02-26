@@ -5,14 +5,13 @@
     Directory.Build.targets is automatically picked up and imported by
     Microsoft.Common.targets. This file needs to exist, even if empty so that
     files in the parent directory tree, with the same name, are not imported
-    instead. The import fairly late and most other props/targets will have
+    instead. They import fairly late and most other props/targets will have
     been imported beforehand. We also don't need to add ourselves to
     MSBuildAllProjects, as that is done by the file that imports us.
   -->
 
-  <PropertyGroup>
-    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileDirectory)..\Directory.Build.targets</MSBuildAllProjects>
-  </PropertyGroup>
+  <!-- Import the shared tests .targets file -->
+  <Import Project="$(MSBuildThisFileDirectory)..\shared-infrastructure\msbuild\targets\SixLabors.Tests.targets" />
 
   <!-- Import the solution .targets file. -->
   <Import Project="$(MSBuildThisFileDirectory)..\Directory.Build.targets" />
@@ -21,9 +20,6 @@
     <PackageReference Update="BenchmarkDotNet" Version="0.12.1" />
     <PackageReference Update="Magick.NET-Q16-AnyCPU" Version="7.23.2" />
     <PackageReference Update="Microsoft.NET.Test.Sdk" Version="16.2.0" />
-    <PackageReference Update="xunit" Version="2.4.1" />
-    <PackageReference Update="xunit.runner.console" Version="2.4.1" />
-    <PackageReference Update="xunit.runner.visualstudio" Version="2.4.1" />
     <PackageReference Update="System.Drawing.Common" Version="5.0.1" />
     <PackageReference Update="Veldrid.ImageSharp" Version="4.8.0" />
     <PackageReference Update="Veldrid.ImGui" Version="5.72.0" />

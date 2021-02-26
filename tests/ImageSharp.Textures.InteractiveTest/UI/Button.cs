@@ -1,4 +1,4 @@
-﻿// Copyright (c) Six Labors and contributors.
+// Copyright (c) Six Labors and contributors.
 // Licensed under the Apache License, Version 2.0.
 
 using System;
@@ -15,11 +15,11 @@ namespace Phoenix.Import.Application.UI
 
         public bool Enabled { get; set; } = true;
 
-        public bool Visble { get; set; } = true;
+        public bool Visible { get; set; } = true;
 
         public void Render(Action clicked)
         {
-            if (!this.Visble)
+            if (!this.Visible)
             {
                 return;
             }

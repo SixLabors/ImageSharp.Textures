@@ -1,25 +1,22 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <GenerateProgramFile>false</GenerateProgramFile>
+    <TargetFrameworks>net5.0;netcoreapp3.1</TargetFrameworks>
     <RuntimeIdentifiers>win-x64;osx-x64</RuntimeIdentifiers>
     <PublishTrimmed>false</PublishTrimmed>
-    <LangVersion>8.0</LangVersion>
+    <AssemblyName>SixLabors.ImageSharp.Textures.InteractiveTest</AssemblyName>
+    <RootNamespace>SixLabors.ImageSharp.Textures.InteractiveTest</RootNamespace>
   </PropertyGroup>
 
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-  </PropertyGroup>
-  
   <ItemGroup>
-    <PackageReference Include="SixLabors.ImageSharp" />
     <PackageReference Include="Veldrid.ImageSharp" />
     <PackageReference Include="Veldrid.ImGui" />
     <PackageReference Include="Veldrid.StartupUtilities" />
     <PackageReference Include="Veldrid.Utilities" />
   </ItemGroup>
-  
+
   <ItemGroup>
     <None Remove="Shaders\GLSL\imgui-frag.glsl" />
     <None Remove="Shaders\GLSL\imgui-vertex.glsl" />
@@ -41,10 +38,6 @@
     <None Remove="Shaders\Metal\imgui-vert.metallib" />
     <None Remove="Shaders\SPIR-V\imgui-frag.spv" />
     <None Remove="Shaders\SPIR-V\imgui-vert.spv" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\..\src\ImageSharp.Textures\ImageSharp.Textures.csproj" />
   </ItemGroup>
 
   <ItemGroup>

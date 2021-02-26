@@ -57,19 +57,19 @@ namespace Phoenix.Import.Application
 
                 _titleBar.Render(_wizard.CurrentPageIndex);
 
-                _wizard.CancelButton.Visble = false;
+                _wizard.CancelButton.Visible = false;
                 _wizard.CancelButton.Enabled = true;
                 _wizard.CancelButton.Title = "Cancel";
 
-                _wizard.ValidateButton.Visble = false;
+                _wizard.ValidateButton.Visible = false;
                 _wizard.ValidateButton.Enabled = true;
                 _wizard.ValidateButton.Title = "Validate";
 
-                _wizard.PreviousButton.Visble = true;
+                _wizard.PreviousButton.Visible = true;
                 _wizard.PreviousButton.Enabled = _wizard.CurrentPageIndex > 0;
                 _wizard.PreviousButton.Title = "Previous";
 
-                _wizard.NextButton.Visble = true;
+                _wizard.NextButton.Visible = true;
                 _wizard.NextButton.Enabled = _wizard.CurrentPageIndex < (_wizard.Pages - 1);
                 _wizard.NextButton.Title = "Next";
                 _wizard.Render(RenderPage_Action);

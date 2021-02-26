@@ -1,34 +1,41 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-
     <AssemblyName>SixLabors.ImageSharp.Textures</AssemblyName>
     <AssemblyTitle>SixLabors.ImageSharp.Textures</AssemblyTitle>
-    <Description>A texture loading and manipulation library; written in C#</Description>
-    <NeutralLanguage>en</NeutralLanguage>
-
-    <VersionPrefix Condition="$(packageversion) != ''">$(packageversion)</VersionPrefix>
-    <VersionPrefix Condition="$(packageversion) == ''">0.0.1</VersionPrefix>
-
-    <TargetFrameworks>netcoreapp3.1;netcoreapp2.1;netcoreapp2.0;netstandard2.1;netstandard2.0;netstandard1.3;net472</TargetFrameworks>
-    <LangVersion>8.0</LangVersion>
-
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <PackageId>SixLabors.ImageSharp.Textures</PackageId>
-    <PackageTags>Texture Surface BASIS DDS KTX</PackageTags>
     <RootNamespace>SixLabors.ImageSharp.Textures</RootNamespace>
-
+    <PackageId>SixLabors.ImageSharp.Textures</PackageId>
+    <PackageIcon>sixlabors.imagesharp.128.png</PackageIcon>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <RepositoryUrl Condition="'$(RepositoryUrl)' == ''">https://github.com/SixLabors/ImageSharp.Textures/</RepositoryUrl>
+    <PackageProjectUrl>$(RepositoryUrl)</PackageProjectUrl>
+    <PackageTags>Texture Surface BASIS DDS KTX</PackageTags>
+    <Description>A texture loading and manipulation library; written in C#</Description>
   </PropertyGroup>
 
+  <Choose>
+    <When Condition="$(SIXLABORS_TESTING) == true">
+      <PropertyGroup>
+        <TargetFrameworks>net5.0;netcoreapp3.1;netcoreapp2.1;netstandard2.1;netstandard2.0;netstandard1.3;net472</TargetFrameworks>
+      </PropertyGroup>
+    </When>
+    <Otherwise>
+      <PropertyGroup>
+        <TargetFrameworks>netcoreapp3.1;netcoreapp2.1;netstandard2.1;netstandard2.0;netstandard1.3;net472</TargetFrameworks>
+      </PropertyGroup>
+    </Otherwise>
+  </Choose>
+
   <ItemGroup>
-    <Compile Include="..\..\shared-infrastructure\**\*.cs" />
+    <None Include="..\..\shared-infrastructure\branding\icons\imagesharp\sixlabors.imagesharp.128.png" Pack="true" PackagePath="" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="StyleCop.Analyzers" PrivateAssets="All" />
-    <PackageReference Include="SixLabors.ImageSharp" />
-    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="1.0.3"/>
+
+    <!--TODO: Upgrade version in ImageSharp-->
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="5.0.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -48,10 +55,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Compile Update="PixelFormats\Generated\MultipleOutputHelper.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
@@ -59,4 +62,10 @@
     </Compile>
   </ItemGroup>
 
+  <ItemGroup>
+    <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
+  </ItemGroup>
+
+  <Import Project="..\..\shared-infrastructure\src\SharedInfrastructure\SharedInfrastructure.projitems" Label="Shared" />
+  
 </Project>

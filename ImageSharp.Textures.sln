@@ -5,7 +5,7 @@ VisualStudioVersion = 16.0.29613.14
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ImageSharp.Textures", "src\ImageSharp.Textures\ImageSharp.Textures.csproj", "{1588F6C4-2186-4A35-9693-E9F296791393}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{9F1F0B0F-704F-4B71-89EF-EE36042A27C9}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_root", "_root", "{9F1F0B0F-704F-4B71-89EF-EE36042A27C9}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
 		.gitattributes = .gitattributes
@@ -37,6 +37,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ImageSharp.Textures.Interac
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		shared-infrastructure\src\SharedInfrastructure\SharedInfrastructure.projitems*{1588f6c4-2186-4a35-9693-e9f296791393}*SharedItemsImports = 5
 		tests\Images\Images.projitems*{17fcbd4d-d232-45e8-876f-dfbc2fad52cf}*SharedItemsImports = 5
 		tests\Images\Images.projitems*{18be79b6-6b95-4ed7-a963-ad75f6cb9f3c}*SharedItemsImports = 5
 		tests\Images\Images.projitems*{68a8cc40-6aed-4e96-b524-31b1158fdeea}*SharedItemsImports = 13

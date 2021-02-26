@@ -9,8 +9,8 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.PixelFormats
     {
         public static bool IsFixUpOffset(byte uPartitions, byte uShape, int uOffset)
         {
-            Guard.MustBeLessThan(uPartitions, 3, nameof(uPartitions));
-            Guard.MustBeLessThan(uShape, 64, nameof(uShape));
+            Guard.MustBeLessThan(uPartitions, (byte)3, nameof(uPartitions));
+            Guard.MustBeLessThan(uShape, (byte)64, nameof(uShape));
             Guard.MustBeBetweenOrEqualTo(uOffset, 0, 15, nameof(uOffset));
 
             for (byte p = 0; p <= uPartitions; p++)

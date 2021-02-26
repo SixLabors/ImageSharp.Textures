@@ -19,8 +19,8 @@ namespace Phoenix.Import.Application.UI.WizardPages
 
         public override void Render()
         {
-            this.Wizard.PreviousButton.Visble = false;
-            this.Wizard.CancelButton.Visble = false;
+            this.Wizard.PreviousButton.Visible = false;
+            this.Wizard.CancelButton.Visible = false;
 
             ImGui.TextWrapped("Welcome");
             ImGui.Spacing();
