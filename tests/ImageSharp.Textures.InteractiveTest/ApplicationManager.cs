@@ -1,4 +1,4 @@
-﻿// Copyright (c) Six Labors and contributors.
+// Copyright (c) Six Labors.
 // Licensed under the Apache License, Version 2.0.
 
 using System;
@@ -39,18 +39,18 @@ namespace Phoenix.Import.Application
             Controller.ClearCachedImageResources();
         }
 
-        private static Dictionary<string, object> _datastore;
+        private static Dictionary<string, object> datastore;
 
         public static Dictionary<string, object> DataStore
         {
             get
             {
-                if (_datastore == null)
+                if (datastore == null)
                 {
-                    _datastore = new Dictionary<string, object>();
+                    datastore = new Dictionary<string, object>();
                 }
 
-                return _datastore;
+                return datastore;
             }
         }
     }

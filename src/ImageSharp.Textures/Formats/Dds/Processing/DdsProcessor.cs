@@ -1,4 +1,4 @@
-// Copyright (c) Six Labors and contributors.
+// Copyright (c) Six Labors.
 // Licensed under the Apache License, Version 2.0.
 
 using System;
@@ -117,7 +117,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 case DdsFourCc.R32G32_FLOAT:
                 case DdsFourCc.R32G32B32A32_FLOAT:
                 case DdsFourCc.YUY2:
-                case DdsFourCc.RGBG: 
+                case DdsFourCc.RGBG:
                 case DdsFourCc.GRGB:
                     return this.ProcessUncompressed(stream, width, height, count);
                 case DdsFourCc.DXT1:
