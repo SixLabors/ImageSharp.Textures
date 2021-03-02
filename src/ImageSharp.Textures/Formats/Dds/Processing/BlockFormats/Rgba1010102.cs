@@ -1,8 +1,11 @@
-﻿// Copyright (c) Six Labors.
+// Copyright (c) Six Labors.
 // Licensed under the Apache License, Version 2.0.
 
 namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
 {
+    /// <summary>
+    /// Texture format for textures with 10 the RGB channel and 2 Bits for the alpha channel.
+    /// </summary>
     public struct Rgba1010102 : IBlock<Rgba1010102>
     {
         /// <inheritdoc/>
@@ -28,9 +31,6 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
         }
 
         /// <inheritdoc/>
-        public byte[] Decompress(byte[] blockData, int width, int height)
-        {
-            return blockData;
-        }
+        public byte[] Decompress(byte[] blockData, int width, int height) => blockData;
     }
 }

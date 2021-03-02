@@ -4,11 +4,10 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using Veldrid;
 
-namespace Phoenix.Import.Application
+namespace SixLabors.ImageSharp.Textures.InteractiveTest
 {
     public static class ApplicationManager
     {
@@ -24,7 +23,7 @@ namespace Phoenix.Import.Application
         {
             lock (LockObject)
             {
-                Texture texture = GraphicsDevice.ResourceFactory.CreateTexture(TextureDescription.Texture2D((uint)image.Width, (uint)image.Height, 1, 1, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.Sampled));
+                Veldrid.Texture texture = GraphicsDevice.ResourceFactory.CreateTexture(TextureDescription.Texture2D((uint)image.Width, (uint)image.Height, 1, 1, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.Sampled));
                 fixed (void* pin = &MemoryMarshal.GetReference(image.GetPixelRowSpan(0)))
                 {
                     GraphicsDevice.UpdateTexture(texture, (IntPtr)pin, (uint)(4 * image.Width * image.Height), 0, 0, 0, (uint)image.Width, (uint)image.Height, 1, 0, 0);
@@ -34,10 +33,7 @@ namespace Phoenix.Import.Application
             }
         }
 
-        public static void ClearImageCache()
-        {
-            Controller.ClearCachedImageResources();
-        }
+        public static void ClearImageCache() => Controller.ClearCachedImageResources();
 
         private static Dictionary<string, object> datastore;
 

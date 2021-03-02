@@ -2,10 +2,12 @@
 // Licensed under the Apache License, Version 2.0.
 
 using System.Runtime.CompilerServices;
-using SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats;
 
-namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
+namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
 {
+    /// <summary>
+    /// Texture compressed with BC4 with one color channel (8 bits).
+    /// </summary>
     public struct Bc4 : IBlock<Bc4>
     {
         /// <inheritdoc/>
@@ -35,7 +37,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
         {
             IBlock self = this;
 
-            return Helper.InMemoryDecode<Bc4>(blockData, width, height, (byte[] stream, byte[] data, int streamIndex, int dataIndex, int stride) =>
+            return Helper.InMemoryDecode<Bc4>(blockData, width, height, (stream, data, streamIndex, dataIndex, stride) =>
             {
                 byte red0 = blockData[streamIndex++];
                 byte red1 = blockData[streamIndex++];
@@ -53,7 +55,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                     data[dataIndex++] = InterpolateColor(index, red0, red1);
 
                     // Is mult 4?
-                    if ((i + 1 & 0x3) == 0)
+                    if (((i + 1) & 0x3) == 0)
                     {
                         dataIndex += self.PixelDepthBytes * (stride - self.DivSize);
                     }

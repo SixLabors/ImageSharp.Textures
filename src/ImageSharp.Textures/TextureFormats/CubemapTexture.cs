@@ -1,14 +1,21 @@
 // Copyright (c) Six Labors.
 // Licensed under the Apache License, Version 2.0.
 
+using System;
+
 namespace SixLabors.ImageSharp.Textures.TextureFormats
 {
-    using System;
-
+    /// <summary>
+    /// Represents a cube map texture.
+    /// </summary>
+    /// <seealso cref="SixLabors.ImageSharp.Textures.Texture" />
     public class CubemapTexture : Texture
     {
         private bool isDisposed;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CubemapTexture"/> class.
+        /// </summary>
         public CubemapTexture()
         {
             this.PositiveX = new FlatTexture();
@@ -19,16 +26,34 @@ namespace SixLabors.ImageSharp.Textures.TextureFormats
             this.NegativeZ = new FlatTexture();
         }
 
+        /// <summary>
+        /// Gets the positive x texture.
+        /// </summary>
         public FlatTexture PositiveX { get; }
 
+        /// <summary>
+        /// Gets the negative x texture.
+        /// </summary>
         public FlatTexture NegativeX { get; }
 
+        /// <summary>
+        /// Gets the positive y texture.
+        /// </summary>
         public FlatTexture PositiveY { get; }
 
+        /// <summary>
+        /// Gets the negative y texture.
+        /// </summary>
         public FlatTexture NegativeY { get; }
 
+        /// <summary>
+        /// Gets the positive z texture.
+        /// </summary>
         public FlatTexture PositiveZ { get; }
 
+        /// <summary>
+        /// Gets the negative z texture.
+        /// </summary>
         public FlatTexture NegativeZ { get; }
 
         /// <inheritdoc/>

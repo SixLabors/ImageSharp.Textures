@@ -3,7 +3,7 @@
 
 using SixLabors.ImageSharp.Textures.Formats.Dds.Processing.PixelFormats;
 
-namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
+namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
 {
     internal struct Bc6hsModeInfo
     {

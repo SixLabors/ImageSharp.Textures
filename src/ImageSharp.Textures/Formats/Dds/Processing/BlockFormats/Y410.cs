@@ -1,8 +1,11 @@
-﻿// Copyright (c) Six Labors.
+// Copyright (c) Six Labors.
 // Licensed under the Apache License, Version 2.0.
 
 namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
 {
+    /// <summary>
+    /// Texture for 10-bit per channel packed YUV 4:4:4 video resource format.
+    /// </summary>
     public struct Y410 : IBlock<Y410>
     {
         /// <inheritdoc/>
@@ -28,9 +31,6 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
         }
 
         /// <inheritdoc/>
-        public byte[] Decompress(byte[] blockData, int width, int height)
-        {
-            return blockData;
-        }
+        public byte[] Decompress(byte[] blockData, int width, int height) => blockData;
     }
 }

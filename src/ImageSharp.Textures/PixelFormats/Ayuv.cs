@@ -1,15 +1,16 @@
-﻿// Copyright (c) Six Labors.
+// Copyright (c) Six Labors.
 // Licensed under the Apache License, Version 2.0.
 
 using System;
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using SixLabors.ImageSharp.PixelFormats;
 
 namespace SixLabors.ImageSharp.Textures.PixelFormats
 {
-    [StructLayout(LayoutKind.Sequential)]
+    /// <summary>
+    /// Pixel format for YUV 4:4:4 data.
+    /// </summary>
     public struct Ayuv : IPixel<Ayuv>, IPackedVector<uint>
     {
         /// <inheritdoc/>
@@ -47,49 +48,49 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         public override readonly int GetHashCode() => this.Yuv.GetHashCode();
 
         /// <inheritdoc/>
-        public void FromArgb32(Argb32 source) => throw new System.NotImplementedException();
+        public void FromArgb32(Argb32 source) => throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public void FromBgr24(Bgr24 source) => throw new System.NotImplementedException();
+        public void FromBgr24(Bgr24 source) => throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public void FromBgra32(Bgra32 source) => throw new System.NotImplementedException();
+        public void FromBgra32(Bgra32 source) => throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public void FromBgra5551(Bgra5551 source) => throw new System.NotImplementedException();
+        public void FromBgra5551(Bgra5551 source) => throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public void FromL16(L16 source) => throw new System.NotImplementedException();
+        public void FromL16(L16 source) => throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public void FromL8(L8 source) => throw new System.NotImplementedException();
+        public void FromL8(L8 source) => throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public void FromLa16(La16 source) => throw new System.NotImplementedException();
+        public void FromLa16(La16 source) => throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public void FromLa32(La32 source) => throw new System.NotImplementedException();
+        public void FromLa32(La32 source) => throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public void FromRgb24(Rgb24 source) => throw new System.NotImplementedException();
+        public void FromRgb24(Rgb24 source) => throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public void FromRgb48(Rgb48 source) => throw new System.NotImplementedException();
+        public void FromRgb48(Rgb48 source) => throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public void FromRgba32(Rgba32 source) => throw new System.NotImplementedException();
+        public void FromRgba32(Rgba32 source) => throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public void FromRgba64(Rgba64 source) => throw new System.NotImplementedException();
+        public void FromRgba64(Rgba64 source) => throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public void FromScaledVector4(Vector4 vector) => throw new System.NotImplementedException();
+        public void FromScaledVector4(Vector4 vector) => throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public void FromVector4(Vector4 vector) => throw new System.NotImplementedException();
+        public void FromVector4(Vector4 vector) => throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public void ToRgba32(ref Rgba32 dest) => throw new System.NotImplementedException();
+        public void ToRgba32(ref Rgba32 dest) => throw new NotImplementedException();
 
         /// <inheritdoc/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -109,9 +110,9 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
             // Y'  = Y - 16
             // Cb' = Cb - 128
             // Cr' = Cr - 128
-            y = y - 16;
-            u = u - 128;
-            v = v - 128;
+            y -= 16;
+            u -= 128;
+            v -= 128;
 
             // R = 1.1644Y' + 1.5960Cr'
             // G = 1.1644Y' - 0.3917Cb' - 0.8128Cr'

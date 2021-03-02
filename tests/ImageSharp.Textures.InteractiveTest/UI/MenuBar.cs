@@ -3,7 +3,7 @@
 
 using ImGuiNET;
 
-namespace Phoenix.Import.Application.UI
+namespace SixLabors.ImageSharp.Textures.InteractiveTest.UI
 {
     public class MenuBar
     {

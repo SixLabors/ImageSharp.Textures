@@ -4,17 +4,19 @@
 using System;
 using System.Diagnostics;
 using SixLabors.ImageSharp.Textures.Common.Helpers;
-using SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats;
 using SixLabors.ImageSharp.Textures.Formats.Dds.Processing.PixelFormats;
 
-namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
+namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
 {
+    /// <summary>
+    /// Texture compressed with BC6HS, three color channels (16 bits:16 bits:16 bits) in "half" floating point.
+    /// </summary>
     public struct Bc6hs : IBlock<Bc6hs>
     {
         // Code based on commit 138efff1b9c53fd9a5dd34b8c865e8f5ae798030 2019/10/24 in DirectXTex C++ library
-        private static readonly Bc6hsModeDescriptor[][] MsADesc = new Bc6hsModeDescriptor[14][]
+        private static readonly Bc6hsModeDescriptor[][] MsADesc = new[]
         {
-            new Bc6hsModeDescriptor[82]
+            new[]
             {
                 // Mode 1 (0x00) - 10 5 5 5
                 new Bc6hsModeDescriptor(Bc6hEField.M, 0), new Bc6hsModeDescriptor(Bc6hEField.M, 1), new Bc6hsModeDescriptor(Bc6hEField.GY, 4), new Bc6hsModeDescriptor(Bc6hEField.BY, 4), new Bc6hsModeDescriptor(Bc6hEField.BZ, 4), new Bc6hsModeDescriptor(Bc6hEField.RW, 0), new Bc6hsModeDescriptor(Bc6hEField.RW, 1), new Bc6hsModeDescriptor(Bc6hEField.RW, 2), new Bc6hsModeDescriptor(Bc6hEField.RW, 3), new Bc6hsModeDescriptor(Bc6hEField.RW, 4),
@@ -28,7 +30,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 new Bc6hsModeDescriptor(Bc6hEField.D, 3), new Bc6hsModeDescriptor(Bc6hEField.D, 4)
             },
 
-            new Bc6hsModeDescriptor[82]
+            new[]
             {
                 // Mode 2 (0x01) - 7 6 6 6
                 new Bc6hsModeDescriptor(Bc6hEField.M, 0), new Bc6hsModeDescriptor(Bc6hEField.M, 1), new Bc6hsModeDescriptor(Bc6hEField.GY, 5), new Bc6hsModeDescriptor(Bc6hEField.GZ, 4), new Bc6hsModeDescriptor(Bc6hEField.GZ, 5), new Bc6hsModeDescriptor(Bc6hEField.RW, 0), new Bc6hsModeDescriptor(Bc6hEField.RW, 1), new Bc6hsModeDescriptor(Bc6hEField.RW, 2), new Bc6hsModeDescriptor(Bc6hEField.RW, 3), new Bc6hsModeDescriptor(Bc6hEField.RW, 4),
@@ -42,7 +44,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 new Bc6hsModeDescriptor(Bc6hEField.D, 3), new Bc6hsModeDescriptor(Bc6hEField.D, 4)
             },
 
-            new Bc6hsModeDescriptor[82]
+            new[]
             {
                 // Mode 3 (0x02) - 11 5 4 4
                 new Bc6hsModeDescriptor(Bc6hEField.M, 0), new Bc6hsModeDescriptor(Bc6hEField.M, 1), new Bc6hsModeDescriptor(Bc6hEField.M, 2), new Bc6hsModeDescriptor(Bc6hEField.M, 3), new Bc6hsModeDescriptor(Bc6hEField.M, 4), new Bc6hsModeDescriptor(Bc6hEField.RW, 0), new Bc6hsModeDescriptor(Bc6hEField.RW, 1), new Bc6hsModeDescriptor(Bc6hEField.RW, 2), new Bc6hsModeDescriptor(Bc6hEField.RW, 3), new Bc6hsModeDescriptor(Bc6hEField.RW, 4),
@@ -56,7 +58,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 new Bc6hsModeDescriptor(Bc6hEField.D, 3), new Bc6hsModeDescriptor(Bc6hEField.D, 4)
             },
 
-            new Bc6hsModeDescriptor[82]
+            new[]
             {
                 // Mode 4 (0x06) - 11 4 5 4
                 new Bc6hsModeDescriptor(Bc6hEField.M, 0), new Bc6hsModeDescriptor(Bc6hEField.M, 1), new Bc6hsModeDescriptor(Bc6hEField.M, 2), new Bc6hsModeDescriptor(Bc6hEField.M, 3), new Bc6hsModeDescriptor(Bc6hEField.M, 4), new Bc6hsModeDescriptor(Bc6hEField.RW, 0), new Bc6hsModeDescriptor(Bc6hEField.RW, 1), new Bc6hsModeDescriptor(Bc6hEField.RW, 2), new Bc6hsModeDescriptor(Bc6hEField.RW, 3), new Bc6hsModeDescriptor(Bc6hEField.RW, 4),
@@ -70,7 +72,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 new Bc6hsModeDescriptor(Bc6hEField.D, 3), new Bc6hsModeDescriptor(Bc6hEField.D, 4)
             },
 
-            new Bc6hsModeDescriptor[82]
+            new[]
             {
                 // Mode 5 (0x0a) - 11 4 4 5
                 new Bc6hsModeDescriptor(Bc6hEField.M, 0), new Bc6hsModeDescriptor(Bc6hEField.M, 1), new Bc6hsModeDescriptor(Bc6hEField.M, 2), new Bc6hsModeDescriptor(Bc6hEField.M, 3), new Bc6hsModeDescriptor(Bc6hEField.M, 4), new Bc6hsModeDescriptor(Bc6hEField.RW, 0), new Bc6hsModeDescriptor(Bc6hEField.RW, 1), new Bc6hsModeDescriptor(Bc6hEField.RW, 2), new Bc6hsModeDescriptor(Bc6hEField.RW, 3), new Bc6hsModeDescriptor(Bc6hEField.RW, 4),
@@ -84,7 +86,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 new Bc6hsModeDescriptor(Bc6hEField.D, 3), new Bc6hsModeDescriptor(Bc6hEField.D, 4)
             },
 
-            new Bc6hsModeDescriptor[82]
+            new[]
             {
                 // Mode 6 (0x0e) - 9 5 5 5
                 new Bc6hsModeDescriptor(Bc6hEField.M, 0), new Bc6hsModeDescriptor(Bc6hEField.M, 1), new Bc6hsModeDescriptor(Bc6hEField.M, 2), new Bc6hsModeDescriptor(Bc6hEField.M, 3), new Bc6hsModeDescriptor(Bc6hEField.M, 4), new Bc6hsModeDescriptor(Bc6hEField.RW, 0), new Bc6hsModeDescriptor(Bc6hEField.RW, 1), new Bc6hsModeDescriptor(Bc6hEField.RW, 2), new Bc6hsModeDescriptor(Bc6hEField.RW, 3), new Bc6hsModeDescriptor(Bc6hEField.RW, 4),
@@ -98,7 +100,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 new Bc6hsModeDescriptor(Bc6hEField.D, 3), new Bc6hsModeDescriptor(Bc6hEField.D, 4)
             },
 
-            new Bc6hsModeDescriptor[82]
+            new[]
             {
                 // Mode 7 (0x12) - 8 6 5 5
                 new Bc6hsModeDescriptor(Bc6hEField.M, 0), new Bc6hsModeDescriptor(Bc6hEField.M, 1), new Bc6hsModeDescriptor(Bc6hEField.M, 2), new Bc6hsModeDescriptor(Bc6hEField.M, 3), new Bc6hsModeDescriptor(Bc6hEField.M, 4), new Bc6hsModeDescriptor(Bc6hEField.RW, 0), new Bc6hsModeDescriptor(Bc6hEField.RW, 1), new Bc6hsModeDescriptor(Bc6hEField.RW, 2), new Bc6hsModeDescriptor(Bc6hEField.RW, 3), new Bc6hsModeDescriptor(Bc6hEField.RW, 4),
@@ -112,7 +114,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 new Bc6hsModeDescriptor(Bc6hEField.D, 3), new Bc6hsModeDescriptor(Bc6hEField.D, 4)
             },
 
-            new Bc6hsModeDescriptor[82]
+            new[]
             {
                 // Mode 8 (0x16) - 8 5 6 5
                 new Bc6hsModeDescriptor(Bc6hEField.M, 0), new Bc6hsModeDescriptor(Bc6hEField.M, 1), new Bc6hsModeDescriptor(Bc6hEField.M, 2), new Bc6hsModeDescriptor(Bc6hEField.M, 3), new Bc6hsModeDescriptor(Bc6hEField.M, 4), new Bc6hsModeDescriptor(Bc6hEField.RW, 0), new Bc6hsModeDescriptor(Bc6hEField.RW, 1), new Bc6hsModeDescriptor(Bc6hEField.RW, 2), new Bc6hsModeDescriptor(Bc6hEField.RW, 3), new Bc6hsModeDescriptor(Bc6hEField.RW, 4),
@@ -126,7 +128,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 new Bc6hsModeDescriptor(Bc6hEField.D, 3), new Bc6hsModeDescriptor(Bc6hEField.D, 4)
             },
 
-            new Bc6hsModeDescriptor[82]
+            new[]
             {
                 // Mode 9 (0x1a) - 8 5 5 6
                 new Bc6hsModeDescriptor(Bc6hEField.M, 0), new Bc6hsModeDescriptor(Bc6hEField.M, 1), new Bc6hsModeDescriptor(Bc6hEField.M, 2), new Bc6hsModeDescriptor(Bc6hEField.M, 3), new Bc6hsModeDescriptor(Bc6hEField.M, 4), new Bc6hsModeDescriptor(Bc6hEField.RW, 0), new Bc6hsModeDescriptor(Bc6hEField.RW, 1), new Bc6hsModeDescriptor(Bc6hEField.RW, 2), new Bc6hsModeDescriptor(Bc6hEField.RW, 3), new Bc6hsModeDescriptor(Bc6hEField.RW, 4),
@@ -140,7 +142,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 new Bc6hsModeDescriptor(Bc6hEField.D, 3), new Bc6hsModeDescriptor(Bc6hEField.D, 4)
             },
 
-            new Bc6hsModeDescriptor[82]
+            new[]
             {
                 // Mode 10 (0x1e) - 6 6 6 6
                 new Bc6hsModeDescriptor(Bc6hEField.M, 0), new Bc6hsModeDescriptor(Bc6hEField.M, 1), new Bc6hsModeDescriptor(Bc6hEField.M, 2), new Bc6hsModeDescriptor(Bc6hEField.M, 3), new Bc6hsModeDescriptor(Bc6hEField.M, 4), new Bc6hsModeDescriptor(Bc6hEField.RW, 0), new Bc6hsModeDescriptor(Bc6hEField.RW, 1), new Bc6hsModeDescriptor(Bc6hEField.RW, 2), new Bc6hsModeDescriptor(Bc6hEField.RW, 3), new Bc6hsModeDescriptor(Bc6hEField.RW, 4),
@@ -154,7 +156,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 new Bc6hsModeDescriptor(Bc6hEField.D, 3), new Bc6hsModeDescriptor(Bc6hEField.D, 4)
             },
 
-            new Bc6hsModeDescriptor[82]
+            new[]
             {
                 // Mode 11 (0x03) - 10 10
                 new Bc6hsModeDescriptor(Bc6hEField.M, 0), new Bc6hsModeDescriptor(Bc6hEField.M, 1), new Bc6hsModeDescriptor(Bc6hEField.M, 2), new Bc6hsModeDescriptor(Bc6hEField.M, 3), new Bc6hsModeDescriptor(Bc6hEField.M, 4), new Bc6hsModeDescriptor(Bc6hEField.RW, 0), new Bc6hsModeDescriptor(Bc6hEField.RW, 1), new Bc6hsModeDescriptor(Bc6hEField.RW, 2), new Bc6hsModeDescriptor(Bc6hEField.RW, 3), new Bc6hsModeDescriptor(Bc6hEField.RW, 4),
@@ -168,7 +170,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 new Bc6hsModeDescriptor(Bc6hEField.NA, 0), new Bc6hsModeDescriptor(Bc6hEField.NA, 0)
             },
 
-            new Bc6hsModeDescriptor[82]
+            new[]
             {
                 // Mode 12 (0x07) - 11 9
                 new Bc6hsModeDescriptor(Bc6hEField.M, 0), new Bc6hsModeDescriptor(Bc6hEField.M, 1), new Bc6hsModeDescriptor(Bc6hEField.M, 2), new Bc6hsModeDescriptor(Bc6hEField.M, 3), new Bc6hsModeDescriptor(Bc6hEField.M, 4), new Bc6hsModeDescriptor(Bc6hEField.RW, 0), new Bc6hsModeDescriptor(Bc6hEField.RW, 1), new Bc6hsModeDescriptor(Bc6hEField.RW, 2), new Bc6hsModeDescriptor(Bc6hEField.RW, 3), new Bc6hsModeDescriptor(Bc6hEField.RW, 4),
@@ -182,7 +184,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 new Bc6hsModeDescriptor(Bc6hEField.NA, 0), new Bc6hsModeDescriptor(Bc6hEField.NA, 0)
             },
 
-            new Bc6hsModeDescriptor[82]
+            new[]
             {
                 // Mode 13 (0x0b) - 12 8
                 new Bc6hsModeDescriptor(Bc6hEField.M, 0), new Bc6hsModeDescriptor(Bc6hEField.M, 1), new Bc6hsModeDescriptor(Bc6hEField.M, 2), new Bc6hsModeDescriptor(Bc6hEField.M, 3), new Bc6hsModeDescriptor(Bc6hEField.M, 4), new Bc6hsModeDescriptor(Bc6hEField.RW, 0), new Bc6hsModeDescriptor(Bc6hEField.RW, 1), new Bc6hsModeDescriptor(Bc6hEField.RW, 2), new Bc6hsModeDescriptor(Bc6hEField.RW, 3), new Bc6hsModeDescriptor(Bc6hEField.RW, 4),
@@ -196,7 +198,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 new Bc6hsModeDescriptor(Bc6hEField.NA, 0), new Bc6hsModeDescriptor(Bc6hEField.NA, 0)
             },
 
-            new Bc6hsModeDescriptor[82]
+            new[]
             {
                 // Mode 14 (0x0f) - 16 4
                 new Bc6hsModeDescriptor(Bc6hEField.M, 0), new Bc6hsModeDescriptor(Bc6hEField.M, 1), new Bc6hsModeDescriptor(Bc6hEField.M, 2), new Bc6hsModeDescriptor(Bc6hEField.M, 3), new Bc6hsModeDescriptor(Bc6hEField.M, 4), new Bc6hsModeDescriptor(Bc6hEField.RW, 0), new Bc6hsModeDescriptor(Bc6hEField.RW, 1), new Bc6hsModeDescriptor(Bc6hEField.RW, 2), new Bc6hsModeDescriptor(Bc6hEField.RW, 3), new Bc6hsModeDescriptor(Bc6hEField.RW, 4),
@@ -213,20 +215,20 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
 
         private static readonly Bc6hsModeInfo[] MsAInfo =
         {
-            new Bc6hsModeInfo(0x00, 1, true,  3, new LdrColorA[][] { new LdrColorA[] { new LdrColorA(10, 10, 10, 0), new LdrColorA(5, 5, 5, 0) }, new LdrColorA[] { new LdrColorA(5, 5, 5, 0), new LdrColorA(5, 5, 5, 0) } }), // Mode 1
-            new Bc6hsModeInfo(0x01, 1, true,  3, new LdrColorA[][] { new LdrColorA[] { new LdrColorA(7, 7, 7, 0), new LdrColorA(6, 6, 6, 0) }, new LdrColorA[] { new LdrColorA(6, 6, 6, 0), new LdrColorA(6, 6, 6, 0) } }), // Mode 2
-            new Bc6hsModeInfo(0x02, 1, true,  3, new LdrColorA[][] { new LdrColorA[] { new LdrColorA(11, 11, 11, 0), new LdrColorA(5, 4, 4, 0) }, new LdrColorA[] { new LdrColorA(5, 4, 4, 0), new LdrColorA(5, 4, 4, 0) } }), // Mode 3
-            new Bc6hsModeInfo(0x06, 1, true,  3, new LdrColorA[][] { new LdrColorA[] { new LdrColorA(11, 11, 11, 0), new LdrColorA(4, 5, 4, 0) }, new LdrColorA[] { new LdrColorA(4, 5, 4, 0), new LdrColorA(4, 5, 4, 0) } }), // Mode 4
-            new Bc6hsModeInfo(0x0a, 1, true,  3, new LdrColorA[][] { new LdrColorA[] { new LdrColorA(11, 11, 11, 0), new LdrColorA(4, 4, 5, 0) }, new LdrColorA[] { new LdrColorA(4, 4, 5, 0), new LdrColorA(4, 4, 5, 0) } }), // Mode 5
-            new Bc6hsModeInfo(0x0e, 1, true,  3, new LdrColorA[][] { new LdrColorA[] { new LdrColorA(9, 9, 9, 0), new LdrColorA(5, 5, 5, 0) }, new LdrColorA[] { new LdrColorA(5, 5, 5, 0), new LdrColorA(5, 5, 5, 0) } }), // Mode 6
-            new Bc6hsModeInfo(0x12, 1, true,  3, new LdrColorA[][] { new LdrColorA[] { new LdrColorA(8, 8, 8, 0), new LdrColorA(6, 5, 5, 0) }, new LdrColorA[] { new LdrColorA(6, 5, 5, 0), new LdrColorA(6, 5, 5, 0) } }), // Mode 7
-            new Bc6hsModeInfo(0x16, 1, true,  3, new LdrColorA[][] { new LdrColorA[] { new LdrColorA(8, 8, 8, 0), new LdrColorA(5, 6, 5, 0) }, new LdrColorA[] { new LdrColorA(5, 6, 5, 0), new LdrColorA(5, 6, 5, 0) } }), // Mode 8
-            new Bc6hsModeInfo(0x1a, 1, true,  3, new LdrColorA[][] { new LdrColorA[] { new LdrColorA(8, 8, 8, 0), new LdrColorA(5, 5, 6, 0) }, new LdrColorA[] { new LdrColorA(5, 5, 6, 0), new LdrColorA(5, 5, 6, 0) } }), // Mode 9
-            new Bc6hsModeInfo(0x1e, 1, false, 3, new LdrColorA[][] { new LdrColorA[] { new LdrColorA(6, 6, 6, 0), new LdrColorA(6, 6, 6, 0) }, new LdrColorA[] { new LdrColorA(6, 6, 6, 0), new LdrColorA(6, 6, 6, 0) } }), // Mode 10
-            new Bc6hsModeInfo(0x03, 0, false, 4, new LdrColorA[][] { new LdrColorA[] { new LdrColorA(10, 10, 10, 0), new LdrColorA(10, 10, 10, 0) }, new LdrColorA[] { new LdrColorA(0, 0, 0, 0), new LdrColorA(0, 0, 0, 0) } }), // Mode 11
-            new Bc6hsModeInfo(0x07, 0, true,  4, new LdrColorA[][] { new LdrColorA[] { new LdrColorA(11, 11, 11, 0), new LdrColorA(9, 9, 9, 0) }, new LdrColorA[] { new LdrColorA(0, 0, 0, 0), new LdrColorA(0, 0, 0, 0) } }), // Mode 12
-            new Bc6hsModeInfo(0x0b, 0, true,  4, new LdrColorA[][] { new LdrColorA[] { new LdrColorA(12, 12, 12, 0), new LdrColorA(8, 8, 8, 0) }, new LdrColorA[] { new LdrColorA(0, 0, 0, 0), new LdrColorA(0, 0, 0, 0) } }), // Mode 13
-            new Bc6hsModeInfo(0x0f, 0, true,  4, new LdrColorA[][] { new LdrColorA[] { new LdrColorA(16, 16, 16, 0), new LdrColorA(4, 4, 4, 0) }, new LdrColorA[] { new LdrColorA(0, 0, 0, 0), new LdrColorA(0, 0, 0, 0) } }), // Mode 14
+            new Bc6hsModeInfo(0x00, 1, true,  3, new[] { new[] { new LdrColorA(10, 10, 10, 0), new LdrColorA(5, 5, 5, 0) }, new[] { new LdrColorA(5, 5, 5, 0), new LdrColorA(5, 5, 5, 0) } }), // Mode 1
+            new Bc6hsModeInfo(0x01, 1, true,  3, new[] { new[] { new LdrColorA(7, 7, 7, 0), new LdrColorA(6, 6, 6, 0) }, new[] { new LdrColorA(6, 6, 6, 0), new LdrColorA(6, 6, 6, 0) } }), // Mode 2
+            new Bc6hsModeInfo(0x02, 1, true,  3, new[] { new[] { new LdrColorA(11, 11, 11, 0), new LdrColorA(5, 4, 4, 0) }, new[] { new LdrColorA(5, 4, 4, 0), new LdrColorA(5, 4, 4, 0) } }), // Mode 3
+            new Bc6hsModeInfo(0x06, 1, true,  3, new[] { new[] { new LdrColorA(11, 11, 11, 0), new LdrColorA(4, 5, 4, 0) }, new[] { new LdrColorA(4, 5, 4, 0), new LdrColorA(4, 5, 4, 0) } }), // Mode 4
+            new Bc6hsModeInfo(0x0a, 1, true,  3, new[] { new[] { new LdrColorA(11, 11, 11, 0), new LdrColorA(4, 4, 5, 0) }, new[] { new LdrColorA(4, 4, 5, 0), new LdrColorA(4, 4, 5, 0) } }), // Mode 5
+            new Bc6hsModeInfo(0x0e, 1, true,  3, new[] { new[] { new LdrColorA(9, 9, 9, 0), new LdrColorA(5, 5, 5, 0) }, new[] { new LdrColorA(5, 5, 5, 0), new LdrColorA(5, 5, 5, 0) } }), // Mode 6
+            new Bc6hsModeInfo(0x12, 1, true,  3, new[] { new[] { new LdrColorA(8, 8, 8, 0), new LdrColorA(6, 5, 5, 0) }, new[] { new LdrColorA(6, 5, 5, 0), new LdrColorA(6, 5, 5, 0) } }), // Mode 7
+            new Bc6hsModeInfo(0x16, 1, true,  3, new[] { new[] { new LdrColorA(8, 8, 8, 0), new LdrColorA(5, 6, 5, 0) }, new[] { new LdrColorA(5, 6, 5, 0), new LdrColorA(5, 6, 5, 0) } }), // Mode 8
+            new Bc6hsModeInfo(0x1a, 1, true,  3, new[] { new[] { new LdrColorA(8, 8, 8, 0), new LdrColorA(5, 5, 6, 0) }, new[] { new LdrColorA(5, 5, 6, 0), new LdrColorA(5, 5, 6, 0) } }), // Mode 9
+            new Bc6hsModeInfo(0x1e, 1, false, 3, new[] { new[] { new LdrColorA(6, 6, 6, 0), new LdrColorA(6, 6, 6, 0) }, new[] { new LdrColorA(6, 6, 6, 0), new LdrColorA(6, 6, 6, 0) } }), // Mode 10
+            new Bc6hsModeInfo(0x03, 0, false, 4, new[] { new[] { new LdrColorA(10, 10, 10, 0), new LdrColorA(10, 10, 10, 0) }, new[] { new LdrColorA(0, 0, 0, 0), new LdrColorA(0, 0, 0, 0) } }), // Mode 11
+            new Bc6hsModeInfo(0x07, 0, true,  4, new[] { new[] { new LdrColorA(11, 11, 11, 0), new LdrColorA(9, 9, 9, 0) }, new[] { new LdrColorA(0, 0, 0, 0), new LdrColorA(0, 0, 0, 0) } }), // Mode 12
+            new Bc6hsModeInfo(0x0b, 0, true,  4, new[] { new[] { new LdrColorA(12, 12, 12, 0), new LdrColorA(8, 8, 8, 0) }, new[] { new LdrColorA(0, 0, 0, 0), new LdrColorA(0, 0, 0, 0) } }), // Mode 13
+            new Bc6hsModeInfo(0x0f, 0, true,  4, new[] { new[] { new LdrColorA(16, 16, 16, 0), new LdrColorA(4, 4, 4, 0) }, new[] { new LdrColorA(0, 0, 0, 0), new LdrColorA(0, 0, 0, 0) } }), // Mode 14
         };
 
         private static readonly int[] MsAModeToInfo =
@@ -293,12 +295,12 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
             IBlock self = this;
             byte[] currentBlock = new byte[this.CompressedBytesPerBlock];
 
-            return Helper.InMemoryDecode<Bc6hs>(blockData, width, height, (byte[] stream, byte[] data, int streamIndex, int dataIndex, int stride) =>
+            return Helper.InMemoryDecode<Bc6hs>(blockData, width, height, (stream, data, streamIndex, dataIndex, stride) =>
             {
                 // I would prefer to use Span, but not sure if I should reference System.Memory in this project
                 // copy data instead
-                Buffer.BlockCopy(blockData, (int)streamIndex, currentBlock, 0, currentBlock.Length);
-                streamIndex += (int)currentBlock.Length;
+                Buffer.BlockCopy(blockData, streamIndex, currentBlock, 0, currentBlock.Length);
+                streamIndex += currentBlock.Length;
 
                 uint uStartBit = 0;
                 byte uMode = GetBits(currentBlock, ref uStartBit, 2u);
@@ -307,14 +309,14 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                     uMode = (byte)((GetBits(currentBlock, ref uStartBit, 3) << 2) | uMode);
                 }
 
-                Debug.Assert(uMode < 32);
+                Debug.Assert(uMode < 32, "uMode should be less then 32");
 
                 if (MsAModeToInfo[uMode] >= 0)
                 {
-                    Debug.Assert(MsAModeToInfo[uMode] < MsAInfo.Length);
+                    Debug.Assert(MsAModeToInfo[uMode] < MsAInfo.Length, "MsAModeToInfo[uMode] should be smaller then MsAInfo.Length");
                     Bc6hsModeDescriptor[] desc = MsADesc[MsAModeToInfo[uMode]];
 
-                    Debug.Assert(MsAModeToInfo[uMode] < MsADesc.Length);
+                    Debug.Assert(MsAModeToInfo[uMode] < MsADesc.Length, "MsAModeToInfo[uMode] should be smaller then MsADesc.Length");
                     ref Bc6hsModeInfo info = ref MsAInfo[MsAModeToInfo[uMode]];
 
                     var aEndPts = new IntEndPntPair[Constants.BC6H_MAX_REGIONS];
@@ -334,43 +336,43 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                         {
                             switch (desc[uCurBit].MBc6HEField)
                             {
-                                case Bc6hEField.D: uShape |= 1u << desc[uCurBit].m_uBit;
+                                case Bc6hEField.D: uShape |= 1u << desc[uCurBit].Bit;
                                     break;
                                 case Bc6hEField.RW:
-                                    aEndPts[0].A.R |= 1 << desc[uCurBit].m_uBit;
+                                    aEndPts[0].A.R |= 1 << desc[uCurBit].Bit;
                                     break;
                                 case Bc6hEField.RX:
-                                    aEndPts[0].B.R |= 1 << desc[uCurBit].m_uBit;
+                                    aEndPts[0].B.R |= 1 << desc[uCurBit].Bit;
                                     break;
                                 case Bc6hEField.RY:
-                                    aEndPts[1].A.R |= 1 << desc[uCurBit].m_uBit;
+                                    aEndPts[1].A.R |= 1 << desc[uCurBit].Bit;
                                     break;
                                 case Bc6hEField.RZ:
-                                    aEndPts[1].B.R |= 1 << desc[uCurBit].m_uBit;
+                                    aEndPts[1].B.R |= 1 << desc[uCurBit].Bit;
                                     break;
                                 case Bc6hEField.GW:
-                                    aEndPts[0].A.G |= 1 << desc[uCurBit].m_uBit;
+                                    aEndPts[0].A.G |= 1 << desc[uCurBit].Bit;
                                     break;
                                 case Bc6hEField.GX:
-                                    aEndPts[0].B.G |= 1 << desc[uCurBit].m_uBit;
+                                    aEndPts[0].B.G |= 1 << desc[uCurBit].Bit;
                                     break;
                                 case Bc6hEField.GY:
-                                    aEndPts[1].A.G |= 1 << desc[uCurBit].m_uBit;
+                                    aEndPts[1].A.G |= 1 << desc[uCurBit].Bit;
                                     break;
                                 case Bc6hEField.GZ:
-                                    aEndPts[1].B.G |= 1 << desc[uCurBit].m_uBit;
+                                    aEndPts[1].B.G |= 1 << desc[uCurBit].Bit;
                                     break;
                                 case Bc6hEField.BW:
-                                    aEndPts[0].A.B |= 1 << desc[uCurBit].m_uBit;
+                                    aEndPts[0].A.B |= 1 << desc[uCurBit].Bit;
                                     break;
                                 case Bc6hEField.BX:
-                                    aEndPts[0].B.B |= 1 << desc[uCurBit].m_uBit;
+                                    aEndPts[0].B.B |= 1 << desc[uCurBit].Bit;
                                     break;
                                 case Bc6hEField.BY:
-                                    aEndPts[1].A.B |= 1 << desc[uCurBit].m_uBit;
+                                    aEndPts[1].A.B |= 1 << desc[uCurBit].Bit;
                                     break;
                                 case Bc6hEField.BZ:
-                                    aEndPts[1].B.B |= 1 << desc[uCurBit].m_uBit;
+                                    aEndPts[1].B.B |= 1 << desc[uCurBit].Bit;
                                     break;
                                 default:
                                 {
@@ -382,13 +384,13 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                         }
                     }
 
-                    Debug.Assert(uShape < 64);
+                    Debug.Assert(uShape < 64, "uShape shoul be less then 64");
 
                     aEndPts[0].A.SignExtend(info.RgbaPrec[0][0]);
 
                     if (info.BTransformed)
                     {
-                        Debug.Assert(info.UPartitions < Constants.BC6H_MAX_REGIONS);
+                        Debug.Assert(info.UPartitions < Constants.BC6H_MAX_REGIONS, $"info.UPartitions should be less then {Constants.BC6H_MAX_REGIONS}");
                         for (int p = 0; p <= info.UPartitions; ++p)
                         {
                             if (p != 0)
@@ -426,8 +428,8 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                             return dataIndex;
                         }
 
-                        uint uRegion = Constants.g_aPartitionTable[info.UPartitions][uShape][i];
-                        Debug.Assert(uRegion < Constants.BC6H_MAX_REGIONS);
+                        uint uRegion = Constants.PartitionTable[info.UPartitions][uShape][i];
+                        Debug.Assert(uRegion < Constants.BC6H_MAX_REGIONS, $"uRegion should be less then {Constants.BC6H_MAX_REGIONS}");
 
                         // Unquantize endpoints and interpolate
                         int r1 = Unquantize(aEndPts[uRegion].A.R, info.RgbaPrec[0][0].R);
@@ -436,11 +438,13 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                         int r2 = Unquantize(aEndPts[uRegion].B.R, info.RgbaPrec[0][0].R);
                         int g2 = Unquantize(aEndPts[uRegion].B.G, info.RgbaPrec[0][0].G);
                         int b2 = Unquantize(aEndPts[uRegion].B.B, info.RgbaPrec[0][0].B);
-                        int[] aWeights = info.UPartitions > 0 ? Constants.g_aWeights3 : Constants.g_aWeights4;
-                        var fc = new IntColor();
-                        fc.R = FinishUnquantize(((r1 * (Constants.BC67_WEIGHT_MAX - aWeights[uIndex])) + (r2 * aWeights[uIndex]) + Constants.BC67_WEIGHT_ROUND) >> Constants.BC67_WEIGHT_SHIFT);
-                        fc.G = FinishUnquantize(((g1 * (Constants.BC67_WEIGHT_MAX - aWeights[uIndex])) + (g2 * aWeights[uIndex]) + Constants.BC67_WEIGHT_ROUND) >> Constants.BC67_WEIGHT_SHIFT);
-                        fc.B = FinishUnquantize(((b1 * (Constants.BC67_WEIGHT_MAX - aWeights[uIndex])) + (b2 * aWeights[uIndex]) + Constants.BC67_WEIGHT_ROUND) >> Constants.BC67_WEIGHT_SHIFT);
+                        int[] aWeights = info.UPartitions > 0 ? Constants.Weights3 : Constants.Weights4;
+                        var fc = new IntColor
+                        {
+                            R = FinishUnquantize(((r1 * (Constants.BC67_WEIGHT_MAX - aWeights[uIndex])) + (r2 * aWeights[uIndex]) + Constants.BC67_WEIGHT_ROUND) >> Constants.BC67_WEIGHT_SHIFT),
+                            G = FinishUnquantize(((g1 * (Constants.BC67_WEIGHT_MAX - aWeights[uIndex])) + (g2 * aWeights[uIndex]) + Constants.BC67_WEIGHT_ROUND) >> Constants.BC67_WEIGHT_SHIFT),
+                            B = FinishUnquantize(((b1 * (Constants.BC67_WEIGHT_MAX - aWeights[uIndex])) + (b2 * aWeights[uIndex]) + Constants.BC67_WEIGHT_ROUND) >> Constants.BC67_WEIGHT_SHIFT)
+                        };
 
                         ushort[] rgb = new ushort[3];
                         fc.ToF16Signed(rgb);
@@ -491,6 +495,12 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
             });
         }
 
+        /// <summary>
+        /// Gets a bit for a given position.
+        /// </summary>
+        /// <param name="currentBlock">The current block.</param>
+        /// <param name="uStartBit">The start bit.</param>
+        /// <returns>A bit at a given position.</returns>
         public static byte GetBit(byte[] currentBlock, ref uint uStartBit)
         {
             Guard.MustBeLessThan<uint>(uStartBit, 128, nameof(uStartBit));
@@ -501,6 +511,13 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
             return ret;
         }
 
+        /// <summary>
+        /// Gets n bits at a given start position.
+        /// </summary>
+        /// <param name="currentBlock">The current block.</param>
+        /// <param name="uStartBit">The start bit.</param>
+        /// <param name="uNumBits">The number of bits.</param>
+        /// <returns>Bits at a given position.</returns>
         public static byte GetBits(byte[] currentBlock, ref uint uStartBit, uint uNumBits)
         {
             if (uNumBits == 0)
@@ -508,7 +525,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 return 0;
             }
 
-            Debug.Assert(uStartBit + uNumBits <= 128 && uNumBits <= 8);
+            Debug.Assert(uStartBit + uNumBits <= 128 && uNumBits <= 8, "uStartBit + uNumBits <= 128 && uNumBits <= 8");
             byte ret;
             uint uIndex = uStartBit >> 3;
             uint uBase = uStartBit - (uIndex << 3);
@@ -523,7 +540,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 ret = (byte)((currentBlock[uIndex] >> (int)uBase) & ((1 << (int)uNumBits) - 1));
             }
 
-            Debug.Assert(ret < (1 << (int)uNumBits));
+            Debug.Assert(ret < (1 << (int)uNumBits), $"GetBits return value should be less then {1 << (int)uNumBits}");
             uStartBit += uNumBits;
             return ret;
         }
@@ -566,9 +583,6 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
             return unq;
         }
 
-        private static int FinishUnquantize(int comp)
-        {
-            return (comp < 0) ? -(((-comp) * 31) >> 5) : (comp * 31) >> 5;  // scale the magnitude by 31/32
-        }
+        private static int FinishUnquantize(int comp) => (comp < 0) ? -(((-comp) * 31) >> 5) : (comp * 31) >> 5; // scale the magnitude by 31/32
     }
 }

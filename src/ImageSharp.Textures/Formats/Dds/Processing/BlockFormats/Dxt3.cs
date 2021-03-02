@@ -1,10 +1,11 @@
 // Copyright (c) Six Labors.
 // Licensed under the Apache License, Version 2.0.
 
-using SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats;
-
-namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
+namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
 {
+    /// <summary>
+    /// Texture compressed with DXT3.
+    /// </summary>
     public struct Dxt3 : IBlock<Dxt3>
     {
         /// <inheritdoc/>
@@ -35,7 +36,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
             IBlock self = this;
             var colors = new ImageSharp.PixelFormats.Rgb24[4];
 
-            return Helper.InMemoryDecode<Dxt3>(blockData, width, height, (byte[] stream, byte[] data, int streamIndex, int dataIndex, int stride) =>
+            return Helper.InMemoryDecode<Dxt3>(blockData, width, height, (stream, data, streamIndex, dataIndex, stride) =>
             {
                 /*
                  * Strategy for decompression:
@@ -44,13 +45,13 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                  * to store values for later use.
                  */
 
-            // Remember where the alpha data is stored so we can decode simultaneously
+            // Remember where the alpha data is stored so we can decode simultaneously.
             int alphaPtr = streamIndex;
 
-            // Jump ahead to the color data
+            // Jump ahead to the color data.
             streamIndex += 8;
 
-            // Colors are stored in a pair of 16 bits
+            // Colors are stored in a pair of 16 bits.
             ushort color0 = blockData[streamIndex++];
             color0 |= (ushort)(blockData[streamIndex++] << 8);
 
@@ -61,16 +62,16 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
             colors[0].R = (byte)(color0 & 0x1f);
             colors[0].G = (byte)((color0 & 0x7E0) >> 5);
             colors[0].B = (byte)((color0 & 0xF800) >> 11);
-            colors[0].R = (byte)(colors[0].R << 3 | colors[0].R >> 2);
-            colors[0].G = (byte)(colors[0].G << 2 | colors[0].G >> 3);
-            colors[0].B = (byte)(colors[0].B << 3 | colors[0].B >> 2);
+            colors[0].R = (byte)((colors[0].R << 3) | (colors[0].R >> 2));
+            colors[0].G = (byte)((colors[0].G << 2) | (colors[0].G >> 3));
+            colors[0].B = (byte)((colors[0].B << 3) | (colors[0].B >> 2));
 
             colors[1].R = (byte)(color1 & 0x1f);
             colors[1].G = (byte)((color1 & 0x7E0) >> 5);
             colors[1].B = (byte)((color1 & 0xF800) >> 11);
-            colors[1].R = (byte)(colors[1].R << 3 | colors[1].R >> 2);
-            colors[1].G = (byte)(colors[1].G << 2 | colors[1].G >> 3);
-            colors[1].B = (byte)(colors[1].B << 3 | colors[1].B >> 2);
+            colors[1].R = (byte)((colors[1].R << 3) | (colors[1].R >> 2));
+            colors[1].G = (byte)((colors[1].G << 2) | (colors[1].G >> 3));
+            colors[1].B = (byte)((colors[1].B << 3) | (colors[1].B >> 2));
 
             // Used the two extracted colors to create two new colors
             // that are slightly different.

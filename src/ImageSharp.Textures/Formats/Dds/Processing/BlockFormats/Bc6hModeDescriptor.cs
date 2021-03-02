@@ -1,17 +1,17 @@
 // Copyright (c) Six Labors.
 // Licensed under the Apache License, Version 2.0.
 
-namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
+namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
 {
-    internal struct Bc6hModeDescriptor
+    internal struct Bc6HModeDescriptor
     {
-        public Bc6hEField MBc6HEField;
-        public byte m_uBit;
+        public readonly Bc6hEField MBc6HEField;
+        public readonly byte Bit;
 
-        public Bc6hModeDescriptor(Bc6hEField bc6HEF, byte uB)
+        public Bc6HModeDescriptor(Bc6hEField bc6Hef, byte uB)
         {
-            this.MBc6HEField = bc6HEF;
-            this.m_uBit = uB;
+            this.MBc6HEField = bc6Hef;
+            this.Bit = uB;
         }
     }
 }

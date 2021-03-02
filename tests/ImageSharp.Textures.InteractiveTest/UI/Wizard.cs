@@ -5,7 +5,7 @@ using System;
 using System.Numerics;
 using ImGuiNET;
 
-namespace Phoenix.Import.Application.UI
+namespace SixLabors.ImageSharp.Textures.InteractiveTest.UI
 {
     public class Wizard
     {

@@ -2,10 +2,12 @@
 // Licensed under the Apache License, Version 2.0.
 
 using System;
-using SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats;
 
-namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
+namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
 {
+    /// <summary>
+    /// Texture compressed with BC5 with two color channels (8 bits:8 bits)
+    /// </summary>
     public struct Bc5 : IBlock<Bc5>
     {
         /// <inheritdoc/>
@@ -38,7 +40,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
             byte[] firstGradient = new byte[8];
             byte[] secondGradient = new byte[8];
 
-            return Helper.InMemoryDecode<Bc5>(blockData, width, height, (byte[] stream, byte[] data, int streamIndex, int dataIndex, int stride) =>
+            return Helper.InMemoryDecode<Bc5>(blockData, width, height, (stream, data, streamIndex, dataIndex, stride) =>
             {
                 streamIndex = ExtractGradient(firstGradient, blockData, streamIndex);
                 ulong firstCodes = blockData[streamIndex++];
@@ -61,9 +63,9 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                     for (int j = 0; j < 4; j++)
                     {
                         // 3 bits determine alpha index to use.
-                        byte firstIndex = (byte)(firstCodes >> (alphaShift + (3 * j)) & 0x07);
-                        byte secondIndex = (byte)(secondCodes >> (alphaShift + (3 * j)) & 0x07);
-                        data[dataIndex++] = 0; // skip blue.
+                        byte firstIndex = (byte)((firstCodes >> (alphaShift + (3 * j))) & 0x07);
+                        byte secondIndex = (byte)((secondCodes >> (alphaShift + (3 * j))) & 0x07);
+                        data[dataIndex++] = 0; // Skip blue.
                         data[dataIndex++] = secondGradient[secondIndex];
                         data[dataIndex++] = firstGradient[firstIndex];
                     }

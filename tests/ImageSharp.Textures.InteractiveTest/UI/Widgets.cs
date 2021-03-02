@@ -1,11 +1,11 @@
-﻿// Copyright (c) Six Labors.
+// Copyright (c) Six Labors.
 // Licensed under the Apache License, Version 2.0.
 
 using System;
 using System.Numerics;
 using ImGuiNET;
 
-namespace Phoenix.Import.Application.UI
+namespace SixLabors.ImageSharp.Textures.InteractiveTest.UI
 {
     public static class Widgets
     {
@@ -24,8 +24,8 @@ namespace Phoenix.Import.Application.UI
             drawList.PathClear();
             for (int i = 0; i < num_segments; i++)
             {
-                float a = aMin + (i / (float)num_segments) * (aMax - aMin);
-                var location = new Vector2(centre.X + MathF.Cos(a + time * 8) * radius, centre.Y + MathF.Sin(a + time * 8) * radius);
+                float a = aMin + (i / (float)num_segments * (aMax - aMin));
+                var location = new Vector2(centre.X + (MathF.Cos(a + (time * 8)) * radius), centre.Y + (MathF.Sin(a + (time * 8)) * radius));
                 drawList.PathLineTo(location);
             }
 

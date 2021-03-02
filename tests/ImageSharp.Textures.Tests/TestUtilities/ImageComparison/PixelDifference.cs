@@ -22,7 +22,8 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.ImageComparison
         }
 
         public PixelDifference(Point position, Vector4 expected, Vector4 actual)
-            : this(position,
+            : this(
+                position,
                 actual.X - expected.X,
                 actual.Y - expected.Y,
                 actual.Z - expected.Z,

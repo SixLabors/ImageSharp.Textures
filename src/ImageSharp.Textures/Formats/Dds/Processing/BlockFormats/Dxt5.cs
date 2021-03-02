@@ -1,10 +1,11 @@
 // Copyright (c) Six Labors.
 // Licensed under the Apache License, Version 2.0.
 
-using SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats;
-
-namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
+namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
 {
+    /// <summary>
+    /// Texture compressed with DXT5.
+    /// </summary>
     public struct Dxt5 : IBlock<Dxt5>
     {
         /// <inheritdoc/>
@@ -36,7 +37,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
             byte[] alpha = new byte[8];
             var colors = new ImageSharp.PixelFormats.Rgb24[4];
 
-            return Helper.InMemoryDecode<Dxt5>(blockData, width, height, (byte[] stream, byte[] data, int streamIndex, int dataIndex, int stride) =>
+            return Helper.InMemoryDecode<Dxt5>(blockData, width, height, (stream, data, streamIndex, dataIndex, stride) =>
             {
                 streamIndex = Bc5.ExtractGradient(alpha, blockData, streamIndex);
 
@@ -47,27 +48,27 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 alphaCodes |= (ulong)blockData[streamIndex++] << 32;
                 alphaCodes |= (ulong)blockData[streamIndex++] << 40;
 
-                // Colors are stored in a pair of 16 bits
+                // Colors are stored in a pair of 16 bits.
                 ushort color0 = blockData[streamIndex++];
                 color0 |= (ushort)(blockData[streamIndex++] << 8);
 
                 ushort color1 = blockData[streamIndex++];
                 color1 |= (ushort)(blockData[streamIndex++] << 8);
 
-                // Extract R5G6B5 (in that order)
+                // Extract R5G6B5 (in that order).
                 colors[0].R = (byte)(color0 & 0x1f);
                 colors[0].G = (byte)((color0 & 0x7E0) >> 5);
                 colors[0].B = (byte)((color0 & 0xF800) >> 11);
-                colors[0].R = (byte)(colors[0].R << 3 | colors[0].R >> 2);
-                colors[0].G = (byte)(colors[0].G << 2 | colors[0].G >> 3);
-                colors[0].B = (byte)(colors[0].B << 3 | colors[0].B >> 2);
+                colors[0].R = (byte)((colors[0].R << 3) | (colors[0].R >> 2));
+                colors[0].G = (byte)((colors[0].G << 2) | (colors[0].G >> 3));
+                colors[0].B = (byte)((colors[0].B << 3) | (colors[0].B >> 2));
 
                 colors[1].R = (byte)(color1 & 0x1f);
                 colors[1].G = (byte)((color1 & 0x7E0) >> 5);
                 colors[1].B = (byte)((color1 & 0xF800) >> 11);
-                colors[1].R = (byte)(colors[1].R << 3 | colors[1].R >> 2);
-                colors[1].G = (byte)(colors[1].G << 2 | colors[1].G >> 3);
-                colors[1].B = (byte)(colors[1].B << 3 | colors[1].B >> 2);
+                colors[1].R = (byte)((colors[1].R << 3) | (colors[1].R >> 2));
+                colors[1].G = (byte)((colors[1].G << 2) | (colors[1].G >> 3));
+                colors[1].B = (byte)((colors[1].B << 3) | (colors[1].B >> 2));
 
                 colors[2].R = (byte)(((2 * colors[0].R) + colors[1].R) / 3);
                 colors[2].G = (byte)(((2 * colors[0].G) + colors[1].G) / 3);
@@ -82,7 +83,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                     byte rowVal = blockData[streamIndex++];
                     for (int j = 0; j < 4; j++)
                     {
-                        // 3 bits determine alpha index to use
+                        // 3 bits determine alpha index to use.
                         byte alphaIndex = (byte)((alphaCodes >> (alphaShift + (3 * j))) & 0x07);
                         ImageSharp.PixelFormats.Rgb24 col = colors[(rowVal >> (j * 2)) & 0x03];
                         data[dataIndex++] = col.R;

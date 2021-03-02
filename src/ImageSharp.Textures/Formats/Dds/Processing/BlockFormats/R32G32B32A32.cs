@@ -1,8 +1,11 @@
-﻿// Copyright (c) Six Labors.
+// Copyright (c) Six Labors.
 // Licensed under the Apache License, Version 2.0.
 
 namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
 {
+    /// <summary>
+    /// Texture which has 32 bits per color channel including the alpha channel.
+    /// </summary>
     public struct R32G32B32A32 : IBlock<R32G32B32A32>
     {
         /// <inheritdoc/>
@@ -28,9 +31,6 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
         }
 
         /// <inheritdoc/>
-        public byte[] Decompress(byte[] blockData, int width, int height)
-        {
-            return blockData;
-        }
+        public byte[] Decompress(byte[] blockData, int width, int height) => blockData;
     }
 }

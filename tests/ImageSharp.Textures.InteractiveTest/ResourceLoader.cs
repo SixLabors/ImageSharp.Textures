@@ -6,7 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 
-namespace Phoenix.Import.Application
+namespace SixLabors.ImageSharp.Textures.InteractiveTest
 {
     public static class ResourceLoader
     {

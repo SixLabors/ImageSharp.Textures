@@ -1,10 +1,13 @@
-﻿// Copyright (c) Six Labors.
+// Copyright (c) Six Labors.
 // Licensed under the Apache License, Version 2.0.
 
 using SixLabors.ImageSharp.Textures.PixelFormats;
 
 namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
 {
+    /// <summary>
+    /// Texture for pixel data with 11 bits for red and green and 10 bits for the blue channel as float.
+    /// </summary>
     public struct R11G11B10Float : IBlock<R11G11B10Float>
     {
         /// <inheritdoc/>
@@ -30,9 +33,6 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
         }
 
         /// <inheritdoc/>
-        public byte[] Decompress(byte[] blockData, int width, int height)
-        {
-            return blockData;
-        }
+        public byte[] Decompress(byte[] blockData, int width, int height) => blockData;
     }
 }

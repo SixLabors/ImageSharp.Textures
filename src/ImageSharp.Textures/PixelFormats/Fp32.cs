@@ -1,4 +1,4 @@
-﻿// Copyright (c) Six Labors.
+// Copyright (c) Six Labors.
 // Licensed under the Apache License, Version 2.0.
 
 using System;
@@ -8,6 +8,9 @@ using SixLabors.ImageSharp.PixelFormats;
 
 namespace SixLabors.ImageSharp.Textures.PixelFormats
 {
+    /// <summary>
+    /// Pixel where each pixel is represented by a 32 bit float value.
+    /// </summary>
     public struct Fp32 : IPixel<Fp32>, IPackedVector<float>
     {
         /// <summary>
@@ -41,10 +44,7 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void FromVector4(Vector4 vector)
-        {
-            this.PackedValue = (ushort)Pack(new Vector<float>(vector.X));
-        }
+        public void FromVector4(Vector4 vector) => this.PackedValue = (ushort)Pack(new Vector<float>(vector.X));
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -92,10 +92,7 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void ToRgba32(ref Rgba32 dest)
-        {
-            dest.FromScaledVector4(this.ToScaledVector4());
-        }
+        public void ToRgba32(ref Rgba32 dest) => dest.FromScaledVector4(this.ToScaledVector4());
 
         /// <inheritdoc/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -132,9 +129,6 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         public override int GetHashCode() => this.PackedValue.GetHashCode();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static float Pack(Vector<float> vector)
-        {
-            return vector[0];
-        }
+        private static float Pack(Vector<float> vector) => vector[0];
     }
 }

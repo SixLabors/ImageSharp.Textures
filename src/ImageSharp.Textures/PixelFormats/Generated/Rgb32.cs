@@ -82,14 +82,12 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Vector4 ToVector4()
-        {
-            return new Vector4(
+        public Vector4 ToVector4() =>
+            new Vector4(
                 (this.PackedValue & 255) / 255F,
                 ((this.PackedValue >> 8) & 255) / 255F,
                 ((this.PackedValue >> 16) & 255) / 255F,
                 1.0f);
-        }
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -133,10 +131,7 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void ToRgba32(ref Rgba32 dest)
-        {
-            dest.FromScaledVector4(this.ToScaledVector4());
-        }
+        public void ToRgba32(ref Rgba32 dest) => dest.FromScaledVector4(this.ToScaledVector4());
 
         /// <inheritdoc/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

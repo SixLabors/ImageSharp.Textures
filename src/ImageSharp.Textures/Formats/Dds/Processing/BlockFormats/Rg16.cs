@@ -5,6 +5,9 @@ using SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats;
 
 namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
 {
+    /// <summary>
+    /// Texture format for pixels which have only the red and green channel and use 8 bit for each.
+    /// </summary>
     public struct Rg16 : IBlock<Rg16>
     {
         /// <inheritdoc/>
@@ -30,9 +33,6 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
         }
 
         /// <inheritdoc/>
-        public byte[] Decompress(byte[] blockData, int width, int height)
-        {
-            return blockData;
-        }
+        public byte[] Decompress(byte[] blockData, int width, int height) => blockData;
     }
 }

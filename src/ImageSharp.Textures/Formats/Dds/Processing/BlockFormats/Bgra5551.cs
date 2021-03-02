@@ -1,10 +1,11 @@
 // Copyright (c) Six Labors.
 // Licensed under the Apache License, Version 2.0.
 
-using SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats;
-
-namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
+namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
 {
+    /// <summary>
+    /// Texture format for pixel data with 5 bit for each color channel and 1 bit for the alpha channel.
+    /// </summary>
     public struct Bgra5551 : IBlock<Bgra5551>
     {
         /// <inheritdoc/>
@@ -30,9 +31,6 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
         }
 
         /// <inheritdoc/>
-        public byte[] Decompress(byte[] blockData, int width, int height)
-        {
-            return blockData;
-        }
+        public byte[] Decompress(byte[] blockData, int width, int height) => blockData;
     }
 }

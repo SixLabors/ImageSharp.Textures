@@ -15,7 +15,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.PixelFormats
 
             for (byte p = 0; p <= uPartitions; p++)
             {
-                if (uOffset == Constants.g_aFixUp[uPartitions][uShape][p])
+                if (uOffset == Constants.FixUp[uPartitions][uShape][p])
                 {
                     return true;
                 }

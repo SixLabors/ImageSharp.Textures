@@ -3,15 +3,17 @@
 
 using System;
 using System.Diagnostics;
-using SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats;
 using SixLabors.ImageSharp.Textures.Formats.Dds.Processing.PixelFormats;
 
-namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
+namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
 {
+    /// <summary>
+    /// Texture compressed with BC7 with three color channels (4 to 7 bits per channel) with 0 to 8 bits of alpha.
+    /// </summary>
     public struct Bc7 : IBlock<Bc7>
     {
         // Code based on commit 138efff1b9c53fd9a5dd34b8c865e8f5ae798030 2019/10/24 in DirectXTex C++ library
-        private static readonly Bc7ModeInfo[] msAInfo =
+        private static readonly Bc7ModeInfo[] ModeInfos =
         {
             // Mode 0: Color only, 3 Subsets, RGBP 4441 (unique P-bit), 3-bit indecies, 16 partitions
             new Bc7ModeInfo(2, 4, 6, 0, 0, 3, 0, new LdrColorA(4, 4, 4, 0), new LdrColorA(5, 5, 5, 0)),
@@ -66,7 +68,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
             byte[] currentBlock = new byte[this.CompressedBytesPerBlock];
             IBlock self = this;
 
-            return Helper.InMemoryDecode<Bc7>(blockData, width, height, (byte[] stream, byte[] data, int streamIndex, int dataIndex, int stride) =>
+            return Helper.InMemoryDecode<Bc7>(blockData, width, height, (stream, data, streamIndex, dataIndex, stride) =>
             {
                 // I would prefer to use Span, but not sure if I should reference System.Memory in this project copy data instead.
                 Buffer.BlockCopy(blockData, streamIndex, currentBlock, 0, currentBlock.Length);
@@ -81,23 +83,23 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
 
                 if (uMode < 8)
                 {
-                    byte uPartitions = msAInfo[uMode].UPartitions;
-                    Debug.Assert(uPartitions < Constants.BC7_MAX_REGIONS);
+                    byte uPartitions = ModeInfos[uMode].UPartitions;
+                    Debug.Assert(uPartitions < Constants.BC7_MAX_REGIONS, $"uPartitions should be smaller then {Constants.BC7_MAX_REGIONS}");
 
                     byte uNumEndPts = (byte)((uPartitions + 1u) << 1);
-                    byte uIndexPrec = msAInfo[uMode].UIndexPrec;
-                    byte uIndexPrec2 = msAInfo[uMode].UIndexPrec2;
+                    byte uIndexPrec = ModeInfos[uMode].UIndexPrec;
+                    byte uIndexPrec2 = ModeInfos[uMode].UIndexPrec2;
                     int i;
                     uint uStartBit = uMode + 1u;
                     int[] p = new int[6];
-                    byte uShape = GetBits(currentBlock, ref uStartBit, msAInfo[uMode].UPartitionBits);
-                    Debug.Assert(uShape < Constants.BC7_MAX_SHAPES);
+                    byte uShape = GetBits(currentBlock, ref uStartBit, ModeInfos[uMode].UPartitionBits);
+                    Debug.Assert(uShape < Constants.BC7_MAX_SHAPES, $"uShape should be smaller then {Constants.BC7_MAX_SHAPES}");
 
-                    byte uRotation = GetBits(currentBlock, ref uStartBit, msAInfo[uMode].URotationBits);
-                    Debug.Assert(uRotation < 4);
+                    byte uRotation = GetBits(currentBlock, ref uStartBit, ModeInfos[uMode].URotationBits);
+                    Debug.Assert(uRotation < 4, "uRotation should be less then 4");
 
-                    byte uIndexMode = GetBits(currentBlock, ref uStartBit, msAInfo[uMode].UIndexModeBits);
-                    Debug.Assert(uIndexMode < 2);
+                    byte uIndexMode = GetBits(currentBlock, ref uStartBit, ModeInfos[uMode].UIndexModeBits);
+                    Debug.Assert(uIndexMode < 2, "uIndexMode should be less then 2");
 
                     var c = new LdrColorA[Constants.BC7_MAX_REGIONS << 1];
                     for (i = 0; i < c.Length; ++i)
@@ -105,10 +107,10 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                         c[i] = new LdrColorA();
                     }
 
-                    LdrColorA rgbaPrec = msAInfo[uMode].RgbaPrec;
-                    LdrColorA rgbaPrecWithP = msAInfo[uMode].RgbaPrecWithP;
+                    LdrColorA rgbaPrec = ModeInfos[uMode].RgbaPrec;
+                    LdrColorA rgbaPrecWithP = ModeInfos[uMode].RgbaPrecWithP;
 
-                    Debug.Assert(uNumEndPts <= (Constants.BC7_MAX_REGIONS << 1));
+                    Debug.Assert(uNumEndPts <= (Constants.BC7_MAX_REGIONS << 1), $"uNumEndPts should be smaller or equal to {Constants.BC7_MAX_REGIONS << 1}");
 
                     // Red channel
                     for (i = 0; i < uNumEndPts; i++)
@@ -163,8 +165,8 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                     }
 
                     // P-bits
-                    Debug.Assert(msAInfo[uMode].UPBits <= 6);
-                    for (i = 0; i < msAInfo[uMode].UPBits; i++)
+                    Debug.Assert(ModeInfos[uMode].UPBits <= 6, "ModeInfos[uMode].UPBits should be less then 7");
+                    for (i = 0; i < ModeInfos[uMode].UPBits; i++)
                     {
                         if (uStartBit > 127)
                         {
@@ -176,11 +178,11 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                         p[i] = GetBit(currentBlock, ref uStartBit);
                     }
 
-                    if (msAInfo[uMode].UPBits != 0)
+                    if (ModeInfos[uMode].UPBits != 0)
                     {
                         for (i = 0; i < uNumEndPts; i++)
                         {
-                            int pi = i * msAInfo[uMode].UPBits / uNumEndPts;
+                            int pi = i * ModeInfos[uMode].UPBits / uNumEndPts;
                             for (byte ch = 0; ch < Constants.BC7_NUM_CHANNELS; ch++)
                             {
                                 if (rgbaPrec[ch] != rgbaPrecWithP[ch])
@@ -201,7 +203,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                     // read color indices
                     for (i = 0; i < Constants.NumPixelsPerBlock; i++)
                     {
-                        uint uNumBits = Helpers.IsFixUpOffset(msAInfo[uMode].UPartitions, uShape, i) ? uIndexPrec - 1u : uIndexPrec;
+                        uint uNumBits = Helpers.IsFixUpOffset(ModeInfos[uMode].UPartitions, uShape, i) ? uIndexPrec - 1u : uIndexPrec;
                         if (uStartBit + uNumBits > 128)
                         {
                             Debug.WriteLine("BC7: Invalid block encountered during decoding");
@@ -231,7 +233,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
 
                     for (i = 0; i < Constants.NumPixelsPerBlock; ++i)
                     {
-                        byte uRegion = Constants.g_aPartitionTable[uPartitions][uShape][i];
+                        byte uRegion = Constants.PartitionTable[uPartitions][uShape][i];
                         var outPixel = new LdrColorA();
                         if (uIndexPrec2 == 0)
                         {
@@ -295,6 +297,12 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
             });
         }
 
+        /// <summary>
+        /// Gets a bit for a given position.
+        /// </summary>
+        /// <param name="currentBlock">The current block.</param>
+        /// <param name="uStartBit">The start bit.</param>
+        /// <returns>A bit at a given position.</returns>
         public static byte GetBit(byte[] currentBlock, ref uint uStartBit)
         {
             Guard.MustBeLessThan<uint>(uStartBit, 128, nameof(uStartBit));
@@ -304,6 +312,13 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
             return ret;
         }
 
+        /// <summary>
+        /// Gets n bits at a given start position.
+        /// </summary>
+        /// <param name="currentBlock">The current block.</param>
+        /// <param name="uStartBit">The start bit.</param>
+        /// <param name="uNumBits">The number of bits.</param>
+        /// <returns>Bits at a given position.</returns>
         public static byte GetBits(byte[] currentBlock, ref uint uStartBit, uint uNumBits)
         {
             if (uNumBits == 0)
@@ -311,7 +326,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 return 0;
             }
 
-            Debug.Assert(uStartBit + uNumBits <= 128 && uNumBits <= 8);
+            Debug.Assert(uStartBit + uNumBits <= 128 && uNumBits <= 8, "uStartBit + uNumBits <= 128 && uNumBits <= 8");
             byte ret;
             uint uIndex = uStartBit >> 3;
             uint uBase = uStartBit - (uIndex << 3);
@@ -326,7 +341,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 ret = (byte)((currentBlock[uIndex] >> (int)uBase) & ((1 << (int)uNumBits) - 1));
             }
 
-            Debug.Assert(ret < (1 << (int)uNumBits));
+            Debug.Assert(ret < (1 << (int)uNumBits), $"GetBits() return value should be smaller then {1 << (int)uNumBits}");
             uStartBit += uNumBits;
             return ret;
         }

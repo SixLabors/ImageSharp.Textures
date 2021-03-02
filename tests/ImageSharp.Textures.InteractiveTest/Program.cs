@@ -1,4 +1,4 @@
-﻿// Copyright (c) Six Labors.
+// Copyright (c) Six Labors.
 // Licensed under the Apache License, Version 2.0.
 
 using System;
@@ -7,7 +7,7 @@ using Veldrid;
 using Veldrid.Sdl2;
 using Veldrid.StartupUtilities;
 
-namespace Phoenix.Import.Application
+namespace SixLabors.ImageSharp.Textures.InteractiveTest
 {
     public class Program
     {
@@ -19,7 +19,7 @@ namespace Phoenix.Import.Application
         {
             uiManager = new UiManager();
 
-            window = VeldridStartup.CreateWindow(new WindowCreateInfo(50, 50, 1280, 720, WindowState.Normal, $"ImageSharp.Textures.InteractiveTest"));
+            window = VeldridStartup.CreateWindow(new WindowCreateInfo(50, 50, 1280, 720, WindowState.Normal, "ImageSharp.Textures.InteractiveTest"));
             ApplicationManager.GraphicsDevice = VeldridStartup.CreateGraphicsDevice(window, GraphicsBackend.OpenGL);
 
             window.Resized += Window_Resized;
@@ -79,15 +79,12 @@ namespace Phoenix.Import.Application
             ApplicationManager.GraphicsDevice.Dispose();
         }
 
-        static void Window_Resized()
+        private static void Window_Resized()
         {
             ApplicationManager.GraphicsDevice.MainSwapchain.Resize((uint)window.Width, (uint)window.Height);
             ApplicationManager.Controller.WindowResized(window.Width, window.Height);
         }
 
-        private static void SubmitUi()
-        {
-            uiManager.Render(window.Width, window.Height);
-        }
+        private static void SubmitUi() => uiManager.Render(window.Width, window.Height);
     }
 }

@@ -6,6 +6,10 @@ using System.Collections.Generic;
 
 namespace SixLabors.ImageSharp.Textures.TextureFormats
 {
+    /// <summary>
+    /// A flat texture.
+    /// </summary>
+    /// <seealso cref="SixLabors.ImageSharp.Textures.Texture" />
     public class FlatTexture : Texture
     {
         private bool isDisposed;
@@ -13,11 +17,11 @@ namespace SixLabors.ImageSharp.Textures.TextureFormats
         /// <summary>
         /// Initializes a new instance of the <see cref="FlatTexture"/> class.
         /// </summary>
-        public FlatTexture()
-        {
-            this.MipMaps = new List<MipMap>();
-        }
+        public FlatTexture() => this.MipMaps = new List<MipMap>();
 
+        /// <summary>
+        /// Gets the list of mip maps of the texture.
+        /// </summary>
         public List<MipMap> MipMaps { get; }
 
         /// <inheritdoc/>

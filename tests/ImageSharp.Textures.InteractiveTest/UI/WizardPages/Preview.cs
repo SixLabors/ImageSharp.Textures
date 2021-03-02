@@ -8,13 +8,12 @@ using System.IO;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using ImGuiNET;
-using SixLabors.ImageSharp;
+
 using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Textures;
 using SixLabors.ImageSharp.Textures.Formats.Dds;
 using SixLabors.ImageSharp.Textures.TextureFormats;
 
-namespace Phoenix.Import.Application.UI.WizardPages
+namespace SixLabors.ImageSharp.Textures.InteractiveTest.UI.WizardPages
 {
     public class Preview : WizardPage
     {
@@ -27,7 +26,7 @@ namespace Phoenix.Import.Application.UI.WizardPages
             public string ErrorMessage;
         }
 
-        private string rootFolder;
+        private readonly string rootFolder;
         private string currentFolder;
         private string currentFile;
 
@@ -88,10 +87,10 @@ namespace Phoenix.Import.Application.UI.WizardPages
         {
             try
             {
-                string saveFilePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.png");
+                string saveFilePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.png");
                 var decoder = new DdsDecoder();
                 using FileStream fileStream = File.OpenRead(filePath);
-                using var result = (FlatTexture)decoder.DecodeTexture(SixLabors.ImageSharp.Textures.Configuration.Default, fileStream);
+                using var result = (FlatTexture)decoder.DecodeTexture(Configuration.Default, fileStream);
                 using Image ddsImage = result.MipMaps[0].GetImage();
                 using Image<Rgba32> clone = ddsImage.CloneAs<Rgba32>();
                 clone.Save(saveFilePath);
@@ -103,10 +102,7 @@ namespace Phoenix.Import.Application.UI.WizardPages
             }
         }
 
-        public override void Initialize()
-        {
-            ApplicationManager.ClearImageCache();
-        }
+        public override void Initialize() => ApplicationManager.ClearImageCache();
 
         private static void DrawLines(IReadOnlyList<Vector2> points, Vector2 location, float size)
         {
@@ -114,8 +110,8 @@ namespace Phoenix.Import.Application.UI.WizardPages
             ImDrawListPtr drawList = ImGui.GetWindowDrawList();
             for (int i = 0; i < points.Count; i += 2)
             {
-                Vector2 vector1 = (points[i] / 100) * size;
-                Vector2 vector2 = (points[i + 1] / 100) * size;
+                Vector2 vector1 = points[i] / 100 * size;
+                Vector2 vector2 = points[i + 1] / 100 * size;
                 drawList.AddLine(location + vector1, location + vector2, iconColor);
             }
         }

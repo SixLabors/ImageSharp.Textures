@@ -4,7 +4,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Phoenix.Import.Application
+namespace SixLabors.ImageSharp.Textures.InteractiveTest
 {
     public static class Extensions
     {

@@ -1,11 +1,15 @@
 // Copyright (c) Six Labors.
 // Licensed under the Apache License, Version 2.0.
 
+using System;
+using System.Collections.Generic;
+
 namespace SixLabors.ImageSharp.Textures.TextureFormats
 {
-    using System;
-    using System.Collections.Generic;
-
+    /// <summary>
+    /// Represents a volume texture.
+    /// </summary>
+    /// <seealso cref="SixLabors.ImageSharp.Textures.Texture" />
     public class VolumeTexture : Texture
     {
         private bool isDisposed;
@@ -13,11 +17,11 @@ namespace SixLabors.ImageSharp.Textures.TextureFormats
         /// <summary>
         /// Initializes a new instance of the <see cref="VolumeTexture"/> class.
         /// </summary>
-        public VolumeTexture()
-        {
-            this.Slices = new List<FlatTexture>();
-        }
+        public VolumeTexture() => this.Slices = new List<FlatTexture>();
 
+        /// <summary>
+        /// Gets a list of flat textures from which the volume texture is composed of.
+        /// </summary>
         public List<FlatTexture> Slices { get; }
 
         /// <inheritdoc/>

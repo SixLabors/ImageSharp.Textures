@@ -42,7 +42,7 @@
 
   <ItemGroup>
     <None Update="Shaders\SPIRV\imgui-vert.spv">
-      <LogicalName>Phoenix.Import.Application.Shaders.SPIRV.imgui-vert.spv</LogicalName>
+      <LogicalName>SixLabors.ImageSharp.Textures.InteractiveTest.Shaders.SPIRV.imgui-vert.spv</LogicalName>
     </None>
   </ItemGroup>
 

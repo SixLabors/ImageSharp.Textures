@@ -1,10 +1,11 @@
 // Copyright (c) Six Labors.
 // Licensed under the Apache License, Version 2.0.
 
-using SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats;
-
-namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
+namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
 {
+    /// <summary>
+    /// Texture compressed with BC5S with two color channels (8 bits:8 bits)
+    /// </summary>
     public struct Bc5s : IBlock<Bc5s>
     {
         /// <inheritdoc/>
@@ -34,7 +35,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
         {
             IBlock self = this;
 
-            return Helper.InMemoryDecode<Bc5s>(blockData, width, height, (byte[] stream, byte[] data, int streamIndex, int dataIndex, int stride) =>
+            return Helper.InMemoryDecode<Bc5s>(blockData, width, height, (stream, data, streamIndex, dataIndex, stride) =>
             {
                 sbyte red0 = (sbyte)blockData[streamIndex++];
                 sbyte red1 = (sbyte)blockData[streamIndex++];
@@ -63,12 +64,12 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                     byte rSel = (byte)((uint)(rIndex >> (3 * i)) & 0x07);
                     byte gSel = (byte)((uint)(gIndex >> (3 * i)) & 0x07);
 
-                    data[dataIndex++] = 0; // skip blue
+                    data[dataIndex++] = 0; // Skip blue.
                     data[dataIndex++] = Bc4s.InterpolateColor(gSel, green0, green1);
                     data[dataIndex++] = Bc4s.InterpolateColor(rSel, red0, red1);
 
                     // Is mult 4?
-                    if ((i + 1 & 0x3) == 0)
+                    if (((i + 1) & 0x3) == 0)
                     {
                         dataIndex += self.PixelDepthBytes * (stride - self.DivSize);
                     }

@@ -1,4 +1,4 @@
-﻿// Copyright (c) Six Labors.
+// Copyright (c) Six Labors.
 // Licensed under the Apache License, Version 2.0.
 
 using System;
@@ -6,6 +6,9 @@ using System.Runtime.InteropServices;
 
 namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
 {
+    /// <summary>
+    /// Texture for the pixel format G8R8G8B8.
+    /// </summary>
     public struct G8R8G8B8 : IBlock<G8R8G8B8>
     {
         /// <inheritdoc/>

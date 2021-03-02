@@ -1,38 +1,37 @@
-﻿// Copyright (c) Six Labors.
+// Copyright (c) Six Labors.
 // Licensed under the Apache License, Version 2.0.
 
 using System.Numerics;
 using ImGuiNET;
-using Phoenix.Import.Application.UI;
-using Phoenix.Import.Application.UI.WizardPages;
+using SixLabors.ImageSharp.Textures.InteractiveTest.UI;
+using SixLabors.ImageSharp.Textures.InteractiveTest.UI.WizardPages;
 
-namespace Phoenix.Import.Application
+namespace SixLabors.ImageSharp.Textures.InteractiveTest
 {
     public class UiManager
     {
-        private readonly MenuBar _menuBar;
-        private readonly TitleBar _titleBar;
-        private readonly Wizard _wizard;
-        private readonly WizardPage[] _wizardPages;
-        private bool _busy;
+        private readonly MenuBar menuBar;
+        private readonly TitleBar titleBar;
+        private readonly Wizard wizard;
+        private readonly WizardPage[] wizardPages;
 
         public UiManager()
         {
-            _menuBar = new MenuBar();
-            _titleBar = new TitleBar();
+            this.menuBar = new MenuBar();
+            this.titleBar = new TitleBar();
 
-            _wizard = new Wizard();
-            _wizardPages = new WizardPage[]
+            this.wizard = new Wizard();
+            this.wizardPages = new WizardPage[]
             {
-                new Welcome(_wizard),
-                new Preview(_wizard)
+                new Welcome(this.wizard),
+                new Preview(this.wizard)
             };
-            _wizard.Pages = _wizardPages.Length;
+            this.wizard.Pages = this.wizardPages.Length;
 
-            _wizard.OnCancel += CancelButton_Action;
-            _wizard.OnValidate += ValidateButton_Action;
-            _wizard.OnPrevious += PreviousButton_Action;
-            _wizard.OnNext += NextButton_Action;
+            this.wizard.OnCancel += this.CancelButton_Action;
+            this.wizard.OnValidate += this.ValidateButton_Action;
+            this.wizard.OnPrevious += this.PreviousButton_Action;
+            this.wizard.OnNext += this.NextButton_Action;
         }
 
         public void Render(float width, float height)
@@ -42,8 +41,8 @@ namespace Phoenix.Import.Application
             newBackgroundColor.W = 1.0f;
             ImGui.PushStyleColor(ImGuiCol.WindowBg, newBackgroundColor);
 
-            _menuBar.Render(out float menuHeight);
-            if (_menuBar.DemoMode)
+            this.menuBar.Render(out float menuHeight);
+            if (this.menuBar.DemoMode)
             {
                 ImGui.ShowDemoWindow();
                 return;
@@ -55,30 +54,24 @@ namespace Phoenix.Import.Application
                 ImGui.SetWindowPos(new Vector2(0.0f, menuHeight));
                 ImGui.SetWindowSize(new Vector2(width, height - menuHeight));
 
-                _titleBar.Render(_wizard.CurrentPageIndex);
+                this.titleBar.Render(this.wizard.CurrentPageIndex);
 
-                _wizard.CancelButton.Visible = false;
-                _wizard.CancelButton.Enabled = true;
-                _wizard.CancelButton.Title = "Cancel";
+                this.wizard.CancelButton.Visible = false;
+                this.wizard.CancelButton.Enabled = true;
+                this.wizard.CancelButton.Title = "Cancel";
 
-                _wizard.ValidateButton.Visible = false;
-                _wizard.ValidateButton.Enabled = true;
-                _wizard.ValidateButton.Title = "Validate";
+                this.wizard.ValidateButton.Visible = false;
+                this.wizard.ValidateButton.Enabled = true;
+                this.wizard.ValidateButton.Title = "Validate";
 
-                _wizard.PreviousButton.Visible = true;
-                _wizard.PreviousButton.Enabled = _wizard.CurrentPageIndex > 0;
-                _wizard.PreviousButton.Title = "Previous";
+                this.wizard.PreviousButton.Visible = true;
+                this.wizard.PreviousButton.Enabled = this.wizard.CurrentPageIndex > 0;
+                this.wizard.PreviousButton.Title = "Previous";
 
-                _wizard.NextButton.Visible = true;
-                _wizard.NextButton.Enabled = _wizard.CurrentPageIndex < (_wizard.Pages - 1);
-                _wizard.NextButton.Title = "Next";
-                _wizard.Render(RenderPage_Action);
-
-                if (_busy)
-                {
-                    var position = ImGui.GetWindowPos() + (ImGui.GetWindowSize() / 2);
-                    Widgets.RenderSpinner(position, 20, 3);
-                }
+                this.wizard.NextButton.Visible = true;
+                this.wizard.NextButton.Enabled = this.wizard.CurrentPageIndex < (this.wizard.Pages - 1);
+                this.wizard.NextButton.Title = "Next";
+                this.wizard.Render(this.RenderPage_Action);
 
                 ImGui.End();
             }
@@ -87,32 +80,20 @@ namespace Phoenix.Import.Application
             ImGui.PopStyleColor();
         }
 
-        private void RenderPage_Action()
-        {
-            _wizardPages[_wizard.CurrentPageIndex].Render();
-        }
+        private void RenderPage_Action() => this.wizardPages[this.wizard.CurrentPageIndex].Render();
 
-        private void CancelButton_Action()
-        {
-            _wizardPages[_wizard.CurrentPageIndex].Cancel();
-        }
+        private void CancelButton_Action() => this.wizardPages[this.wizard.CurrentPageIndex].Cancel();
 
-        private void ValidateButton_Action()
-        {
-            _wizardPages[_wizard.CurrentPageIndex].Validate();
-        }
+        private void ValidateButton_Action() => this.wizardPages[this.wizard.CurrentPageIndex].Validate();
 
-        private bool PreviousButton_Action(int newPageIndex)
-        {
-            return _wizardPages[_wizard.CurrentPageIndex].Previous(_wizardPages[newPageIndex]);
-        }
+        private bool PreviousButton_Action(int newPageIndex) => this.wizardPages[this.wizard.CurrentPageIndex].Previous(this.wizardPages[newPageIndex]);
 
         private bool NextButton_Action(int newPageIndex)
         {
-            bool value = _wizardPages[_wizard.CurrentPageIndex].Next(_wizardPages[newPageIndex]);
+            bool value = this.wizardPages[this.wizard.CurrentPageIndex].Next(this.wizardPages[newPageIndex]);
             if (value)
             {
-                _wizardPages[newPageIndex].Initialize();
+                this.wizardPages[newPageIndex].Initialize();
             }
 
             return value;

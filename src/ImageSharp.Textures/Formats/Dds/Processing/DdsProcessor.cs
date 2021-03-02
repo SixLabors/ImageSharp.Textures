@@ -108,14 +108,14 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
             switch (this.DdsHeader.PixelFormat.FourCC)
             {
                 case DdsFourCc.None:
-                case DdsFourCc.R16_FLOAT:
-                case DdsFourCc.R16G16_FLOAT:
-                case DdsFourCc.R16G16B16A16_SNORM:
-                case DdsFourCc.R16G16B16A16_UNORM:
-                case DdsFourCc.R16G16B16A16_FLOAT:
-                case DdsFourCc.R32_FLOAT:
-                case DdsFourCc.R32G32_FLOAT:
-                case DdsFourCc.R32G32B32A32_FLOAT:
+                case DdsFourCc.R16FLOAT:
+                case DdsFourCc.R16G16FLOAT:
+                case DdsFourCc.R16G16B16A16SNORM:
+                case DdsFourCc.R16G16B16A16UNORM:
+                case DdsFourCc.R16G16B16A16FLOAT:
+                case DdsFourCc.R32FLOAT:
+                case DdsFourCc.R32G32FLOAT:
+                case DdsFourCc.R32G32B32A32FLOAT:
                 case DdsFourCc.YUY2:
                 case DdsFourCc.RGBG:
                 case DdsFourCc.GRGB:
@@ -124,7 +124,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                     return this.AllocateMipMaps<Dxt1>(stream, width, height, count);
                 case DdsFourCc.DXT2:
                 case DdsFourCc.DXT4:
-                    throw new ArgumentException("Can not support DXT2 or DXT4 due to patents.");
+                    throw new NotSupportedException("Due to patentsCan, DXT2 or DXT4 cannot be supported.");
                 case DdsFourCc.DXT3:
                     return this.AllocateMipMaps<Dxt3>(stream, width, height, count);
                 case DdsFourCc.DXT5:
@@ -142,7 +142,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 case DdsFourCc.BC5S:
                     return this.AllocateMipMaps<Bc5s>(stream, width, height, count);
                 default:
-                    throw new ArgumentException($"FourCC: {this.DdsHeader.PixelFormat.FourCC.FourCcToString()} not supported.");
+                    throw new NotSupportedException($"FourCC: {this.DdsHeader.PixelFormat.FourCC.FourCcToString()} not supported.");
             }
         }
 
@@ -163,20 +163,20 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                     // For unknown reason some formats do not have the bitsPerPixel set in the header (its zero).
                     switch (this.DdsHeader.PixelFormat.FourCC)
                     {
-                        case DdsFourCc.R16_FLOAT:
+                        case DdsFourCc.R16FLOAT:
                             return this.SixteenBitImageFormat(stream, width, height, count);
-                        case DdsFourCc.R32_FLOAT:
-                        case DdsFourCc.R16G16_FLOAT:
+                        case DdsFourCc.R32FLOAT:
+                        case DdsFourCc.R16G16FLOAT:
                         case DdsFourCc.YUY2:
                         case DdsFourCc.RGBG:
                         case DdsFourCc.GRGB:
                             return this.ThirtyTwoBitImageFormat(stream, width, height, count);
-                        case DdsFourCc.R16G16B16A16_SNORM:
-                        case DdsFourCc.R16G16B16A16_UNORM:
-                        case DdsFourCc.R16G16B16A16_FLOAT:
-                        case DdsFourCc.R32G32_FLOAT:
+                        case DdsFourCc.R16G16B16A16SNORM:
+                        case DdsFourCc.R16G16B16A16UNORM:
+                        case DdsFourCc.R16G16B16A16FLOAT:
+                        case DdsFourCc.R32G32FLOAT:
                             return this.SixtyFourBitImageFormat(stream, width, height, count);
-                        case DdsFourCc.R32G32B32A32_FLOAT:
+                        case DdsFourCc.R32G32B32A32FLOAT:
                             return this.HundredTwentyEightBitImageFormat(stream, width, height, count);
                     }
 
@@ -244,7 +244,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 return this.AllocateMipMaps<Rg16>(stream, width, height, count);
             }
 
-            if (pixelFormat.FourCC == DdsFourCc.R16_FLOAT)
+            if (pixelFormat.FourCC == DdsFourCc.R16FLOAT)
             {
                 return this.AllocateMipMaps<R16Float>(stream, width, height, count);
             }
@@ -297,12 +297,12 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 return this.AllocateMipMaps<Rg32>(stream, width, height, count);
             }
 
-            if (pixelFormat.FourCC == DdsFourCc.R32_FLOAT)
+            if (pixelFormat.FourCC == DdsFourCc.R32FLOAT)
             {
                 return this.AllocateMipMaps<Fp32>(stream, width, height, count);
             }
 
-            if (pixelFormat.FourCC == DdsFourCc.R16G16_FLOAT)
+            if (pixelFormat.FourCC == DdsFourCc.R16G16FLOAT)
             {
                 return this.AllocateMipMaps<R16G16Float>(stream, width, height, count);
             }
@@ -329,17 +329,17 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
         {
             DdsPixelFormat pixelFormat = this.DdsHeader.PixelFormat;
 
-            if (pixelFormat.FourCC == DdsFourCc.R16G16B16A16_SNORM || pixelFormat.FourCC == DdsFourCc.R16G16B16A16_UNORM)
+            if (pixelFormat.FourCC == DdsFourCc.R16G16B16A16SNORM || pixelFormat.FourCC == DdsFourCc.R16G16B16A16UNORM)
             {
                 return this.AllocateMipMaps<Rgba64>(stream, width, height, count);
             }
 
-            if (pixelFormat.FourCC == DdsFourCc.R32G32_FLOAT)
+            if (pixelFormat.FourCC == DdsFourCc.R32G32FLOAT)
             {
                 return this.AllocateMipMaps<R32G32Float>(stream, width, height, count);
             }
 
-            if (pixelFormat.FourCC == DdsFourCc.R16G16B16A16_FLOAT)
+            if (pixelFormat.FourCC == DdsFourCc.R16G16B16A16FLOAT)
             {
                 return this.AllocateMipMaps<R16G16B16A16Float>(stream, width, height, count);
             }
@@ -351,7 +351,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
         {
             DdsPixelFormat pixelFormat = this.DdsHeader.PixelFormat;
 
-            if (pixelFormat.FourCC == DdsFourCc.R32G32B32A32_FLOAT || pixelFormat.FourCC == DdsFourCc.R32_FLOAT)
+            if (pixelFormat.FourCC == DdsFourCc.R32G32B32A32FLOAT || pixelFormat.FourCC == DdsFourCc.R32FLOAT)
             {
                 return this.AllocateMipMaps<R32G32B32A32Float>(stream, width, height, count);
             }

@@ -1,4 +1,4 @@
-﻿// Copyright (c) Six Labors.
+// Copyright (c) Six Labors.
 // Licensed under the Apache License, Version 2.0.
 
 using System;
@@ -8,6 +8,9 @@ using SixLabors.ImageSharp.Textures.PixelFormats;
 
 namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
 {
+    /// <summary>
+    /// Texture for 16-bit per channel packed YUV 4:2:2 video resource format.
+    /// </summary>
     public struct Y216 : IBlock<Y216>
     {
         /// <inheritdoc/>

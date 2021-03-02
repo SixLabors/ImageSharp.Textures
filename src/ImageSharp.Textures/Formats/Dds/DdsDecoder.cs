@@ -1,36 +1,21 @@
 // Copyright (c) Six Labors.
 // Licensed under the Apache License, Version 2.0.
 
+/* Notes:
+https://github.com/toji/texture
+https://docs.microsoft.com/en-us/windows/win32/direct3ddds/dx-graphics-dds-pguide
+https://docs.microsoft.com/en-us/windows/uwp/gaming/complete-code-for-ddstextureloader
+*/
+
+using System.IO;
+
 namespace SixLabors.ImageSharp.Textures.Formats.Dds
 {
-    /* Notes:
-    https://github.com/toji/texture
-    https://docs.microsoft.com/en-us/windows/win32/direct3ddds/dx-graphics-dds-pguide
-    https://docs.microsoft.com/en-us/windows/uwp/gaming/complete-code-for-ddstextureloader
-    */
-
-    using System;
-    using System.IO;
-    using SixLabors.ImageSharp.PixelFormats;
-
     /// <summary>
     /// Image decoder for DDS images.
     /// </summary>
     public sealed class DdsDecoder : ITextureDecoder, IDdsDecoderOptions, ITextureInfoDetector
     {
-        /// <inheritdoc/>
-        public Image<TPixel> Decode<TPixel>(Configuration configuration, Stream stream)
-            where TPixel : unmanaged, IPixel<TPixel>
-        {
-            throw new NotSupportedException();
-        }
-
-        /// <inheritdoc />
-        public Image Decode(Configuration configuration, Stream stream)
-        {
-            throw new NotSupportedException();
-        }
-
         /// <inheritdoc/>
         public Texture DecodeTexture(Configuration configuration, Stream stream)
         {

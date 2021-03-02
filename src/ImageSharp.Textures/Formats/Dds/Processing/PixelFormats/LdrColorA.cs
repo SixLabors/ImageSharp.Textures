@@ -42,13 +42,35 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.PixelFormats
 
         public static void InterpolateRgb(LdrColorA c0, LdrColorA c1, int wc, int wcprec, LdrColorA outt)
         {
-            int[] aWeights = null;
+            DebugGuard.MustBeBetweenOrEqualTo(wcprec, 2, 4, nameof(wcprec));
+
+            int[] aWeights;
             switch (wcprec)
             {
-                case 2: aWeights = Constants.g_aWeights2; Debug.Assert(wc < 4, "wc is expected to be smaller then 4"); break;
-                case 3: aWeights = Constants.g_aWeights3; Debug.Assert(wc < 8, "wc is expected to be smaller then 8"); break;
-                case 4: aWeights = Constants.g_aWeights4; Debug.Assert(wc < 16, "wc is expected to be smaller then 16"); break;
-                default: Debug.Assert(false); outt.R = outt.G = outt.B = 0; return;
+                case 2:
+                {
+                    aWeights = Constants.Weights2;
+                    Debug.Assert(wc < 4, "wc is expected to be smaller then 4");
+                    break;
+                }
+
+                case 3:
+                {
+                    aWeights = Constants.Weights3;
+                    Debug.Assert(wc < 8, "wc is expected to be smaller then 8");
+                    break;
+                }
+
+                case 4:
+                {
+                    aWeights = Constants.Weights4;
+                    Debug.Assert(wc < 16, "wc is expected to be smaller then 16");
+                    break;
+                }
+
+                default:
+                    outt.R = outt.G = outt.B = 0;
+                    return;
             }
 
             outt.R = (byte)(((c0.R * (uint)(Constants.BC67_WEIGHT_MAX - aWeights[wc])) + (c1.R * (uint)aWeights[wc]) + Constants.BC67_WEIGHT_ROUND) >> Constants.BC67_WEIGHT_SHIFT);
@@ -58,13 +80,35 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.PixelFormats
 
         public static void InterpolateA(LdrColorA c0, LdrColorA c1, int wa, int waprec, LdrColorA outt)
         {
-            int[] aWeights = null;
+            DebugGuard.MustBeBetweenOrEqualTo(waprec, 2, 4, nameof(waprec));
+
+            int[] aWeights;
             switch (waprec)
             {
-                case 2: aWeights = Constants.g_aWeights2; Debug.Assert(wa < 4, "wc is expected to be smaller then 4"); break;
-                case 3: aWeights = Constants.g_aWeights3; Debug.Assert(wa < 8, "wc is expected to be smaller then 8"); break;
-                case 4: aWeights = Constants.g_aWeights4; Debug.Assert(wa < 16, "wc is expected to be smaller then 16"); break;
-                default: Debug.Assert(false); outt.A = 0; return;
+                case 2:
+                {
+                    aWeights = Constants.Weights2;
+                    Debug.Assert(wa < 4, "wc is expected to be smaller then 4");
+                    break;
+                }
+
+                case 3:
+                {
+                    aWeights = Constants.Weights3;
+                    Debug.Assert(wa < 8, "wc is expected to be smaller then 8");
+                    break;
+                }
+
+                case 4:
+                {
+                    aWeights = Constants.Weights4;
+                    Debug.Assert(wa < 16, "wc is expected to be smaller then 16");
+                    break;
+                }
+
+                default:
+                    outt.A = 0;
+                    return;
             }
 
             outt.A = (byte)(((c0.A * (uint)(Constants.BC67_WEIGHT_MAX - aWeights[wa])) + (c1.A * (uint)aWeights[wa]) + Constants.BC67_WEIGHT_ROUND) >> Constants.BC67_WEIGHT_SHIFT);
