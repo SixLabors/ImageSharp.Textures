@@ -55,17 +55,17 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
                 ushort color1 = blockData[streamIndex++];
                 color1 |= (ushort)(blockData[streamIndex++] << 8);
 
-                // Extract R5G6B5 (in that order).
-                colors[0].R = (byte)(color0 & 0x1f);
+                // Extract R5G6B5.
+                colors[0].R = (byte)((color0 & 0xF800) >> 11);
                 colors[0].G = (byte)((color0 & 0x7E0) >> 5);
-                colors[0].B = (byte)((color0 & 0xF800) >> 11);
+                colors[0].B = (byte)(color0 & 0x1f);
                 colors[0].R = (byte)((colors[0].R << 3) | (colors[0].R >> 2));
                 colors[0].G = (byte)((colors[0].G << 2) | (colors[0].G >> 3));
                 colors[0].B = (byte)((colors[0].B << 3) | (colors[0].B >> 2));
 
-                colors[1].R = (byte)(color1 & 0x1f);
+                colors[1].R = (byte)((color1 & 0xF800) >> 11);
                 colors[1].G = (byte)((color1 & 0x7E0) >> 5);
-                colors[1].B = (byte)((color1 & 0xF800) >> 11);
+                colors[1].B = (byte)(color1 & 0x1f);
                 colors[1].R = (byte)((colors[1].R << 3) | (colors[1].R >> 2));
                 colors[1].G = (byte)((colors[1].G << 2) | (colors[1].G >> 3));
                 colors[1].B = (byte)((colors[1].B << 3) | (colors[1].B >> 2));
