@@ -101,7 +101,7 @@ jobs:
               run: ./ci-test.ps1 "${{matrix.options.os}}" "${{matrix.options.framework}}" "${{matrix.options.runtime}}" "${{matrix.options.codecov}}"
               env:
                   SIXLABORS_TESTING: True
-                  XUNIT_PATH: .\tests\ImageSharp.Tests # Required for xunit
+                  XUNIT_PATH: .\tests\ImageSharp.Textures.Tests # Required for xunit
 
             - name: Export Failed Output
               uses: actions/upload-artifact@v2
