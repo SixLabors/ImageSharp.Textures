@@ -1,6 +1,8 @@
 // Copyright (c) Six Labors.
 // Licensed under the Apache License, Version 2.0.
 
+using SixLabors.ImageSharp.Textures.Common.Helpers;
+
 namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
 {
     /// <summary>
@@ -59,19 +61,19 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
             color1 |= (ushort)(blockData[streamIndex++] << 8);
 
             // Extract R5G6B5.
-            colors[0].R = (byte)((color0 & 0xF800) >> 11);
-            colors[0].G = (byte)((color0 & 0x7E0) >> 5);
-            colors[0].B = (byte)(color0 & 0x1f);
-            colors[0].R = (byte)((colors[0].R << 3) | (colors[0].R >> 2));
-            colors[0].G = (byte)((colors[0].G << 2) | (colors[0].G >> 3));
-            colors[0].B = (byte)((colors[0].B << 3) | (colors[0].B >> 2));
+            var r = (color0 & 0xF800) >> 11;
+            var g = (color0 & 0x7E0) >> 5;
+            var b = color0 & 0x1f;
+            colors[0].R = PixelUtils.GetBytesFrom5BitValue(r);
+            colors[0].G = PixelUtils.GetBytesFrom6BitValue(g);
+            colors[0].B = PixelUtils.GetBytesFrom5BitValue(b);
 
-            colors[1].R = (byte)((color1 & 0xF800) >> 11);
-            colors[1].G = (byte)((color1 & 0x7E0) >> 5);
-            colors[1].B = (byte)(color1 & 0x1f);
-            colors[1].R = (byte)((colors[1].R << 3) | (colors[1].R >> 2));
-            colors[1].G = (byte)((colors[1].G << 2) | (colors[1].G >> 3));
-            colors[1].B = (byte)((colors[1].B << 3) | (colors[1].B >> 2));
+            r = (color1 & 0xF800) >> 11;
+            g = (color1 & 0x7E0) >> 5;
+            b = color1 & 0x1f;
+            colors[1].R = PixelUtils.GetBytesFrom5BitValue(r);
+            colors[1].G = PixelUtils.GetBytesFrom6BitValue(g);
+            colors[1].B = PixelUtils.GetBytesFrom5BitValue(b);
 
             // Used the two extracted colors to create two new colors
             // that are slightly different.
