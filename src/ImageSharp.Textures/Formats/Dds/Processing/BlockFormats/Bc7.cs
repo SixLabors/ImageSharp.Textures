@@ -254,9 +254,9 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
 
                         switch (uRotation)
                         {
-                            case 1: ByteSwap(ref outPixel.R, ref outPixel.A); break;
-                            case 2: ByteSwap(ref outPixel.G, ref outPixel.A); break;
-                            case 3: ByteSwap(ref outPixel.B, ref outPixel.A); break;
+                            case 1: outPixel.SwapRedWithAlpha(); break;
+                            case 2: outPixel.SwapGreenWithAlpha(); break;
+                            case 3: outPixel.SwapBlueWithAlpha(); break;
                         }
 
                         // Note: whether it's sRGB is not taken into consideration
@@ -367,13 +367,6 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
             };
 
             return q;
-        }
-
-        private static void ByteSwap(ref byte a, ref byte b)
-        {
-            byte tmp = a;
-            a = b;
-            b = tmp;
         }
     }
 }

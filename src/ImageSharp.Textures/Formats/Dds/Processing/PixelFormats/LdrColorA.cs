@@ -8,15 +8,20 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.PixelFormats
 {
     internal class LdrColorA
     {
-        public byte R;
-        public byte G;
-        public byte B;
-        public byte A;
-
+        /// <summary>
+        /// Initializes a new instance of the <see cref="LdrColorA" /> class.
+        /// </summary>
         public LdrColorA()
         {
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="LdrColorA" /> class.
+        /// </summary>
+        /// <param name="r">The red color value.</param>
+        /// <param name="g">The green color value.</param>
+        /// <param name="b">The blue color value.</param>
+        /// <param name="a">The alpha value.</param>
         public LdrColorA(byte r, byte g, byte b, byte a)
         {
             this.R = r;
@@ -25,19 +30,81 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.PixelFormats
             this.A = a;
         }
 
-        public ref byte this[int uElement]
+        /// <summary>
+        /// Gets or sets the red component.
+        /// </summary>
+        public byte R { get; set; }
+
+        /// <summary>
+        /// Gets or sets the green component.
+        /// </summary>
+        public byte G { get; set; }
+
+        /// <summary>
+        /// Gets or sets the blue component.
+        /// </summary>
+        public byte B { get; set; }
+
+        /// <summary>
+        /// Gets or sets the alpha value.
+        /// </summary>
+        public byte A { get; set; }
+
+        public byte this[int uElement]
         {
             get
             {
                 switch (uElement)
                 {
-                    case 0: return ref this.R;
-                    case 1: return ref this.G;
-                    case 2: return ref this.B;
-                    case 3: return ref this.A;
+                    case 0: return this.R;
+                    case 1: return this.G;
+                    case 2: return this.B;
+                    case 3: return this.A;
                     default: throw new IndexOutOfRangeException();
                 }
             }
+
+            set
+            {
+                switch (uElement)
+                {
+                    case 0:
+                        this.R = value;
+                        break;
+                    case 1:
+                        this.G = value;
+                        break;
+                    case 2:
+                        this.B = value;
+                        break;
+                    case 3:
+                        this.A = value;
+                        break;
+                    default:
+                        throw new IndexOutOfRangeException();
+                }
+            }
+        }
+
+        public void SwapRedWithAlpha()
+        {
+            byte tmp = this.A;
+            this.A = this.R;
+            this.R = tmp;
+        }
+
+        public void SwapBlueWithAlpha()
+        {
+            byte tmp = this.A;
+            this.A = this.B;
+            this.B = tmp;
+        }
+
+        public void SwapGreenWithAlpha()
+        {
+            byte tmp = this.A;
+            this.A = this.G;
+            this.G = tmp;
         }
 
         public static void InterpolateRgb(LdrColorA c0, LdrColorA c1, int wc, int wcprec, LdrColorA outt)
