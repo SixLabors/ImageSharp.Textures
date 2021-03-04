@@ -260,7 +260,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
 
             if (!hasAlpha && pixelFormat.RBitMask == 0xFF0000 && pixelFormat.GBitMask == 0xFF00 && pixelFormat.BBitMask == 0xFF)
             {
-                return this.AllocateMipMaps<Rgb24>(stream, width, height, count);
+                return this.AllocateMipMaps<Bgr24>(stream, width, height, count);
             }
 
             throw new Exception("Unsupported 24 bit format");
@@ -408,7 +408,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 case DxgiFormat.B8G8R8X8_Typeless:
                 case DxgiFormat.B8G8R8X8_UNorm:
                 case DxgiFormat.B8G8R8X8_UNorm_SRGB:
-                    return this.AllocateMipMaps<Rgba32>(stream, width, height, count);
+                    return this.AllocateMipMaps<Bgra32>(stream, width, height, count);
                 case DxgiFormat.B8G8R8A8_Typeless:
                 case DxgiFormat.B8G8R8A8_UNorm:
                 case DxgiFormat.B8G8R8A8_UNorm_SRGB:
