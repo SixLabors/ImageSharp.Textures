@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0.
 
 using System;
+using System.Runtime.CompilerServices;
 
 namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
 {
@@ -65,9 +66,9 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
                         // 3 bits determine alpha index to use.
                         byte firstIndex = (byte)((firstCodes >> (alphaShift + (3 * j))) & 0x07);
                         byte secondIndex = (byte)((secondCodes >> (alphaShift + (3 * j))) & 0x07);
-                        data[dataIndex++] = 0; // Skip blue.
-                        data[dataIndex++] = secondGradient[secondIndex];
                         data[dataIndex++] = firstGradient[firstIndex];
+                        data[dataIndex++] = secondGradient[secondIndex];
+                        data[dataIndex++] = 0; // Skip blue.
                     }
 
                     dataIndex += self.PixelDepthBytes * (stride - self.DivSize);
@@ -77,6 +78,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
             });
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static int ExtractGradient(Span<byte> gradient, Span<byte> stream, int bIndex)
         {
             byte endpoint0;

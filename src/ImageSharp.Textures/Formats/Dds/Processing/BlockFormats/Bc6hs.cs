@@ -3,6 +3,7 @@
 
 using System;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using SixLabors.ImageSharp.Textures.Common.Helpers;
 using SixLabors.ImageSharp.Textures.Formats.Dds.Processing.PixelFormats;
 
@@ -450,9 +451,9 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
                         fc.ToF16Signed(rgb);
 
                         // Clamp 0..1, and convert to byte (we're losing high dynamic range)
-                        data[dataIndex++] = (byte)((Math.Max(0.0f, Math.Min(1.0f, FloatHelper.UnpackFloat16ToFloat(rgb[2]))) * 255.0f) + 0.5f); // blue
-                        data[dataIndex++] = (byte)((Math.Max(0.0f, Math.Min(1.0f, FloatHelper.UnpackFloat16ToFloat(rgb[1]))) * 255.0f) + 0.5f); // green
                         data[dataIndex++] = (byte)((Math.Max(0.0f, Math.Min(1.0f, FloatHelper.UnpackFloat16ToFloat(rgb[0]))) * 255.0f) + 0.5f); // red
+                        data[dataIndex++] = (byte)((Math.Max(0.0f, Math.Min(1.0f, FloatHelper.UnpackFloat16ToFloat(rgb[1]))) * 255.0f) + 0.5f); // green
+                        data[dataIndex++] = (byte)((Math.Max(0.0f, Math.Min(1.0f, FloatHelper.UnpackFloat16ToFloat(rgb[2]))) * 255.0f) + 0.5f); // blue
                         data[dataIndex++] = 255;
 
                         // Is mult 4?
@@ -464,16 +465,16 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
                 }
                 else
                 {
-                    string warnstr = "BC6H: Invalid mode encountered during decoding";
+                    string warnStr = "BC6H: Invalid mode encountered during decoding";
                     switch (uMode)
                     {
-                        case 0x13: warnstr = "BC6H: Reserved mode 10011 encountered during decoding"; break;
-                        case 0x17: warnstr = "BC6H: Reserved mode 10111 encountered during decoding"; break;
-                        case 0x1B: warnstr = "BC6H: Reserved mode 11011 encountered during decoding"; break;
-                        case 0x1F: warnstr = "BC6H: Reserved mode 11111 encountered during decoding"; break;
+                        case 0x13: warnStr = "BC6H: Reserved mode 10011 encountered during decoding"; break;
+                        case 0x17: warnStr = "BC6H: Reserved mode 10111 encountered during decoding"; break;
+                        case 0x1B: warnStr = "BC6H: Reserved mode 11011 encountered during decoding"; break;
+                        case 0x1F: warnStr = "BC6H: Reserved mode 11111 encountered during decoding"; break;
                     }
 
-                    Debug.WriteLine(warnstr);
+                    Debug.WriteLine(warnStr);
 
                     // Per the BC6H format spec, we must return opaque black
                     for (int i = 0; i < Constants.NumPixelsPerBlock; ++i)
@@ -545,6 +546,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
             return ret;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static int Unquantize(int comp, byte uBitsPerComp)
         {
             int s = 0;
@@ -583,6 +585,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
             return unq;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static int FinishUnquantize(int comp) => (comp < 0) ? -(((-comp) * 31) >> 5) : (comp * 31) >> 5; // scale the magnitude by 31/32
     }
 }

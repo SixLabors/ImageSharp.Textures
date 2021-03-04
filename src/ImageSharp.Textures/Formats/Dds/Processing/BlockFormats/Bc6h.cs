@@ -3,6 +3,7 @@
 
 using System;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using SixLabors.ImageSharp.Textures.Common.Helpers;
 using SixLabors.ImageSharp.Textures.Formats.Dds.Processing.PixelFormats;
 
@@ -423,9 +424,9 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
                         fc.ToF16Unsigned(rgb);
 
                         // Clamp 0..1, and convert to byte (we're losing high dynamic range)
-                        data[dataIndex++] = (byte)((Math.Max(0.0f, Math.Min(1.0f, FloatHelper.UnpackFloat16ToFloat(rgb[2]))) * 255.0f) + 0.5f); // blue
-                        data[dataIndex++] = (byte)((Math.Max(0.0f, Math.Min(1.0f, FloatHelper.UnpackFloat16ToFloat(rgb[1]))) * 255.0f) + 0.5f); // green
                         data[dataIndex++] = (byte)((Math.Max(0.0f, Math.Min(1.0f, FloatHelper.UnpackFloat16ToFloat(rgb[0]))) * 255.0f) + 0.5f); // red
+                        data[dataIndex++] = (byte)((Math.Max(0.0f, Math.Min(1.0f, FloatHelper.UnpackFloat16ToFloat(rgb[1]))) * 255.0f) + 0.5f); // green
+                        data[dataIndex++] = (byte)((Math.Max(0.0f, Math.Min(1.0f, FloatHelper.UnpackFloat16ToFloat(rgb[2]))) * 255.0f) + 0.5f); // blue
                         data[dataIndex++] = 255;
 
                         // Is mult 4?
@@ -517,6 +518,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
             return ret;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static int Unquantize(int comp, byte uBitsPerComp)
         {
             int unq;
@@ -541,6 +543,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
             return unq;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static int FinishUnquantize(int comp) => (comp * 31) >> 6; // scale the magnitude by 31/64
     }
 }

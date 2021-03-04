@@ -3,6 +3,7 @@
 
 using System;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using SixLabors.ImageSharp.Textures.Formats.Dds.Processing.PixelFormats;
 
 namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
@@ -261,9 +262,9 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
                         // Note: whether it's sRGB is not taken into consideration
                         // we're returning data that could be either/or depending
                         // on the input BC7 format
-                        data[dataIndex++] = outPixel.B;
-                        data[dataIndex++] = outPixel.G;
                         data[dataIndex++] = outPixel.R;
+                        data[dataIndex++] = outPixel.G;
+                        data[dataIndex++] = outPixel.B;
                         data[dataIndex++] = outPixel.A;
 
                         // Is mult 4?
@@ -346,6 +347,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
             return ret;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static byte Unquantize(byte comp, uint uPrec)
         {
             Guard.MustBeBetweenOrEqualTo<uint>(uPrec, 1, 8, nameof(uPrec));
@@ -353,6 +355,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
             return (byte)(comp | (comp >> (int)uPrec));
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static LdrColorA Unquantize(LdrColorA c, LdrColorA rgbaPrec)
         {
             var q = new LdrColorA
