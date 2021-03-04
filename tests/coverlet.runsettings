@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<RunSettings>
+    <RunConfiguration>
+        <!--Used in conjunction with ActiveIssueAttribute to skip tests with known issues-->
+        <TestCaseFilter>category!=failing</TestCaseFilter>
+    </RunConfiguration>
+    <DataCollectionRunSettings>
+        <DataCollectors>
+            <DataCollector friendlyName="XPlat code coverage">
+                <Configuration>
+                    <Format>lcov</Format>
+                    <Include>[SixLabors.*]*</Include>
+                    <UseSourceLink>true</UseSourceLink>
+                </Configuration>
+            </DataCollector>
+        </DataCollectors>
+    </DataCollectionRunSettings>
+</RunSettings>
