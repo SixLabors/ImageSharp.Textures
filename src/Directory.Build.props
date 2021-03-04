@@ -18,8 +18,7 @@
 
   <!-- Compilation properties. -->
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">
-    <!--TODO: Enable this-->
-    <!--<TreatWarningsAsErrors>true</TreatWarningsAsErrors>-->
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 
   <ItemGroup>
