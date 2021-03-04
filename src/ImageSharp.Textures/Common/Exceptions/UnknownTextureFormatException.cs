@@ -1,7 +1,7 @@
 // Copyright (c) Six Labors.
 // Licensed under the Apache License, Version 2.0.
 
-namespace SixLabors.ImageSharp.Textures
+namespace SixLabors.ImageSharp.Textures.Common.Exceptions
 {
     /// <summary>
     /// The exception that is thrown when the library tries to load

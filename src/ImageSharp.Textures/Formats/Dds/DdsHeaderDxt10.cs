@@ -1,13 +1,13 @@
 // Copyright (c) Six Labors.
 // Licensed under the Apache License, Version 2.0.
 
+using System;
+using System.Buffers.Binary;
+using System.Runtime.InteropServices;
+using SixLabors.ImageSharp.Textures.Formats.Dds.Emums;
+
 namespace SixLabors.ImageSharp.Textures.Formats.Dds
 {
-    using System;
-    using System.Buffers.Binary;
-    using System.Runtime.InteropServices;
-    using SixLabors.ImageSharp.Textures.Formats.Dds.Emums;
-
     /// <summary>
     /// DDS header extension to handle resource arrays.
     /// </summary>
@@ -101,14 +101,11 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds
         /// </summary>
         /// <param name="data">The data to parse.</param>
         /// <returns>The parsed DDS_HEADER_DXT10.</returns>
-        public static DdsHeaderDxt10 Parse(Span<byte> data)
-        {
-            return new DdsHeaderDxt10(
+        public static DdsHeaderDxt10 Parse(Span<byte> data) => new DdsHeaderDxt10(
                 dxgiFormat: (DxgiFormat)BinaryPrimitives.ReadUInt32LittleEndian(data.Slice(0, 4)),
                 resourceDimension: (D3d10ResourceDimension)BinaryPrimitives.ReadUInt32LittleEndian(data.Slice(4, 4)),
                 miscFlag: (D3d10ResourceMiscFlags)BinaryPrimitives.ReadUInt32LittleEndian(data.Slice(8, 4)),
                 arraySize: BinaryPrimitives.ReadUInt32LittleEndian(data.Slice(12, 4)),
                 reserved: BinaryPrimitives.ReadUInt32LittleEndian(data.Slice(16, 4)));
-        }
     }
 }

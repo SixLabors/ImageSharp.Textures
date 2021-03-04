@@ -1,4 +1,4 @@
-﻿// Copyright (c) Six Labors.
+// Copyright (c) Six Labors.
 // Licensed under the Apache License, Version 2.0.
 
 using System;
@@ -21,13 +21,13 @@ namespace SixLabors.ImageSharp.Textures.InteractiveTest.UI
 
         public Func<int, bool> OnNext { get; set; }
 
-        public Button CancelButton { get; private set; }
+        public Button CancelButton { get; }
 
-        public Button ValidateButton { get; private set; }
+        public Button ValidateButton { get; }
 
-        public Button PreviousButton { get; private set; }
+        public Button PreviousButton { get; }
 
-        public Button NextButton { get; private set; }
+        public Button NextButton { get; }
 
         public Wizard()
         {
@@ -86,15 +86,9 @@ namespace SixLabors.ImageSharp.Textures.InteractiveTest.UI
             this.NextButton.Render(this.NextAction);
         }
 
-        private void CancelAction()
-        {
-            this.OnCancel?.Invoke();
-        }
+        private void CancelAction() => this.OnCancel?.Invoke();
 
-        private void ValidateAction()
-        {
-            this.OnValidate?.Invoke();
-        }
+        private void ValidateAction() => this.OnValidate?.Invoke();
 
         private void PreviousAction()
         {
@@ -124,14 +118,8 @@ namespace SixLabors.ImageSharp.Textures.InteractiveTest.UI
             }
         }
 
-        public void GoHome()
-        {
-            this.CurrentPageIndex = 0;
-        }
+        public void GoHome() => this.CurrentPageIndex = 0;
 
-        public void GoNext()
-        {
-            this.NextAction();
-        }
+        public void GoNext() => this.NextAction();
     }
 }

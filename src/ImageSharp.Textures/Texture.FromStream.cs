@@ -1,14 +1,15 @@
 // Copyright (c) Six Labors.
 // Licensed under the Apache License, Version 2.0.
 
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Text;
+using SixLabors.ImageSharp.Textures.Common.Exceptions;
+using SixLabors.ImageSharp.Textures.Formats;
+
 namespace SixLabors.ImageSharp.Textures
 {
-    using System;
-    using System.Collections.Generic;
-    using System.IO;
-    using System.Text;
-    using SixLabors.ImageSharp.Textures.Formats;
-
     /// <content>
     /// Adds static methods allowing the creation of new image from a given stream.
     /// </content>
@@ -138,7 +139,7 @@ namespace SixLabors.ImageSharp.Textures
         /// <returns>A new <see cref="Texture"/>.</returns>
         public static Texture Load(Configuration config, Stream stream, out ITextureFormat format)
         {
-            config = config ?? Configuration.Default;
+            config ??= Configuration.Default;
             (Texture img, ITextureFormat format) data = WithSeekableStream(config, stream, s => DecodeTexture(s, config));
 
             format = data.format;

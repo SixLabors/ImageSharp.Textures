@@ -8,6 +8,6 @@ namespace SixLabors.ImageSharp.Textures.Tests.Enums
         /// <summary>
         /// DDS
         /// </summary>
-        DDS,
+        Dds,
     }
 }

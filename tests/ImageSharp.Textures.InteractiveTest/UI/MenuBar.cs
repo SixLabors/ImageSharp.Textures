@@ -1,4 +1,4 @@
-﻿// Copyright (c) Six Labors.
+// Copyright (c) Six Labors.
 // Licensed under the Apache License, Version 2.0.
 
 using ImGuiNET;
@@ -9,7 +9,7 @@ namespace SixLabors.ImageSharp.Textures.InteractiveTest.UI
     {
         public bool DarkMode { get; private set; }
 
-        public bool DemoMode { get; private set; }
+        public bool DemoMode { get; }
 
         public MenuBar()
         {

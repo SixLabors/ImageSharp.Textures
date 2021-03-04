@@ -25,7 +25,7 @@ namespace SixLabors.ImageSharp.Textures
         private static readonly Lazy<bool> RunsOnCiLazy = new Lazy<bool>(
             () => bool.TryParse(Environment.GetEnvironmentVariable("CI"), out bool isCi) && isCi);
 
-        internal static bool RunsOnCI => RunsOnCiLazy.Value;
+        internal static bool RunsOnCi => RunsOnCiLazy.Value;
 
         internal static string SolutionDirectoryFullPath => SolutionDirectoryFullPathLazy.Value;
 

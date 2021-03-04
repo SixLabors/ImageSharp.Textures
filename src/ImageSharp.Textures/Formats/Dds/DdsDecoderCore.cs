@@ -5,6 +5,8 @@ using System;
 using System.Buffers.Binary;
 using System.IO;
 using SixLabors.ImageSharp.Memory;
+using SixLabors.ImageSharp.Textures.Common.Exceptions;
+using SixLabors.ImageSharp.Textures.Common.Extensions;
 using SixLabors.ImageSharp.Textures.Formats.Dds.Emums;
 using SixLabors.ImageSharp.Textures.Formats.Dds.Extensions;
 using SixLabors.ImageSharp.Textures.Formats.Dds.Processing;

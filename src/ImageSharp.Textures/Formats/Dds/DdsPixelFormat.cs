@@ -118,9 +118,8 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds
         /// <param name="data">The data to parse.</param>
         /// <param name="offset">Offset in the buffer.</param>
         /// <returns>The parsed DdsPixelFormat.</returns>
-        public static DdsPixelFormat Parse(Span<byte> data, int offset)
-        {
-            return new DdsPixelFormat(
+        public static DdsPixelFormat Parse(Span<byte> data, int offset) =>
+            new DdsPixelFormat(
                 size: BinaryPrimitives.ReadUInt32LittleEndian(data.Slice(offset, 4)),
                 flags: (DdsPixelFormatFlags)BinaryPrimitives.ReadUInt32LittleEndian(data.Slice(offset + 4, 4)),
                 fourCC: BinaryPrimitives.ReadUInt32LittleEndian(data.Slice(offset + 8, 4)),
@@ -129,7 +128,6 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds
                 gBitMask: BinaryPrimitives.ReadUInt32LittleEndian(data.Slice(offset + 20, 4)),
                 bBitMask: BinaryPrimitives.ReadUInt32LittleEndian(data.Slice(offset + 24, 4)),
                 aBitMask: BinaryPrimitives.ReadUInt32LittleEndian(data.Slice(offset + 28, 4)));
-        }
 
         /// <summary>
         /// Gets the <see cref="D3dFormat" /> represented by this structure.

@@ -6,7 +6,7 @@ using System.Buffers;
 using System.IO;
 using SixLabors.ImageSharp.Memory;
 
-namespace SixLabors.ImageSharp
+namespace SixLabors.ImageSharp.Textures.Common.Extensions
 {
     /// <summary>
     /// Extension methods for the <see cref="Stream"/> type.
@@ -21,10 +21,7 @@ namespace SixLabors.ImageSharp
         /// <param name="offset">The offset within the buffer where the bytes are read into.</param>
         /// <param name="count">The number of bytes, if available, to read.</param>
         /// <returns>The actual number of bytes read.</returns>
-        public static int Read(this Stream stream, Span<byte> buffer, int offset, int count)
-        {
-            return stream.Read(buffer.Slice(offset, count));
-        }
+        public static int Read(this Stream stream, Span<byte> buffer, int offset, int count) => stream.Read(buffer.Slice(offset, count));
 
         /// <summary>
         /// Skips the number of bytes in the given stream.
@@ -58,15 +55,9 @@ namespace SixLabors.ImageSharp
             }
         }
 
-        public static void Read(this Stream stream, IManagedByteBuffer buffer)
-        {
-            stream.Read(buffer.Array, 0, buffer.Memory.Length);
-        }
+        public static void Read(this Stream stream, IManagedByteBuffer buffer) => stream.Read(buffer.Array, 0, buffer.Memory.Length);
 
-        public static void Write(this Stream stream, IManagedByteBuffer buffer)
-        {
-            stream.Write(buffer.Array, 0, buffer.Memory.Length);
-        }
+        public static void Write(this Stream stream, IManagedByteBuffer buffer) => stream.Write(buffer.Array, 0, buffer.Memory.Length);
 
 #if NET472 || NETSTANDARD1_3 || NETSTANDARD2_0
         // This is a port of the CoreFX implementation and is MIT Licensed: https://github.com/dotnet/coreclr/blob/c4dca1072d15bdda64c754ad1ea474b1580fa554/src/System.Private.CoreLib/shared/System/IO/Stream.cs#L770

@@ -1,10 +1,10 @@
 // Copyright (c) Six Labors.
 // Licensed under the Apache License, Version 2.0.
 
-namespace SixLabors.ImageSharp.Textures
-{
-    using System;
+using System;
 
+namespace SixLabors.ImageSharp.Textures.Common.Exceptions
+{
     /// <summary>
     /// The exception that is thrown when an error occurs when applying a process to an image.
     /// </summary>

@@ -52,10 +52,15 @@ namespace SixLabors.ImageSharp.Textures.InteractiveTest.UI.WizardPages
         public string DecompressDds(string filePath)
         {
             string command = Path.Combine(TestEnvironment.ToolsDirectoryFullPath, "TexConv.exe");
-            var process = new Process();
-            process.StartInfo.FileName = command;
-            process.StartInfo.Arguments = $"-ft PNG \"{filePath}\" -f rgba -o {Path.GetTempPath()}";
-            process.StartInfo.RedirectStandardOutput = true;
+            var process = new Process
+            {
+                StartInfo =
+                {
+                    FileName = command,
+                    Arguments = $"-ft PNG \"{filePath}\" -f rgba -o {Path.GetTempPath()}",
+                    RedirectStandardOutput = true
+                }
+            };
             process.Start();
             process.WaitForExit();
             string sourceFile = Path.Combine(Path.GetTempPath(), $"{Path.GetFileNameWithoutExtension(filePath)}.png");

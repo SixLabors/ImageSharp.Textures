@@ -37,17 +37,6 @@ namespace SixLabors.ImageSharp.Textures.InteractiveTest
 
         private static Dictionary<string, object> datastore;
 
-        public static Dictionary<string, object> DataStore
-        {
-            get
-            {
-                if (datastore == null)
-                {
-                    datastore = new Dictionary<string, object>();
-                }
-
-                return datastore;
-            }
-        }
+        public static Dictionary<string, object> DataStore => datastore ?? (datastore = new Dictionary<string, object>());
     }
 }

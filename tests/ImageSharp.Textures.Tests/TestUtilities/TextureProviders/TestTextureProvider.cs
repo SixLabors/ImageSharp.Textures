@@ -14,17 +14,17 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.TextureProviders
 {
     public class TestTextureProvider : ITestTextureProvider
     {
-        public string MethodName { get; private set; }
+        public string MethodName { get; }
 
-        public TestTextureFormat TextureFormat { get; private set; }
+        public TestTextureFormat TextureFormat { get; }
 
-        public TestTextureType TextureType { get; private set; }
+        public TestTextureType TextureType { get; }
 
-        public TestTextureTool TextureTool { get; private set; }
+        public TestTextureTool TextureTool { get; }
 
-        public string InputFile { get; private set; }
+        public string InputFile { get;  }
 
-        public bool IsRegex { get; private set; }
+        public bool IsRegex { get; }
 
         public virtual Texture GetTexture(ITextureDecoder decoder)
         {
@@ -130,7 +130,7 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.TextureProviders
 
         public void SaveTextures(Texture texture)
         {
-            if (TestEnvironment.RunsOnCI)
+            if (TestEnvironment.RunsOnCi)
             {
                 return;
             }

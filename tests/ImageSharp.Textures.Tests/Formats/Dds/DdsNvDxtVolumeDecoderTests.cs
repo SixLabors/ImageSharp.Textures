@@ -12,7 +12,7 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.Dds
     public class DdsNvDxtVolumeDecoderTests
     {
         [Theory]
-        [WithFile(TestTextureFormat.DDS, TestTextureType.Volume, TestTextureTool.NvDxt, "volume has-mips.dds")]
+        [WithFile(TestTextureFormat.Dds, TestTextureType.Volume, TestTextureTool.NvDxt, "volume has-mips.dds")]
         public void DdsDecoder_CanDecode_Volume_NvDxt_Has_Mips(TestTextureProvider provider)
         {
             using Texture texture = provider.GetTexture(new DdsDecoder());
@@ -21,7 +21,7 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.Dds
         }
 
         [Theory]
-        [WithFile(TestTextureFormat.DDS, TestTextureType.Volume, TestTextureTool.NvDxt, "volume no-mips.dds")]
+        [WithFile(TestTextureFormat.Dds, TestTextureType.Volume, TestTextureTool.NvDxt, "volume no-mips.dds")]
         public void DdsDecoder_CanDecode_Volume_NvDxt_No_Mips(TestTextureProvider provider)
         {
             using Texture texture = provider.GetTexture(new DdsDecoder());
