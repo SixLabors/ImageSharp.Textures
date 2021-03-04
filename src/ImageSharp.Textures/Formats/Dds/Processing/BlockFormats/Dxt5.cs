@@ -58,19 +58,8 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
                 color1 |= (ushort)(blockData[streamIndex++] << 8);
 
                 // Extract R5G6B5.
-                var r = (color0 & 0xF800) >> 11;
-                var g = (color0 & 0x7E0) >> 5;
-                var b = color0 & 0x1f;
-                colors[0].R = PixelUtils.GetBytesFrom5BitValue(r);
-                colors[0].G = PixelUtils.GetBytesFrom6BitValue(g);
-                colors[0].B = PixelUtils.GetBytesFrom5BitValue(b);
-
-                r = (color1 & 0xF800) >> 11;
-                g = (color1 & 0x7E0) >> 5;
-                b = color1 & 0x1f;
-                colors[1].R = PixelUtils.GetBytesFrom5BitValue(r);
-                colors[1].G = PixelUtils.GetBytesFrom6BitValue(g);
-                colors[1].B = PixelUtils.GetBytesFrom5BitValue(b);
+                PixelUtils.ExtractR5G6B5(color0, ref colors[0]);
+                PixelUtils.ExtractR5G6B5(color1, ref colors[1]);
 
                 colors[2].R = (byte)(((2 * colors[0].R) + colors[1].R) / 3);
                 colors[2].G = (byte)(((2 * colors[0].G) + colors[1].G) / 3);
