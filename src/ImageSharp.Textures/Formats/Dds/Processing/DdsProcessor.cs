@@ -528,7 +528,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
                 case DxgiFormat.V408:
                 case DxgiFormat.Unknown:
                 default:
-                    throw new Exception($"Unsupported format {this.DdsHeaderDxt10.DxgiFormat}");
+                    throw new NotSupportedException($"Unsupported format {this.DdsHeaderDxt10.DxgiFormat}");
             }
         }
     }

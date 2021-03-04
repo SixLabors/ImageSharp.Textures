@@ -1,6 +1,7 @@
 // Copyright (c) Six Labors.
 // Licensed under the Apache License, Version 2.0.
 
+using System;
 using SixLabors.ImageSharp.Textures.Formats.Dds;
 using SixLabors.ImageSharp.Textures.Tests.Enums;
 using SixLabors.ImageSharp.Textures.Tests.TestUtilities.Attributes;
@@ -318,12 +319,14 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.Dds
         }
 
         [Theory]
-        [WithFile(TestTextureFormat.Dds, TestTextureType.Flat, TestTextureTool.TexConv, "flat R10G10B10_XR_BIAS_A2_UNORM.DDS")]
+        [WithFile(TestTextureFormat.Dds, TestTextureType.Flat, TestTextureTool.TexConv,
+            "flat R10G10B10_XR_BIAS_A2_UNORM.DDS")]
         public void DdsDecoder_CanDecode_Flat_TexConv_R10G10B10_XR_BIAS_A2_UNORM(TestTextureProvider provider)
         {
-            using Texture texture = provider.GetTexture(new DdsDecoder());
-            provider.SaveTextures(texture);
-            provider.CompareTextures(texture);
+            Assert.Throws<NotSupportedException>(() =>
+            {
+                using Texture texture = provider.GetTexture(new DdsDecoder());
+            });
         }
 
         [Theory]
@@ -726,9 +729,10 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.Dds
         [WithFile(TestTextureFormat.Dds, TestTextureType.Flat, TestTextureTool.TexConv, "flat R9G9B9E5_SHAREDEXP.DDS")]
         public void DdsDecoder_CanDecode_Flat_TexConv_R9G9B9E5_SHAREDEXP(TestTextureProvider provider)
         {
-            using Texture texture = provider.GetTexture(new DdsDecoder());
-            provider.SaveTextures(texture);
-            provider.CompareTextures(texture);
+            Assert.Throws<NotSupportedException>(() =>
+            {
+                using Texture texture = provider.GetTexture(new DdsDecoder());
+            });
         }
 
         [Theory]
