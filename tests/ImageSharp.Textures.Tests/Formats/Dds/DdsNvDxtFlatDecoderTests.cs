@@ -68,23 +68,19 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.Dds
 
         [Theory]
         [WithFile(TestTextureFormat.Dds, TestTextureType.Flat, TestTextureTool.NvDxt, "flat has-mips CXV8U8.dds")]
-        public void DdsDecoder_CanDecode_Flat_NvDxt_Has_Mips_CXV8U8(TestTextureProvider provider)
-        {
+        public void DdsDecoder_CanDecode_Flat_NvDxt_Has_Mips_CXV8U8(TestTextureProvider provider) =>
             Assert.Throws<NotSupportedException>(() =>
-            {
-                using Texture texture = provider.GetTexture(new DdsDecoder());
-            });
-        }
+               {
+                   using Texture texture = provider.GetTexture(new DdsDecoder());
+               });
 
         [Theory]
         [WithFile(TestTextureFormat.Dds, TestTextureType.Flat, TestTextureTool.NvDxt, "flat no-mips CXV8U8.dds")]
-        public void DdsDecoder_CanDecode_Flat_NvDxt_No_Mips_CXV8U8(TestTextureProvider provider)
-        {
+        public void DdsDecoder_CanDecode_Flat_NvDxt_No_Mips_CXV8U8(TestTextureProvider provider) =>
             Assert.Throws<NotSupportedException>(() =>
-            {
-                using Texture texture = provider.GetTexture(new DdsDecoder());
-            });
-        }
+              {
+                  using Texture texture = provider.GetTexture(new DdsDecoder());
+              });
 
         [Theory]
         [WithFile(TestTextureFormat.Dds, TestTextureType.Flat, TestTextureTool.NvDxt, "flat has-mips DXT1A.dds")]

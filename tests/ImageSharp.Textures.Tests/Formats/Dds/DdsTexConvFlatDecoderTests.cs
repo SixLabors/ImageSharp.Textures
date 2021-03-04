@@ -319,15 +319,12 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.Dds
         }
 
         [Theory]
-        [WithFile(TestTextureFormat.Dds, TestTextureType.Flat, TestTextureTool.TexConv,
-            "flat R10G10B10_XR_BIAS_A2_UNORM.DDS")]
-        public void DdsDecoder_CanDecode_Flat_TexConv_R10G10B10_XR_BIAS_A2_UNORM(TestTextureProvider provider)
-        {
+        [WithFile(TestTextureFormat.Dds, TestTextureType.Flat, TestTextureTool.TexConv, "flat R10G10B10_XR_BIAS_A2_UNORM.DDS")]
+        public void DdsDecoder_CanDecode_Flat_TexConv_R10G10B10_XR_BIAS_A2_UNORM(TestTextureProvider provider) =>
             Assert.Throws<NotSupportedException>(() =>
             {
                 using Texture texture = provider.GetTexture(new DdsDecoder());
             });
-        }
 
         [Theory]
         [WithFile(TestTextureFormat.Dds, TestTextureType.Flat, TestTextureTool.TexConv, "flat R10G10B10A2_UINT.DDS")]
@@ -727,13 +724,11 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.Dds
 
         [Theory]
         [WithFile(TestTextureFormat.Dds, TestTextureType.Flat, TestTextureTool.TexConv, "flat R9G9B9E5_SHAREDEXP.DDS")]
-        public void DdsDecoder_CanDecode_Flat_TexConv_R9G9B9E5_SHAREDEXP(TestTextureProvider provider)
-        {
+        public void DdsDecoder_CanDecode_Flat_TexConv_R9G9B9E5_SHAREDEXP(TestTextureProvider provider) =>
             Assert.Throws<NotSupportedException>(() =>
             {
                 using Texture texture = provider.GetTexture(new DdsDecoder());
             });
-        }
 
         [Theory]
         [WithFile(TestTextureFormat.Dds, TestTextureType.Flat, TestTextureTool.TexConv, "flat RGBA.DDS")]
