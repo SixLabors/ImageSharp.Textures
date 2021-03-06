@@ -1,6 +1,8 @@
 // Copyright (c) Six Labors.
 // Licensed under the Apache License, Version 2.0.
 
+using SixLabors.ImageSharp.Textures.Formats.Ktx;
+
 namespace SixLabors.ImageSharp.Textures.Formats.Dds
 {
     /// <summary>
@@ -11,9 +13,11 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds
         /// <inheritdoc/>
         public void Configure(Configuration configuration)
         {
-            // configuration.ImageFormatsManager.SetEncoder(DdsFormat.Instance, new DdsEncoder());
             configuration.ImageFormatsManager.SetDecoder(DdsFormat.Instance, new DdsDecoder());
             configuration.ImageFormatsManager.AddImageFormatDetector(new DdsImageFormatDetector());
+
+            configuration.ImageFormatsManager.SetDecoder(KtxFormat.Instance, new KtxDecoder());
+            configuration.ImageFormatsManager.AddImageFormatDetector(new KtxImageFormatDetector());
         }
     }
 }

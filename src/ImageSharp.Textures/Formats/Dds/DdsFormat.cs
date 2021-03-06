@@ -6,10 +6,13 @@ using System.Collections.Generic;
 namespace SixLabors.ImageSharp.Textures.Formats.Dds
 {
     /// <summary>
-    /// Registers the image encoders, decoders and mime type detectors for the png format.
+    /// Registers the texture decoders and mime type detectors for the dds format.
     /// </summary>
     public sealed class DdsFormat : ITextureFormat
     {
+        /// <summary>
+        /// Prevents a default instance of the <see cref="DdsFormat" /> class from being created.
+        /// </summary>
         private DdsFormat()
         {
         }

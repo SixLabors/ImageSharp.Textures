@@ -3,19 +3,19 @@
 
 using System.IO;
 
-namespace SixLabors.ImageSharp.Textures.Formats.Dds
+namespace SixLabors.ImageSharp.Textures.Formats.Ktx
 {
     /// <summary>
-    /// Image decoder for DDS textures.
+    /// Image decoder for KTX textures.
     /// </summary>
-    public sealed class DdsDecoder : ITextureDecoder, IDdsDecoderOptions, ITextureInfoDetector
+    public sealed class KtxDecoder : ITextureDecoder, IKtxDecoderOptions, ITextureInfoDetector
     {
         /// <inheritdoc/>
         public Texture DecodeTexture(Configuration configuration, Stream stream)
         {
             Guard.NotNull(stream, nameof(stream));
 
-            return new DdsDecoderCore(configuration, this).DecodeTexture(stream);
+            return new KtxDecoderCore(configuration, this).DecodeTexture(stream);
         }
 
         /// <inheritdoc/>
@@ -23,7 +23,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds
         {
             Guard.NotNull(stream, nameof(stream));
 
-            return new DdsDecoderCore(configuration, this).Identify(stream);
+            return new KtxDecoderCore(configuration, this).Identify(stream);
         }
     }
 }

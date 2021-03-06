@@ -4,7 +4,7 @@
 namespace SixLabors.ImageSharp.Textures.Formats.Dds
 {
     /// <summary>
-    /// The options for decoding dds images. Currently empty, but this may change in the future.
+    /// The options for decoding dds textures. Currently empty, but this may change in the future.
     /// </summary>
     internal interface IDdsDecoderOptions
     {

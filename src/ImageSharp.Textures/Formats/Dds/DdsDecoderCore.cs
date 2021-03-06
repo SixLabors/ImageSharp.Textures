@@ -14,10 +14,13 @@ using SixLabors.ImageSharp.Textures.TextureFormats;
 
 namespace SixLabors.ImageSharp.Textures.Formats.Dds
 {
+    /// <summary>
+    /// Performs the dds decoding operation.
+    /// </summary>
     internal sealed class DdsDecoderCore
     {
         /// <summary>
-        /// The file header containing general information about the image.
+        /// The file header containing general information about the texture.
         /// </summary>
         private DdsHeader ddsHeader;
 
@@ -59,9 +62,9 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds
         }
 
         /// <summary>
-        /// Decodes the image from the specified stream.
+        /// Decodes the texture from the specified stream.
         /// </summary>
-        /// <param name="stream">The stream, where the image should be decoded from. Cannot be null.</param>
+        /// <param name="stream">The stream, where the texture should be decoded from. Cannot be null.</param>
         /// <returns>The decoded image.</returns>
         public Texture DecodeTexture(Stream stream)
         {
@@ -184,7 +187,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds
         /// <summary>
         /// Reads the dds file header from the stream.
         /// </summary>
-        /// <param name="stream">The <see cref="Stream"/> containing image data.</param>
+        /// <param name="stream">The <see cref="Stream"/> containing texture data.</param>
         private void ReadFileHeader(Stream stream)
         {
             this.currentStream = stream;
