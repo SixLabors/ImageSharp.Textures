@@ -77,7 +77,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx
         /// Gets the internal format.
         /// For compressed textures, glInternalFormat must equal the compressed internal format, usually one of the values from table 8.14 of the OpenGL 4.4 specification.
         /// For uncompressed textures, glInternalFormat specifies the internalformat parameter passed to glTexStorage*D or glTexImage*D,
-        /// usually one of the sized internal formats from tables 8.12 & 8.13 of the OpenGL 4.4 specification.
+        /// usually one of the sized internal formats from tables 8.12 and 8.13 of the OpenGL 4.4 specification.
         /// </summary>
         public uint GlInternalFormat { get; }
 

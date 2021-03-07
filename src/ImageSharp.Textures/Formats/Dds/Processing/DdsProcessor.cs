@@ -48,6 +48,8 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
         /// <returns>The decoded mipmaps.</returns>
         public MipMap[] DecodeDds(Stream stream, int width, int height, int count)
         {
+            Guard.MustBeGreaterThan(count, 0, nameof(count));
+
             switch (this.DdsHeader.PixelFormat.FourCC)
             {
                 case DdsFourCc.None:

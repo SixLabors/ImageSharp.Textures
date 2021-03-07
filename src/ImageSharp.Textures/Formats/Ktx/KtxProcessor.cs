@@ -5,7 +5,6 @@ using System;
 using System.Buffers.Binary;
 using System.IO;
 using SixLabors.ImageSharp.Textures.Common.Exceptions;
-using SixLabors.ImageSharp.Textures.Formats.Dds;
 using SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats;
 
 namespace SixLabors.ImageSharp.Textures.Formats.Ktx
@@ -41,16 +40,42 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx
         /// <returns>The decoded mipmaps.</returns>
         public MipMap[] DecodeKtx(Stream stream, int width, int height, uint count)
         {
-            switch (this.KtxHeader.GlFormat)
+            if (this.KtxHeader.GlTypeSize == 1)
             {
-                // TODO: move texture formats which are same for dds and ktx in a common place once its clear which ones those are.
-                case GlPixelFormat.Rgb:
-                    return this.AllocateMipMaps<Rgb24>(stream, width, height, count);
-                case GlPixelFormat.Rgba:
-                    return this.AllocateMipMaps<Rgba32>(stream, width, height, count);
-                default:
-                    throw new NotSupportedException("The pixel format is not supported");
+                switch (this.KtxHeader.GlFormat)
+                {
+                    // TODO: move texture formats which are same for dds and ktx in a common place once its clear which ones those are.
+                    case GlPixelFormat.Rgb:
+                        return this.AllocateMipMaps<Rgb24>(stream, width, height, count);
+                    case GlPixelFormat.Rgba:
+                        return this.AllocateMipMaps<Rgba32>(stream, width, height, count);
+                    case GlPixelFormat.Bgr:
+                        return this.AllocateMipMaps<Bgr24>(stream, width, height, count);
+                    case GlPixelFormat.Bgra:
+                        return this.AllocateMipMaps<Bgra32>(stream, width, height, count);
+                    case GlPixelFormat.Luminance:
+                        return this.AllocateMipMaps<L8>(stream, width, height, count);
+                    case GlPixelFormat.Alpha:
+                        return this.AllocateMipMaps<A8>(stream, width, height, count);
+                }
             }
+
+            if (this.KtxHeader.GlTypeSize == 2)
+            {
+                // TODO: endianess is not respected here. Use stream reader which respects endianess.
+                switch (this.KtxHeader.GlFormat)
+                {
+                    // TODO: bgr48 and bgra64
+                    case GlPixelFormat.Rgb:
+                        return this.AllocateMipMaps<Rgb48>(stream, width, height, count);
+                    case GlPixelFormat.Rgba:
+                        return this.AllocateMipMaps<Rgba64>(stream, width, height, count);
+                    case GlPixelFormat.Luminance:
+                        return this.AllocateMipMaps<L16>(stream, width, height, count);
+                }
+            }
+
+            throw new NotSupportedException("The pixel format is not supported");
         }
 
         /// <summary>
@@ -64,6 +89,13 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx
         private MipMap[] AllocateMipMaps<TBlock>(Stream stream, int width, int height, uint count)
             where TBlock : struct, IBlock<TBlock>
         {
+            // If numberOfMipmapLevels equals 0, it indicates that a full mipmap pyramid should be generated from level 0 at load time.
+            // TODO: generate mipmap pyramid. For now only the first image is loaded.
+            if (count == 0)
+            {
+                count = 1;
+            }
+
             var blockFormat = default(TBlock);
 
             var mipMaps = new MipMap<TBlock>[count];
