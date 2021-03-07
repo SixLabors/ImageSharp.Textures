@@ -1,7 +1,6 @@
 // Copyright (c) Six Labors.
 // Licensed under the Apache License, Version 2.0.
 
-using System.Buffers.Binary;
 using System.IO;
 using SixLabors.ImageSharp.Memory;
 using SixLabors.ImageSharp.Textures.Common.Exceptions;
@@ -14,11 +13,6 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx
     /// </summary>
     internal sealed class KtxDecoderCore
     {
-        /// <summary>
-        /// A scratch buffer to reduce allocations.
-        /// </summary>
-        private readonly byte[] buffer = new byte[12];
-
         /// <summary>
         /// The global configuration.
         /// </summary>
@@ -70,10 +64,16 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx
                 throw new UnknownTextureFormatException("Width cannot be 0");
             }
 
-            var texture = new FlatTexture();
+            int width = (int)this.ktxHeader.Width;
+            int height = (int)this.ktxHeader.Height;
 
-            int bytesRead = currentStream.Read(this.buffer, 0, 4);
-            uint size = BinaryPrimitives.ReadUInt32LittleEndian(this.buffer);
+            // Skip over bytesOfKeyValueData, if any is present.
+            currentStream.Position += this.ktxHeader.BytesOfKeyValueData;
+
+            var ktxProcessor = new KtxProcessor(this.ktxHeader);
+            var texture = new FlatTexture();
+            MipMap[] mipMaps = ktxProcessor.DecodeKtx(this.stream, width, height, this.ktxHeader.NumberOfMipmapLevels);
+            texture.MipMaps.AddRange(mipMaps);
 
             return texture;
         }
@@ -100,7 +100,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx
             this.stream = currentStream;
 
             // Discard the magic bytes, we already know at this point its a ktx file.
-            this.stream.Read(this.buffer, 0, KtxConstants.MagicBytes.Length);
+            this.stream.Position += KtxConstants.MagicBytes.Length;
 
             byte[] ktxHeaderBuffer = new byte[KtxConstants.KtxHeaderSize];
             this.stream.Read(ktxHeaderBuffer, 0, KtxConstants.KtxHeaderSize);

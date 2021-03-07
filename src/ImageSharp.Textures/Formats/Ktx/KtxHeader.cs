@@ -32,7 +32,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx
             this.Endianness = endianness;
             this.GlType = glType;
             this.GlTypeSize = glTypeSize;
-            this.GlFormat = glFormat;
+            this.GlFormat = (GlPixelFormat)glFormat;
             this.GlInternalFormat = glInternalFormat;
             this.GlBaseInternalFormat = glBaseInternalFormat;
             this.Width = width;
@@ -71,7 +71,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx
         /// For compressed textures, glFormat must equal 0. For uncompressed textures, glFormat specifies the format parameter passed to glTex{,Sub}Image*D,
         /// usually one of the values from table 8.3 of the OpenGL 4.4 specification. (RGB, RGBA, BGRA, etc.)
         /// </summary>
-        public uint GlFormat { get; }
+        public GlPixelFormat GlFormat { get; }
 
         /// <summary>
         /// Gets the internal format.

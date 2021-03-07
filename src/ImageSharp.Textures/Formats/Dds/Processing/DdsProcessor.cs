@@ -3,7 +3,7 @@
 
 using System;
 using System.IO;
-
+using SixLabors.ImageSharp.Textures.Common.Exceptions;
 using SixLabors.ImageSharp.Textures.Common.Extensions;
 using SixLabors.ImageSharp.Textures.Formats.Dds.Emums;
 using SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats;
@@ -13,96 +13,39 @@ using L32 = SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats.L3
 namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
 {
     /// <summary>
-    /// Class that represents direct draw surfaces
+    /// Decodes direct draw surfaces.
     /// </summary>
     internal class DdsProcessor
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="DdsProcessor" /> class.
+        /// </summary>
+        /// <param name="ddsHeader">The DDS header.</param>
+        /// <param name="ddsHeaderDxt10">The DDS header DXT10.</param>
         public DdsProcessor(DdsHeader ddsHeader, DdsHeaderDxt10 ddsHeaderDxt10)
         {
             this.DdsHeader = ddsHeader;
             this.DdsHeaderDxt10 = ddsHeaderDxt10;
         }
 
+        /// <summary>
+        /// Gets the dds header.
+        /// </summary>
         public DdsHeader DdsHeader { get; }
 
+        /// <summary>
+        /// Gets the dxt 10 header.
+        /// </summary>
         public DdsHeaderDxt10 DdsHeaderDxt10 { get; }
 
-        /*
-        private void AllocateMipMaps(Stream stream)
-         {
-            if (this.DdsHeader.TextureCount() <= 1)
-            {
-                int width = (int)Math.Max(BlockInfo.DivSize, (int)this.DdsHeader.Width);
-                int height = (int)Math.Max(BlockInfo.DivSize, this.DdsHeader.Height);
-                int bytesPerPixel = (BlockInfo.BitsPerPixel + 7) / 8;
-                int stride = CalcStride(width, BlockInfo.BitsPerPixel);
-                int len = stride * height;
-
-                var mipData = new byte[len];
-                stream.Read(mipData, 0, len);
-
-                var mipMap = new MipMap(BlockInfo, mipData, false, width, height, stride / bytesPerPixel);
-                Swap(mipMap);
-                this.mipMaps = new[] { mipMap };
-                return;
-            }
-
-            mipMaps = new MipMap[this.DdsHeader.TextureCount() - 1];
-
-            for (int i = 0; i < this.DdsHeader.TextureCount() - 1; i++)
-            {
-                int width = (int)Math.Max(BlockInfo.DivSize, (int)(this.DdsHeader.Width / Math.Pow(2, i + 1)));
-                int height = (int)Math.Max(BlockInfo.DivSize, this.DdsHeader.Height / Math.Pow(2, i + 1));
-
-                int bytesPerPixel = (BlockInfo.BitsPerPixel + 7) / 8;
-                int stride = CalcStride(width, BlockInfo.BitsPerPixel);
-                int len = stride * height;
-
-                var mipData = new byte[len];
-                stream.Read(mipData, 0, len);
-
-                var mipMap = new MipMap(BlockInfo, mipData, false, width, height, stride / bytesPerPixel);
-                Swap(mipMap);
-                mipMaps[i] = mipMap;
-            }
-         }
-        */
-
-        private MipMap[] AllocateMipMaps<TBlock>(Stream stream, int width, int height, int count)
-            where TBlock : struct, IBlock<TBlock>
-        {
-            var blockFormat = default(TBlock);
-
-            var mipMaps = new MipMap<TBlock>[count];
-
-            for (int i = 0; i < count; i++)
-            {
-                int widthBlocks = blockFormat.Compressed ? Helper.CalcBlocks(width) : width;
-                int heightBlocks = blockFormat.Compressed ? Helper.CalcBlocks(height) : height;
-                int bytesToRead = heightBlocks * widthBlocks * blockFormat.CompressedBytesPerBlock;
-
-                // Special case for yuv formats with a single pixel.
-                if (bytesToRead < blockFormat.BitsPerPixel / 8)
-                {
-                    bytesToRead = blockFormat.BitsPerPixel / 8;
-                }
-
-                byte[] mipData = new byte[bytesToRead];
-                int read = stream.Read(mipData, 0, bytesToRead);
-                if (read != bytesToRead)
-                {
-                    throw new InvalidDataException();
-                }
-
-                mipMaps[i] = new MipMap<TBlock>(blockFormat, mipData, width, height);
-
-                width >>= 1;
-                height >>= 1;
-            }
-
-            return mipMaps;
-        }
-
+        /// <summary>
+        /// Decodes the mipmaps of a DDS textures.
+        /// </summary>
+        /// <param name="stream">The stream to read the texture data from.</param>
+        /// <param name="width">The width of the texture at level 0.</param>
+        /// <param name="height">The height of the texture at level 0.</param>
+        /// <param name="count">The mipmap count.</param>
+        /// <returns>The decoded mipmaps.</returns>
         public MipMap[] DecodeDds(Stream stream, int width, int height, int count)
         {
             switch (this.DdsHeader.PixelFormat.FourCC)
@@ -182,6 +125,49 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
 
                     throw new Exception($"Unrecognized rgb bit count: {this.DdsHeader.PixelFormat.RGBBitCount}");
             }
+        }
+
+        /// <summary>
+        /// Allocates and decodes all mipmap levels of a DDS texture.
+        /// </summary>
+        /// <param name="stream">The stream to read the texture data from.</param>
+        /// <param name="width">The width of the texture at level 0.</param>
+        /// <param name="height">The height of the texture at level 0.</param>
+        /// <param name="count">The mipmap count.</param>
+        /// <returns>The decoded mipmaps.</returns>
+        private MipMap[] AllocateMipMaps<TBlock>(Stream stream, int width, int height, int count)
+            where TBlock : struct, IBlock<TBlock>
+        {
+            var blockFormat = default(TBlock);
+
+            var mipMaps = new MipMap<TBlock>[count];
+
+            for (int i = 0; i < count; i++)
+            {
+                int widthBlocks = blockFormat.Compressed ? Helper.CalcBlocks(width) : width;
+                int heightBlocks = blockFormat.Compressed ? Helper.CalcBlocks(height) : height;
+                int bytesToRead = heightBlocks * widthBlocks * blockFormat.CompressedBytesPerBlock;
+
+                // Special case for yuv formats with a single pixel.
+                if (bytesToRead < blockFormat.BitsPerPixel / 8)
+                {
+                    bytesToRead = blockFormat.BitsPerPixel / 8;
+                }
+
+                byte[] mipData = new byte[bytesToRead];
+                int read = stream.Read(mipData, 0, bytesToRead);
+                if (read != bytesToRead)
+                {
+                    throw new TextureFormatException("could not read enough texture data from the stream");
+                }
+
+                mipMaps[i] = new MipMap<TBlock>(blockFormat, mipData, width, height);
+
+                width >>= 1;
+                height >>= 1;
+            }
+
+            return mipMaps;
         }
 
         private MipMap[] EightBitImageFormat(Stream stream, int width, int height, int count)

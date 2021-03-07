@@ -1,13 +1,13 @@
 // Copyright (c) Six Labors.
 // Licensed under the Apache License, Version 2.0.
 
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
+
 namespace SixLabors.ImageSharp.Textures.Formats
 {
-    using System;
-    using System.Collections.Concurrent;
-    using System.Collections.Generic;
-    using System.Linq;
-
     /// <summary>
     /// Collection of Image Formats to be used in <see cref="Configuration" /> class.
     /// </summary>
@@ -112,10 +112,7 @@ namespace SixLabors.ImageSharp.Textures.Formats
         /// </summary>
         /// <param name="mimeType">The mime-type to discover</param>
         /// <returns>The <see cref="ITextureFormat"/> if found; otherwise null</returns>
-        public ITextureFormat FindFormatByMimeType(string mimeType)
-        {
-            return this.imageFormats.FirstOrDefault(x => x.MimeTypes.Contains(mimeType, StringComparer.OrdinalIgnoreCase));
-        }
+        public ITextureFormat FindFormatByMimeType(string mimeType) => this.imageFormats.FirstOrDefault(x => x.MimeTypes.Contains(mimeType, StringComparer.OrdinalIgnoreCase));
 
         /// <summary>
         /// Sets a specific image encoder as the encoder for a specific image format.
@@ -146,10 +143,7 @@ namespace SixLabors.ImageSharp.Textures.Formats
         /// <summary>
         /// Removes all the registered image format detectors.
         /// </summary>
-        public void ClearImageFormatDetectors()
-        {
-            this.imageFormatDetectors = new ConcurrentBag<ITextureFormatDetector>();
-        }
+        public void ClearImageFormatDetectors() => this.imageFormatDetectors = new ConcurrentBag<ITextureFormatDetector>();
 
         /// <summary>
         /// Adds a new detector for detecting mime types.
