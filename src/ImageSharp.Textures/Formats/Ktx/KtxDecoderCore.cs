@@ -71,10 +71,24 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx
             currentStream.Position += this.ktxHeader.BytesOfKeyValueData;
 
             var ktxProcessor = new KtxProcessor(this.ktxHeader);
-            var texture = new FlatTexture();
-            MipMap[] mipMaps = ktxProcessor.DecodeKtx(this.stream, width, height, this.ktxHeader.NumberOfMipmapLevels);
-            texture.MipMaps.AddRange(mipMaps);
 
+            if (this.ktxHeader.NumberOfFaces == 6)
+            {
+                CubemapTexture cubeMapTexture = ktxProcessor.DecodeCubeMap(this.stream, width, height);
+
+                // Cube map faces are stored in the order: +X, -X, +Y, -Y, +Z, -Z.
+                /*cubeMapTexture.PositiveX.MipMaps.Add(cubeMapFaces[0]);
+                cubeMapTexture.NegativeX.MipMaps.Add(cubeMapFaces[1]);
+                cubeMapTexture.PositiveY.MipMaps.Add(cubeMapFaces[2]);
+                cubeMapTexture.NegativeY.MipMaps.Add(cubeMapFaces[3]);
+                cubeMapTexture.PositiveZ.MipMaps.Add(cubeMapFaces[4]);
+                cubeMapTexture.NegativeZ.MipMaps.Add(cubeMapFaces[5]);*/
+                return cubeMapTexture;
+            }
+
+            var texture = new FlatTexture();
+            MipMap[] mipMaps = ktxProcessor.DecodeMipMaps(this.stream, width, height, this.ktxHeader.NumberOfMipmapLevels);
+            texture.MipMaps.AddRange(mipMaps);
             return texture;
         }
 

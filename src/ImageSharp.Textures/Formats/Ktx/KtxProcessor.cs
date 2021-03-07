@@ -6,6 +6,7 @@ using System.Buffers.Binary;
 using System.IO;
 using SixLabors.ImageSharp.Textures.Common.Exceptions;
 using SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats;
+using SixLabors.ImageSharp.Textures.TextureFormats;
 
 namespace SixLabors.ImageSharp.Textures.Formats.Ktx
 {
@@ -31,14 +32,14 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx
         public KtxHeader KtxHeader { get; }
 
         /// <summary>
-        /// Decodes the mipmaps of a DDS textures.
+        /// Decodes the mipmaps of a KTX textures.
         /// </summary>
         /// <param name="stream">The stream to read the texture data from.</param>
         /// <param name="width">The width of the texture at level 0.</param>
         /// <param name="height">The height of the texture at level 0.</param>
         /// <param name="count">The mipmap count.</param>
         /// <returns>The decoded mipmaps.</returns>
-        public MipMap[] DecodeKtx(Stream stream, int width, int height, uint count)
+        public MipMap[] DecodeMipMaps(Stream stream, int width, int height, uint count)
         {
             if (this.KtxHeader.GlTypeSize == 1)
             {
@@ -79,6 +80,85 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx
         }
 
         /// <summary>
+        /// Decodes the a KTX cube map texture.
+        /// </summary>
+        /// <param name="stream">The stream to read the texture data from.</param>
+        /// <param name="width">The width of a texture face.</param>
+        /// <param name="height">The height of a texture face.</param>
+        /// <returns>A decoded cubemap texture.</returns>
+        /// <exception cref="NotSupportedException">The pixel format is not supported</exception>
+        public CubemapTexture DecodeCubeMap(Stream stream, int width, int height)
+        {
+            switch (this.KtxHeader.GlFormat)
+            {
+                // TODO: move texture formats which are same for dds and ktx in a common place once its clear which ones those are.
+                case GlPixelFormat.Rgb:
+                    return this.AllocateCubeMap<Rgb24>(stream, width, height);
+                case GlPixelFormat.Rgba:
+                    return this.AllocateCubeMap<Rgba32>(stream, width, height);
+                case GlPixelFormat.Bgr:
+                    return this.AllocateCubeMap<Bgr24>(stream, width, height);
+                case GlPixelFormat.Bgra:
+                    return this.AllocateCubeMap<Bgr32>(stream, width, height);
+                case GlPixelFormat.Luminance:
+                    return this.AllocateCubeMap<L8>(stream, width, height);
+                case GlPixelFormat.Alpha:
+                    return this.AllocateCubeMap<A8>(stream, width, height);
+            }
+
+            if (this.KtxHeader.GlTypeSize == 2)
+            {
+                // TODO: endianess is not respected here. Use stream reader which respects endianess.
+                switch (this.KtxHeader.GlFormat)
+                {
+                    // TODO: bgr48 and bgra64
+                    case GlPixelFormat.Rgb:
+                        return this.AllocateCubeMap<Rgb48>(stream, width, height);
+                    case GlPixelFormat.Rgba:
+                        return this.AllocateCubeMap<Rgba64>(stream, width, height);
+                    case GlPixelFormat.Luminance:
+                        return this.AllocateCubeMap<L16>(stream, width, height);
+                }
+            }
+
+            throw new NotSupportedException("The pixel format is not supported");
+        }
+
+        /// <summary>
+        /// Allocates and decodes the a KTX cube map texture.
+        /// </summary>
+        /// <param name="stream">The stream to read the texture data from.</param>
+        /// <param name="width">The width of a texture face.</param>
+        /// <param name="height">The height of a texture face.</param>
+        /// <returns>A decoded cubemap texture.</returns>
+        /// <exception cref="NotSupportedException">The pixel format is not supported</exception>
+        private CubemapTexture AllocateCubeMap<TBlock>(Stream stream, int width, int height)
+            where TBlock : struct, IBlock<TBlock>
+        {
+            var cubeMapTexture = new CubemapTexture();
+
+            var blockFormat = default(TBlock);
+
+            var pixelDataSize = this.ReadTextureDataSize(stream);
+            var faceTextures = new MipMap[6];
+            for (int i = 0; i < 6; i++)
+            {
+                byte[] faceData = new byte[pixelDataSize];
+                ReadTextureData(stream, faceData);
+                faceTextures[i] = new MipMap<TBlock>(blockFormat, faceData, width, height);
+            }
+
+            cubeMapTexture.PositiveX.MipMaps.Add(faceTextures[0]);
+            cubeMapTexture.NegativeX.MipMaps.Add(faceTextures[1]);
+            cubeMapTexture.PositiveY.MipMaps.Add(faceTextures[2]);
+            cubeMapTexture.NegativeY.MipMaps.Add(faceTextures[3]);
+            cubeMapTexture.PositiveZ.MipMaps.Add(faceTextures[4]);
+            cubeMapTexture.NegativeZ.MipMaps.Add(faceTextures[5]);
+
+            return cubeMapTexture;
+        }
+
+        /// <summary>
         /// Allocates and decodes all mipmap levels of a ktx texture.
         /// </summary>
         /// <param name="stream">The stream to read the texture data from.</param>
@@ -97,24 +177,12 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx
             }
 
             var blockFormat = default(TBlock);
-
             var mipMaps = new MipMap<TBlock>[count];
-
             for (int i = 0; i < count; i++)
             {
-                int bytesRead = stream.Read(this.buffer, 0, 4);
-                if (bytesRead != 4)
-                {
-                    throw new TextureFormatException("could not read texture data length from the stream");
-                }
-
-                var pixelDataSize = BinaryPrimitives.ReadUInt32LittleEndian(this.buffer);
+                var pixelDataSize = this.ReadTextureDataSize(stream);
                 byte[] mipMapData = new byte[pixelDataSize];
-                bytesRead = stream.Read(mipMapData, 0, (int)pixelDataSize);
-                if (bytesRead != pixelDataSize)
-                {
-                    throw new TextureFormatException("could not read enough texture data from the stream");
-                }
+                ReadTextureData(stream, mipMapData);
 
                 mipMaps[i] = new MipMap<TBlock>(blockFormat, mipMapData, width, height);
 
@@ -123,6 +191,28 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx
             }
 
             return mipMaps;
+        }
+
+        private static void ReadTextureData(Stream stream, byte[] mipMapData)
+        {
+            int bytesRead = stream.Read(mipMapData, 0, mipMapData.Length);
+            if (bytesRead != mipMapData.Length)
+            {
+                throw new TextureFormatException("could not read enough texture data from the stream");
+            }
+        }
+
+        private uint ReadTextureDataSize(Stream stream)
+        {
+            int bytesRead = stream.Read(this.buffer, 0, 4);
+            if (bytesRead != 4)
+            {
+                throw new TextureFormatException("could not read texture data length from the stream");
+            }
+
+            var pixelDataSize = BinaryPrimitives.ReadUInt32LittleEndian(this.buffer);
+
+            return pixelDataSize;
         }
     }
 }
