@@ -7,7 +7,7 @@ using System.Runtime.CompilerServices;
 namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
 {
     /// <summary>
-    /// Texture compressed with BC5 with two color channels (8 bits:8 bits)
+    /// Texture compressed with BC5 with two color channels, red and green.
     /// </summary>
     public struct Bc5 : IBlock<Bc5>
     {
@@ -30,6 +30,8 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
         public Image GetImage(byte[] blockData, int width, int height)
         {
             byte[] decompressedData = this.Decompress(blockData, width, height);
+
+            // Should RG format be used instead RGB24?
             return Image.LoadPixelData<ImageSharp.PixelFormats.Rgb24>(decompressedData, width, height);
         }
 

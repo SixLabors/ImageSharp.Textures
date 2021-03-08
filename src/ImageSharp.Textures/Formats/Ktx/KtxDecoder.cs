@@ -19,7 +19,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx
         }
 
         /// <inheritdoc/>
-        public ITextueInfo Identify(Configuration configuration, Stream stream)
+        public ITextureInfo Identify(Configuration configuration, Stream stream)
         {
             Guard.NotNull(stream, nameof(stream));
 

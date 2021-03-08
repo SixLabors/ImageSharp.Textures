@@ -9,7 +9,7 @@ namespace SixLabors.ImageSharp.Textures
     /// Encapsulates properties that describe basic image information including dimensions, pixel type information
     /// and additional metadata.
     /// </summary>
-    public interface ITextueInfo
+    public interface ITextureInfo
     {
         /// <summary>
         /// Gets information about the image pixels.

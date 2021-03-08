@@ -8,7 +8,7 @@ namespace SixLabors.ImageSharp.Textures
     /// <summary>
     /// Contains information about the image including dimensions, pixel type information and additional metadata
     /// </summary>
-    internal sealed class TextureInfo : ITextueInfo
+    internal sealed class TextureInfo : ITextureInfo
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="TextureInfo"/> class.

@@ -84,9 +84,9 @@ namespace SixLabors.ImageSharp.Textures
         /// <param name="stream">The stream.</param>
         /// <param name="config">the configuration.</param>
         /// <returns>
-        /// The <see cref="ITextueInfo"/> or null if suitable info detector not found.
+        /// The <see cref="ITextureInfo"/> or null if suitable info detector not found.
         /// </returns>
-        private static (ITextueInfo info, ITextureFormat format) InternalIdentity(Stream stream, Configuration config)
+        private static (ITextureInfo info, ITextureFormat format) InternalIdentity(Stream stream, Configuration config)
         {
             if (!(DiscoverDecoder(stream, config, out ITextureFormat format) is ITextureInfoDetector detector))
             {

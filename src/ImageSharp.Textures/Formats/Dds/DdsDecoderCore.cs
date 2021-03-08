@@ -170,7 +170,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds
         /// Reads the raw image information from the specified stream.
         /// </summary>
         /// <param name="stream">The <see cref="Stream"/> containing image data.</param>
-        public ITextueInfo Identify(Stream stream)
+        public ITextureInfo Identify(Stream stream)
         {
             this.ReadFileHeader(stream);
 

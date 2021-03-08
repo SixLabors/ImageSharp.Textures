@@ -16,6 +16,6 @@ namespace SixLabors.ImageSharp.Textures.Formats
         /// <param name="configuration">The configuration for the image.</param>
         /// <param name="stream">The <see cref="Stream"/> containing image data.</param>
         /// <returns>The <see cref="TextureTypeInfo"/> object</returns>
-        ITextueInfo Identify(Configuration configuration, Stream stream);
+        ITextureInfo Identify(Configuration configuration, Stream stream);
     }
 }

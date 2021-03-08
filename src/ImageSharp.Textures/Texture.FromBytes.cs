@@ -15,18 +15,15 @@ namespace SixLabors.ImageSharp.Textures
         /// <summary>
         /// By reading the header on the provided byte array this calculates the images format.
         /// </summary>
-        /// <param name="data">The byte array containing encoded image data to read the header from.</param>
+        /// <param name="data">The byte array containing encoded texture data to read the header from.</param>
         /// <returns>The format or null if none found.</returns>
-        public static ITextureFormat DetectFormat(byte[] data)
-        {
-            return DetectFormat(Configuration.Default, data);
-        }
+        public static ITextureFormat DetectFormat(byte[] data) => DetectFormat(Configuration.Default, data);
 
         /// <summary>
         /// By reading the header on the provided byte array this calculates the images format.
         /// </summary>
         /// <param name="config">The configuration.</param>
-        /// <param name="data">The byte array containing encoded image data to read the header from.</param>
+        /// <param name="data">The byte array containing encoded texture data to read the header from.</param>
         /// <returns>The mime type or null if none found.</returns>
         public static ITextureFormat DetectFormat(Configuration config, byte[] data)
         {
@@ -39,18 +36,15 @@ namespace SixLabors.ImageSharp.Textures
         /// <summary>
         /// By reading the header on the provided byte array this calculates the images format.
         /// </summary>
-        /// <param name="data">The byte array containing encoded image data to read the header from.</param>
+        /// <param name="data">The byte array containing encoded texture data to read the header from.</param>
         /// <returns>The format or null if none found.</returns>
-        public static ITextureFormat DetectFormat(ReadOnlySpan<byte> data)
-        {
-            return DetectFormat(Configuration.Default, data);
-        }
+        public static ITextureFormat DetectFormat(ReadOnlySpan<byte> data) => DetectFormat(Configuration.Default, data);
 
         /// <summary>
         /// By reading the header on the provided byte array this calculates the images format.
         /// </summary>
         /// <param name="config">The configuration.</param>
-        /// <param name="data">The byte array containing encoded image data to read the header from.</param>
+        /// <param name="data">The byte array containing encoded texture data to read the header from.</param>
         /// <returns>The mime type or null if none found.</returns>
         public static ITextureFormat DetectFormat(Configuration config, ReadOnlySpan<byte> data)
         {
@@ -74,9 +68,54 @@ namespace SixLabors.ImageSharp.Textures
         }
 
         /// <summary>
+        /// Reads the raw texture information from the specified stream without fully decoding it.
+        /// </summary>
+        /// <param name="data">The byte array containing encoded texture data to read the header from.</param>
+        /// <exception cref="ArgumentNullException">The data is null.</exception>
+        /// <exception cref="NotSupportedException">The data is not readable.</exception>
+        /// <returns>
+        /// The <see cref="ITextureInfo"/> or null if suitable info detector not found.
+        /// </returns>
+        public static ITextureInfo Identify(byte[] data) => Identify(data, out ITextureFormat _);
+
+        /// <summary>
+        /// Reads the raw image information from the specified stream without fully decoding it.
+        /// </summary>
+        /// <param name="data">The byte array containing encoded texture data to read the header from.</param>
+        /// <param name="format">The format type of the decoded texture.</param>
+        /// <exception cref="ArgumentNullException">The data is null.</exception>
+        /// <exception cref="NotSupportedException">The data is not readable.</exception>
+        /// <returns>
+        /// The <see cref="ITextureInfo"/> or null if suitable info detector not found.
+        /// </returns>
+        public static ITextureInfo Identify(byte[] data, out ITextureFormat format) => Identify(Configuration.Default, data, out format);
+
+        /// <summary>
+        /// Reads the raw texture information from the specified stream without fully decoding it.
+        /// </summary>
+        /// <param name="configuration">The configuration.</param>
+        /// <param name="data">The byte array containing encoded texture data to read the header from.</param>
+        /// <param name="format">The format type of the decoded texture.</param>
+        /// <exception cref="ArgumentNullException">The configuration is null.</exception>
+        /// <exception cref="ArgumentNullException">The data is null.</exception>
+        /// <exception cref="NotSupportedException">The data is not readable.</exception>
+        /// <returns>
+        /// The <see cref="ITextureInfo"/> or null if suitable info detector is not found.
+        /// </returns>
+        public static ITextureInfo Identify(Configuration configuration, byte[] data, out ITextureFormat format)
+        {
+            Guard.NotNull(data, nameof(data));
+
+            using (var stream = new MemoryStream(data, 0, data.Length, false, true))
+            {
+                return Identify(configuration, stream, out format);
+            }
+        }
+
+        /// <summary>
         /// Load a new instance of <see cref="Texture"/> from the given encoded byte array.
         /// </summary>
-        /// <param name="data">The byte array containing image data.</param>
+        /// <param name="data">The byte array containing texture data.</param>
         /// <param name="format">The detected format.</param>
         /// <returns>The <see cref="Texture"/>.</returns>
         public static Texture Load(byte[] data, out ITextureFormat format) =>
@@ -85,7 +124,7 @@ namespace SixLabors.ImageSharp.Textures
         /// <summary>
         /// Load a new instance of <see cref="Texture"/> from the given encoded byte array.
         /// </summary>
-        /// <param name="data">The byte array containing encoded image data.</param>
+        /// <param name="data">The byte array containing encoded texture data.</param>
         /// <param name="decoder">The decoder.</param>
         /// <returns>The <see cref="Texture"/>.</returns>
         public static Texture Load(byte[] data, ITextureDecoder decoder) => Load(Configuration.Default, data, decoder);
@@ -94,7 +133,7 @@ namespace SixLabors.ImageSharp.Textures
         /// Load a new instance of <see cref="Texture"/> from the given encoded byte array.
         /// </summary>
         /// <param name="config">The config for the decoder.</param>
-        /// <param name="data">The byte array containing encoded image data.</param>
+        /// <param name="data">The byte array containing encoded texture data.</param>
         /// <returns>The <see cref="Texture"/>.</returns>
         public static Texture Load(Configuration config, byte[] data) => Load(config, data, out _);
 
@@ -102,7 +141,7 @@ namespace SixLabors.ImageSharp.Textures
         /// Load a new instance of <see cref="Texture"/> from the given encoded byte array.
         /// </summary>
         /// <param name="config">The config for the decoder.</param>
-        /// <param name="data">The byte array containing image data.</param>
+        /// <param name="data">The byte array containing texture data.</param>
         /// <param name="decoder">The decoder.</param>
         /// <returns>The <see cref="Texture"/>.</returns>
         public static Texture Load(Configuration config, byte[] data, ITextureDecoder decoder)
@@ -117,8 +156,8 @@ namespace SixLabors.ImageSharp.Textures
         /// Load a new instance of <see cref="Texture"/> from the given encoded byte array.
         /// </summary>
         /// <param name="config">The config for the decoder.</param>
-        /// <param name="data">The byte array containing image data.</param>
-        /// <param name="format">The mime type of the decoded image.</param>
+        /// <param name="data">The byte array containing texture data.</param>
+        /// <param name="format">The mime type of the decoded texture.</param>
         /// <returns>The <see cref="Texture"/>.</returns>
         public static Texture Load(Configuration config, byte[] data, out ITextureFormat format)
         {
@@ -131,14 +170,14 @@ namespace SixLabors.ImageSharp.Textures
         /// <summary>
         /// Load a new instance of <see cref="Texture"/> from the given encoded byte span.
         /// </summary>
-        /// <param name="data">The byte span containing image data.</param>
+        /// <param name="data">The byte span containing texture data.</param>
         /// <returns>The <see cref="Texture"/>.</returns>
         public static Texture Load(ReadOnlySpan<byte> data) => Load(Configuration.Default, data);
 
         /// <summary>
         /// Load a new instance of <see cref="Texture"/> from the given encoded byte span.
         /// </summary>
-        /// <param name="data">The byte span containing image data.</param>
+        /// <param name="data">The byte span containing texture data.</param>
         /// <param name="decoder">The decoder.</param>
         /// <returns>The <see cref="Texture"/>.</returns>
         public static Texture Load(ReadOnlySpan<byte> data, ITextureDecoder decoder) =>
@@ -147,7 +186,7 @@ namespace SixLabors.ImageSharp.Textures
         /// <summary>
         /// Load a new instance of <see cref="Texture"/> from the given encoded byte array.
         /// </summary>
-        /// <param name="data">The byte span containing image data.</param>
+        /// <param name="data">The byte span containing texture data.</param>
         /// <param name="format">The detected format.</param>
         /// <returns>The <see cref="Texture"/>.</returns>
         public static Texture Load(ReadOnlySpan<byte> data, out ITextureFormat format) =>
@@ -157,7 +196,7 @@ namespace SixLabors.ImageSharp.Textures
         /// Decodes a new instance of <see cref="Texture"/> from the given encoded byte span.
         /// </summary>
         /// <param name="config">The configuration options.</param>
-        /// <param name="data">The byte span containing image data.</param>
+        /// <param name="data">The byte span containing texture data.</param>
         /// <returns>The <see cref="Texture"/>.</returns>
         public static Texture Load(Configuration config, ReadOnlySpan<byte> data) => Load(config, data, out _);
 
@@ -165,7 +204,7 @@ namespace SixLabors.ImageSharp.Textures
         /// Load a new instance of <see cref="Texture"/> from the given encoded byte span.
         /// </summary>
         /// <param name="config">The Configuration.</param>
-        /// <param name="data">The byte span containing image data.</param>
+        /// <param name="data">The byte span containing texture data.</param>
         /// <param name="decoder">The decoder.</param>
         /// <returns>The <see cref="Texture"/>.</returns>
         public static unsafe Texture Load(
@@ -186,8 +225,8 @@ namespace SixLabors.ImageSharp.Textures
         /// Load a new instance of <see cref="Texture"/> from the given encoded byte span.
         /// </summary>
         /// <param name="config">The configuration options.</param>
-        /// <param name="data">The byte span containing image data.</param>
-        /// <param name="format">The <see cref="ITextureFormat"/> of the decoded image.</param>>
+        /// <param name="data">The byte span containing texture data.</param>
+        /// <param name="format">The <see cref="ITextureFormat"/> of the decoded texture.</param>>
         /// <returns>The <see cref="Texture"/>.</returns>
         public static unsafe Texture Load(
             Configuration config,

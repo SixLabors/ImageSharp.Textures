@@ -88,7 +88,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx
         /// Reads the raw texture information from the specified stream.
         /// </summary>
         /// <param name="currentStream">The <see cref="Stream"/> containing texture data.</param>
-        public ITextueInfo Identify(Stream currentStream)
+        public ITextureInfo Identify(Stream currentStream)
         {
             this.ReadFileHeader(currentStream);
 

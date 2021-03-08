@@ -39,9 +39,9 @@ namespace SixLabors.ImageSharp.Textures
         /// <param name="stream">The image stream to read the header from.</param>
         /// <exception cref="NotSupportedException">Thrown if the stream is not readable.</exception>
         /// <returns>
-        /// The <see cref="ITextueInfo"/> or null if suitable info detector not found.
+        /// The <see cref="ITextureInfo"/> or null if suitable info detector not found.
         /// </returns>
-        public static ITextueInfo Identify(Stream stream) => Identify(stream, out ITextureFormat _);
+        public static ITextureInfo Identify(Stream stream) => Identify(stream, out ITextureFormat _);
 
         /// <summary>
         /// By reading the header on the provided stream this reads the raw image information.
@@ -50,9 +50,9 @@ namespace SixLabors.ImageSharp.Textures
         /// <param name="format">The format type of the decoded image.</param>
         /// <exception cref="NotSupportedException">Thrown if the stream is not readable.</exception>
         /// <returns>
-        /// The <see cref="ITextueInfo"/> or null if suitable info detector not found.
+        /// The <see cref="ITextureInfo"/> or null if suitable info detector not found.
         /// </returns>
-        public static ITextueInfo Identify(Stream stream, out ITextureFormat format) => Identify(Configuration.Default, stream, out format);
+        public static ITextureInfo Identify(Stream stream, out ITextureFormat format) => Identify(Configuration.Default, stream, out format);
 
         /// <summary>
         /// Reads the raw image information from the specified stream without fully decoding it.
@@ -62,11 +62,11 @@ namespace SixLabors.ImageSharp.Textures
         /// <param name="format">The format type of the decoded image.</param>
         /// <exception cref="NotSupportedException">Thrown if the stream is not readable.</exception>
         /// <returns>
-        /// The <see cref="ITextueInfo"/> or null if suitable info detector is not found.
+        /// The <see cref="ITextureInfo"/> or null if suitable info detector is not found.
         /// </returns>
-        public static ITextueInfo Identify(Configuration config, Stream stream, out ITextureFormat format)
+        public static ITextureInfo Identify(Configuration config, Stream stream, out ITextureFormat format)
         {
-            (ITextueInfo info, ITextureFormat format) data = WithSeekableStream(config, stream, s => InternalIdentity(s, config ?? Configuration.Default));
+            (ITextureInfo info, ITextureFormat format) data = WithSeekableStream(config, stream, s => InternalIdentity(s, config ?? Configuration.Default));
 
             format = data.format;
             return data.info;
