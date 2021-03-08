@@ -6,7 +6,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
     /// <summary>
     /// Texture format for pixels which have only the red and green channel and use 32 bit for each as float.
     /// </summary>
-    public struct R32G32Float : IBlock<R32G32Float>
+    internal struct R32G32Float : IBlock<R32G32Float>
     {
         /// <inheritdoc/>
         public int BitsPerPixel => 64;

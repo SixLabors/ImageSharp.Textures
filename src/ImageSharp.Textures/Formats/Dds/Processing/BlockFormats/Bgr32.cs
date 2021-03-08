@@ -6,7 +6,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
     /// <summary>
     /// Texture for the pixel format Bgr32.
     /// </summary>
-    public struct Bgr32 : IBlock<Bgr32>
+    internal struct Bgr32 : IBlock<Bgr32>
     {
         /// <inheritdoc/>
         public int BitsPerPixel => 32;

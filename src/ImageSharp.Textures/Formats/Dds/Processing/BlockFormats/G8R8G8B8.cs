@@ -9,7 +9,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
     /// <summary>
     /// Texture for the pixel format G8R8G8B8.
     /// </summary>
-    public struct G8R8G8B8 : IBlock<G8R8G8B8>
+    internal struct G8R8G8B8 : IBlock<G8R8G8B8>
     {
         /// <inheritdoc/>
         public int BitsPerPixel => 32;

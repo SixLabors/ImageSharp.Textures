@@ -6,7 +6,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
     /// <summary>
     /// Texture format with pixels which use 16 bits for each channel without an alpha channel (pixel format is Rgb48).
     /// </summary>
-    public struct Rgb48 : IBlock<Rgb48>
+    internal struct Rgb48 : IBlock<Rgb48>
     {
         /// <inheritdoc/>
         public int BitsPerPixel => 24;

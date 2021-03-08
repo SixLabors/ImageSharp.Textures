@@ -6,7 +6,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
     /// <summary>
     /// Texture format for pixel data with 5 bit for each color channel and 1 bit for the alpha channel.
     /// </summary>
-    public struct Bgra5551 : IBlock<Bgra5551>
+    internal struct Bgra5551 : IBlock<Bgra5551>
     {
         /// <inheritdoc/>
         public int BitsPerPixel => 16;

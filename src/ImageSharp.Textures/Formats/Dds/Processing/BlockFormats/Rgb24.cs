@@ -6,7 +6,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
     /// <summary>
     /// Texture format with pixels which use 8 bits for each channel without an alpha channel (pixel format is Rgb24).
     /// </summary>
-    public struct Rgb24 : IBlock<Rgb24>
+    internal struct Rgb24 : IBlock<Rgb24>
     {
         /// <inheritdoc/>
         public int BitsPerPixel => 24;

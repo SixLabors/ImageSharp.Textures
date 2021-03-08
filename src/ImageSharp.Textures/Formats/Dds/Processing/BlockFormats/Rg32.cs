@@ -1,14 +1,12 @@
 // Copyright (c) Six Labors.
 // Licensed under the Apache License, Version 2.0.
 
-using SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats;
-
-namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing
+namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
 {
     /// <summary>
     /// Texture format for pixels which have only the red and green channel and use 16 bit for each.
     /// </summary>
-    public struct Rg32 : IBlock<Rg32>
+    internal struct Rg32 : IBlock<Rg32>
     {
         /// <inheritdoc/>
         public int BitsPerPixel => 32;

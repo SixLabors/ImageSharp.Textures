@@ -12,7 +12,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
     /// <summary>
     /// Texture compressed with BC6HS, three color channels (16 bits:16 bits:16 bits) in "half" floating point.
     /// </summary>
-    public struct Bc6hs : IBlock<Bc6hs>
+    internal struct Bc6hs : IBlock<Bc6hs>
     {
         // Code based on commit 138efff1b9c53fd9a5dd34b8c865e8f5ae798030 2019/10/24 in DirectXTex C++ library
         private static readonly Bc6hsModeDescriptor[][] MsADesc = new[]

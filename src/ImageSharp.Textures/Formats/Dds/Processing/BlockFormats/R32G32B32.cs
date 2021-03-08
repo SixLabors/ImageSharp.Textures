@@ -6,7 +6,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
     /// <summary>
     /// Texture which has 32 bits per color channel without a alpha channel (pixel format R32G32B32).
     /// </summary>
-    public struct R32G32B32 : IBlock<R32G32B32>
+    internal struct R32G32B32 : IBlock<R32G32B32>
     {
         /// <inheritdoc/>
         public int BitsPerPixel => 96;

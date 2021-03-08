@@ -11,7 +11,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
     /// <summary>
     /// A texture based on the YUV 4:2:2 video resource format. The pixel format will be decoded into Rgb24.
     /// </summary>
-    public struct Yuy2 : IBlock<Yuy2>
+    internal struct Yuy2 : IBlock<Yuy2>
     {
         /// <inheritdoc/>
         public int BitsPerPixel => 32;

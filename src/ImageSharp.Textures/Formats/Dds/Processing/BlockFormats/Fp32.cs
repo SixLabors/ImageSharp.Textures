@@ -6,7 +6,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
     /// <summary>
     /// Texture for pixel data for single channel 32 bit float values.
     /// </summary>
-    public struct Fp32 : IBlock<Fp32>
+    internal struct Fp32 : IBlock<Fp32>
     {
         /// <inheritdoc/>
         public int BitsPerPixel => 32;

@@ -6,7 +6,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
     /// <summary>
     /// Texture format for textures with 10 the RGB channel and 2 Bits for the alpha channel.
     /// </summary>
-    public struct Rgba1010102 : IBlock<Rgba1010102>
+    internal struct Rgba1010102 : IBlock<Rgba1010102>
     {
         /// <inheritdoc/>
         public int BitsPerPixel => 32;

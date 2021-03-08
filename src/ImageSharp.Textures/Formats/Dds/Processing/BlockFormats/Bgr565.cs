@@ -6,7 +6,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
     /// <summary>
     /// Texture for pixels with 5 bits for the red 6 bits for blue and 5 bits for green.
     /// </summary>
-    public struct Bgr565 : IBlock<Bgr565>
+    internal struct Bgr565 : IBlock<Bgr565>
     {
         /// <inheritdoc/>
         public int BitsPerPixel => 16;

@@ -8,7 +8,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
     /// <summary>
     /// Texture for data with a single channel red channel as 16 bit float.
     /// </summary>
-    public struct R16Float : IBlock<R16Float>
+    internal struct R16Float : IBlock<R16Float>
     {
         /// <inheritdoc/>
         public int BitsPerPixel => 16;

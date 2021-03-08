@@ -6,7 +6,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
     /// <summary>
     /// Texture for YUV 4:4:4 pixel data.
     /// </summary>
-    public struct Ayuv : IBlock<Ayuv>
+    internal struct Ayuv : IBlock<Ayuv>
     {
         /// <inheritdoc/>
         public int BitsPerPixel => 32;

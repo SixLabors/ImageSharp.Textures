@@ -8,7 +8,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
     /// <summary>
     /// Texture compressed with DXT1.
     /// </summary>
-    public struct Dxt1 : IBlock<Dxt1>
+    internal struct Dxt1 : IBlock<Dxt1>
     {
         /// <inheritdoc/>
         public int BitsPerPixel => 24;

@@ -8,7 +8,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
     /// <summary>
     /// Texture format for pixels which use 32 bit float values for the RGBA channels.
     /// </summary>
-    public struct R32G32B32A32Float : IBlock<R32G32B32A32Float>
+    internal struct R32G32B32A32Float : IBlock<R32G32B32A32Float>
     {
         /// <inheritdoc/>
         public int BitsPerPixel => 128;

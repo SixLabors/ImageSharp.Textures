@@ -6,7 +6,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
     /// <summary>
     /// Texture for pixel data which only contains the alpha value.
     /// </summary>
-    public struct A8 : IBlock<A8>
+    internal struct A8 : IBlock<A8>
     {
         /// <inheritdoc/>
         public int BitsPerPixel => 8;

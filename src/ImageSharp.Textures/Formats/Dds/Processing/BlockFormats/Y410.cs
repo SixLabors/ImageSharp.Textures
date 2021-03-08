@@ -6,7 +6,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
     /// <summary>
     /// Texture for 10-bit per channel packed YUV 4:4:4 video resource format.
     /// </summary>
-    public struct Y410 : IBlock<Y410>
+    internal struct Y410 : IBlock<Y410>
     {
         /// <inheritdoc/>
         public int BitsPerPixel => 32;

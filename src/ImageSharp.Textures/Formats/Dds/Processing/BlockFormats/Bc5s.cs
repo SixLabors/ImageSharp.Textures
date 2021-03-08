@@ -4,9 +4,9 @@
 namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
 {
     /// <summary>
-    /// Texture compressed with BC5S with two color channels (8 bits:8 bits)
+    /// Texture compressed with BC5S with two color channels, red and green.
     /// </summary>
-    public struct Bc5s : IBlock<Bc5s>
+    internal struct Bc5s : IBlock<Bc5s>
     {
         /// <inheritdoc/>
         public int BitsPerPixel => 24;

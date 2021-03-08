@@ -8,7 +8,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
     /// <summary>
     /// Texture format for pixels with 16 bit floating point values for each channel (including the alpha channel).
     /// </summary>
-    public struct R16G16B16A16Float : IBlock<R16G16B16A16Float>
+    internal struct R16G16B16A16Float : IBlock<R16G16B16A16Float>
     {
         /// <inheritdoc/>
         public int BitsPerPixel => 64;

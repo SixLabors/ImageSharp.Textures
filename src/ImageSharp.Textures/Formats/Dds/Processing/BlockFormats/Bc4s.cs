@@ -8,7 +8,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
     /// <summary>
     /// Texture compressed with BC4S with one color channel (8 bits).
     /// </summary>
-    public struct Bc4s : IBlock<Bc4s>
+    internal struct Bc4s : IBlock<Bc4s>
     {
         private const float Multiplier = 255.0f / 254.0f;
 

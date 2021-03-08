@@ -8,7 +8,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
     /// <summary>
     /// Texture compressed with BC4 with one color channel (8 bits).
     /// </summary>
-    public struct Bc4 : IBlock<Bc4>
+    internal struct Bc4 : IBlock<Bc4>
     {
         /// <inheritdoc/>
         public int BitsPerPixel => 8;

@@ -6,7 +6,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
     /// <summary>
     /// Texture for pixels with 16 bit luminance values.
     /// </summary>
-    public struct L16 : IBlock<L16>
+    internal struct L16 : IBlock<L16>
     {
         /// <inheritdoc/>
         public int BitsPerPixel => 16;

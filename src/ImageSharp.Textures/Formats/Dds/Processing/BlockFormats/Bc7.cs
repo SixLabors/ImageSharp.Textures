@@ -11,7 +11,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
     /// <summary>
     /// Texture compressed with BC7 with three color channels (4 to 7 bits per channel) with 0 to 8 bits of alpha.
     /// </summary>
-    public struct Bc7 : IBlock<Bc7>
+    internal struct Bc7 : IBlock<Bc7>
     {
         // Code based on commit 138efff1b9c53fd9a5dd34b8c865e8f5ae798030 2019/10/24 in DirectXTex C++ library
         private static readonly Bc7ModeInfo[] ModeInfos =

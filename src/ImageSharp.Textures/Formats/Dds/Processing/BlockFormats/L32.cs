@@ -6,7 +6,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
     /// <summary>
     /// Texture for 32 bit luminance pixel data.
     /// </summary>
-    public struct L32 : IBlock<L32>
+    internal struct L32 : IBlock<L32>
     {
         /// <inheritdoc/>
         public int BitsPerPixel => 32;

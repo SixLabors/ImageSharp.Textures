@@ -6,7 +6,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
     /// <summary>
     /// Texture for 8 bit luminance pixels.
     /// </summary>
-    public struct L8 : IBlock<L8>
+    internal struct L8 : IBlock<L8>
     {
         /// <inheritdoc/>
         public int BitsPerPixel => 8;
