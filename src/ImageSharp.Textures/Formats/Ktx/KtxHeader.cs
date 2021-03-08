@@ -33,7 +33,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx
             this.GlType = glType;
             this.GlTypeSize = glTypeSize;
             this.GlFormat = (GlPixelFormat)glFormat;
-            this.GlInternalFormat = glInternalFormat;
+            this.GlInternalFormat = (GlInternalPixelFormat)glInternalFormat;
             this.GlBaseInternalFormat = glBaseInternalFormat;
             this.Width = width;
             this.Height = height;
@@ -79,7 +79,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx
         /// For uncompressed textures, glInternalFormat specifies the internalformat parameter passed to glTexStorage*D or glTexImage*D,
         /// usually one of the sized internal formats from tables 8.12 and 8.13 of the OpenGL 4.4 specification.
         /// </summary>
-        public uint GlInternalFormat { get; }
+        public GlInternalPixelFormat GlInternalFormat { get; }
 
         /// <summary>
         /// Gets the base internal format.

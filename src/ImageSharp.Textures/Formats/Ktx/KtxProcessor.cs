@@ -135,25 +135,23 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx
         private CubemapTexture AllocateCubeMap<TBlock>(Stream stream, int width, int height)
             where TBlock : struct, IBlock<TBlock>
         {
+            var numberOfMipMaps = this.KtxHeader.NumberOfMipmapLevels != 0 ? this.KtxHeader.NumberOfMipmapLevels : 1;
+
             var cubeMapTexture = new CubemapTexture();
-
             var blockFormat = default(TBlock);
-
-            var pixelDataSize = this.ReadTextureDataSize(stream);
-            var faceTextures = new MipMap[6];
-            for (int i = 0; i < 6; i++)
+            for (int i = 0; i < numberOfMipMaps; i++)
             {
-                byte[] faceData = new byte[pixelDataSize];
-                ReadTextureData(stream, faceData);
-                faceTextures[i] = new MipMap<TBlock>(blockFormat, faceData, width, height);
-            }
+                var dataForEachFace = this.ReadTextureDataSize(stream);
+                cubeMapTexture.PositiveX.MipMaps.Add(ReadFaceTexture(stream, width, height, blockFormat, dataForEachFace));
+                cubeMapTexture.NegativeX.MipMaps.Add(ReadFaceTexture(stream, width, height, blockFormat, dataForEachFace));
+                cubeMapTexture.PositiveY.MipMaps.Add(ReadFaceTexture(stream, width, height, blockFormat, dataForEachFace));
+                cubeMapTexture.NegativeY.MipMaps.Add(ReadFaceTexture(stream, width, height, blockFormat, dataForEachFace));
+                cubeMapTexture.PositiveZ.MipMaps.Add(ReadFaceTexture(stream, width, height, blockFormat, dataForEachFace));
+                cubeMapTexture.NegativeZ.MipMaps.Add(ReadFaceTexture(stream, width, height, blockFormat, dataForEachFace));
 
-            cubeMapTexture.PositiveX.MipMaps.Add(faceTextures[0]);
-            cubeMapTexture.NegativeX.MipMaps.Add(faceTextures[1]);
-            cubeMapTexture.PositiveY.MipMaps.Add(faceTextures[2]);
-            cubeMapTexture.NegativeY.MipMaps.Add(faceTextures[3]);
-            cubeMapTexture.PositiveZ.MipMaps.Add(faceTextures[4]);
-            cubeMapTexture.NegativeZ.MipMaps.Add(faceTextures[5]);
+                width >>= 1;
+                height >>= 1;
+            }
 
             return cubeMapTexture;
         }
@@ -167,6 +165,22 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx
         /// <param name="count">The mipmap count.</param>
         /// <returns>The decoded mipmaps.</returns>
         private MipMap[] AllocateMipMaps<TBlock>(Stream stream, int width, int height, uint count)
+            where TBlock : struct, IBlock<TBlock>
+        {
+            MipMap[] mipMaps = this.ReadMipMaps<TBlock>(stream, width, height, count);
+
+            return mipMaps;
+        }
+
+        private static MipMap<TBlock> ReadFaceTexture<TBlock>(Stream stream, int width, int height, TBlock blockFormat, uint dataForEachFace)
+            where TBlock : struct, IBlock<TBlock>
+        {
+            byte[] faceData = new byte[dataForEachFace];
+            ReadTextureData(stream, faceData);
+            return new MipMap<TBlock>(blockFormat, faceData, width, height);
+        }
+
+        private MipMap[] ReadMipMaps<TBlock>(Stream stream, int width, int height, uint count)
             where TBlock : struct, IBlock<TBlock>
         {
             // If numberOfMipmapLevels equals 0, it indicates that a full mipmap pyramid should be generated from level 0 at load time.

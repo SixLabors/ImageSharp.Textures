@@ -75,14 +75,6 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx
             if (this.ktxHeader.NumberOfFaces == 6)
             {
                 CubemapTexture cubeMapTexture = ktxProcessor.DecodeCubeMap(this.stream, width, height);
-
-                // Cube map faces are stored in the order: +X, -X, +Y, -Y, +Z, -Z.
-                /*cubeMapTexture.PositiveX.MipMaps.Add(cubeMapFaces[0]);
-                cubeMapTexture.NegativeX.MipMaps.Add(cubeMapFaces[1]);
-                cubeMapTexture.PositiveY.MipMaps.Add(cubeMapFaces[2]);
-                cubeMapTexture.NegativeY.MipMaps.Add(cubeMapFaces[3]);
-                cubeMapTexture.PositiveZ.MipMaps.Add(cubeMapFaces[4]);
-                cubeMapTexture.NegativeZ.MipMaps.Add(cubeMapFaces[5]);*/
                 return cubeMapTexture;
             }
 

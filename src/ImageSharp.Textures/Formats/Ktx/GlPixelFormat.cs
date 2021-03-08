@@ -9,6 +9,11 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx
     internal enum GlPixelFormat : uint
     {
         /// <summary>
+        /// Zero indicates, that the texture is compressed.
+        /// </summary>
+        Compressed = 0,
+
+        /// <summary>
         /// Only the red channel.
         /// </summary>
         Red = 0x1903,
