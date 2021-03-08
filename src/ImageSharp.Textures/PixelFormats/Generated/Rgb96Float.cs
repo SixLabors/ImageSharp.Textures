@@ -4,67 +4,77 @@
 using System;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Textures.Common.Helpers;
 
 namespace SixLabors.ImageSharp.Textures.PixelFormats
 {
     /// <summary>
-    /// Packed pixel type containing unsigned normalized values ranging from 0 to 1.
-    /// The x, y, z and w components use 16 bits.
+    /// Pixel type containing three 32-bit unsigned normalized values ranging from 0 to 4294967295.
+    /// The color components are stored in red, green, blue
     /// <para>
-    /// Ranges from [0, 0, 0, 0] to [1, 1, 1, 1] in vector form.
+    /// Ranges from [0, 0, 0] to [1, 1, 1] in vector form.
     /// </para>
     /// </summary>
-    public partial struct R16G16B16A16f : IPixel<R16G16B16A16f>, IPackedVector<ulong>
+    [StructLayout(LayoutKind.Explicit)]
+    public partial struct Rgb96Float : IPixel<Rgb96Float>
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="R16G16B16A16f"/> struct.
+        /// Gets or sets the red component.
         /// </summary>
-        /// <param name="x">The x-component</param>
-        /// <param name="y">The y-component</param>
-        /// <param name="z">The z-component</param>
-        /// <param name="w">The w-component</param>
-        public R16G16B16A16f(float x, float y, float z, float w)
-            : this(new Vector4(x, y, z, w))
+        [FieldOffset(0)]
+        public float R;
+
+        /// <summary>
+        /// Gets or sets the green component.
+        /// </summary>
+        [FieldOffset(4)]
+        public float G;
+
+        /// <summary>
+        /// Gets or sets the blue component.
+        /// </summary>
+        [FieldOffset(8)]
+        public float B;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Rgb96Float"/> struct.
+        /// </summary>
+        /// <param name="r">The red component.</param>
+        /// <param name="g">The green component.</param>
+        /// <param name="b">The blue component.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Rgb96Float(float r, float g, float b)
         {
+            this.R = r;
+            this.G = g;
+            this.B = b;
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="R16G16B16A16f"/> struct.
+        /// Compares two <see cref="Rgb96Float"/> objects for equality.
         /// </summary>
-        /// <param name="vector">
-        /// The vector containing the components for the packed vector.
-        /// </param>
-        public R16G16B16A16f(Vector4 vector) => this.PackedValue = Pack(ref vector);
-
-        /// <inheritdoc/>
-        public ulong PackedValue { get; set; }
-
-        /// <summary>
-        /// Compares two <see cref="R16G16B16A16f"/> objects for equality.
-        /// </summary>
-        /// <param name="left">The <see cref="R16G16B16A16f"/> on the left side of the operand.</param>
+        /// <param name="left">The <see cref="Rgb96Float"/> on the left side of the operand.</param>
         /// <returns>
         /// True if the <paramref name="left"/> parameter is equal to the <paramref name="right"/> parameter; otherwise, false.
         /// </returns>
-        /// <param name="right">The <see cref="R16G16B16A16f"/> on the right side of the operand.</param>
+        /// <param name="right">The <see cref="Rgb96Float"/> on the right side of the operand.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool operator ==(R16G16B16A16f left, R16G16B16A16f right) => left.Equals(right);
+        public static bool operator ==(Rgb96Float left, Rgb96Float right) => left.Equals(right);
 
         /// <summary>
-        /// Compares two <see cref="R16G16B16A16f"/> objects for equality.
+        /// Compares two <see cref="Rgb96Float"/> objects for equality.
         /// </summary>
-        /// <param name="left">The <see cref="R16G16B16A16f"/> on the left side of the operand.</param>
-        /// <param name="right">The <see cref="R16G16B16A16f"/> on the right side of the operand.</param>
+        /// <param name="left">The <see cref="Rgb96Float"/> on the left side of the operand.</param>
+        /// <param name="right">The <see cref="Rgb96Float"/> on the right side of the operand.</param>
         /// <returns>
         /// True if the <paramref name="left"/> parameter is not equal to the <paramref name="right"/> parameter; otherwise, false.
         /// </returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool operator !=(R16G16B16A16f left, R16G16B16A16f right) => !left.Equals(right);
+        public static bool operator !=(Rgb96Float left, Rgb96Float right) => !left.Equals(right);
 
         /// <inheritdoc />
-        public PixelOperations<R16G16B16A16f> CreatePixelOperations() => new PixelOperations<R16G16B16A16f>();
+        public PixelOperations<Rgb96Float> CreatePixelOperations() => new PixelOperations<Rgb96Float>();
 
         /// <inheritdoc/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -78,8 +88,9 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void FromVector4(Vector4 vector)
         {
-            var vector4 = new Vector4(vector.X, vector.Y, vector.Z, vector.W);
-            this.PackedValue = Pack(ref vector4);
+            this.R = vector.X;
+            this.G = vector.Y;
+            this.B = vector.Z;
         }
 
         /// <inheritdoc />
@@ -87,10 +98,10 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         public Vector4 ToVector4()
         {
             return new Vector4(
-                FloatHelper.UnpackFloat16ToFloat((ushort)(this.PackedValue & 65535)),
-                FloatHelper.UnpackFloat16ToFloat((ushort)((this.PackedValue >> 16) & 65535)),
-                FloatHelper.UnpackFloat16ToFloat((ushort)((this.PackedValue >> 32) & 65535)),
-                FloatHelper.UnpackFloat16ToFloat((ushort)((this.PackedValue >> 48) & 65535)));
+                this.R,
+                this.G,
+                this.B,
+                1.0f);
         }
 
         /// <inheritdoc />
@@ -149,32 +160,20 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         public void FromRgba64(Rgba64 source) => this.FromScaledVector4(source.ToScaledVector4());
 
         /// <inheritdoc />
-        public override bool Equals(object obj) => obj is R16G16B16A16f other && this.Equals(other);
+        public override bool Equals(object obj) => obj is Rgb96Float other && this.Equals(other);
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool Equals(R16G16B16A16f other) => this.PackedValue.Equals(other.PackedValue);
+        public bool Equals(Rgb96Float other) => this.R.Equals(other.R) && this.G.Equals(other.G) && this.B.Equals(other.B);
 
         /// <inheritdoc />
         public override string ToString()
         {
-            var vector = this.ToVector4();
-            return FormattableString.Invariant($"R16G16B16A16f({vector.X:#0.##}, {vector.Y:#0.##}, {vector.Z:#0.##}, {vector.W:#0.##})");
+            return FormattableString.Invariant($"Rgb96Float({this.R}, {this.G}, {this.B})");
         }
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override int GetHashCode() => this.PackedValue.GetHashCode();
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static ulong Pack(ref Vector4 vector)
-        {
-            vector = Vector4.Clamp(vector, Vector4.Zero, Vector4.One);
-            return (ulong)(
-                (uint)FloatHelper.PackFloatToFloat16(vector.X)
-                | ((uint)FloatHelper.PackFloatToFloat16(vector.Y) << 16)
-                | ((uint)FloatHelper.PackFloatToFloat16(vector.Z) << 32)
-                | ((uint)FloatHelper.PackFloatToFloat16(vector.W) << 48));
-        }
+        public override int GetHashCode() => HashCode.Combine(this.R, this.G, this.B);
     }
 }

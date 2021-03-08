@@ -10,7 +10,7 @@
 
         new PixelInfo
         {
-            Name = "R32G32B32A32f",
+            Name = "Rgba128Float",
             PackedType = "none",
             ChannelInfos = new[] {
                 new ChannelInfo { Bits = 32, IsFloat = true, Channel = "r" },
@@ -22,7 +22,7 @@
 
         new PixelInfo
         {
-            Name = "R32G32B32A32",
+            Name = "Rgba128",
             PackedType = "none",
             ChannelInfos = new[] {
                 new ChannelInfo { Bits = 32, IsFloat = false, Channel = "r" },
@@ -34,7 +34,7 @@
 
         new PixelInfo
         {
-            Name = "R32G32B32f",
+            Name = "Rgb96Float",
             PackedType = "none",
             ChannelInfos = new[] {
                 new ChannelInfo { Bits = 32, IsFloat = true, Channel = "r" },
@@ -45,7 +45,7 @@
 
         new PixelInfo
         {
-            Name = "R32G32B32",
+            Name = "Rgb96",
             PackedType = "none",
             ChannelInfos = new[] {
                 new ChannelInfo { Bits = 32, IsFloat = false, Channel = "r" },
@@ -56,7 +56,7 @@
 
         new PixelInfo
         {
-            Name = "R16G16B16A16f",
+            Name = "Rgba64Float",
             PackedType = "ulong",
             ChannelInfos = new[] {
                 new ChannelInfo { Bits = 16, IsFloat = true, Channel = "r" },
@@ -68,7 +68,7 @@
 
         new PixelInfo
         {
-            Name = "R16G16f",
+            Name = "Rg32Float",
             PackedType = "uint",
             ChannelInfos = new[] {
                 new ChannelInfo { Bits = 16, IsFloat = true, Channel = "r" },
@@ -78,7 +78,7 @@
 
         new PixelInfo
         {
-            Name = "R32G32f",
+            Name = "Rg64Float",
             PackedType = "none",
             ChannelInfos = new[] {
                 new ChannelInfo { Bits = 32, IsFloat = true, Channel = "r" },
@@ -88,7 +88,7 @@
 
         new PixelInfo
         {
-            Name = "R32G32",
+            Name = "Rg64",
             PackedType = "none",
             ChannelInfos = new[] {
                 new ChannelInfo { Bits = 32, IsFloat = false, Channel = "r" },
@@ -141,7 +141,7 @@
 
         new PixelInfo
         {
-            Name = "R11G11B10f",
+            Name = "R11G11B10Float",
             PackedType = "uint",
             ChannelInfos = new[] {
                 new ChannelInfo { Bits = 11, IsFloat = true, Channel = "r" },

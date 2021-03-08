@@ -1,8 +1,6 @@
 // Copyright (c) Six Labors.
 // Licensed under the Apache License, Version 2.0.
 
-using SixLabors.ImageSharp.Textures.PixelFormats;
-
 namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
 {
     /// <summary>
@@ -29,7 +27,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
         public Image GetImage(byte[] blockData, int width, int height)
         {
             byte[] decompressedData = this.Decompress(blockData, width, height);
-            return Image.LoadPixelData<R11G11B10f>(decompressedData, width, height);
+            return Image.LoadPixelData<Textures.PixelFormats.R11G11B10Float>(decompressedData, width, height);
         }
 
         /// <inheritdoc/>

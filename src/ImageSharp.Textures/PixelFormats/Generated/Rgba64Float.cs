@@ -4,85 +4,67 @@
 using System;
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Textures.Common.Helpers;
 
 namespace SixLabors.ImageSharp.Textures.PixelFormats
 {
     /// <summary>
-    /// Pixel type containing four 32-bit unsigned normalized values ranging from 0 to 4294967295.
-    /// The color components are stored in red, green, blue, alpha
+    /// Packed pixel type containing unsigned normalized values ranging from 0 to 1.
+    /// The x, y, z and w components use 16 bits.
     /// <para>
     /// Ranges from [0, 0, 0, 0] to [1, 1, 1, 1] in vector form.
     /// </para>
     /// </summary>
-    [StructLayout(LayoutKind.Explicit)]
-    public partial struct R32G32B32A32 : IPixel<R32G32B32A32>
+    public partial struct Rgba64Float : IPixel<Rgba64Float>, IPackedVector<ulong>
     {
         /// <summary>
-        /// Gets or sets the red component.
+        /// Initializes a new instance of the <see cref="Rgba64Float"/> struct.
         /// </summary>
-        [FieldOffset(0)]
-        public uint R;
-
-        /// <summary>
-        /// Gets or sets the green component.
-        /// </summary>
-        [FieldOffset(4)]
-        public uint G;
-
-        /// <summary>
-        /// Gets or sets the blue component.
-        /// </summary>
-        [FieldOffset(8)]
-        public uint B;
-
-        /// <summary>
-        /// Gets or sets the alpha component.
-        /// </summary>
-        [FieldOffset(12)]
-        public uint A;
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="R32G32B32A32"/> struct.
-        /// </summary>
-        /// <param name="r">The red component.</param>
-        /// <param name="g">The green component.</param>
-        /// <param name="b">The blue component.</param>
-        /// <param name="a">The alpha component.</param>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public R32G32B32A32(uint r, uint g, uint b, uint a)
+        /// <param name="x">The x-component</param>
+        /// <param name="y">The y-component</param>
+        /// <param name="z">The z-component</param>
+        /// <param name="w">The w-component</param>
+        public Rgba64Float(float x, float y, float z, float w)
+            : this(new Vector4(x, y, z, w))
         {
-            this.R = r;
-            this.G = g;
-            this.B = b;
-            this.A = a;
         }
 
         /// <summary>
-        /// Compares two <see cref="R32G32B32A32"/> objects for equality.
+        /// Initializes a new instance of the <see cref="Rgba64Float"/> struct.
         /// </summary>
-        /// <param name="left">The <see cref="R32G32B32A32"/> on the left side of the operand.</param>
+        /// <param name="vector">
+        /// The vector containing the components for the packed vector.
+        /// </param>
+        public Rgba64Float(Vector4 vector) => this.PackedValue = Pack(ref vector);
+
+        /// <inheritdoc/>
+        public ulong PackedValue { get; set; }
+
+        /// <summary>
+        /// Compares two <see cref="Rgba64Float"/> objects for equality.
+        /// </summary>
+        /// <param name="left">The <see cref="Rgba64Float"/> on the left side of the operand.</param>
         /// <returns>
         /// True if the <paramref name="left"/> parameter is equal to the <paramref name="right"/> parameter; otherwise, false.
         /// </returns>
-        /// <param name="right">The <see cref="R32G32B32A32"/> on the right side of the operand.</param>
+        /// <param name="right">The <see cref="Rgba64Float"/> on the right side of the operand.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool operator ==(R32G32B32A32 left, R32G32B32A32 right) => left.Equals(right);
+        public static bool operator ==(Rgba64Float left, Rgba64Float right) => left.Equals(right);
 
         /// <summary>
-        /// Compares two <see cref="R32G32B32A32"/> objects for equality.
+        /// Compares two <see cref="Rgba64Float"/> objects for equality.
         /// </summary>
-        /// <param name="left">The <see cref="R32G32B32A32"/> on the left side of the operand.</param>
-        /// <param name="right">The <see cref="R32G32B32A32"/> on the right side of the operand.</param>
+        /// <param name="left">The <see cref="Rgba64Float"/> on the left side of the operand.</param>
+        /// <param name="right">The <see cref="Rgba64Float"/> on the right side of the operand.</param>
         /// <returns>
         /// True if the <paramref name="left"/> parameter is not equal to the <paramref name="right"/> parameter; otherwise, false.
         /// </returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool operator !=(R32G32B32A32 left, R32G32B32A32 right) => !left.Equals(right);
+        public static bool operator !=(Rgba64Float left, Rgba64Float right) => !left.Equals(right);
 
         /// <inheritdoc />
-        public PixelOperations<R32G32B32A32> CreatePixelOperations() => new PixelOperations<R32G32B32A32>();
+        public PixelOperations<Rgba64Float> CreatePixelOperations() => new PixelOperations<Rgba64Float>();
 
         /// <inheritdoc/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -96,10 +78,8 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void FromVector4(Vector4 vector)
         {
-            this.R = (uint)(vector.X * 4294967295);
-            this.G = (uint)(vector.Y * 4294967295);
-            this.B = (uint)(vector.Z * 4294967295);
-            this.A = (uint)(vector.W * 4294967295);
+            var vector4 = new Vector4(vector.X, vector.Y, vector.Z, vector.W);
+            this.PackedValue = Pack(ref vector4);
         }
 
         /// <inheritdoc />
@@ -107,10 +87,10 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         public Vector4 ToVector4()
         {
             return new Vector4(
-                this.R / 4294967295F,
-                this.G / 4294967295F,
-                this.B / 4294967295F,
-                this.A / 4294967295F);
+                FloatHelper.UnpackFloat16ToFloat((ushort)(this.PackedValue & 65535)),
+                FloatHelper.UnpackFloat16ToFloat((ushort)((this.PackedValue >> 16) & 65535)),
+                FloatHelper.UnpackFloat16ToFloat((ushort)((this.PackedValue >> 32) & 65535)),
+                FloatHelper.UnpackFloat16ToFloat((ushort)((this.PackedValue >> 48) & 65535)));
         }
 
         /// <inheritdoc />
@@ -169,20 +149,32 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         public void FromRgba64(Rgba64 source) => this.FromScaledVector4(source.ToScaledVector4());
 
         /// <inheritdoc />
-        public override bool Equals(object obj) => obj is R32G32B32A32 other && this.Equals(other);
+        public override bool Equals(object obj) => obj is Rgba64Float other && this.Equals(other);
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool Equals(R32G32B32A32 other) => this.R.Equals(other.R) && this.G.Equals(other.G) && this.B.Equals(other.B) && this.A.Equals(other.A);
+        public bool Equals(Rgba64Float other) => this.PackedValue.Equals(other.PackedValue);
 
         /// <inheritdoc />
         public override string ToString()
         {
-            return FormattableString.Invariant($"R32G32B32A32({this.R}, {this.G}, {this.B}, {this.A})");
+            var vector = this.ToVector4();
+            return FormattableString.Invariant($"Rgba64Float({vector.X:#0.##}, {vector.Y:#0.##}, {vector.Z:#0.##}, {vector.W:#0.##})");
         }
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override int GetHashCode() => HashCode.Combine(this.R, this.G, this.B, this.A);
+        public override int GetHashCode() => this.PackedValue.GetHashCode();
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static ulong Pack(ref Vector4 vector)
+        {
+            vector = Vector4.Clamp(vector, Vector4.Zero, Vector4.One);
+            return (ulong)(
+                (uint)FloatHelper.PackFloatToFloat16(vector.X)
+                | ((uint)FloatHelper.PackFloatToFloat16(vector.Y) << 16)
+                | ((uint)FloatHelper.PackFloatToFloat16(vector.Z) << 32)
+                | ((uint)FloatHelper.PackFloatToFloat16(vector.W) << 48));
+        }
     }
 }

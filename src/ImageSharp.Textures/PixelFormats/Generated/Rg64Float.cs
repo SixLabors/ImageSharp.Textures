@@ -10,14 +10,14 @@ using SixLabors.ImageSharp.PixelFormats;
 namespace SixLabors.ImageSharp.Textures.PixelFormats
 {
     /// <summary>
-    /// Pixel type containing three 32-bit unsigned normalized values ranging from 0 to 4294967295.
-    /// The color components are stored in red, green, blue
+    /// Pixel type containing two 32-bit unsigned normalized values ranging from 0 to 4294967295.
+    /// The color components are stored in red, green
     /// <para>
-    /// Ranges from [0, 0, 0] to [1, 1, 1] in vector form.
+    /// Ranges from [0, 0] to [1, 1] in vector form.
     /// </para>
     /// </summary>
     [StructLayout(LayoutKind.Explicit)]
-    public partial struct R32G32B32f : IPixel<R32G32B32f>
+    public partial struct Rg64Float : IPixel<Rg64Float>
     {
         /// <summary>
         /// Gets or sets the red component.
@@ -32,49 +32,41 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         public float G;
 
         /// <summary>
-        /// Gets or sets the blue component.
-        /// </summary>
-        [FieldOffset(8)]
-        public float B;
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="R32G32B32f"/> struct.
+        /// Initializes a new instance of the <see cref="Rg64Float"/> struct.
         /// </summary>
         /// <param name="r">The red component.</param>
         /// <param name="g">The green component.</param>
-        /// <param name="b">The blue component.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public R32G32B32f(float r, float g, float b)
+        public Rg64Float(float r, float g)
         {
             this.R = r;
             this.G = g;
-            this.B = b;
         }
 
         /// <summary>
-        /// Compares two <see cref="R32G32B32f"/> objects for equality.
+        /// Compares two <see cref="Rg64Float"/> objects for equality.
         /// </summary>
-        /// <param name="left">The <see cref="R32G32B32f"/> on the left side of the operand.</param>
+        /// <param name="left">The <see cref="Rg64Float"/> on the left side of the operand.</param>
         /// <returns>
         /// True if the <paramref name="left"/> parameter is equal to the <paramref name="right"/> parameter; otherwise, false.
         /// </returns>
-        /// <param name="right">The <see cref="R32G32B32f"/> on the right side of the operand.</param>
+        /// <param name="right">The <see cref="Rg64Float"/> on the right side of the operand.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool operator ==(R32G32B32f left, R32G32B32f right) => left.Equals(right);
+        public static bool operator ==(Rg64Float left, Rg64Float right) => left.Equals(right);
 
         /// <summary>
-        /// Compares two <see cref="R32G32B32f"/> objects for equality.
+        /// Compares two <see cref="Rg64Float"/> objects for equality.
         /// </summary>
-        /// <param name="left">The <see cref="R32G32B32f"/> on the left side of the operand.</param>
-        /// <param name="right">The <see cref="R32G32B32f"/> on the right side of the operand.</param>
+        /// <param name="left">The <see cref="Rg64Float"/> on the left side of the operand.</param>
+        /// <param name="right">The <see cref="Rg64Float"/> on the right side of the operand.</param>
         /// <returns>
         /// True if the <paramref name="left"/> parameter is not equal to the <paramref name="right"/> parameter; otherwise, false.
         /// </returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool operator !=(R32G32B32f left, R32G32B32f right) => !left.Equals(right);
+        public static bool operator !=(Rg64Float left, Rg64Float right) => !left.Equals(right);
 
         /// <inheritdoc />
-        public PixelOperations<R32G32B32f> CreatePixelOperations() => new PixelOperations<R32G32B32f>();
+        public PixelOperations<Rg64Float> CreatePixelOperations() => new PixelOperations<Rg64Float>();
 
         /// <inheritdoc/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -90,7 +82,6 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         {
             this.R = vector.X;
             this.G = vector.Y;
-            this.B = vector.Z;
         }
 
         /// <inheritdoc />
@@ -100,7 +91,7 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
             return new Vector4(
                 this.R,
                 this.G,
-                this.B,
+                0.0f,
                 1.0f);
         }
 
@@ -160,20 +151,20 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         public void FromRgba64(Rgba64 source) => this.FromScaledVector4(source.ToScaledVector4());
 
         /// <inheritdoc />
-        public override bool Equals(object obj) => obj is R32G32B32f other && this.Equals(other);
+        public override bool Equals(object obj) => obj is Rg64Float other && this.Equals(other);
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool Equals(R32G32B32f other) => this.R.Equals(other.R) && this.G.Equals(other.G) && this.B.Equals(other.B);
+        public bool Equals(Rg64Float other) => this.R.Equals(other.R) && this.G.Equals(other.G);
 
         /// <inheritdoc />
         public override string ToString()
         {
-            return FormattableString.Invariant($"R32G32B32f({this.R}, {this.G}, {this.B})");
+            return FormattableString.Invariant($"Rg64Float({this.R}, {this.G})");
         }
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override int GetHashCode() => HashCode.Combine(this.R, this.G, this.B);
+        public override int GetHashCode() => HashCode.Combine(this.R, this.G);
     }
 }

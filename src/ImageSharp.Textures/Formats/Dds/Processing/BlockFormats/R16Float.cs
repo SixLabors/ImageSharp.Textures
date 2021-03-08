@@ -29,7 +29,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
         public Image GetImage(byte[] blockData, int width, int height)
         {
             byte[] decompressedData = this.Decompress(blockData, width, height);
-            return Image.LoadPixelData<R16f>(decompressedData, width, height);
+            return Image.LoadPixelData<Textures.PixelFormats.R16Float>(decompressedData, width, height);
         }
 
         /// <inheritdoc/>

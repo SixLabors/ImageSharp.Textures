@@ -10,41 +10,59 @@ using SixLabors.ImageSharp.Textures.Common.Helpers;
 namespace SixLabors.ImageSharp.Textures.PixelFormats
 {
     /// <summary>
-    /// Packed pixel type containing unsigned normalized values only for the red channel ranging from 0 to 1.
-    /// The x component uses 16 bits.
+    /// Packed pixel type containing unsigned normalized values ranging from 0 to 1.
+    /// The x and y components use 16 bits.
     /// <para>
-    /// Ranges from [0] to [1] in vector form.
+    /// Ranges from [0, 0] to [1, 1] in vector form.
     /// </para>
     /// </summary>
-    public struct R16f : IPixel<R16f>, IPackedVector<ushort>
+    public partial struct Rg32Float : IPixel<Rg32Float>, IPackedVector<uint>
     {
-        /// <inheritdoc/>
-        public ushort PackedValue { get; set; }
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Rg32Float"/> struct.
+        /// </summary>
+        /// <param name="x">The x-component</param>
+        /// <param name="y">The y-component</param>
+        public Rg32Float(float x, float y)
+            : this(new Vector2(x, y))
+        {
+        }
 
         /// <summary>
-        /// Compares two <see cref="R16f"/> objects for equality.
+        /// Initializes a new instance of the <see cref="Rg32Float"/> struct.
         /// </summary>
-        /// <param name="left">The <see cref="R16f"/> on the left side of the operand.</param>
+        /// <param name="vector">
+        /// The vector containing the components for the packed vector.
+        /// </param>
+        public Rg32Float(Vector2 vector) => this.PackedValue = Pack(ref vector);
+
+        /// <inheritdoc/>
+        public uint PackedValue { get; set; }
+
+        /// <summary>
+        /// Compares two <see cref="Rg32Float"/> objects for equality.
+        /// </summary>
+        /// <param name="left">The <see cref="Rg32Float"/> on the left side of the operand.</param>
         /// <returns>
         /// True if the <paramref name="left"/> parameter is equal to the <paramref name="right"/> parameter; otherwise, false.
         /// </returns>
-        /// <param name="right">The <see cref="R16f"/> on the right side of the operand.</param>
+        /// <param name="right">The <see cref="Rg32Float"/> on the right side of the operand.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool operator ==(R16f left, R16f right) => left.Equals(right);
+        public static bool operator ==(Rg32Float left, Rg32Float right) => left.Equals(right);
 
         /// <summary>
-        /// Compares two <see cref="R16f"/> objects for equality.
+        /// Compares two <see cref="Rg32Float"/> objects for equality.
         /// </summary>
-        /// <param name="left">The <see cref="R16f"/> on the left side of the operand.</param>
-        /// <param name="right">The <see cref="R16f"/> on the right side of the operand.</param>
+        /// <param name="left">The <see cref="Rg32Float"/> on the left side of the operand.</param>
+        /// <param name="right">The <see cref="Rg32Float"/> on the right side of the operand.</param>
         /// <returns>
         /// True if the <paramref name="left"/> parameter is not equal to the <paramref name="right"/> parameter; otherwise, false.
         /// </returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool operator !=(R16f left, R16f right) => !left.Equals(right);
+        public static bool operator !=(Rg32Float left, Rg32Float right) => !left.Equals(right);
 
         /// <inheritdoc />
-        public PixelOperations<R16f> CreatePixelOperations() => new PixelOperations<R16f>();
+        public PixelOperations<Rg32Float> CreatePixelOperations() => new PixelOperations<Rg32Float>();
 
         /// <inheritdoc/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -67,8 +85,8 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         public Vector4 ToVector4()
         {
             return new Vector4(
-                FloatHelper.UnpackFloat16ToFloat(this.PackedValue),
-                0.0f,
+                FloatHelper.UnpackFloat16ToFloat((ushort)(this.PackedValue & 65535)),
+                FloatHelper.UnpackFloat16ToFloat((ushort)((this.PackedValue >> 16) & 65535)),
                 0.0f,
                 1.0f);
         }
@@ -129,17 +147,17 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         public void FromRgba64(Rgba64 source) => this.FromScaledVector4(source.ToScaledVector4());
 
         /// <inheritdoc />
-        public override bool Equals(object obj) => obj is R16G16f other && this.Equals(other);
+        public override bool Equals(object obj) => obj is Rg32Float other && this.Equals(other);
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool Equals(R16f other) => this.PackedValue.Equals(other.PackedValue);
+        public bool Equals(Rg32Float other) => this.PackedValue.Equals(other.PackedValue);
 
         /// <inheritdoc />
         public override string ToString()
         {
             var vector = this.ToVector4();
-            return FormattableString.Invariant($"R16f({vector.X:#0.##})");
+            return FormattableString.Invariant($"Rg32Float({vector.X:#0.##}, {vector.Y:#0.##})");
         }
 
         /// <inheritdoc />
@@ -147,10 +165,12 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         public override int GetHashCode() => this.PackedValue.GetHashCode();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static ushort Pack(ref Vector2 vector)
+        private static uint Pack(ref Vector2 vector)
         {
             vector = Vector2.Clamp(vector, Vector2.Zero, Vector2.One);
-            return (ushort)FloatHelper.PackFloatToFloat16(vector.X);
+            return (uint)(
+                (uint)FloatHelper.PackFloatToFloat16(vector.X)
+                | ((uint)FloatHelper.PackFloatToFloat16(vector.Y) << 16));
         }
     }
 }

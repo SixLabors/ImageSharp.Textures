@@ -17,7 +17,7 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
     /// </para>
     /// </summary>
     [StructLayout(LayoutKind.Explicit)]
-    public partial struct R32G32B32 : IPixel<R32G32B32>
+    public partial struct Rgb96 : IPixel<Rgb96>
     {
         /// <summary>
         /// Gets or sets the red component.
@@ -38,13 +38,13 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         public uint B;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="R32G32B32"/> struct.
+        /// Initializes a new instance of the <see cref="Rgb96"/> struct.
         /// </summary>
         /// <param name="r">The red component.</param>
         /// <param name="g">The green component.</param>
         /// <param name="b">The blue component.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public R32G32B32(uint r, uint g, uint b)
+        public Rgb96(uint r, uint g, uint b)
         {
             this.R = r;
             this.G = g;
@@ -52,29 +52,29 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         }
 
         /// <summary>
-        /// Compares two <see cref="R32G32B32"/> objects for equality.
+        /// Compares two <see cref="Rgb96"/> objects for equality.
         /// </summary>
-        /// <param name="left">The <see cref="R32G32B32"/> on the left side of the operand.</param>
+        /// <param name="left">The <see cref="Rgb96"/> on the left side of the operand.</param>
         /// <returns>
         /// True if the <paramref name="left"/> parameter is equal to the <paramref name="right"/> parameter; otherwise, false.
         /// </returns>
-        /// <param name="right">The <see cref="R32G32B32"/> on the right side of the operand.</param>
+        /// <param name="right">The <see cref="Rgb96"/> on the right side of the operand.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool operator ==(R32G32B32 left, R32G32B32 right) => left.Equals(right);
+        public static bool operator ==(Rgb96 left, Rgb96 right) => left.Equals(right);
 
         /// <summary>
-        /// Compares two <see cref="R32G32B32"/> objects for equality.
+        /// Compares two <see cref="Rgb96"/> objects for equality.
         /// </summary>
-        /// <param name="left">The <see cref="R32G32B32"/> on the left side of the operand.</param>
-        /// <param name="right">The <see cref="R32G32B32"/> on the right side of the operand.</param>
+        /// <param name="left">The <see cref="Rgb96"/> on the left side of the operand.</param>
+        /// <param name="right">The <see cref="Rgb96"/> on the right side of the operand.</param>
         /// <returns>
         /// True if the <paramref name="left"/> parameter is not equal to the <paramref name="right"/> parameter; otherwise, false.
         /// </returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool operator !=(R32G32B32 left, R32G32B32 right) => !left.Equals(right);
+        public static bool operator !=(Rgb96 left, Rgb96 right) => !left.Equals(right);
 
         /// <inheritdoc />
-        public PixelOperations<R32G32B32> CreatePixelOperations() => new PixelOperations<R32G32B32>();
+        public PixelOperations<Rgb96> CreatePixelOperations() => new PixelOperations<Rgb96>();
 
         /// <inheritdoc/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -160,16 +160,16 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         public void FromRgba64(Rgba64 source) => this.FromScaledVector4(source.ToScaledVector4());
 
         /// <inheritdoc />
-        public override bool Equals(object obj) => obj is R32G32B32 other && this.Equals(other);
+        public override bool Equals(object obj) => obj is Rgb96 other && this.Equals(other);
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool Equals(R32G32B32 other) => this.R.Equals(other.R) && this.G.Equals(other.G) && this.B.Equals(other.B);
+        public bool Equals(Rgb96 other) => this.R.Equals(other.R) && this.G.Equals(other.G) && this.B.Equals(other.B);
 
         /// <inheritdoc />
         public override string ToString()
         {
-            return FormattableString.Invariant($"R32G32B32({this.R}, {this.G}, {this.B})");
+            return FormattableString.Invariant($"Rgb96({this.R}, {this.G}, {this.B})");
         }
 
         /// <inheritdoc />

@@ -17,7 +17,7 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
     /// </para>
     /// </summary>
     [StructLayout(LayoutKind.Explicit)]
-    public partial struct R32G32 : IPixel<R32G32>
+    public partial struct Rg64 : IPixel<Rg64>
     {
         /// <summary>
         /// Gets or sets the red component.
@@ -32,41 +32,41 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         public uint G;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="R32G32"/> struct.
+        /// Initializes a new instance of the <see cref="Rg64"/> struct.
         /// </summary>
         /// <param name="r">The red component.</param>
         /// <param name="g">The green component.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public R32G32(uint r, uint g)
+        public Rg64(uint r, uint g)
         {
             this.R = r;
             this.G = g;
         }
 
         /// <summary>
-        /// Compares two <see cref="R32G32"/> objects for equality.
+        /// Compares two <see cref="Rg64"/> objects for equality.
         /// </summary>
-        /// <param name="left">The <see cref="R32G32"/> on the left side of the operand.</param>
+        /// <param name="left">The <see cref="Rg64"/> on the left side of the operand.</param>
         /// <returns>
         /// True if the <paramref name="left"/> parameter is equal to the <paramref name="right"/> parameter; otherwise, false.
         /// </returns>
-        /// <param name="right">The <see cref="R32G32"/> on the right side of the operand.</param>
+        /// <param name="right">The <see cref="Rg64"/> on the right side of the operand.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool operator ==(R32G32 left, R32G32 right) => left.Equals(right);
+        public static bool operator ==(Rg64 left, Rg64 right) => left.Equals(right);
 
         /// <summary>
-        /// Compares two <see cref="R32G32"/> objects for equality.
+        /// Compares two <see cref="Rg64"/> objects for equality.
         /// </summary>
-        /// <param name="left">The <see cref="R32G32"/> on the left side of the operand.</param>
-        /// <param name="right">The <see cref="R32G32"/> on the right side of the operand.</param>
+        /// <param name="left">The <see cref="Rg64"/> on the left side of the operand.</param>
+        /// <param name="right">The <see cref="Rg64"/> on the right side of the operand.</param>
         /// <returns>
         /// True if the <paramref name="left"/> parameter is not equal to the <paramref name="right"/> parameter; otherwise, false.
         /// </returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool operator !=(R32G32 left, R32G32 right) => !left.Equals(right);
+        public static bool operator !=(Rg64 left, Rg64 right) => !left.Equals(right);
 
         /// <inheritdoc />
-        public PixelOperations<R32G32> CreatePixelOperations() => new PixelOperations<R32G32>();
+        public PixelOperations<Rg64> CreatePixelOperations() => new PixelOperations<Rg64>();
 
         /// <inheritdoc/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -151,16 +151,16 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         public void FromRgba64(Rgba64 source) => this.FromScaledVector4(source.ToScaledVector4());
 
         /// <inheritdoc />
-        public override bool Equals(object obj) => obj is R32G32 other && this.Equals(other);
+        public override bool Equals(object obj) => obj is Rg64 other && this.Equals(other);
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool Equals(R32G32 other) => this.R.Equals(other.R) && this.G.Equals(other.G);
+        public bool Equals(Rg64 other) => this.R.Equals(other.R) && this.G.Equals(other.G);
 
         /// <inheritdoc />
         public override string ToString()
         {
-            return FormattableString.Invariant($"R32G32({this.R}, {this.G})");
+            return FormattableString.Invariant($"Rg64({this.R}, {this.G})");
         }
 
         /// <inheritdoc />

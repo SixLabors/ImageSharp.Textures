@@ -6,7 +6,7 @@ using SixLabors.ImageSharp.Textures.PixelFormats;
 namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
 {
     /// <summary>
-    /// Texture format for pixels which have only the red and green channel and use 8 bit for each as float.
+    /// Texture format for pixels which have only the red and green channel and use 16 bit for each as float.
     /// </summary>
     internal struct R16G16Float : IBlock<R16G16Float>
     {
@@ -29,7 +29,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
         public Image GetImage(byte[] blockData, int width, int height)
         {
             byte[] decompressedData = this.Decompress(blockData, width, height);
-            return Image.LoadPixelData<R16G16f>(decompressedData, width, height);
+            return Image.LoadPixelData<Rg32Float>(decompressedData, width, height);
         }
 
         /// <inheritdoc/>
