@@ -68,18 +68,6 @@
 
         new PixelInfo
         {
-            Name = "R16G16B16A16",
-            PackedType = "ulong",
-            ChannelInfos = new[] {
-                new ChannelInfo { Bits = 16, IsFloat = false, Channel = "r" },
-                new ChannelInfo { Bits = 16, IsFloat = false, Channel = "g" },
-                new ChannelInfo { Bits = 16, IsFloat = false, Channel = "b" },
-                new ChannelInfo { Bits = 16, IsFloat = false, Channel = "a" }
-            }
-        },
-
-        new PixelInfo
-        {
             Name = "R16G16f",
             PackedType = "uint",
             ChannelInfos = new[] {
@@ -153,17 +141,6 @@
 
         new PixelInfo
         {
-            Name = "R8G8B8",
-            PackedType = "none",
-            ChannelInfos = new[] {
-                new ChannelInfo { Bits = 8, IsFloat = false, Channel = "r" },
-                new ChannelInfo { Bits = 8, IsFloat = false, Channel = "g" },
-                new ChannelInfo { Bits = 8, IsFloat = false, Channel = "b" }
-            }
-        },
-
-        new PixelInfo
-        {
             Name = "R11G11B10f",
             PackedType = "uint",
             ChannelInfos = new[] {
@@ -179,7 +156,7 @@
     
         manager.StartNewFile($"{pixelInfo.Name}.cs");
     
-#>// Copyright (c) Six Labors and contributors.
+#>// Copyright (c) Six Labors.
 // Licensed under the Apache License, Version 2.0.
 
 <#= Helper.GenerateUsings(pixelInfo) #>
