@@ -58,6 +58,18 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx
                         return this.AllocateMipMaps<L8>(stream, width, height, count);
                     case GlPixelFormat.Alpha:
                         return this.AllocateMipMaps<A8>(stream, width, height, count);
+                    case GlPixelFormat.Compressed:
+                        switch (this.KtxHeader.GlInternalFormat)
+                        {
+                            case GlInternalPixelFormat.RgbaDxt1:
+                                return this.AllocateMipMaps<Dxt1>(stream, width, height, count);
+                            case GlInternalPixelFormat.RgbaDxt3:
+                                return this.AllocateMipMaps<Dxt3>(stream, width, height, count);
+                            case GlInternalPixelFormat.RgbaDxt5:
+                                return this.AllocateMipMaps<Dxt5>(stream, width, height, count);
+                        }
+
+                        break;
                 }
             }
 
@@ -104,6 +116,18 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx
                     return this.AllocateCubeMap<L8>(stream, width, height);
                 case GlPixelFormat.Alpha:
                     return this.AllocateCubeMap<A8>(stream, width, height);
+                case GlPixelFormat.Compressed:
+                    switch (this.KtxHeader.GlInternalFormat)
+                    {
+                        case GlInternalPixelFormat.RgbaDxt1:
+                            return this.AllocateCubeMap<Dxt1>(stream, width, height);
+                        case GlInternalPixelFormat.RgbaDxt3:
+                            return this.AllocateCubeMap<Dxt3>(stream, width, height);
+                        case GlInternalPixelFormat.RgbaDxt5:
+                            return this.AllocateCubeMap<Dxt5>(stream, width, height);
+                    }
+
+                    break;
             }
 
             if (this.KtxHeader.GlTypeSize == 2)
