@@ -1,7 +1,7 @@
 // Copyright (c) Six Labors.
 // Licensed under the Apache License, Version 2.0.
 
-using SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats;
+using SixLabors.ImageSharp.Textures.TextureFormats.Decoding;
 
 namespace SixLabors.ImageSharp.Textures
 {

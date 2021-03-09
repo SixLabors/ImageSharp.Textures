@@ -5,8 +5,8 @@ using System;
 using System.Buffers.Binary;
 using System.IO;
 using SixLabors.ImageSharp.Textures.Common.Exceptions;
-using SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats;
 using SixLabors.ImageSharp.Textures.TextureFormats;
+using SixLabors.ImageSharp.Textures.TextureFormats.Decoding;
 
 namespace SixLabors.ImageSharp.Textures.Formats.Ktx
 {
@@ -45,7 +45,6 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx
             {
                 switch (this.KtxHeader.GlFormat)
                 {
-                    // TODO: move texture formats which are same for dds and ktx in a common place once its clear which ones those are.
                     case GlPixelFormat.Rgb:
                         return this.AllocateMipMaps<Rgb24>(stream, width, height, count);
                     case GlPixelFormat.Rgba:
@@ -103,7 +102,6 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx
         {
             switch (this.KtxHeader.GlFormat)
             {
-                // TODO: move texture formats which are same for dds and ktx in a common place once its clear which ones those are.
                 case GlPixelFormat.Rgb:
                     return this.AllocateCubeMap<Rgb24>(stream, width, height);
                 case GlPixelFormat.Rgba:
