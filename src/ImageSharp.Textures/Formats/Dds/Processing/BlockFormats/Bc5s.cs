@@ -27,6 +27,8 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
         public Image GetImage(byte[] blockData, int width, int height)
         {
             byte[] decompressedData = this.Decompress(blockData, width, height);
+
+            // Should RG format be used instead RGB24?
             return Image.LoadPixelData<ImageSharp.PixelFormats.Rgb24>(decompressedData, width, height);
         }
 
@@ -64,9 +66,9 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Processing.BlockFormats
                     byte rSel = (byte)((uint)(rIndex >> (3 * i)) & 0x07);
                     byte gSel = (byte)((uint)(gIndex >> (3 * i)) & 0x07);
 
-                    data[dataIndex++] = 0; // Skip blue.
-                    data[dataIndex++] = Bc4s.InterpolateColor(gSel, green0, green1);
                     data[dataIndex++] = Bc4s.InterpolateColor(rSel, red0, red1);
+                    data[dataIndex++] = Bc4s.InterpolateColor(gSel, green0, green1);
+                    data[dataIndex++] = 0; // Skip blue.
 
                     // Is mult 4?
                     if (((i + 1) & 0x3) == 0)
