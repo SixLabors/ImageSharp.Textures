@@ -45,6 +45,11 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx
             {
                 switch (this.KtxHeader.GlFormat)
                 {
+                    case GlPixelFormat.Red:
+                        return this.AllocateMipMaps<L8>(stream, width, height, count);
+                    case GlPixelFormat.Rg:
+                    case GlPixelFormat.RgInteger:
+                        return this.AllocateMipMaps<Rg16>(stream, width, height, count);
                     case GlPixelFormat.Rgb:
                         return this.AllocateMipMaps<Rgb24>(stream, width, height, count);
                     case GlPixelFormat.Rgba:
@@ -53,6 +58,8 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx
                         return this.AllocateMipMaps<Bgr24>(stream, width, height, count);
                     case GlPixelFormat.Bgra:
                         return this.AllocateMipMaps<Bgra32>(stream, width, height, count);
+                    case GlPixelFormat.LuminanceAlpha:
+                        return this.AllocateMipMaps<La16>(stream, width, height, count);
                     case GlPixelFormat.Luminance:
                         return this.AllocateMipMaps<L8>(stream, width, height, count);
                     case GlPixelFormat.Alpha:
@@ -81,18 +88,21 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx
                 }
             }
 
-            if (this.KtxHeader.GlTypeSize == 2)
+            if (this.KtxHeader.GlTypeSize == 2 || this.KtxHeader.GlTypeSize == 4)
             {
                 // TODO: endianess is not respected here. Use stream reader which respects endianess.
-                switch (this.KtxHeader.GlFormat)
+                switch (this.KtxHeader.GlInternalFormat)
                 {
-                    // TODO: bgr48 and bgra64
-                    case GlPixelFormat.Rgb:
+                    case GlInternalPixelFormat.Rgb5A1:
+                        return this.AllocateMipMaps<Rgba5551>(stream, width, height, count);
+                    case GlInternalPixelFormat.Rgb10A2:
+                        return this.AllocateMipMaps<Rgba1010102>(stream, width, height, count);
+                    case GlInternalPixelFormat.Rgb16:
                         return this.AllocateMipMaps<Rgb48>(stream, width, height, count);
-                    case GlPixelFormat.Rgba:
+                    case GlInternalPixelFormat.Rgba16:
                         return this.AllocateMipMaps<Rgba64>(stream, width, height, count);
-                    case GlPixelFormat.Luminance:
-                        return this.AllocateMipMaps<L16>(stream, width, height, count);
+                    case GlInternalPixelFormat.Rgba32UnsignedInt:
+                        return this.AllocateMipMaps<R32G32B32A32>(stream, width, height, count);
                 }
             }
 
@@ -111,6 +121,11 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx
         {
             switch (this.KtxHeader.GlFormat)
             {
+                case GlPixelFormat.Red:
+                    return this.AllocateCubeMap<L8>(stream, width, height);
+                case GlPixelFormat.Rg:
+                case GlPixelFormat.RgInteger:
+                    return this.AllocateCubeMap<Rg16>(stream, width, height);
                 case GlPixelFormat.Rgb:
                     return this.AllocateCubeMap<Rgb24>(stream, width, height);
                 case GlPixelFormat.Rgba:
@@ -119,6 +134,8 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx
                     return this.AllocateCubeMap<Bgr24>(stream, width, height);
                 case GlPixelFormat.Bgra:
                     return this.AllocateCubeMap<Bgr32>(stream, width, height);
+                case GlPixelFormat.LuminanceAlpha:
+                    return this.AllocateCubeMap<La16>(stream, width, height);
                 case GlPixelFormat.Luminance:
                     return this.AllocateCubeMap<L8>(stream, width, height);
                 case GlPixelFormat.Alpha:
@@ -146,18 +163,21 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx
                     break;
             }
 
-            if (this.KtxHeader.GlTypeSize == 2)
+            if (this.KtxHeader.GlTypeSize == 2 || this.KtxHeader.GlTypeSize == 4)
             {
                 // TODO: endianess is not respected here. Use stream reader which respects endianess.
-                switch (this.KtxHeader.GlFormat)
+                switch (this.KtxHeader.GlInternalFormat)
                 {
-                    // TODO: bgr48 and bgra64
-                    case GlPixelFormat.Rgb:
+                    case GlInternalPixelFormat.Rgb5A1:
+                        return this.AllocateCubeMap<Rgba5551>(stream, width, height);
+                    case GlInternalPixelFormat.Rgb10A2:
+                        return this.AllocateCubeMap<Rgba1010102>(stream, width, height);
+                    case GlInternalPixelFormat.Rgb16:
                         return this.AllocateCubeMap<Rgb48>(stream, width, height);
-                    case GlPixelFormat.Rgba:
+                    case GlInternalPixelFormat.Rgba16:
                         return this.AllocateCubeMap<Rgba64>(stream, width, height);
-                    case GlPixelFormat.Luminance:
-                        return this.AllocateCubeMap<L16>(stream, width, height);
+                    case GlInternalPixelFormat.Rgba32UnsignedInt:
+                        return this.AllocateCubeMap<R32G32B32A32>(stream, width, height);
                 }
             }
 

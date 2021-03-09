@@ -13,6 +13,10 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx.Enums
 
         Alpha = 0x1906,
 
+        Rgb = 0x1907,
+
+        Rgba = 0x1908,
+
         Luminance = 0x1909,
 
         LuminanceAlpha = 0x190A,
@@ -21,12 +25,10 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx.Enums
 
         RedGreen = 0x8227,
 
-        Rgb = 0x1907,
-
         Bgr = 0x80E0,
 
-        Rgba = 0x1908,
+        Bgra = 0x80E1,
 
-        Bgra = 0x80E1
+        Rg = 0x8228
     }
 }

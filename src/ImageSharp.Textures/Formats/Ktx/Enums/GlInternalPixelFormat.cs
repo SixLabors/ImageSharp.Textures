@@ -9,9 +9,21 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx
 
         Luminance8 = 0x8040,
 
+        Luminance4Alpha4 = 0x8043,
+
+        Luminance6Alpha2 = 0x8044,
+
+        Luminance7Alpha8 = 0x8045,
+
         Rgb4 = 0x804F,
 
         Rgb5 = 0x8050,
+
+        Rgb8 = 0x8051,
+
+        Rgb16 = 0x8054,
+
+        Rgba8 = 0x8058,
 
         Rgb565 = 0x8D62,
 
@@ -31,15 +43,25 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx
 
         Rgb9E5 = 0x8C3D,
 
-        Rgb8 = 0x8051,
-
-        Rgb16 = 0x8054,
-
-        Rgba8 = 0x8058,
-
         Rgba16 = 0x805B,
 
         R8 = 0x8229,
+
+        R8UnsignedInt = 0x8232,
+
+        Rg8UnsignedInt = 0x8238,
+
+        Rgb8UnsignedInt = 0x8D7D,
+
+        RgbaUnsignedInt = 0x8D7C,
+
+        R32UnsignedInt = 0x8236,
+
+        Rg32UnsignedInt = 0x823C,
+
+        Rgb32UnsignedInt = 0x8D71,
+
+        Rgba32UnsignedInt = 0x8D70,
 
         R16 = 0x822A,
 

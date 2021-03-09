@@ -39,9 +39,19 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx
         Luminance = 0x1909,
 
         /// <summary>
+        /// Luminance and alpha.
+        /// </summary>
+        LuminanceAlpha = 0x190A,
+
+        /// <summary>
         /// Pixels are stored only with the red and green channel present.
         /// </summary>
         Rg = 0x8227,
+
+        /// <summary>
+        /// Pixels are stored only with the red and green channel present.
+        /// </summary>
+        RgInteger = 0x8228,
 
         /// <summary>
         /// Pixels are stored as RGB.
