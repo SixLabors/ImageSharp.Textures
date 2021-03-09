@@ -1,4 +1,4 @@
-﻿<#@ assembly name="System.Core"
+<#@ assembly name="System.Core"
 #><#@ assembly name="System.Data.Linq"
 #><#@ assembly name="EnvDTE"
 #><#@ assembly name="System.Xml"
@@ -116,7 +116,11 @@ class Helper
 
     private static object GetMaxValue(int bits)
     {
-        if (bits == 5) 
+        if (bits == 1) 
+        {
+            return 1;
+        }
+        else if (bits == 5) 
         {
             return (1 << 5) - 1;
         }

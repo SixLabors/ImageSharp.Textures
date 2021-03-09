@@ -116,6 +116,18 @@
                 new ChannelInfo { Bits = 5, IsFloat = false, Channel = "r" }
             }
         },
+
+        new PixelInfo
+        {
+            Name = "Rgba5551",
+            PackedType = "ushort",
+            ChannelInfos = new[] {
+                new ChannelInfo { Bits = 5, IsFloat = false, Channel = "r" },
+                new ChannelInfo { Bits = 5, IsFloat = false, Channel = "g" },
+                new ChannelInfo { Bits = 5, IsFloat = false, Channel = "b" },
+                new ChannelInfo { Bits = 1, IsFloat = false, Channel = "a" },
+            }
+        },
     
         new PixelInfo
         {
@@ -275,7 +287,4 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
     }
 
      manager.Process(true); 
-#>
-<#+
-private
 #>
