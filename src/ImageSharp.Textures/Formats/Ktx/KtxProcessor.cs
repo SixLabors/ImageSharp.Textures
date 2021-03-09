@@ -61,11 +61,20 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx
                         switch (this.KtxHeader.GlInternalFormat)
                         {
                             case GlInternalPixelFormat.RgbaDxt1:
+                            case GlInternalPixelFormat.RgbDxt1:
                                 return this.AllocateMipMaps<Dxt1>(stream, width, height, count);
                             case GlInternalPixelFormat.RgbaDxt3:
                                 return this.AllocateMipMaps<Dxt3>(stream, width, height, count);
                             case GlInternalPixelFormat.RgbaDxt5:
                                 return this.AllocateMipMaps<Dxt5>(stream, width, height, count);
+                            case GlInternalPixelFormat.RedRgtc1:
+                                return this.AllocateMipMaps<Bc4>(stream, width, height, count);
+                            case GlInternalPixelFormat.SignedRedRgtc1:
+                                return this.AllocateMipMaps<Bc4s>(stream, width, height, count);
+                            case GlInternalPixelFormat.RedGreenRgtc2:
+                                return this.AllocateMipMaps<Bc5>(stream, width, height, count);
+                            case GlInternalPixelFormat.SignedRedGreenRgtc2:
+                                return this.AllocateMipMaps<Bc5s>(stream, width, height, count);
                         }
 
                         break;
@@ -118,11 +127,20 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx
                     switch (this.KtxHeader.GlInternalFormat)
                     {
                         case GlInternalPixelFormat.RgbaDxt1:
+                        case GlInternalPixelFormat.RgbDxt1:
                             return this.AllocateCubeMap<Dxt1>(stream, width, height);
                         case GlInternalPixelFormat.RgbaDxt3:
                             return this.AllocateCubeMap<Dxt3>(stream, width, height);
                         case GlInternalPixelFormat.RgbaDxt5:
                             return this.AllocateCubeMap<Dxt5>(stream, width, height);
+                        case GlInternalPixelFormat.RedRgtc1:
+                            return this.AllocateCubeMap<Bc4>(stream, width, height);
+                        case GlInternalPixelFormat.SignedRedRgtc1:
+                            return this.AllocateCubeMap<Bc4s>(stream, width, height);
+                        case GlInternalPixelFormat.RedGreenRgtc2:
+                            return this.AllocateCubeMap<Bc5>(stream, width, height);
+                        case GlInternalPixelFormat.SignedRedGreenRgtc2:
+                            return this.AllocateCubeMap<Bc5s>(stream, width, height);
                     }
 
                     break;

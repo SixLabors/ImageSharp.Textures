@@ -5,6 +5,14 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx
 {
     internal enum GlInternalPixelFormat : uint
     {
+        RedRgtc1 = 0x8DBB,
+
+        SignedRedRgtc1 = 0x8DBC,
+
+        RedGreenRgtc2 = 0x8DBD,
+
+        SignedRedGreenRgtc2 = 0x8DBE,
+
         RgbDxt1 = 0x83F0,
 
         RgbaDxt1 = 0x83F1,
