@@ -5,6 +5,7 @@ using System;
 using System.Buffers.Binary;
 using System.Runtime.InteropServices;
 using SixLabors.ImageSharp.Textures.Common.Exceptions;
+using SixLabors.ImageSharp.Textures.Formats.Ktx.Enums;
 
 namespace SixLabors.ImageSharp.Textures.Formats.Ktx
 {
@@ -16,11 +17,11 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx
     {
         public KtxHeader(
             KtxEndianness endianness,
-            uint glType,
+            GlType glType,
             uint glTypeSize,
-            uint glFormat,
-            uint glInternalFormat,
-            uint glBaseInternalFormat,
+            GlPixelFormat glFormat,
+            GlInternalPixelFormat glInternalFormat,
+            GlBaseInternalPixelFormat glBaseInternalFormat,
             uint width,
             uint height,
             uint pixelDepth,
@@ -30,10 +31,10 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx
             uint bytesOfKeyValueData)
         {
             this.Endianness = endianness;
-            this.GlType = glType;
+            this.GlTypeParameter = glType;
             this.GlTypeSize = glTypeSize;
-            this.GlFormat = (GlPixelFormat)glFormat;
-            this.GlInternalFormat = (GlInternalPixelFormat)glInternalFormat;
+            this.GlFormat = glFormat;
+            this.GlInternalFormat = glInternalFormat;
             this.GlBaseInternalFormat = glBaseInternalFormat;
             this.Width = width;
             this.Height = height;
@@ -56,7 +57,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx
         /// For compressed textures, glType must equal 0. For uncompressed textures, glType specifies the type parameter passed to glTex{,Sub}Image*D,
         /// usually one of the values from table 8.2 of the OpenGL 4.4 specification
         /// </summary>
-        public uint GlType { get; }
+        public GlType GlTypeParameter { get; }
 
         /// <summary>
         /// Gets the glTypeSize.
@@ -88,7 +89,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx
         /// For uncompressed textures, this value will be the same as glFormat and is used as the internalformat parameter when loading into a context that does not support sized formats,
         /// such as an unextended OpenGL ES 2.0 context.
         /// </summary>
-        public uint GlBaseInternalFormat { get; }
+        public GlBaseInternalPixelFormat GlBaseInternalFormat { get; }
 
         /// <summary>
         /// Gets the width in pixels of the texture at level 0.
@@ -149,11 +150,11 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx
             {
                 return new KtxHeader(
                     (KtxEndianness)BinaryPrimitives.ReadUInt32LittleEndian(data.Slice(0, 4)),
-                    BinaryPrimitives.ReadUInt32LittleEndian(data.Slice(4, 4)),
+                    (GlType)BinaryPrimitives.ReadUInt32LittleEndian(data.Slice(4, 4)),
                     BinaryPrimitives.ReadUInt32LittleEndian(data.Slice(8, 4)),
-                    BinaryPrimitives.ReadUInt32LittleEndian(data.Slice(12, 4)),
-                    BinaryPrimitives.ReadUInt32LittleEndian(data.Slice(16, 4)),
-                    BinaryPrimitives.ReadUInt32LittleEndian(data.Slice(20, 4)),
+                    (GlPixelFormat)BinaryPrimitives.ReadUInt32LittleEndian(data.Slice(12, 4)),
+                    (GlInternalPixelFormat)BinaryPrimitives.ReadUInt32LittleEndian(data.Slice(16, 4)),
+                    (GlBaseInternalPixelFormat)BinaryPrimitives.ReadUInt32LittleEndian(data.Slice(20, 4)),
                     BinaryPrimitives.ReadUInt32LittleEndian(data.Slice(24, 4)),
                     BinaryPrimitives.ReadUInt32LittleEndian(data.Slice(28, 4)),
                     BinaryPrimitives.ReadUInt32LittleEndian(data.Slice(32, 4)),
@@ -165,11 +166,11 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx
 
             return new KtxHeader(
                 (KtxEndianness)BinaryPrimitives.ReadUInt32BigEndian(data.Slice(0, 4)),
-                BinaryPrimitives.ReadUInt32BigEndian(data.Slice(4, 4)),
+                (GlType)BinaryPrimitives.ReadUInt32BigEndian(data.Slice(4, 4)),
                 BinaryPrimitives.ReadUInt32BigEndian(data.Slice(8, 4)),
-                BinaryPrimitives.ReadUInt32BigEndian(data.Slice(12, 4)),
-                BinaryPrimitives.ReadUInt32BigEndian(data.Slice(16, 4)),
-                BinaryPrimitives.ReadUInt32BigEndian(data.Slice(20, 4)),
+                (GlPixelFormat)BinaryPrimitives.ReadUInt32BigEndian(data.Slice(12, 4)),
+                (GlInternalPixelFormat)BinaryPrimitives.ReadUInt32BigEndian(data.Slice(16, 4)),
+                (GlBaseInternalPixelFormat)BinaryPrimitives.ReadUInt32BigEndian(data.Slice(20, 4)),
                 BinaryPrimitives.ReadUInt32BigEndian(data.Slice(24, 4)),
                 BinaryPrimitives.ReadUInt32BigEndian(data.Slice(28, 4)),
                 BinaryPrimitives.ReadUInt32BigEndian(data.Slice(32, 4)),
