@@ -4,27 +4,30 @@
 using System;
 using System.Collections.Generic;
 
-namespace SixLabors.ImageSharp.Textures.Formats.Ktx
+namespace SixLabors.ImageSharp.Textures.Formats.Ktx2
 {
-    internal static class KtxConstants
+    /// <summary>
+    /// Constants for ktx version 2 textures.
+    /// </summary>
+    internal static class Ktx2Constants
     {
         /// <summary>
         /// The size of a KTX header in bytes.
         /// </summary>
-        public const int KtxHeaderSize = 52;
+        public const int KtxHeaderSize = 68;
 
         /// <summary>
-        /// The list of mimetypes that equate to a ktx file.
+        /// The list of mimetypes that equate to a ktx2 file.
         /// </summary>
-        public static readonly IEnumerable<string> MimeTypes = new[] { "image/ktx" };
+        public static readonly IEnumerable<string> MimeTypes = new[] { "image/ktx2" };
 
         /// <summary>
-        /// The list of file extensions that equate to a ktx file.
+        /// The list of file extensions that equate to a ktx2 file.
         /// </summary>
-        public static readonly IEnumerable<string> FileExtensions = new[] { "ktx" };
+        public static readonly IEnumerable<string> FileExtensions = new[] { "ktx2" };
 
         /// <summary>
-        /// Gets the magic bytes identifying a ktx texture.
+        /// Gets the magic bytes identifying a ktx2 texture.
         /// </summary>
         public static ReadOnlySpan<byte> MagicBytes => new byte[]
         {
@@ -33,8 +36,8 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx
             0x54, // T
             0x58, // X
             0x20, // " "
-            0x31, // 1
-            0x31, // 1
+            0x32, // 2
+            0x30, // 0
             0xBB, // »
             0x0D, // \r
             0x0A, // \n

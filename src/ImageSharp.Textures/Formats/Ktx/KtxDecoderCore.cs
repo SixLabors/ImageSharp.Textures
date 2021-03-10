@@ -29,12 +29,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx
         private KtxHeader ktxHeader;
 
         /// <summary>
-        /// The stream to decode from.
-        /// </summary>
-        private Stream stream;
-
-        /// <summary>
-        /// The bitmap decoder options.
+        /// The texture decoder options.
         /// </summary>
         private readonly IKtxDecoderOptions options;
 
@@ -53,11 +48,11 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx
         /// <summary>
         /// Decodes the texture from the specified stream.
         /// </summary>
-        /// <param name="currentStream">The stream, where the texture should be decoded from. Cannot be null.</param>
+        /// <param name="stream">The stream, where the texture should be decoded from. Cannot be null.</param>
         /// <returns>The decoded image.</returns>
-        public Texture DecodeTexture(Stream currentStream)
+        public Texture DecodeTexture(Stream stream)
         {
-            this.ReadFileHeader(currentStream);
+            this.ReadFileHeader(stream);
 
             if (this.ktxHeader.Width == 0)
             {
@@ -68,18 +63,18 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx
             int height = (int)this.ktxHeader.Height;
 
             // Skip over bytesOfKeyValueData, if any is present.
-            currentStream.Position += this.ktxHeader.BytesOfKeyValueData;
+            stream.Position += this.ktxHeader.BytesOfKeyValueData;
 
             var ktxProcessor = new KtxProcessor(this.ktxHeader);
 
             if (this.ktxHeader.NumberOfFaces == 6)
             {
-                CubemapTexture cubeMapTexture = ktxProcessor.DecodeCubeMap(this.stream, width, height);
+                CubemapTexture cubeMapTexture = ktxProcessor.DecodeCubeMap(stream, width, height);
                 return cubeMapTexture;
             }
 
             var texture = new FlatTexture();
-            MipMap[] mipMaps = ktxProcessor.DecodeMipMaps(this.stream, width, height, this.ktxHeader.NumberOfMipmapLevels);
+            MipMap[] mipMaps = ktxProcessor.DecodeMipMaps(stream, width, height, this.ktxHeader.NumberOfMipmapLevels);
             texture.MipMaps.AddRange(mipMaps);
             return texture;
         }
@@ -100,16 +95,14 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx
         /// <summary>
         /// Reads the dds file header from the stream.
         /// </summary>
-        /// <param name="currentStream">The <see cref="Stream"/> containing texture data.</param>
-        private void ReadFileHeader(Stream currentStream)
+        /// <param name="stream">The <see cref="Stream"/> containing texture data.</param>
+        private void ReadFileHeader(Stream stream)
         {
-            this.stream = currentStream;
-
             // Discard the magic bytes, we already know at this point its a ktx file.
-            this.stream.Position += KtxConstants.MagicBytes.Length;
+            stream.Position += KtxConstants.MagicBytes.Length;
 
             byte[] ktxHeaderBuffer = new byte[KtxConstants.KtxHeaderSize];
-            this.stream.Read(ktxHeaderBuffer, 0, KtxConstants.KtxHeaderSize);
+            stream.Read(ktxHeaderBuffer, 0, KtxConstants.KtxHeaderSize);
 
             this.ktxHeader = KtxHeader.Parse(ktxHeaderBuffer);
         }

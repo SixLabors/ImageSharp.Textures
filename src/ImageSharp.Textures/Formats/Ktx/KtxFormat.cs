@@ -26,7 +26,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx
         public string Name => "KTX";
 
         /// <inheritdoc/>
-        public string DefaultMimeType => "image/vnd.ms-dds";
+        public string DefaultMimeType => "image/ktx";
 
         /// <inheritdoc/>
         public IEnumerable<string> MimeTypes => KtxConstants.MimeTypes;

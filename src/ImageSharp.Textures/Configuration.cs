@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using SixLabors.ImageSharp.Memory;
 using SixLabors.ImageSharp.Textures.Formats;
 using SixLabors.ImageSharp.Textures.Formats.Dds;
+using SixLabors.ImageSharp.Textures.Formats.Ktx;
+using SixLabors.ImageSharp.Textures.Formats.Ktx2;
 using SixLabors.ImageSharp.Textures.IO;
 
 namespace SixLabors.ImageSharp.Textures
@@ -121,28 +123,24 @@ namespace SixLabors.ImageSharp.Textures
         /// Creates a shallow copy of the <see cref="Configuration"/>.
         /// </summary>
         /// <returns>A new configuration instance.</returns>
-        public Configuration Clone()
+        public Configuration Clone() => new Configuration
         {
-            return new Configuration
-            {
-                MaxDegreeOfParallelism = this.MaxDegreeOfParallelism,
-                ImageFormatsManager = this.ImageFormatsManager,
-                MemoryAllocator = this.MemoryAllocator,
-                ReadOrigin = this.ReadOrigin,
-                FileSystem = this.FileSystem,
-                WorkingBufferSizeHintInBytes = this.WorkingBufferSizeHintInBytes,
-            };
-        }
+            MaxDegreeOfParallelism = this.MaxDegreeOfParallelism,
+            ImageFormatsManager = this.ImageFormatsManager,
+            MemoryAllocator = this.MemoryAllocator,
+            ReadOrigin = this.ReadOrigin,
+            FileSystem = this.FileSystem,
+            WorkingBufferSizeHintInBytes = this.WorkingBufferSizeHintInBytes,
+        };
 
         /// <summary>
         /// Creates the default instance with the following <see cref="IConfigurationModule"/>s preregistered:
         /// <see cref="DdsConfigurationModule"/>
         /// </summary>
         /// <returns>The default configuration of <see cref="Configuration"/>.</returns>
-        internal static Configuration CreateDefaultInstance()
-        {
-            return new Configuration(
-                new DdsConfigurationModule());
-        }
+        internal static Configuration CreateDefaultInstance() => new Configuration(
+                new DdsConfigurationModule(),
+                new KtxConfigurationModule(),
+                new Ktx2ConfigurationModule());
     }
 }

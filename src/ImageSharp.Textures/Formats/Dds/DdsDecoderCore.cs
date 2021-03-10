@@ -40,12 +40,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds
         private readonly MemoryAllocator memoryAllocator;
 
         /// <summary>
-        /// The stream to decode from.
-        /// </summary>
-        private Stream currentStream;
-
-        /// <summary>
-        /// The bitmap decoder options.
+        /// The texture decoder options.
         /// </summary>
         private readonly IDdsDecoderOptions options;
 
@@ -190,10 +185,8 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds
         /// <param name="stream">The <see cref="Stream"/> containing texture data.</param>
         private void ReadFileHeader(Stream stream)
         {
-            this.currentStream = stream;
-
             Span<byte> magicBuffer = stackalloc byte[4];
-            this.currentStream.Read(magicBuffer, 0, 4);
+            stream.Read(magicBuffer, 0, 4);
             uint magicValue = BinaryPrimitives.ReadUInt32LittleEndian(magicBuffer);
             if (magicValue != DdsFourCc.DdsMagicWord)
             {
@@ -202,14 +195,14 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds
 
             byte[] ddsHeaderBuffer = new byte[DdsConstants.DdsHeaderSize];
 
-            this.currentStream.Read(ddsHeaderBuffer, 0, DdsConstants.DdsHeaderSize);
+            stream.Read(ddsHeaderBuffer, 0, DdsConstants.DdsHeaderSize);
             this.ddsHeader = DdsHeader.Parse(ddsHeaderBuffer);
             this.ddsHeader.Validate();
 
             if (this.ddsHeader.ShouldHaveDxt10Header())
             {
                 byte[] ddsDxt10headerBuffer = new byte[DdsConstants.DdsDxt10HeaderSize];
-                this.currentStream.Read(ddsDxt10headerBuffer, 0, DdsConstants.DdsDxt10HeaderSize);
+                stream.Read(ddsDxt10headerBuffer, 0, DdsConstants.DdsDxt10HeaderSize);
                 this.ddsDxt10header = DdsHeaderDxt10.Parse(ddsDxt10headerBuffer);
             }
         }
