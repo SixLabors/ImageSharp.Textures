@@ -216,6 +216,14 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx
             return cubeMapTexture;
         }
 
+        private static MipMap<TBlock> ReadFaceTexture<TBlock>(Stream stream, int width, int height, TBlock blockFormat, uint dataForEachFace)
+            where TBlock : struct, IBlock<TBlock>
+        {
+            byte[] faceData = new byte[dataForEachFace];
+            ReadTextureData(stream, faceData);
+            return new MipMap<TBlock>(blockFormat, faceData, width, height);
+        }
+
         /// <summary>
         /// Allocates and decodes all mipmap levels of a ktx texture.
         /// </summary>
@@ -230,14 +238,6 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx
             MipMap[] mipMaps = this.ReadMipMaps<TBlock>(stream, width, height, count);
 
             return mipMaps;
-        }
-
-        private static MipMap<TBlock> ReadFaceTexture<TBlock>(Stream stream, int width, int height, TBlock blockFormat, uint dataForEachFace)
-            where TBlock : struct, IBlock<TBlock>
-        {
-            byte[] faceData = new byte[dataForEachFace];
-            ReadTextureData(stream, faceData);
-            return new MipMap<TBlock>(blockFormat, faceData, width, height);
         }
 
         private MipMap[] ReadMipMaps<TBlock>(Stream stream, int width, int height, uint count)

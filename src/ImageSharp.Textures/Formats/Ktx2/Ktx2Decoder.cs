@@ -15,7 +15,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx2
         {
             Guard.NotNull(stream, nameof(stream));
 
-            throw new System.NotImplementedException();
+            return new Ktx2DecoderCore(configuration, this).DecodeTexture(stream);
         }
 
         /// <inheritdoc/>

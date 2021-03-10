@@ -1,8 +1,12 @@
 // Copyright (c) Six Labors.
 // Licensed under the Apache License, Version 2.0.
 
+using System;
 using System.IO;
+using System.Runtime.InteropServices;
 using SixLabors.ImageSharp.Memory;
+using SixLabors.ImageSharp.Textures.Common.Exceptions;
+using SixLabors.ImageSharp.Textures.TextureFormats;
 
 namespace SixLabors.ImageSharp.Textures.Formats.Ktx2
 {
@@ -11,6 +15,11 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx2
     /// </summary>
     internal sealed class Ktx2DecoderCore
     {
+        /// <summary>
+        /// A scratch buffer to reduce allocations.
+        /// </summary>
+        private readonly byte[] buffer = new byte[24];
+
         /// <summary>
         /// The global configuration.
         /// </summary>
@@ -41,6 +50,46 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx2
             this.configuration = configuration;
             this.memoryAllocator = configuration.MemoryAllocator;
             this.options = options;
+        }
+
+        /// <summary>
+        /// Decodes the texture from the specified stream.
+        /// </summary>
+        /// <param name="stream">The stream, where the texture should be decoded from. Cannot be null.</param>
+        /// <returns>The decoded image.</returns>
+        public Texture DecodeTexture(Stream stream)
+        {
+            this.ReadFileHeader(stream);
+
+            if (this.ktxHeader.PixelWidth == 0)
+            {
+                throw new UnknownTextureFormatException("Width cannot be 0");
+            }
+
+            int width = (int)this.ktxHeader.PixelWidth;
+            int height = (int)this.ktxHeader.PixelHeight;
+
+            var levelIndices = new LevelIndex[this.ktxHeader.LevelCount];
+            for (int i = 0; i < levelIndices.Length; i++)
+            {
+                stream.Read(this.buffer, 0, 24);
+                LevelIndex levelIndex = MemoryMarshal.Cast<byte, LevelIndex>(this.buffer)[0];
+                levelIndices[i] = levelIndex;
+            }
+
+            if (this.ktxHeader.SupercompressionScheme != 0)
+            {
+                throw new NotSupportedException("SupercompressionSchemes are not yet supported");
+            }
+
+            var ktxProcessor = new Ktx2Processor(this.ktxHeader);
+
+            var texture = new FlatTexture();
+
+            MipMap[] mipMaps = ktxProcessor.DecodeMipMaps(stream, width, height, levelIndices);
+            texture.MipMaps.AddRange(mipMaps);
+
+            return texture;
         }
 
         /// <summary>
