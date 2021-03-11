@@ -5,6 +5,7 @@ using System;
 using System.IO;
 using SixLabors.ImageSharp.Textures.Common.Exceptions;
 using SixLabors.ImageSharp.Textures.Formats.Ktx2.Enums;
+using SixLabors.ImageSharp.Textures.TextureFormats;
 using SixLabors.ImageSharp.Textures.TextureFormats.Decoding;
 
 namespace SixLabors.ImageSharp.Textures.Formats.Ktx2
@@ -45,19 +46,46 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx2
             switch (this.KtxHeader.VkFormat)
             {
                 case VkFormat.VK_FORMAT_R8G8B8_UNORM:
-                case VkFormat.VK_FORMAT_R8G8B8_USCALED:
-                case VkFormat.VK_FORMAT_R8G8B8_SSCALED:
                 case VkFormat.VK_FORMAT_R8G8B8_UINT:
                 case VkFormat.VK_FORMAT_R8G8B8_SINT:
                 case VkFormat.VK_FORMAT_R8G8B8_SRGB:
                     return this.AllocateMipMaps<Rgb24>(memoryStream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_R8G8B8A8_UNORM:
-                case VkFormat.VK_FORMAT_R8G8B8A8_USCALED:
-                case VkFormat.VK_FORMAT_R8G8B8A8_SSCALED:
                 case VkFormat.VK_FORMAT_R8G8B8A8_UINT:
                 case VkFormat.VK_FORMAT_R8G8B8A8_SINT:
                 case VkFormat.VK_FORMAT_R8G8B8A8_SRGB:
                     return this.AllocateMipMaps<Rgba32>(memoryStream, width, height, levelIndices);
+            }
+
+            throw new NotSupportedException("The pixel format is not supported");
+        }
+
+        /// <summary>
+        /// Allocates and decodes the a KTX2 cube map texture.
+        /// </summary>
+        /// <param name="stream">The stream to read the texture data from.</param>
+        /// <param name="width">The width of a texture face.</param>
+        /// <param name="height">The height of a texture face.</param>
+        /// <param name="levelIndices">The start offsets and byte length of each texture.</param>
+        /// <returns>A decoded cubemap texture.</returns>
+        /// <exception cref="NotSupportedException">The pixel format is not supported</exception>
+        public CubemapTexture DecodeCubeMap(Stream stream, int width, int height, LevelIndex[] levelIndices)
+        {
+            DebugGuard.MustBeGreaterThan(width, 0, nameof(width));
+            DebugGuard.MustBeGreaterThan(height, 0, nameof(height));
+
+            switch (this.KtxHeader.VkFormat)
+            {
+                case VkFormat.VK_FORMAT_R8G8B8_UNORM:
+                case VkFormat.VK_FORMAT_R8G8B8_UINT:
+                case VkFormat.VK_FORMAT_R8G8B8_SINT:
+                case VkFormat.VK_FORMAT_R8G8B8_SRGB:
+                    return this.AllocateCubeMap<Rgb24>(stream, width, height, levelIndices);
+                case VkFormat.VK_FORMAT_R8G8B8A8_UNORM:
+                case VkFormat.VK_FORMAT_R8G8B8A8_UINT:
+                case VkFormat.VK_FORMAT_R8G8B8A8_SINT:
+                case VkFormat.VK_FORMAT_R8G8B8A8_SRGB:
+                    return this.AllocateCubeMap<Rgba32>(stream, width, height, levelIndices);
             }
 
             throw new NotSupportedException("The pixel format is not supported");
@@ -90,6 +118,33 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx2
             return mipMaps;
         }
 
+        private CubemapTexture AllocateCubeMap<TBlock>(Stream stream, int width, int height, LevelIndex[] levelIndices)
+            where TBlock : struct, IBlock<TBlock>
+        {
+            var numberOfMipMaps = levelIndices.Length;
+
+            var cubeMapTexture = new CubemapTexture();
+            var blockFormat = default(TBlock);
+            for (int i = 0; i < numberOfMipMaps; i++)
+            {
+                stream.Position = (long)levelIndices[i].ByteOffset;
+                var uncompressedDataLength = levelIndices[i].UncompressedByteLength;
+                var dataForEachFace = (uint)uncompressedDataLength / 6;
+
+                cubeMapTexture.PositiveX.MipMaps.Add(ReadFaceTexture(stream, width, height, blockFormat, dataForEachFace));
+                cubeMapTexture.NegativeX.MipMaps.Add(ReadFaceTexture(stream, width, height, blockFormat, dataForEachFace));
+                cubeMapTexture.PositiveY.MipMaps.Add(ReadFaceTexture(stream, width, height, blockFormat, dataForEachFace));
+                cubeMapTexture.NegativeY.MipMaps.Add(ReadFaceTexture(stream, width, height, blockFormat, dataForEachFace));
+                cubeMapTexture.PositiveZ.MipMaps.Add(ReadFaceTexture(stream, width, height, blockFormat, dataForEachFace));
+                cubeMapTexture.NegativeZ.MipMaps.Add(ReadFaceTexture(stream, width, height, blockFormat, dataForEachFace));
+
+                width >>= 1;
+                height >>= 1;
+            }
+
+            return cubeMapTexture;
+        }
+
         /// <summary>
         /// Read all mip maps and store them in a byte array so the level 0 mipmap will be at the beginning
         /// followed by all other mip map levels.
@@ -115,6 +170,14 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx2
             }
 
             return allMipMapBytes;
+        }
+
+        private static MipMap<TBlock> ReadFaceTexture<TBlock>(Stream stream, int width, int height, TBlock blockFormat, uint dataForEachFace)
+            where TBlock : struct, IBlock<TBlock>
+        {
+            byte[] faceData = new byte[dataForEachFace];
+            ReadTextureData(stream, faceData);
+            return new MipMap<TBlock>(blockFormat, faceData, width, height);
         }
 
         private static void ReadTextureData(Stream stream, byte[] mipMapData)

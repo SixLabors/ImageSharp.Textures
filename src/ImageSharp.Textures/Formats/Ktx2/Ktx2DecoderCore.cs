@@ -84,8 +84,13 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx2
 
             var ktxProcessor = new Ktx2Processor(this.ktxHeader);
 
-            var texture = new FlatTexture();
+            if (this.ktxHeader.FaceCount == 6)
+            {
+                CubemapTexture cubeMapTexture = ktxProcessor.DecodeCubeMap(stream, width, height, levelIndices);
+                return cubeMapTexture;
+            }
 
+            var texture = new FlatTexture();
             MipMap[] mipMaps = ktxProcessor.DecodeMipMaps(stream, width, height, levelIndices);
             texture.MipMaps.AddRange(mipMaps);
 
