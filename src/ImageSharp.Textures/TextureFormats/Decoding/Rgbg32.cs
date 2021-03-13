@@ -7,9 +7,9 @@ using System.Runtime.InteropServices;
 namespace SixLabors.ImageSharp.Textures.TextureFormats.Decoding
 {
     /// <summary>
-    /// Texture for the pixel format G8R8G8B8.
+    /// Texture for pixel data with the R8G8B8G8 format.
     /// </summary>
-    internal struct G8R8G8B8 : IBlock<G8R8G8B8>
+    internal struct Rgbg32 : IBlock<Rgbg32>
     {
         /// <inheritdoc/>
         public int BitsPerPixel => 32;
@@ -44,10 +44,10 @@ namespace SixLabors.ImageSharp.Textures.TextureFormats.Decoding
             int pixelIdx = 0;
             for (int i = 0; i < blockData.Length; i += 4)
             {
-                byte g0 = blockData[i];
-                byte r = blockData[i + 1];
-                byte g1 = blockData[i + 2];
-                byte b = blockData[i + 3];
+                byte r = blockData[i];
+                byte g0 = blockData[i + 1];
+                byte b = blockData[i + 2];
+                byte g1 = blockData[i + 3];
 
                 pixel.FromRgb24(new ImageSharp.PixelFormats.Rgb24(r, g0, b));
                 rgb24Span[pixelIdx++] = pixel;

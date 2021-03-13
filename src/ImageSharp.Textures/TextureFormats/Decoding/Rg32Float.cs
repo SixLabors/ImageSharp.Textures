@@ -1,24 +1,26 @@
 // Copyright (c) Six Labors.
 // Licensed under the Apache License, Version 2.0.
 
+using SixLabors.ImageSharp.Textures.PixelFormats;
+
 namespace SixLabors.ImageSharp.Textures.TextureFormats.Decoding
 {
     /// <summary>
-    /// Texture format for pixels which have only the red and green channel and use 32 bit for each as float.
+    /// Texture format for pixels which have only the red and green channel and use 16 bit for each as float.
     /// </summary>
-    internal struct R32G32Float : IBlock<R32G32Float>
+    internal struct RG32Float : IBlock<RG32Float>
     {
         /// <inheritdoc/>
-        public int BitsPerPixel => 64;
+        public int BitsPerPixel => 32;
 
         /// <inheritdoc/>
-        public byte PixelDepthBytes => 8;
+        public byte PixelDepthBytes => 4;
 
         /// <inheritdoc/>
         public byte DivSize => 1;
 
         /// <inheritdoc/>
-        public byte CompressedBytesPerBlock => 8;
+        public byte CompressedBytesPerBlock => 4;
 
         /// <inheritdoc/>
         public bool Compressed => false;
@@ -27,7 +29,7 @@ namespace SixLabors.ImageSharp.Textures.TextureFormats.Decoding
         public Image GetImage(byte[] blockData, int width, int height)
         {
             byte[] decompressedData = this.Decompress(blockData, width, height);
-            return Image.LoadPixelData<Textures.PixelFormats.Rg64Float>(decompressedData, width, height);
+            return Image.LoadPixelData<Rg32Float>(decompressedData, width, height);
         }
 
         /// <inheritdoc/>

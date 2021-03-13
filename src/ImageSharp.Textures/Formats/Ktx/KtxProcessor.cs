@@ -102,7 +102,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx
                     case GlInternalPixelFormat.Rgba16:
                         return this.AllocateMipMaps<Rgba64>(stream, width, height, count);
                     case GlInternalPixelFormat.Rgba32UnsignedInt:
-                        return this.AllocateMipMaps<R32G32B32A32>(stream, width, height, count);
+                        return this.AllocateMipMaps<Rgba128>(stream, width, height, count);
                 }
             }
 
@@ -177,7 +177,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx
                     case GlInternalPixelFormat.Rgba16:
                         return this.AllocateCubeMap<Rgba64>(stream, width, height);
                     case GlInternalPixelFormat.Rgba32UnsignedInt:
-                        return this.AllocateCubeMap<R32G32B32A32>(stream, width, height);
+                        return this.AllocateCubeMap<Rgba128>(stream, width, height);
                 }
             }
 

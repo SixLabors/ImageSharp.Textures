@@ -4,21 +4,21 @@
 namespace SixLabors.ImageSharp.Textures.TextureFormats.Decoding
 {
     /// <summary>
-    /// Texture for pixel data with 11 bits for red and green and 10 bits for the blue channel as float.
+    /// Texture format for pixels which use 32 bit float values for the RGB channels.
     /// </summary>
-    internal struct R11G11B10Float : IBlock<R11G11B10Float>
+    internal struct Rgb96Float : IBlock<Rgb96Float>
     {
         /// <inheritdoc/>
-        public int BitsPerPixel => 32;
+        public int BitsPerPixel => 96;
 
         /// <inheritdoc/>
-        public byte PixelDepthBytes => 4;
+        public byte PixelDepthBytes => 12;
 
         /// <inheritdoc/>
         public byte DivSize => 1;
 
         /// <inheritdoc/>
-        public byte CompressedBytesPerBlock => 4;
+        public byte CompressedBytesPerBlock => 12;
 
         /// <inheritdoc/>
         public bool Compressed => false;
@@ -27,7 +27,7 @@ namespace SixLabors.ImageSharp.Textures.TextureFormats.Decoding
         public Image GetImage(byte[] blockData, int width, int height)
         {
             byte[] decompressedData = this.Decompress(blockData, width, height);
-            return Image.LoadPixelData<Textures.PixelFormats.R11G11B10Float>(decompressedData, width, height);
+            return Image.LoadPixelData<Textures.PixelFormats.Rgb96Float>(decompressedData, width, height);
         }
 
         /// <inheritdoc/>
