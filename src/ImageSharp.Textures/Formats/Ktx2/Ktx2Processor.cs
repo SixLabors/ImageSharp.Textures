@@ -128,6 +128,27 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx2
                     return this.AllocateMipMaps<Rgba32>(memoryStream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_R5G5B5A1_UNORM_PACK16:
                     return this.AllocateMipMaps<Rgba5551>(memoryStream, width, height, levelIndices);
+                case VkFormat.VK_FORMAT_BC1_RGB_UNORM_BLOCK:
+                case VkFormat.VK_FORMAT_BC1_RGBA_UNORM_BLOCK:
+                    return this.AllocateMipMaps<Dxt1>(memoryStream, width, height, levelIndices);
+                case VkFormat.VK_FORMAT_BC2_UNORM_BLOCK:
+                    return this.AllocateMipMaps<Dxt3>(memoryStream, width, height, levelIndices);
+                case VkFormat.VK_FORMAT_BC3_UNORM_BLOCK:
+                    return this.AllocateMipMaps<Dxt5>(memoryStream, width, height, levelIndices);
+                case VkFormat.VK_FORMAT_BC4_UNORM_BLOCK:
+                    return this.AllocateMipMaps<Bc4>(memoryStream, width, height, levelIndices);
+                case VkFormat.VK_FORMAT_BC4_SNORM_BLOCK:
+                    return this.AllocateMipMaps<Bc4s>(memoryStream, width, height, levelIndices);
+                case VkFormat.VK_FORMAT_BC5_UNORM_BLOCK:
+                    return this.AllocateMipMaps<Bc5>(memoryStream, width, height, levelIndices);
+                case VkFormat.VK_FORMAT_BC5_SNORM_BLOCK:
+                    return this.AllocateMipMaps<Bc5s>(memoryStream, width, height, levelIndices);
+                case VkFormat.VK_FORMAT_BC6H_UFLOAT_BLOCK:
+                    return this.AllocateMipMaps<Bc6h>(memoryStream, width, height, levelIndices);
+                case VkFormat.VK_FORMAT_BC6H_SFLOAT_BLOCK:
+                    return this.AllocateMipMaps<Bc6hs>(memoryStream, width, height, levelIndices);
+                case VkFormat.VK_FORMAT_BC7_UNORM_BLOCK:
+                    return this.AllocateMipMaps<Bc7>(memoryStream, width, height, levelIndices);
             }
 
             throw new NotSupportedException("The pixel format is not supported");
@@ -230,6 +251,25 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx2
                     return this.AllocateCubeMap<Rgba32>(stream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_R5G5B5A1_UNORM_PACK16:
                     return this.AllocateCubeMap<Rgba5551>(stream, width, height, levelIndices);
+                case VkFormat.VK_FORMAT_BC1_RGB_UNORM_BLOCK:
+                case VkFormat.VK_FORMAT_BC1_RGBA_UNORM_BLOCK:
+                    return this.AllocateCubeMap<Dxt1>(stream, width, height, levelIndices);
+                case VkFormat.VK_FORMAT_BC2_UNORM_BLOCK:
+                    return this.AllocateCubeMap<Dxt3>(stream, width, height, levelIndices);
+                case VkFormat.VK_FORMAT_BC4_UNORM_BLOCK:
+                    return this.AllocateCubeMap<Bc4>(stream, width, height, levelIndices);
+                case VkFormat.VK_FORMAT_BC4_SNORM_BLOCK:
+                    return this.AllocateCubeMap<Bc4s>(stream, width, height, levelIndices);
+                case VkFormat.VK_FORMAT_BC5_UNORM_BLOCK:
+                    return this.AllocateCubeMap<Bc5>(stream, width, height, levelIndices);
+                case VkFormat.VK_FORMAT_BC5_SNORM_BLOCK:
+                    return this.AllocateCubeMap<Bc5s>(stream, width, height, levelIndices);
+                case VkFormat.VK_FORMAT_BC6H_UFLOAT_BLOCK:
+                    return this.AllocateCubeMap<Bc6h>(stream, width, height, levelIndices);
+                case VkFormat.VK_FORMAT_BC6H_SFLOAT_BLOCK:
+                    return this.AllocateCubeMap<Bc6hs>(stream, width, height, levelIndices);
+                case VkFormat.VK_FORMAT_BC7_UNORM_BLOCK:
+                    return this.AllocateCubeMap<Bc7>(stream, width, height, levelIndices);
             }
 
             throw new NotSupportedException("The pixel format is not supported");
