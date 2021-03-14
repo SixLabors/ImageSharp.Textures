@@ -292,7 +292,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds
 
             if (pixelFormat.FourCC == DdsFourCc.R16G16FLOAT)
             {
-                return this.AllocateMipMaps<RG32Float>(stream, width, height, count);
+                return this.AllocateMipMaps<Rg32Float>(stream, width, height, count);
             }
 
             if (pixelFormat.FourCC == DdsFourCc.YUY2)
@@ -431,7 +431,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds
                 case DxgiFormat.R10G10B10A2_UInt:
                     return this.AllocateMipMaps<Rgba1010102>(stream, width, height, count);
                 case DxgiFormat.R16G16_Float:
-                    return this.AllocateMipMaps<RG32Float>(stream, width, height, count);
+                    return this.AllocateMipMaps<Rg32Float>(stream, width, height, count);
                 case DxgiFormat.R16G16_Typeless:
                 case DxgiFormat.R16G16_UNorm:
                 case DxgiFormat.R16G16_UInt:

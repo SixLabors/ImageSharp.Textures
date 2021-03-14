@@ -116,7 +116,7 @@
                 new ChannelInfo { Bits = 5, IsFloat = false, Channel = "r" }
             }
         },
-
+        
         new PixelInfo
         {
             Name = "Rgba5551",
@@ -128,7 +128,30 @@
                 new ChannelInfo { Bits = 1, IsFloat = false, Channel = "a" },
             }
         },
-    
+
+        new PixelInfo
+        {
+            Name = "Rgb565",
+            PackedType = "ushort",
+            ChannelInfos = new[] {
+                new ChannelInfo { Bits = 5, IsFloat = false, Channel = "r" },
+                new ChannelInfo { Bits = 6, IsFloat = false, Channel = "g" },
+                new ChannelInfo { Bits = 5, IsFloat = false, Channel = "b" },
+            }
+        },
+        
+        new PixelInfo
+        {
+            Name = "Rgba4444",
+            PackedType = "ushort",
+            ChannelInfos = new[] {
+                new ChannelInfo { Bits = 4, IsFloat = false, Channel = "r" },
+                new ChannelInfo { Bits = 4, IsFloat = false, Channel = "g" },
+                new ChannelInfo { Bits = 4, IsFloat = false, Channel = "b" },
+                new ChannelInfo { Bits = 4, IsFloat = false, Channel = "a" },
+            }
+        },
+
         new PixelInfo
         {
             Name = "Bgr32",

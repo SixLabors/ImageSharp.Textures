@@ -120,9 +120,21 @@ class Helper
         {
             return 1;
         }
+        else if (bits == 4) 
+        {
+            return (1 << 4) - 1;
+        }
         else if (bits == 5) 
         {
             return (1 << 5) - 1;
+        }
+        else if (bits == 6) 
+        {
+            return (1 << 6) - 1;
+        }
+        else if (bits == 8) 
+        {
+            return byte.MaxValue;
         }
         else if (bits == 10) 
         {
@@ -131,10 +143,6 @@ class Helper
         else if (bits == 11) 
         {
             return (1 << 11) - 1;
-        }
-        else if (bits == 8) 
-        {
-            return byte.MaxValue;
         }
         else if (bits == 16) 
         {

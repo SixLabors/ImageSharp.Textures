@@ -87,7 +87,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx2
                 case VkFormat.VK_FORMAT_R16G16B16A16_SINT:
                     return this.AllocateMipMaps<Rgba64>(memoryStream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_R16G16B16A16_SFLOAT:
-                    return this.AllocateMipMaps<RG32Float>(memoryStream, width, height, levelIndices);
+                    return this.AllocateMipMaps<Rg32Float>(memoryStream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_R32G32B32_UINT:
                 case VkFormat.VK_FORMAT_R32G32B32_SINT:
                     return this.AllocateMipMaps<Rgb96>(memoryStream, width, height, levelIndices);
@@ -110,6 +110,10 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx2
                 case VkFormat.VK_FORMAT_R8G8B8_SINT:
                 case VkFormat.VK_FORMAT_R8G8B8_SRGB:
                     return this.AllocateMipMaps<Rgb24>(memoryStream, width, height, levelIndices);
+                case VkFormat.VK_FORMAT_R5G6B5_UNORM_PACK16:
+                    return this.AllocateMipMaps<Rgb565>(memoryStream, width, height, levelIndices);
+                case VkFormat.VK_FORMAT_R4G4B4A4_UNORM_PACK16:
+                    return this.AllocateMipMaps<Rgba4444>(memoryStream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_B8G8R8A8_UNORM:
                 case VkFormat.VK_FORMAT_B8G8R8A8_SNORM:
                 case VkFormat.VK_FORMAT_B8G8R8A8_UINT:
@@ -120,6 +124,8 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx2
                     return this.AllocateMipMaps<Bgra5551>(memoryStream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_B5G6R5_UNORM_PACK16:
                     return this.AllocateMipMaps<Bgr565>(memoryStream, width, height, levelIndices);
+                case VkFormat.VK_FORMAT_B4G4R4A4_UNORM_PACK16:
+                    return this.AllocateMipMaps<Bgra4444>(memoryStream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_R8G8B8A8_UNORM:
                 case VkFormat.VK_FORMAT_R8G8B8A8_SNORM:
                 case VkFormat.VK_FORMAT_R8G8B8A8_UINT:
@@ -205,7 +211,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx2
                 case VkFormat.VK_FORMAT_R16_SFLOAT:
                     return this.AllocateCubeMap<R16Float>(stream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_R16G16B16A16_SFLOAT:
-                    return this.AllocateCubeMap<RG32Float>(stream, width, height, levelIndices);
+                    return this.AllocateCubeMap<Rg32Float>(stream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_R32G32_UINT:
                 case VkFormat.VK_FORMAT_R32G32_SINT:
                     return this.AllocateCubeMap<Rg64>(stream, width, height, levelIndices);
@@ -233,6 +239,10 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx2
                 case VkFormat.VK_FORMAT_R8G8B8_SINT:
                 case VkFormat.VK_FORMAT_R8G8B8_SRGB:
                     return this.AllocateCubeMap<Rgb24>(stream, width, height, levelIndices);
+                case VkFormat.VK_FORMAT_R5G6B5_UNORM_PACK16:
+                    return this.AllocateCubeMap<Rgb565>(stream, width, height, levelIndices);
+                case VkFormat.VK_FORMAT_R4G4B4A4_UNORM_PACK16:
+                    return this.AllocateCubeMap<Rgba4444>(stream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_B8G8R8A8_UNORM:
                 case VkFormat.VK_FORMAT_B8G8R8A8_SNORM:
                 case VkFormat.VK_FORMAT_B8G8R8A8_UINT:
@@ -243,6 +253,8 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx2
                     return this.AllocateCubeMap<Bgra5551>(stream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_B5G6R5_UNORM_PACK16:
                     return this.AllocateCubeMap<Bgr565>(stream, width, height, levelIndices);
+                case VkFormat.VK_FORMAT_B4G4R4A4_UNORM_PACK16:
+                    return this.AllocateCubeMap<Bgra4444>(stream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_R8G8B8A8_UNORM:
                 case VkFormat.VK_FORMAT_R8G8B8A8_SNORM:
                 case VkFormat.VK_FORMAT_R8G8B8A8_UINT:
