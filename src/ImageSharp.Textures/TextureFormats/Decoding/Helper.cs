@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0.
 
 using System;
+using System.Runtime.CompilerServices;
 
 namespace SixLabors.ImageSharp.Textures.TextureFormats.Decoding
 {
@@ -75,5 +76,25 @@ namespace SixLabors.ImageSharp.Textures.TextureFormats.Decoding
 
             return data;
         }
+
+        /// <summary>
+        /// Clamps the specified value between a min and a max value.
+        /// </summary>
+        /// <param name="val">The value to clamp.</param>
+        /// <param name="min">The minimum value.</param>
+        /// <param name="max">The maximum value.</param>
+        /// <returns>The clamped value.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static uint Clamp(uint val, uint min, uint max) => Math.Min(Math.Max(val, min), max);
+
+        /// <summary>
+        /// Clamps the specified value between a min and a max value.
+        /// </summary>
+        /// <param name="val">The value to clamp.</param>
+        /// <param name="min">The minimum value.</param>
+        /// <param name="max">The maximum value.</param>
+        /// <returns>The clamped value.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int Clamp(int val, int min, int max) => Math.Min(Math.Max(val, min), max);
     }
 }

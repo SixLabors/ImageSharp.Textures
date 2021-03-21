@@ -1,4 +1,4 @@
-﻿// Copyright (c) Six Labors.
+// Copyright (c) Six Labors.
 // Licensed under the Apache License, Version 2.0.
 
 using System;
@@ -64,15 +64,9 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static uint Clamp(uint val, uint min, uint max)
-        {
-            return Math.Min(Math.Max(val, min), max);
-        }
+        private static uint Clamp(uint val, uint min, uint max) => Math.Min(Math.Max(val, min), max);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static int Clamp(int val, int min, int max)
-        {
-            return Math.Min(Math.Max(val, min), max);
-        }
+        private static int Clamp(int val, int min, int max) => Math.Min(Math.Max(val, min), max);
     }
 }
