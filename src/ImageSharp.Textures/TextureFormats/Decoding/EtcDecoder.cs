@@ -12,7 +12,7 @@ namespace SixLabors.ImageSharp.Textures.TextureFormats.Decoding
     /// Based on https://github.com/hglm/detex.git
     /// </summary>
     /// <remarks>
-    /// See ktx spec: https://www.khronos.org/registry/DataFormat/specs/1.3/dataformat.1.3.html#ETC1
+    /// See ktx specification: https://www.khronos.org/registry/DataFormat/specs/1.3/dataformat.1.3.html#ETC1
     /// </remarks>
     internal static class EtcDecoder
     {
@@ -32,6 +32,8 @@ namespace SixLabors.ImageSharp.Textures.TextureFormats.Decoding
         {
             0, 8, 16, 24, -32, -24, -16, -8
         };
+
+        private static readonly int[] Etc2DistanceTable = { 3, 6, 11, 16, 23, 32, 41, 64 };
 
         public static void DecodeEtc1Block(Span<byte> payload, Span<byte> decodedPixelSpan)
         {
@@ -171,6 +173,184 @@ namespace SixLabors.ImageSharp.Textures.TextureFormats.Decoding
 
             ProcessPixelEtc1(14, pixelIndexWord, tableCodeword2, redBaseColorSubBlock2, greenBaseColorSubBlock2, blueBaseColorSubBlock2, pixelBuffer.Slice(42, 3));
             ProcessPixelEtc1(15, pixelIndexWord, tableCodeword2, redBaseColorSubBlock2, greenBaseColorSubBlock2, blueBaseColorSubBlock2, pixelBuffer.Slice(45, 3));
+        }
+
+        public static void DecodeEtc2Block(Span<byte> payload, Span<byte> decodedPixelSpan)
+        {
+            // Figure out the mode.
+            if ((payload[3] & 2) == 0)
+            {
+                // Individual mode.
+                DecodeEtc1Block(payload, decodedPixelSpan);
+                return;
+            }
+
+            int r = payload[0] & 0xF8;
+            r += Complement3BitShifted(payload[0] & 7);
+            int g = payload[1] & 0xF8;
+            g += Complement3BitShifted(payload[1] & 7);
+            int b = payload[2] & 0xF8;
+            b += Complement3BitShifted(payload[2] & 7);
+
+            decodedPixelSpan.Fill(0);
+            if ((r & 0xFF07) != 0)
+            {
+                ProcessBlockEtc2TMode(payload, decodedPixelSpan);
+                return;
+            }
+
+            if ((g & 0xFF07) != 0)
+            {
+                ProcessBlockEtc2HMode(payload, decodedPixelSpan);
+                return;
+            }
+
+            if ((b & 0xFF07) != 0)
+            {
+                // Planar mode.
+                ProcessBlockEtc2PlanarMode(payload, decodedPixelSpan);
+                return;
+            }
+
+            // Differential mode.
+            DecodeEtc1Block(payload, decodedPixelSpan);
+        }
+
+        private static void ProcessBlockEtc2PlanarMode(Span<byte> payload, Span<byte> decodedPixelSpan)
+        {
+            // Each color O, H and V is in 6-7-6 format.
+            int ro = (payload[0] & 0x7E) >> 1;
+            int go = ((payload[0] & 0x1) << 6) | ((payload[1] & 0x7E) >> 1);
+            int bo = ((payload[1] & 0x1) << 5) | (payload[2] & 0x18) | ((payload[2] & 0x03) << 1) | ((payload[3] & 0x80) >> 7);
+            int rh = ((payload[3] & 0x7C) >> 1) | (payload[3] & 0x1);
+            int gh = (payload[4] & 0xFE) >> 1;
+            int bh = ((payload[4] & 0x1) << 5) | ((payload[5] & 0xF8) >> 3);
+            int rv = ((payload[5] & 0x7) << 3) | ((payload[6] & 0xE0) >> 5);
+            int gv = ((payload[6] & 0x1F) << 2) | ((payload[7] & 0xC0) >> 6);
+            int bv = payload[7] & 0x3F;
+
+            // Replicate bits.
+            ro = (ro << 2) | ((ro & 0x30) >> 4);
+            go = (go << 1) | ((go & 0x40) >> 6);
+            bo = (bo << 2) | ((bo & 0x30) >> 4);
+            rh = (rh << 2) | ((rh & 0x30) >> 4);
+            gh = (gh << 1) | ((gh & 0x40) >> 6);
+            bh = (bh << 2) | ((bh & 0x30) >> 4);
+            rv = (rv << 2) | ((rv & 0x30) >> 4);
+            gv = (gv << 1) | ((gv & 0x40) >> 6);
+            bv = (bv << 2) | ((bv & 0x30) >> 4);
+
+            for (int y = 0; y < 4; y++)
+            {
+                for (int x = 0; x < 4; x++)
+                {
+                    var r = (byte)Helper.Clamp(((x * (rh - ro)) + (y * (rv - ro)) + (4 * ro) + 2) >> 2, 0, 255);
+                    var g = (byte)Helper.Clamp(((x * (gh - go)) + (y * (gv - go)) + (4 * go) + 2) >> 2, 0, 255);
+                    var b = (byte)Helper.Clamp(((x * (bh - bo)) + (y * (bv - bo)) + (4 * bo) + 2) >> 2, 0, 255);
+                    var pixelIdx = ((y * 4) + x) * 3;
+                    decodedPixelSpan[pixelIdx] = r;
+                    decodedPixelSpan[pixelIdx + 1] = g;
+                    decodedPixelSpan[pixelIdx + 2] = b;
+                }
+            }
+        }
+
+        private static void ProcessBlockEtc2TMode(Span<byte> payload, Span<byte> decodedPixelSpan)
+        {
+            int[] paintColorR = new int[4];
+            int[] paintColorG = new int[4];
+            int[] paintColorB = new int[4];
+
+            var c0r = ((payload[0] & 0x18) >> 1) | (payload[0] & 0x3);
+            c0r |= c0r << 4;
+            var c0g = payload[1] & 0xF0;
+            c0g |= c0g >> 4;
+            var c0b = payload[1] & 0x0F;
+            c0b |= c0b << 4;
+            var c1r = payload[2] & 0xF0;
+            c1r |= c1r >> 4;
+            var c1g = payload[2] & 0x0F;
+            c1g |= c1g << 4;
+            var c1b = payload[3] & 0xF0;
+            c1b |= c1b >> 4;
+
+            var distance = Etc2DistanceTable[((payload[3] & 0x0C) >> 1) | (payload[3] & 0x1)];
+            paintColorR[0] = c0r;
+            paintColorG[0] = c0g;
+            paintColorB[0] = c0b;
+            paintColorR[2] = c1r;
+            paintColorG[2] = c1g;
+            paintColorB[2] = c1b;
+            paintColorR[1] = Helper.Clamp(c1r + distance, 0, 255);
+            paintColorG[1] = Helper.Clamp(c1g + distance, 0, 255);
+            paintColorB[1] = Helper.Clamp(c1b + distance, 0, 255);
+            paintColorR[3] = Helper.Clamp(c1r - distance, 0, 255);
+            paintColorG[3] = Helper.Clamp(c1g - distance, 0, 255);
+            paintColorB[3] = Helper.Clamp(c1b - distance, 0, 255);
+
+            uint pixel_index_word = (uint)((payload[4] << 24) | (payload[5] << 16) | (payload[6] << 8) | payload[7]);
+            var decodedPixelIdx = 0;
+            for (int i = 0; i < 16; i++)
+            {
+                uint pixel_index = (uint)(((pixel_index_word & (1 << i)) >> i) | ((pixel_index_word & (0x10000 << i)) >> (16 + i - 1)));
+                int r = paintColorR[pixel_index];
+                int g = paintColorG[pixel_index];
+                int b = paintColorB[pixel_index];
+                decodedPixelSpan[decodedPixelIdx++] = (byte)r;
+                decodedPixelSpan[decodedPixelIdx++] = (byte)g;
+                decodedPixelSpan[decodedPixelIdx++] = (byte)b;
+            }
+        }
+
+        private static void ProcessBlockEtc2HMode(Span<byte> payload, Span<byte> decodedPixelSpan)
+        {
+            int[] paintColorR = new int[4];
+            int[] paintColorG = new int[4];
+            int[] paintColorB = new int[4];
+
+            var c0r = (payload[0] & 0x78) >> 3;
+            c0r |= c0r << 4;
+            var c0g = ((payload[0] & 0x07) << 1) | ((payload[1] & 0x10) >> 4);
+            c0g |= c0g << 4;
+            var c0b = (payload[1] & 0x08) | ((payload[1] & 0x03) << 1) | ((payload[2] & 0x80) >> 7);
+            c0b |= c0b << 4;
+            var c1r = (payload[2] & 0x78) >> 3;
+            c1r |= c1r << 4;
+            var c1g = ((payload[2] & 0x07) << 1) | ((payload[3] & 0x80) >> 7);
+            c1g |= c1g << 4;
+            var c1b = (payload[3] & 0x78) >> 3;
+            c1b |= c1b << 4;
+
+            int baseColor0Value = (c0r << 16) + (c0g << 8) + c0b;
+            int baseColor1Value = (c1r << 16) + (c1g << 8) + c1b;
+            int bit = baseColor0Value >= baseColor1Value ? 1 : 0;
+
+            var distance = Etc2DistanceTable[(payload[3] & 0x04) | ((payload[3] & 0x01) << 1) | bit];
+            paintColorR[0] = Helper.Clamp(c0r + distance, 0, 255);
+            paintColorG[0] = Helper.Clamp(c0g + distance, 0, 255);
+            paintColorB[0] = Helper.Clamp(c0b + distance, 0, 255);
+            paintColorR[1] = Helper.Clamp(c0r - distance, 0, 255);
+            paintColorG[1] = Helper.Clamp(c0g - distance, 0, 255);
+            paintColorB[1] = Helper.Clamp(c0b - distance, 0, 255);
+            paintColorR[2] = Helper.Clamp(c1r + distance, 0, 255);
+            paintColorG[2] = Helper.Clamp(c1g + distance, 0, 255);
+            paintColorB[2] = Helper.Clamp(c1b + distance, 0, 255);
+            paintColorR[3] = Helper.Clamp(c1r - distance, 0, 255);
+            paintColorG[3] = Helper.Clamp(c1g - distance, 0, 255);
+            paintColorB[3] = Helper.Clamp(c1b - distance, 0, 255);
+
+            uint pixel_index_word = (uint)((payload[4] << 24) | (payload[5] << 16) | (payload[6] << 8) | payload[7]);
+            var decodedPixelIdx = 0;
+            for (int i = 0; i < 16; i++)
+            {
+                uint pixel_index = (uint)(((pixel_index_word & (1 << i)) >> i) | ((pixel_index_word & (0x10000 << i)) >> (16 + i - 1)));
+                int r = paintColorR[pixel_index];
+                int g = paintColorG[pixel_index];
+                int b = paintColorB[pixel_index];
+                decodedPixelSpan[decodedPixelIdx++] = (byte)r;
+                decodedPixelSpan[decodedPixelIdx++] = (byte)g;
+                decodedPixelSpan[decodedPixelIdx++] = (byte)b;
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

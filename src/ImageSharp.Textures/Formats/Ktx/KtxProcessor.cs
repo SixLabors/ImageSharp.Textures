@@ -84,6 +84,8 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx
                                 return this.AllocateMipMaps<Bc5s>(stream, width, height, count);
                             case GlInternalPixelFormat.Etc1Rgb8Oes:
                                 return this.AllocateMipMaps<Etc1>(stream, width, height, count);
+                            case GlInternalPixelFormat.CompressedRgb8Etc2:
+                                return this.AllocateMipMaps<Etc2>(stream, width, height, count);
                         }
 
                         break;
@@ -162,6 +164,8 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx
                             return this.AllocateCubeMap<Bc5s>(stream, width, height);
                         case GlInternalPixelFormat.Etc1Rgb8Oes:
                             return this.AllocateCubeMap<Etc1>(stream, width, height);
+                        case GlInternalPixelFormat.CompressedRgb8Etc2:
+                            return this.AllocateCubeMap<Etc2>(stream, width, height);
                     }
 
                     break;

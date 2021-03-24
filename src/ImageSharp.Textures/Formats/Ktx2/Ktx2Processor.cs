@@ -155,6 +155,8 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx2
                     return this.AllocateMipMaps<Bc6hs>(memoryStream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_BC7_UNORM_BLOCK:
                     return this.AllocateMipMaps<Bc7>(memoryStream, width, height, levelIndices);
+                case VkFormat.VK_FORMAT_ETC2_R8G8B8_UNORM_BLOCK:
+                    return this.AllocateMipMaps<Etc1>(memoryStream, width, height, levelIndices);
             }
 
             throw new NotSupportedException("The pixel format is not supported");
@@ -282,6 +284,8 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx2
                     return this.AllocateCubeMap<Bc6hs>(stream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_BC7_UNORM_BLOCK:
                     return this.AllocateCubeMap<Bc7>(stream, width, height, levelIndices);
+                case VkFormat.VK_FORMAT_ETC2_R8G8B8_UNORM_BLOCK:
+                    return this.AllocateCubeMap<Etc1>(stream, width, height, levelIndices);
             }
 
             throw new NotSupportedException("The pixel format is not supported");
