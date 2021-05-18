@@ -45,8 +45,8 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.Ktx
             Assert.Equal(1, flatTexture.MipMaps[7].GetImage().Width);
             Image firstMipMap = flatTexture.MipMaps[0].GetImage();
             Assert.Equal(32, firstMipMap.PixelType.BitsPerPixel);
-            var test = firstMipMap as Image<Rgba32>;
-            test.CompareToReferenceOutput(provider, appendPixelTypeToFileName: false);
+            var firstMipMapImage = firstMipMap as Image<Rgba32>;
+            firstMipMapImage.CompareToReferenceOutput(provider, appendPixelTypeToFileName: false);
         }
     }
 }

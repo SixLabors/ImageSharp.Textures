@@ -106,7 +106,7 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities
         /// <param name="extension">The required extension</param>
         /// <param name="testOutputDetails">The settings modifying the output path</param>
         /// <param name="appendPixelTypeToFileName">A boolean indicating whether to append the pixel type to output file name.</param>
-        /// <param name="appendSourceFileOrDescription">A boolean indicating whether to append <see cref="ITestImageProvider.SourceFileOrDescription"/> to the test output file name.</param>
+        /// <param name="appendSourceFileOrDescription">A boolean indicating whether to append SourceFileOrDescription to the test output file name.</param>
         /// <returns>The file test name</returns>
         public string GetTestOutputFileName(
             string extension = null,
@@ -213,7 +213,7 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities
             bool appendPixelTypeToFileName = true)
             where TPixel : unmanaged, IPixel<TPixel>
         {
-            encoder = encoder ?? TestEnvironment.GetReferenceEncoder($"foo.{extension}");
+            encoder ??= TestEnvironment.GetReferenceEncoder($"foo.{extension}");
 
             string[] files = this.GetTestOutputFileNamesMultiFrame(
                 image.Frames.Count,
@@ -244,13 +244,6 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities
             TestEnvironment.GetReferenceOutputFileName(
                 this.GetTestOutputFileName(extension, testOutputDetails, appendPixelTypeToFileName, appendSourceFileOrDescription));
 
-        public string[] GetReferenceOutputFileNamesMultiFrame(
-            int frameCount,
-            string extension,
-            object testOutputDetails,
-            bool appendPixelTypeToFileName = true) => this.GetTestOutputFileNamesMultiFrame(frameCount, extension, testOutputDetails)
-                .Select(TestEnvironment.GetReferenceOutputFileName).ToArray();
-
         internal void Init(string typeName, string methodName, string outputSubfolderName)
         {
             this.TestGroupName = typeName;
@@ -279,7 +272,7 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities
             TPixel pixel = img[x, y];
             Rgba64 rgbaPixel = default;
             rgbaPixel.FromScaledVector4(pixel.ToScaledVector4());
-            ushort change = (ushort)Math.Round((perChannelChange / 255F) * 65535F);
+            ushort change = (ushort)Math.Round(perChannelChange / 255F * 65535F);
 
             if (rgbaPixel.R + perChannelChange <= 255)
             {

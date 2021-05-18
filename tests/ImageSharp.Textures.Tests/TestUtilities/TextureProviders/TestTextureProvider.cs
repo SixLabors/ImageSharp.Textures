@@ -3,10 +3,8 @@
 
 using System.IO;
 using System.Text;
-using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Textures.Formats;
 using SixLabors.ImageSharp.Textures.Tests.Enums;
-using SixLabors.ImageSharp.Textures.Tests.TestUtilities.ImageComparison;
 using SixLabors.ImageSharp.Textures.TextureFormats;
 using Xunit;
 
@@ -62,62 +60,6 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.TextureProviders
                 SourceFileOrDescription = inputFile,
                 TestName = methodName
             };
-        }
-
-        private void CompareMipMaps(MipMap[] mipMaps, string name)
-        {
-            string filename;
-
-            if (this.TextureType == TestTextureType.Flat)
-            {
-                string[] fileParts = Path.GetFileName(this.InputFile).Split(' ');
-                filename = fileParts[0];
-            }
-            else
-            {
-                filename = this.TextureType.ToString().ToLower();
-                if (!string.IsNullOrEmpty(name))
-                {
-                    filename = $"{filename}-{name}";
-                }
-            }
-
-            filename = $"{filename}.png";
-
-            string baselinePath = Path.Combine(TestEnvironment.InputImagesDirectoryFullPath, this.TextureType.ToString(), filename);
-
-            using var imageExpected = Image.Load<Rgba32>(baselinePath);
-            using Image testImage = mipMaps[0].GetImage();
-            using Image<Rgba32> imageActual = testImage.CloneAs<Rgba32>();
-
-            var comparer = ImageComparer.Tolerant(1F);
-            comparer.VerifySimilarity(imageExpected, imageActual);
-        }
-
-        public void CompareTextures(Texture texture)
-        {
-            if (texture is CubemapTexture cubemapTexture)
-            {
-                this.CompareMipMaps(cubemapTexture.PositiveX.MipMaps.ToArray(), "positive-x");
-                this.CompareMipMaps(cubemapTexture.NegativeX.MipMaps.ToArray(), "negative-x");
-                this.CompareMipMaps(cubemapTexture.PositiveY.MipMaps.ToArray(), "positive-y");
-                this.CompareMipMaps(cubemapTexture.NegativeY.MipMaps.ToArray(), "negative-y");
-                this.CompareMipMaps(cubemapTexture.PositiveZ.MipMaps.ToArray(), "positive-z");
-                this.CompareMipMaps(cubemapTexture.NegativeZ.MipMaps.ToArray(), "negative-z");
-            }
-
-            if (texture is FlatTexture flatTexture)
-            {
-                this.CompareMipMaps(flatTexture.MipMaps.ToArray(), null);
-            }
-
-            if (texture is VolumeTexture volumeTexture)
-            {
-                for (int i = 0; i < volumeTexture.Slices.Count; i++)
-                {
-                    this.CompareMipMaps(volumeTexture.Slices[i].MipMaps.ToArray(), $"slice-{i + 1}");
-                }
-            }
         }
 
         private void SaveMipMaps(MipMap[] mipMaps, string name)
