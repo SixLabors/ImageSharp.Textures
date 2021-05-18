@@ -41,7 +41,7 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.Attributes
 
             foreach (string featureLevel in featureLevels)
             {
-                string path = Path.Combine(TestEnvironment.InputImagesDirectoryFullPath, this.textureFormat.ToString(), this.textureType.ToString(), this.textureTool.ToString());
+                string path = Path.Combine(TestEnvironment.InputImagesDirectoryFullPath, this.textureFormat.ToString(), this.textureType.ToString());
 
                 if (!string.IsNullOrEmpty(featureLevel))
                 {

@@ -7,12 +7,13 @@ using Rg16 = SixLabors.ImageSharp.Textures.PixelFormats.Rg16;
 
 namespace SixLabors.ImageSharp.Textures.Tests.Formats.PixelFormat
 {
+    [Trait("Category", "PixelFormats")]
     public class PixelFormatTests
     {
         [Fact]
         public void Test_Rg16()
         {
-            string[] hexValues = new[] { "FF", "FF00" };
+            string[] hexValues = { "FF", "FF00" };
             for (int i = 0; i < 2; i++)
             {
                 int x = i == 0 ? 1 : 0;
@@ -41,7 +42,7 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.PixelFormat
         [Fact]
         public void Test_Bgr555()
         {
-            string[] hexValues = new[] { "7C00", "3E0", "1F" };
+            var hexValues = new[] { "7C00", "3E0", "1F" };
             for (int i = 0; i < 3; i++)
             {
                 int x = i == 0 ? 1 : 0;
@@ -69,7 +70,7 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.PixelFormat
         [Fact]
         public void Test_Bgr32()
         {
-            string[] hexValues = new[] { "FF0000", "FF00", "FF" };
+            string[] hexValues = { "FF0000", "FF00", "FF" };
             for (int i = 0; i < 3; i++)
             {
                 int x = i == 0 ? 1 : 0;
@@ -97,7 +98,7 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.PixelFormat
         [Fact]
         public void Test_Rgb32()
         {
-            string[] hexValues = new[] { "FF", "FF00", "FF0000" };
+            string[] hexValues = { "FF", "FF00", "FF0000" };
             for (int i = 0; i < 3; i++)
             {
                 int x = i == 0 ? 1 : 0;

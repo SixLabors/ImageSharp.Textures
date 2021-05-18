@@ -1,10 +1,8 @@
 // Copyright (c) Six Labors.
 // Licensed under the Apache License, Version 2.0.
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using SixLabors.ImageSharp.Advanced;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Textures.Tests.TestUtilities.ImageComparison.Exceptions;
 
@@ -20,10 +18,7 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.ImageComparison
         /// </summary>
         public static ImageComparer Tolerant(
             float imageThreshold = TolerantImageComparer.DefaultImageThreshold,
-            int perPixelManhattanThreshold = 0)
-        {
-            return new TolerantImageComparer(imageThreshold, perPixelManhattanThreshold);
-        }
+            int perPixelManhattanThreshold = 0) => new TolerantImageComparer(imageThreshold, perPixelManhattanThreshold);
 
         /// <summary>
         /// Returns Tolerant(imageThresholdInPercents/100)
@@ -45,10 +40,7 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.ImageComparison
             Image<TPixelA> expected,
             Image<TPixelB> actual)
             where TPixelA : unmanaged, IPixel<TPixelA>
-            where TPixelB : unmanaged, IPixel<TPixelB>
-        {
-            return comparer.CompareImages(expected, actual);
-        }
+            where TPixelB : unmanaged, IPixel<TPixelB> => comparer.CompareImages(expected, actual);
 
         public static void VerifySimilarity<TPixelA, TPixelB>(
             this ImageComparer comparer,

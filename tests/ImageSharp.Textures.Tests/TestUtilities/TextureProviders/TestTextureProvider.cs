@@ -16,10 +16,16 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.TextureProviders
     {
         public string MethodName { get; }
 
+        /// <inheritdoc/>
+        public ImagingTestCaseUtility Utility { get; private set; }
+
+        /// <inheritdoc/>
         public TestTextureFormat TextureFormat { get; }
 
+        /// <inheritdoc/>
         public TestTextureType TextureType { get; }
 
+        /// <inheritdoc/>
         public TestTextureTool TextureTool { get; }
 
         public string InputFile { get;  }
@@ -51,6 +57,11 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.TextureProviders
             this.TextureTool = textureTool;
             this.InputFile = inputFile;
             this.IsRegex = isRegex;
+            this.Utility = new ImagingTestCaseUtility
+            {
+                SourceFileOrDescription = inputFile,
+                TestName = methodName
+            };
         }
 
         private void CompareMipMaps(MipMap[] mipMaps, string name)
@@ -73,7 +84,7 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.TextureProviders
 
             filename = $"{filename}.png";
 
-            string baselinePath = Path.Combine(TestEnvironment.BaselineDirectoryFullPath, this.TextureType.ToString(), filename);
+            string baselinePath = Path.Combine(TestEnvironment.InputImagesDirectoryFullPath, this.TextureType.ToString(), filename);
 
             using var imageExpected = Image.Load<Rgba32>(baselinePath);
             using Image testImage = mipMaps[0].GetImage();
@@ -130,7 +141,7 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.TextureProviders
 
         public void SaveTextures(Texture texture)
         {
-            if (TestEnvironment.RunsOnCi)
+            if (TestEnvironment.RunsOnCI)
             {
                 return;
             }

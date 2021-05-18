@@ -6,13 +6,23 @@ namespace SixLabors.ImageSharp.Textures.Tests.Enums
     public enum TestTextureTool
     {
         /// <summary>
-        /// TexConv
+        /// TexConv.
         /// </summary>
         TexConv,
 
         /// <summary>
-        /// NvDxt
+        /// NvDxt.
         /// </summary>
-        NvDxt
+        NvDxt,
+
+        /// <summary>
+        /// ToKtx.
+        /// </summary>
+        ToKtx,
+
+        /// <summary>
+        /// The PVR tex tool cli.
+        /// </summary>
+        PvrTexToolCli
     }
 }

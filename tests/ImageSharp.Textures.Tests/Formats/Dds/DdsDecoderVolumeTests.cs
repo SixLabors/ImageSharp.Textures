@@ -9,7 +9,8 @@ using Xunit;
 
 namespace SixLabors.ImageSharp.Textures.Tests.Formats.Dds
 {
-    public class DdsNvDxtVolumeDecoderTests
+    [Trait("Format", "Dds")]
+    public class DdsDecoderVolumeTests
     {
         [Theory]
         [WithFile(TestTextureFormat.Dds, TestTextureType.Volume, TestTextureTool.NvDxt, "volume has-mips.dds")]

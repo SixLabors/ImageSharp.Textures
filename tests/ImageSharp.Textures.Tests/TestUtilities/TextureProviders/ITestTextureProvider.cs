@@ -9,8 +9,19 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.TextureProviders
     {
         string MethodName { get; }
 
+        /// <summary>
+        /// Gets the utility instance to provide information about the test image & manage input/output.
+        /// </summary>
+        ImagingTestCaseUtility Utility { get; }
+
+        /// <summary>
+        /// Gets the texture container format.
+        /// </summary>
         TestTextureFormat TextureFormat { get; }
 
+        /// <summary>
+        /// Gets the type of the texture, e.g. flat, volume or cubemap.
+        /// </summary>
         TestTextureType TextureType { get; }
 
         TestTextureTool TextureTool { get; }
