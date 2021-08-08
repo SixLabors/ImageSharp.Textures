@@ -6,14 +6,16 @@ ImageSharp.Textures
 </h1>
 
 <div align="center">
+
 [![Build Status](https://img.shields.io/github/workflow/status/SixLabors/ImageSharp.Textures/Build/master)](https://github.com/SixLabors/ImageSharp.Textures/actions)
 [![Code coverage](https://codecov.io/gh/SixLabors/ImageSharp.Textures/branch/master/graph/badge.svg)](https://codecov.io/gh/SixLabors/ImageSharp.Textures)
 [![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+
 </div>
 
-# ImageSharp.Textures
 
-Texture loading and manipulation library.
+## Texture loading and manipulation library written in C#.
+
 Currently decoding the following texture formats are supported:
 
 - [DDS textures]()
