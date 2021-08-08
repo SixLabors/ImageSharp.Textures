@@ -1,5 +1,57 @@
+<h1 align="center">
+
+<img src="https://github.com/SixLabors/Branding/raw/master/icons/imagesharp.textures/sixlabors.imagesharp.textures.svg?sanitize=true" alt="ImageSharp.Textures" width="256"/>
+<br/>
+ImageSharp.Textures
+</h1>
+
+<div align="center">
+[![Build Status](https://img.shields.io/github/workflow/status/SixLabors/ImageSharp.Textures/Build/master)](https://github.com/SixLabors/ImageSharp.Textures/actions)
+[![Code coverage](https://codecov.io/gh/SixLabors/ImageSharp.Textures/branch/master/graph/badge.svg)](https://codecov.io/gh/SixLabors/ImageSharp.Textures)
+[![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+</div>
+
 # ImageSharp.Textures
 
-Texture loading and manipulation library. Currently decoding of dds and ktx textures is supported.
+Texture loading and manipulation library.
+Currently decoding the following texture formats are supported:
 
-Support for ktx version 2 is work in progress.
+- [DDS textures]()
+- [KTX textures](http://paulbourke.net/dataformats/ktx/)
+- [KTX2 textures](https://github.khronos.org/KTX-Specification/)
+
+with the following compressions:
+
+- DXT1 / BC1
+- DXT2 / BC2
+- DXT3
+- DXT4 / BC3
+- DXT5
+- BC4
+- BC5
+- BC6H
+- BC7
+
+Encoding textures is **not** yet supported. PR are of course very welcome.
+
+## License
+
+- ImageSharp.Textures is licensed under the [Apache License, Version 2.0](https://opensource.org/licenses/Apache-2.0)
+
+## Support Six Labors
+
+Support the efforts of the development of the Six Labors projects.
+ - [Become a sponsor via GitHub Sponsors :heart:]( https://github.com/sponsors/SixLabors)
+ - [Become a sponsor via Open Collective :heart:](https://opencollective.com/sixlabors)
+
+## How can you help?
+
+Please... Spread the word, contribute algorithms, submit performance improvements, unit tests, no input is too little. Make sure to read our [Contribution Guide](https://github.com/SixLabors/ImageSharp.Textures/blob/master/.github/CONTRIBUTING.md) before opening a PR.
+
+## The ImageSharp Team
+
+- [James Jackson-South](https://github.com/jimbobsquarepants)
+- [Dirk Lemstra](https://github.com/dlemstra)
+- [Anton Firsov](https://github.com/antonfirsov)
+- [Scott Williams](https://github.com/tocsoft)
+- [Brian Popow](https://github.com/brianpopow)
