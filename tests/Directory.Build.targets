@@ -26,6 +26,8 @@
     <PackageReference Update="Veldrid.ImGui" Version="5.72.0" />
     <PackageReference Update="Veldrid.StartupUtilities" Version="4.8.0" />
     <PackageReference Update="Veldrid.Utilities" Version="4.8.0" />
+    <PackageReference Update="Microsoft.DotNet.RemoteExecutor" Version="6.0.0-beta.21311.3" />
+    <PackageReference Update="Microsoft.DotNet.XUnitExtensions" Version="6.0.0-beta.21311.3" />
   </ItemGroup>
 
 </Project>
