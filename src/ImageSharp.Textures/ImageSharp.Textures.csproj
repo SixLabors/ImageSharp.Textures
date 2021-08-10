@@ -10,7 +10,7 @@
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <RepositoryUrl Condition="'$(RepositoryUrl)' == ''">https://github.com/SixLabors/ImageSharp.Textures/</RepositoryUrl>
     <PackageProjectUrl>$(RepositoryUrl)</PackageProjectUrl>
-    <PackageTags>Texture Surface BASIS DDS KTX</PackageTags>
+    <PackageTags>Texture Surface BASIS DDS KTX KTX2 ETC1 ETC2 DXT1 DXT3 DXT5 BC5 BC6 BC7</PackageTags>
     <Description>A texture loading and manipulation library; written in C#</Description>
   </PropertyGroup>
 

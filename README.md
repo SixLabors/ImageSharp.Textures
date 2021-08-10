@@ -14,11 +14,31 @@ SixLabors.ImageSharp.Textures
 
 </div>
 
+## Texture loading and manipulation library written in C#.
 
-An experimental texture loading and manipulation library. 
+Currently decoding the following texture formats are supported:
 
-Currently decoding of dds and ktx textures is supported.
-Support for ktx version 2 is work in progress.
+- [DDS textures]()
+- [KTX textures](http://paulbourke.net/dataformats/ktx/)
+- [KTX2 textures](https://github.khronos.org/KTX-Specification/)
+
+with the following compressions:
+
+- DXT1 / BC1
+- DXT2 / BC2
+- DXT3
+- DXT4 / BC3
+- DXT5
+- BC4
+- BC5
+- BC6H
+- BC7
+
+Encoding textures is **not** yet supported. PR are of course very welcome.
+
+## License
+
+- ImageSharp.Textures is licensed under the [Apache License, Version 2.0](https://opensource.org/licenses/Apache-2.0)
 
 ## Code of Conduct  
 This project has adopted the code of conduct defined by the [Contributor Covenant](https://contributor-covenant.org/) to clarify expected behavior in our community.
@@ -31,3 +51,21 @@ Install stable releases via Nuget; development releases are available via MyGet.
 | Package Name                   | Release (NuGet) | Nightly (MyGet) |
 |--------------------------------|-----------------|-----------------|
 | `SixLabors.ImageSharp.Textures`         | Coming Soon | [![MyGet](https://img.shields.io/myget/sixlabors/vpre/SixLabors.ImageSharp.svg)](https://www.myget.org/feed/sixlabors/package/nuget/SixLabors.ImageSharp.Textures) |
+
+## Support Six Labors
+
+Support the efforts of the development of the Six Labors projects.
+ - [Become a sponsor via GitHub Sponsors :heart:]( https://github.com/sponsors/SixLabors)
+ - [Become a sponsor via Open Collective :heart:](https://opencollective.com/sixlabors)
+
+## How can you help?
+
+Please... Spread the word, contribute algorithms, submit performance improvements, unit tests, no input is too little. Make sure to read our [Contribution Guide](https://github.com/SixLabors/ImageSharp.Textures/blob/master/.github/CONTRIBUTING.md) before opening a PR.
+
+## The ImageSharp.Textures Team
+
+- [James Jackson-South](https://github.com/jimbobsquarepants)
+- [Dirk Lemstra](https://github.com/dlemstra)
+- [Anton Firsov](https://github.com/antonfirsov)
+- [Scott Williams](https://github.com/tocsoft)
+- [Brian Popow](https://github.com/brianpopow)
