@@ -11,8 +11,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_root", "_root", "{9F1F0B0F
 		.gitattributes = .gitattributes
 		.gitignore = .gitignore
 		.github\workflows\build-and-test.yml = .github\workflows\build-and-test.yml
+		ci-build.ps1 = ci-build.ps1
+		ci-pack.ps1 = ci-pack.ps1
+		ci-test.ps1 = ci-test.ps1
 		Directory.Build.props = Directory.Build.props
 		Directory.Build.targets = Directory.Build.targets
+		NuGet.Config = NuGet.Config
 		README.md = README.md
 	EndProjectSection
 EndProject
@@ -35,6 +39,13 @@ EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Images", "tests\Images\Images.shproj", "{68A8CC40-6AED-4E96-B524-31B1158FDEEA}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ImageSharp.Textures.InteractiveTest", "tests\ImageSharp.Textures.InteractiveTest\ImageSharp.Textures.InteractiveTest.csproj", "{17FCBD4D-D232-45E8-876F-DFBC2FAD52CF}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".github", ".github", "{E6224AB7-6987-4BA1-B2A6-ECFB7DA281DE}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{9F19EBB4-32DB-4AFE-A5E4-722EDFAAE04B}"
+	ProjectSection(SolutionItems) = preProject
+		.github\workflows\build-and-test.yml = .github\workflows\build-and-test.yml
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
@@ -75,6 +86,8 @@ Global
 		{18BE79B6-6B95-4ED7-A963-AD75F6CB9F3C} = {6DF92068-B792-4038-8E3F-5FDF2E026BE7}
 		{68A8CC40-6AED-4E96-B524-31B1158FDEEA} = {6DF92068-B792-4038-8E3F-5FDF2E026BE7}
 		{17FCBD4D-D232-45E8-876F-DFBC2FAD52CF} = {6DF92068-B792-4038-8E3F-5FDF2E026BE7}
+		{E6224AB7-6987-4BA1-B2A6-ECFB7DA281DE} = {9F1F0B0F-704F-4B71-89EF-EE36042A27C9}
+		{9F19EBB4-32DB-4AFE-A5E4-722EDFAAE04B} = {E6224AB7-6987-4BA1-B2A6-ECFB7DA281DE}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F1762A0D-74C4-454A-BCB7-C010BB067E58}
