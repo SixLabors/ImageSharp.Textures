@@ -8,6 +8,8 @@
     <PublishTrimmed>false</PublishTrimmed>
     <AssemblyName>SixLabors.ImageSharp.Textures.InteractiveTest</AssemblyName>
     <RootNamespace>SixLabors.ImageSharp.Textures.InteractiveTest</RootNamespace>
+    <!--Used to hide test project from dotnet test-->
+    <IsTestProject>false</IsTestProject>
   </PropertyGroup>
 
   <ItemGroup>

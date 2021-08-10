@@ -5,6 +5,8 @@
     <TargetFrameworks>net5.0;netcoreapp3.1;netcoreapp2.1;net472</TargetFrameworks>
     <IsPackable>false</IsPackable>
     <GenerateProgramFile>false</GenerateProgramFile>
+    <!--Used to hide test project from dotnet test-->
+    <IsTestProject>false</IsTestProject>
     <AssemblyName>SixLabors.ImageSharp.Textures.Benchmarks</AssemblyName>
     <RootNamespace>SixLabors.ImageSharp.Textures.Benchmarks</RootNamespace>
   </PropertyGroup>
