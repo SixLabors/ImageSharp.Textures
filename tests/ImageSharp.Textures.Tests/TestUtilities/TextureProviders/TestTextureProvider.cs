@@ -26,7 +26,7 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.TextureProviders
         /// <inheritdoc/>
         public TestTextureTool TextureTool { get; }
 
-        public string InputFile { get;  }
+        public string InputFile { get; }
 
         public bool IsRegex { get; }
 

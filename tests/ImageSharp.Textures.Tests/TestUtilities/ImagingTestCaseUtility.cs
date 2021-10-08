@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-
 using SixLabors.ImageSharp.Formats;
 using SixLabors.ImageSharp.PixelFormats;
 
@@ -223,14 +222,10 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities
 
             for (int i = 0; i < image.Frames.Count; i++)
             {
-                using (Image<TPixel> frameImage = image.Frames.CloneFrame(i))
-                {
-                    string filePath = files[i];
-                    using (FileStream stream = File.OpenWrite(filePath))
-                    {
-                        frameImage.Save(stream, encoder);
-                    }
-                }
+                using Image<TPixel> frameImage = image.Frames.CloneFrame(i);
+                string filePath = files[i];
+                using FileStream stream = File.OpenWrite(filePath);
+                frameImage.Save(stream, encoder);
             }
 
             return files;

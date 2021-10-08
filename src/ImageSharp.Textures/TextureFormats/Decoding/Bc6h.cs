@@ -337,19 +337,45 @@ namespace SixLabors.ImageSharp.Textures.TextureFormats.Decoding
                         {
                             switch (desc[uCurBit].MBc6HEField)
                             {
-                                case Bc6hEField.D: uShape |= 1u << desc[uCurBit].Bit; break;
-                                case Bc6hEField.RW: aEndPts[0].A.R |= 1 << desc[uCurBit].Bit; break;
-                                case Bc6hEField.RX: aEndPts[0].B.R |= 1 << desc[uCurBit].Bit; break;
-                                case Bc6hEField.RY: aEndPts[1].A.R |= 1 << desc[uCurBit].Bit; break;
-                                case Bc6hEField.RZ: aEndPts[1].B.R |= 1 << desc[uCurBit].Bit; break;
-                                case Bc6hEField.GW: aEndPts[0].A.G |= 1 << desc[uCurBit].Bit; break;
-                                case Bc6hEField.GX: aEndPts[0].B.G |= 1 << desc[uCurBit].Bit; break;
-                                case Bc6hEField.GY: aEndPts[1].A.G |= 1 << desc[uCurBit].Bit; break;
-                                case Bc6hEField.GZ: aEndPts[1].B.G |= 1 << desc[uCurBit].Bit; break;
-                                case Bc6hEField.BW: aEndPts[0].A.B |= 1 << desc[uCurBit].Bit; break;
-                                case Bc6hEField.BX: aEndPts[0].B.B |= 1 << desc[uCurBit].Bit; break;
-                                case Bc6hEField.BY: aEndPts[1].A.B |= 1 << desc[uCurBit].Bit; break;
-                                case Bc6hEField.BZ: aEndPts[1].B.B |= 1 << desc[uCurBit].Bit; break;
+                                case Bc6hEField.D:
+                                    uShape |= 1u << desc[uCurBit].Bit;
+                                    break;
+                                case Bc6hEField.RW:
+                                    aEndPts[0].A.R |= 1 << desc[uCurBit].Bit;
+                                    break;
+                                case Bc6hEField.RX:
+                                    aEndPts[0].B.R |= 1 << desc[uCurBit].Bit;
+                                    break;
+                                case Bc6hEField.RY:
+                                    aEndPts[1].A.R |= 1 << desc[uCurBit].Bit;
+                                    break;
+                                case Bc6hEField.RZ:
+                                    aEndPts[1].B.R |= 1 << desc[uCurBit].Bit;
+                                    break;
+                                case Bc6hEField.GW:
+                                    aEndPts[0].A.G |= 1 << desc[uCurBit].Bit;
+                                    break;
+                                case Bc6hEField.GX:
+                                    aEndPts[0].B.G |= 1 << desc[uCurBit].Bit;
+                                    break;
+                                case Bc6hEField.GY:
+                                    aEndPts[1].A.G |= 1 << desc[uCurBit].Bit;
+                                    break;
+                                case Bc6hEField.GZ:
+                                    aEndPts[1].B.G |= 1 << desc[uCurBit].Bit;
+                                    break;
+                                case Bc6hEField.BW:
+                                    aEndPts[0].A.B |= 1 << desc[uCurBit].Bit;
+                                    break;
+                                case Bc6hEField.BX:
+                                    aEndPts[0].B.B |= 1 << desc[uCurBit].Bit;
+                                    break;
+                                case Bc6hEField.BY:
+                                    aEndPts[1].A.B |= 1 << desc[uCurBit].Bit;
+                                    break;
+                                case Bc6hEField.BZ:
+                                    aEndPts[1].B.B |= 1 << desc[uCurBit].Bit;
+                                    break;
                                 default:
                                 {
                                     Debug.WriteLine("BC6H: Invalid header bits encountered during decoding");
@@ -441,10 +467,18 @@ namespace SixLabors.ImageSharp.Textures.TextureFormats.Decoding
                     string warnStr = "BC6H: Invalid mode encountered during decoding";
                     switch (uMode)
                     {
-                        case 0x13: warnStr = "BC6H: Reserved mode 10011 encountered during decoding"; break;
-                        case 0x17: warnStr = "BC6H: Reserved mode 10111 encountered during decoding"; break;
-                        case 0x1B: warnStr = "BC6H: Reserved mode 11011 encountered during decoding"; break;
-                        case 0x1F: warnStr = "BC6H: Reserved mode 11111 encountered during decoding"; break;
+                        case 0x13:
+                            warnStr = "BC6H: Reserved mode 10011 encountered during decoding";
+                            break;
+                        case 0x17:
+                            warnStr = "BC6H: Reserved mode 10111 encountered during decoding";
+                            break;
+                        case 0x1B:
+                            warnStr = "BC6H: Reserved mode 11011 encountered during decoding";
+                            break;
+                        case 0x1F:
+                            warnStr = "BC6H: Reserved mode 11111 encountered during decoding";
+                            break;
                     }
 
                     Debug.WriteLine(warnStr);

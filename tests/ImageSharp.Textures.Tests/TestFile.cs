@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.IO;
-
 using SixLabors.ImageSharp.Advanced;
 using SixLabors.ImageSharp.Formats;
 using SixLabors.ImageSharp.PixelFormats;
@@ -19,13 +18,13 @@ namespace SixLabors.ImageSharp.Textures.Tests
         /// <summary>
         /// The test file cache.
         /// </summary>
-        private static readonly ConcurrentDictionary<string, TestFile> Cache = new ConcurrentDictionary<string, TestFile>();
+        private static readonly ConcurrentDictionary<string, TestFile> Cache = new();
 
         /// <summary>
         /// The "Formats" directory, as lazy value
         /// </summary>
         // ReSharper disable once InconsistentNaming
-        private static readonly Lazy<string> InputImagesDirectoryValue = new Lazy<string>(() => TestEnvironment.InputImagesDirectoryFullPath);
+        private static readonly Lazy<string> InputImagesDirectoryValue = new(() => TestEnvironment.InputImagesDirectoryFullPath);
 
         /// <summary>
         /// The image (lazy initialized value)
@@ -41,15 +40,12 @@ namespace SixLabors.ImageSharp.Textures.Tests
         /// Initializes a new instance of the <see cref="TestFile"/> class.
         /// </summary>
         /// <param name="file">The file.</param>
-        private TestFile(string file)
-        {
-            this.FullPath = file;
-        }
+        private TestFile(string file) => this.FullPath = file;
 
         /// <summary>
         /// Gets the image bytes.
         /// </summary>
-        public byte[] Bytes => this.bytes ?? (this.bytes = File.ReadAllBytes(this.FullPath));
+        public byte[] Bytes => this.bytes ??= File.ReadAllBytes(this.FullPath);
 
         /// <summary>
         /// Gets the full path to file.
@@ -69,7 +65,7 @@ namespace SixLabors.ImageSharp.Textures.Tests
         /// <summary>
         /// Gets the image with lazy initialization.
         /// </summary>
-        private Image<Rgba32> Image => this.image ?? (this.image = ImageSharp.Image.Load<Rgba32>(this.Bytes));
+        private Image<Rgba32> Image => this.image ??= ImageSharp.Image.Load<Rgba32>(this.Bytes);
 
         /// <summary>
         /// Gets the input image directory.
@@ -85,10 +81,7 @@ namespace SixLabors.ImageSharp.Textures.Tests
         /// <returns>
         /// The <see cref="string"/>.
         /// </returns>
-        public static string GetInputFileFullPath(string file)
-        {
-            return Path.Combine(InputImagesDirectory, file).Replace('\\', Path.DirectorySeparatorChar);
-        }
+        public static string GetInputFileFullPath(string file) => Path.Combine(InputImagesDirectory, file).Replace('\\', Path.DirectorySeparatorChar);
 
         /// <summary>
         /// Creates a new test file or returns one from the cache.
@@ -97,10 +90,7 @@ namespace SixLabors.ImageSharp.Textures.Tests
         /// <returns>
         /// The <see cref="TestFile"/>.
         /// </returns>
-        public static TestFile Create(string file)
-        {
-            return Cache.GetOrAdd(file, (string fileName) => new TestFile(GetInputFileFullPath(file)));
-        }
+        public static TestFile Create(string file) => Cache.GetOrAdd(file, (string fileName) => new TestFile(GetInputFileFullPath(file)));
 
         /// <summary>
         /// Gets the file name.
@@ -109,10 +99,7 @@ namespace SixLabors.ImageSharp.Textures.Tests
         /// <returns>
         /// The <see cref="string"/>.
         /// </returns>
-        public string GetFileName(object value)
-        {
-            return $"{this.FileNameWithoutExtension}-{value}{Path.GetExtension(this.FullPath)}";
-        }
+        public string GetFileName(object value) => $"{this.FileNameWithoutExtension}-{value}{Path.GetExtension(this.FullPath)}";
 
         /// <summary>
         /// Gets the file name without extension.
@@ -121,10 +108,7 @@ namespace SixLabors.ImageSharp.Textures.Tests
         /// <returns>
         /// The <see cref="string"/>.
         /// </returns>
-        public string GetFileNameWithoutExtension(object value)
-        {
-            return this.FileNameWithoutExtension + "-" + value;
-        }
+        public string GetFileNameWithoutExtension(object value) => this.FileNameWithoutExtension + "-" + value;
 
         /// <summary>
         /// Creates a new image.
@@ -132,10 +116,7 @@ namespace SixLabors.ImageSharp.Textures.Tests
         /// <returns>
         /// The <see cref="ImageSharp.Image"/>.
         /// </returns>
-        public Image<Rgba32> CreateRgba32Image()
-        {
-            return this.Image.Clone();
-        }
+        public Image<Rgba32> CreateRgba32Image() => this.Image.Clone();
 
         /// <summary>
         /// Creates a new image.
@@ -143,9 +124,6 @@ namespace SixLabors.ImageSharp.Textures.Tests
         /// <returns>
         /// The <see cref="ImageSharp.Image"/>.
         /// </returns>
-        public Image<Rgba32> CreateRgba32Image(IImageDecoder decoder)
-        {
-            return ImageSharp.Image.Load<Rgba32>(this.Image.GetConfiguration(), this.Bytes, decoder);
-        }
+        public Image<Rgba32> CreateRgba32Image(IImageDecoder decoder) => ImageSharp.Image.Load<Rgba32>(this.Image.GetConfiguration(), this.Bytes, decoder);
     }
 }

@@ -66,10 +66,10 @@ namespace SixLabors.ImageSharp.Textures
         /// </returns>
         public static ITextureInfo Identify(Configuration config, Stream stream, out ITextureFormat format)
         {
-            (ITextureInfo info, ITextureFormat format) data = WithSeekableStream(config, stream, s => InternalIdentity(s, config ?? Configuration.Default));
+            (ITextureInfo Info, ITextureFormat Format) data = WithSeekableStream(config, stream, s => InternalIdentity(s, config ?? Configuration.Default));
 
-            format = data.format;
-            return data.info;
+            format = data.Format;
+            return data.Info;
         }
 
         /// <summary>
@@ -140,13 +140,13 @@ namespace SixLabors.ImageSharp.Textures
         public static Texture Load(Configuration config, Stream stream, out ITextureFormat format)
         {
             config ??= Configuration.Default;
-            (Texture img, ITextureFormat format) data = WithSeekableStream(config, stream, s => DecodeTexture(s, config));
+            (Texture Img, ITextureFormat Format) data = WithSeekableStream(config, stream, s => DecodeTexture(s, config));
 
-            format = data.format;
+            format = data.Format;
 
-            if (data.img != null)
+            if (data.Img != null)
             {
-                return data.img;
+                return data.Img;
             }
 
             var sb = new StringBuilder();
@@ -178,13 +178,11 @@ namespace SixLabors.ImageSharp.Textures
             }
 
             // We want to be able to load images from things like HttpContext.Request.Body
-            using (var memoryStream = new MemoryStream())
-            {
-                stream.CopyTo(memoryStream);
-                memoryStream.Position = 0;
+            using var memoryStream = new MemoryStream();
+            stream.CopyTo(memoryStream);
+            memoryStream.Position = 0;
 
-                return action(memoryStream);
-            }
+            return action(memoryStream);
         }
     }
 }

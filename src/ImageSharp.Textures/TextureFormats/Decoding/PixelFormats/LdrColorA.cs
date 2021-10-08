@@ -56,11 +56,16 @@ namespace SixLabors.ImageSharp.Textures.TextureFormats.Decoding.PixelFormats
             {
                 switch (uElement)
                 {
-                    case 0: return this.R;
-                    case 1: return this.G;
-                    case 2: return this.B;
-                    case 3: return this.A;
-                    default: throw new IndexOutOfRangeException();
+                    case 0:
+                        return this.R;
+                    case 1:
+                        return this.G;
+                    case 2:
+                        return this.B;
+                    case 3:
+                        return this.A;
+                    default:
+                        throw new IndexOutOfRangeException();
                 }
             }
 

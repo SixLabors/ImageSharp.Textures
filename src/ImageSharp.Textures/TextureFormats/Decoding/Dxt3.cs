@@ -47,56 +47,56 @@ namespace SixLabors.ImageSharp.Textures.TextureFormats.Decoding
                  * to store values for later use.
                  */
 
-            // Remember where the alpha data is stored so we can decode simultaneously.
-            int alphaPtr = streamIndex;
+                // Remember where the alpha data is stored so we can decode simultaneously.
+                int alphaPtr = streamIndex;
 
-            // Jump ahead to the color data.
-            streamIndex += 8;
+                // Jump ahead to the color data.
+                streamIndex += 8;
 
-            // Colors are stored in a pair of 16 bits.
-            ushort color0 = blockData[streamIndex++];
-            color0 |= (ushort)(blockData[streamIndex++] << 8);
+                // Colors are stored in a pair of 16 bits.
+                ushort color0 = blockData[streamIndex++];
+                color0 |= (ushort)(blockData[streamIndex++] << 8);
 
-            ushort color1 = blockData[streamIndex++];
-            color1 |= (ushort)(blockData[streamIndex++] << 8);
+                ushort color1 = blockData[streamIndex++];
+                color1 |= (ushort)(blockData[streamIndex++] << 8);
 
-            // Extract R5G6B5.
-            PixelUtils.ExtractR5G6B5(color0, ref colors[0]);
-            PixelUtils.ExtractR5G6B5(color1, ref colors[1]);
+                // Extract R5G6B5.
+                PixelUtils.ExtractR5G6B5(color0, ref colors[0]);
+                PixelUtils.ExtractR5G6B5(color1, ref colors[1]);
 
-            // Used the two extracted colors to create two new colors
-            // that are slightly different.
-            colors[2].R = (byte)(((2 * colors[0].R) + colors[1].R) / 3);
-            colors[2].G = (byte)(((2 * colors[0].G) + colors[1].G) / 3);
-            colors[2].B = (byte)(((2 * colors[0].B) + colors[1].B) / 3);
+                // Used the two extracted colors to create two new colors
+                // that are slightly different.
+                colors[2].R = (byte)(((2 * colors[0].R) + colors[1].R) / 3);
+                colors[2].G = (byte)(((2 * colors[0].G) + colors[1].G) / 3);
+                colors[2].B = (byte)(((2 * colors[0].B) + colors[1].B) / 3);
 
-            colors[3].R = (byte)((colors[0].R + (2 * colors[1].R)) / 3);
-            colors[3].G = (byte)((colors[0].G + (2 * colors[1].G)) / 3);
-            colors[3].B = (byte)((colors[0].B + (2 * colors[1].B)) / 3);
+                colors[3].R = (byte)((colors[0].R + (2 * colors[1].R)) / 3);
+                colors[3].G = (byte)((colors[0].G + (2 * colors[1].G)) / 3);
+                colors[3].B = (byte)((colors[0].B + (2 * colors[1].B)) / 3);
 
-            for (int i = 0; i < 4; i++)
-            {
-                byte rowVal = blockData[streamIndex++];
-
-                // Each row of rgb values have 4 alpha values that  are encoded in 4 bits.
-                ushort rowAlpha = blockData[alphaPtr++];
-                rowAlpha |= (ushort)(blockData[alphaPtr++] << 8);
-
-                for (int j = 0; j < 8; j += 2)
+                for (int i = 0; i < 4; i++)
                 {
-                    byte currentAlpha = (byte)((rowAlpha >> (j * 2)) & 0x0f);
-                    currentAlpha |= (byte)(currentAlpha << 4);
-                    ImageSharp.PixelFormats.Rgb24 col = colors[(rowVal >> j) & 0x03];
-                    data[dataIndex++] = col.R;
-                    data[dataIndex++] = col.G;
-                    data[dataIndex++] = col.B;
-                    data[dataIndex++] = currentAlpha;
+                    byte rowVal = blockData[streamIndex++];
+
+                    // Each row of rgb values have 4 alpha values that  are encoded in 4 bits.
+                    ushort rowAlpha = blockData[alphaPtr++];
+                    rowAlpha |= (ushort)(blockData[alphaPtr++] << 8);
+
+                    for (int j = 0; j < 8; j += 2)
+                    {
+                        byte currentAlpha = (byte)((rowAlpha >> (j * 2)) & 0x0f);
+                        currentAlpha |= (byte)(currentAlpha << 4);
+                        ImageSharp.PixelFormats.Rgb24 col = colors[(rowVal >> j) & 0x03];
+                        data[dataIndex++] = col.R;
+                        data[dataIndex++] = col.G;
+                        data[dataIndex++] = col.B;
+                        data[dataIndex++] = currentAlpha;
+                    }
+
+                    dataIndex += self.PixelDepthBytes * (stride - self.DivSize);
                 }
 
-                dataIndex += self.PixelDepthBytes * (stride - self.DivSize);
-            }
-
-            return streamIndex;
+                return streamIndex;
             });
         }
     }

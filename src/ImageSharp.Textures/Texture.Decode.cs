@@ -30,19 +30,17 @@ namespace SixLabors.ImageSharp.Textures
                 return null;
             }
 
-            using (IManagedByteBuffer buffer = config.MemoryAllocator.AllocateManagedByteBuffer(headerSize, AllocationOptions.Clean))
-            {
-                long startPosition = stream.Position;
-                stream.Read(buffer.Array, 0, headerSize);
-                stream.Position = startPosition;
+            using IManagedByteBuffer buffer = config.MemoryAllocator.AllocateManagedByteBuffer(headerSize, AllocationOptions.Clean);
+            long startPosition = stream.Position;
+            stream.Read(buffer.Array, 0, headerSize);
+            stream.Position = startPosition;
 
-                // Does the given stream contain enough data to fit in the header for the format
-                // and does that data match the format specification?
-                // Individual formats should still check since they are public.
-                return config.ImageFormatsManager.FormatDetectors
-                    .Where(x => x.HeaderSize <= headerSize)
-                    .Select(x => x.DetectFormat(buffer.Memory.Span)).LastOrDefault(x => x != null);
-            }
+            // Does the given stream contain enough data to fit in the header for the format
+            // and does that data match the format specification?
+            // Individual formats should still check since they are public.
+            return config.ImageFormatsManager.FormatDetectors
+                .Where(x => x.HeaderSize <= headerSize)
+                .Select(x => x.DetectFormat(buffer.Memory.Span)).LastOrDefault(x => x != null);
         }
 
         /// <summary>
@@ -66,7 +64,7 @@ namespace SixLabors.ImageSharp.Textures
         /// </summary>
         /// <param name="stream">The stream.</param>
         /// <param name="config">the configuration.</param>
-        private static (Texture texture, ITextureFormat format) DecodeTexture(Stream stream, Configuration config)
+        private static (Texture Texture, ITextureFormat Format) DecodeTexture(Stream stream, Configuration config)
         {
             ITextureDecoder decoder = DiscoverDecoder(stream, config, out ITextureFormat format);
             if (decoder is null)
@@ -86,9 +84,9 @@ namespace SixLabors.ImageSharp.Textures
         /// <returns>
         /// The <see cref="ITextureInfo"/> or null if suitable info detector not found.
         /// </returns>
-        private static (ITextureInfo info, ITextureFormat format) InternalIdentity(Stream stream, Configuration config)
+        private static (ITextureInfo Info, ITextureFormat Format) InternalIdentity(Stream stream, Configuration config)
         {
-            if (!(DiscoverDecoder(stream, config, out ITextureFormat format) is ITextureInfoDetector detector))
+            if (DiscoverDecoder(stream, config, out ITextureFormat format) is not ITextureInfoDetector detector)
             {
                 return (null, null);
             }

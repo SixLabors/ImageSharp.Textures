@@ -337,7 +337,8 @@ namespace SixLabors.ImageSharp.Textures.TextureFormats.Decoding
                         {
                             switch (desc[uCurBit].MBc6HEField)
                             {
-                                case Bc6hEField.D: uShape |= 1u << desc[uCurBit].Bit;
+                                case Bc6hEField.D:
+                                    uShape |= 1u << desc[uCurBit].Bit;
                                     break;
                                 case Bc6hEField.RW:
                                     aEndPts[0].A.R |= 1 << desc[uCurBit].Bit;
@@ -468,10 +469,18 @@ namespace SixLabors.ImageSharp.Textures.TextureFormats.Decoding
                     string warnStr = "BC6H: Invalid mode encountered during decoding";
                     switch (uMode)
                     {
-                        case 0x13: warnStr = "BC6H: Reserved mode 10011 encountered during decoding"; break;
-                        case 0x17: warnStr = "BC6H: Reserved mode 10111 encountered during decoding"; break;
-                        case 0x1B: warnStr = "BC6H: Reserved mode 11011 encountered during decoding"; break;
-                        case 0x1F: warnStr = "BC6H: Reserved mode 11111 encountered during decoding"; break;
+                        case 0x13:
+                            warnStr = "BC6H: Reserved mode 10011 encountered during decoding";
+                            break;
+                        case 0x17:
+                            warnStr = "BC6H: Reserved mode 10111 encountered during decoding";
+                            break;
+                        case 0x1B:
+                            warnStr = "BC6H: Reserved mode 11011 encountered during decoding";
+                            break;
+                        case 0x1F:
+                            warnStr = "BC6H: Reserved mode 11111 encountered during decoding";
+                            break;
                     }
 
                     Debug.WriteLine(warnStr);

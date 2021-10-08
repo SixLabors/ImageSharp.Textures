@@ -254,9 +254,15 @@ namespace SixLabors.ImageSharp.Textures.TextureFormats.Decoding
 
                         switch (uRotation)
                         {
-                            case 1: outPixel.SwapRedWithAlpha(); break;
-                            case 2: outPixel.SwapGreenWithAlpha(); break;
-                            case 3: outPixel.SwapBlueWithAlpha(); break;
+                            case 1:
+                                outPixel.SwapRedWithAlpha();
+                                break;
+                            case 2:
+                                outPixel.SwapGreenWithAlpha();
+                                break;
+                            case 3:
+                                outPixel.SwapBlueWithAlpha();
+                                break;
                         }
 
                         // Note: whether it's sRGB is not taken into consideration
