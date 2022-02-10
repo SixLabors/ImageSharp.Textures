@@ -1,6 +1,6 @@
 <h1 align="center">
 
-<img src="https://github.com/SixLabors/Branding/raw/master/icons/imagesharp.textures/sixlabors.imagesharp.textures.svg?sanitize=true" alt="SixLabors.ImageSharp.Textures" width="256"/>
+<img src="https://github.com/SixLabors/Branding/raw/main/icons/imagesharp.textures/sixlabors.imagesharp.textures.svg?sanitize=true" alt="SixLabors.ImageSharp.Textures" width="256"/>
 <br/>
 SixLabors.ImageSharp.Textures
 </h1>
