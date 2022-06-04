@@ -55,7 +55,7 @@ jobs:
         if: "!contains(github.event.head_commit.message, '[skip ci]')"
 
         steps:
-            - uses: actions/checkout@v2
+            - uses: actions/checkout@v3
 
             # See https://github.com/actions/checkout/issues/165#issuecomment-657673315
             - name: Create LFS file list
@@ -133,7 +133,7 @@ jobs:
         if: (github.event_name == 'push')
 
         steps:
-            - uses: actions/checkout@v2
+            - uses: actions/checkout@v3
 
             - name: Install NuGet
               uses: NuGet/setup-nuget@v1
