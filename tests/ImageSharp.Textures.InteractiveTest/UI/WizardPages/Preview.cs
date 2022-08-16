@@ -36,7 +36,7 @@ namespace SixLabors.ImageSharp.Textures.InteractiveTest.UI.WizardPages
         public Preview(Wizard wizard)
             : base(wizard)
         {
-            this.rootFolder = Path.Combine(TestEnvironment.InputImagesDirectoryFullPath, "Dds", "Flat");
+            this.rootFolder = Path.Combine(TestEnvironment.InputImagesDirectoryFullPath, "Dds");
             this.currentFolder = this.rootFolder;
         }
 
