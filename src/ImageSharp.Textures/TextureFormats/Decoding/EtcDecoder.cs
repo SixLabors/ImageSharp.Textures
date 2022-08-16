@@ -37,10 +37,10 @@ namespace SixLabors.ImageSharp.Textures.TextureFormats.Decoding
 
         public static void DecodeEtc1Block(Span<byte> payload, Span<byte> decodedPixelSpan)
         {
-            var red = payload[0];
-            var green = payload[1];
-            var blue = payload[2];
-            var codeWordsWithFlags = payload[3];
+            byte red = payload[0];
+            byte green = payload[1];
+            byte blue = payload[2];
+            byte codeWordsWithFlags = payload[3];
 
             bool diffFlag = (codeWordsWithFlags & 2) != 0;
             bool flipFlag = (codeWordsWithFlags & 1) != 0;
@@ -83,7 +83,7 @@ namespace SixLabors.ImageSharp.Textures.TextureFormats.Decoding
                 c1b = c1b4 | (c1b4 << 4);
             }
 
-            var pixelIndexWord = BinaryPrimitives.ReadUInt32BigEndian(payload.Slice(4, 4));
+            uint pixelIndexWord = BinaryPrimitives.ReadUInt32BigEndian(payload.Slice(4, 4));
 
             // Check if the sub-blocks are horizontal or vertical.
             if (!flipFlag)
@@ -244,10 +244,10 @@ namespace SixLabors.ImageSharp.Textures.TextureFormats.Decoding
             {
                 for (int x = 0; x < 4; x++)
                 {
-                    var r = (byte)Helper.Clamp(((x * (rh - ro)) + (y * (rv - ro)) + (4 * ro) + 2) >> 2, 0, 255);
-                    var g = (byte)Helper.Clamp(((x * (gh - go)) + (y * (gv - go)) + (4 * go) + 2) >> 2, 0, 255);
-                    var b = (byte)Helper.Clamp(((x * (bh - bo)) + (y * (bv - bo)) + (4 * bo) + 2) >> 2, 0, 255);
-                    var pixelIdx = ((y * 4) + x) * 3;
+                    byte r = (byte)Helper.Clamp(((x * (rh - ro)) + (y * (rv - ro)) + (4 * ro) + 2) >> 2, 0, 255);
+                    byte g = (byte)Helper.Clamp(((x * (gh - go)) + (y * (gv - go)) + (4 * go) + 2) >> 2, 0, 255);
+                    byte b = (byte)Helper.Clamp(((x * (bh - bo)) + (y * (bv - bo)) + (4 * bo) + 2) >> 2, 0, 255);
+                    int pixelIdx = ((y * 4) + x) * 3;
                     decodedPixelSpan[pixelIdx] = r;
                     decodedPixelSpan[pixelIdx + 1] = g;
                     decodedPixelSpan[pixelIdx + 2] = b;
@@ -261,20 +261,20 @@ namespace SixLabors.ImageSharp.Textures.TextureFormats.Decoding
             int[] paintColorG = new int[4];
             int[] paintColorB = new int[4];
 
-            var c0r = ((payload[0] & 0x18) >> 1) | (payload[0] & 0x3);
+            int c0r = ((payload[0] & 0x18) >> 1) | (payload[0] & 0x3);
             c0r |= c0r << 4;
-            var c0g = payload[1] & 0xF0;
+            int c0g = payload[1] & 0xF0;
             c0g |= c0g >> 4;
-            var c0b = payload[1] & 0x0F;
+            int c0b = payload[1] & 0x0F;
             c0b |= c0b << 4;
-            var c1r = payload[2] & 0xF0;
+            int c1r = payload[2] & 0xF0;
             c1r |= c1r >> 4;
-            var c1g = payload[2] & 0x0F;
+            int c1g = payload[2] & 0x0F;
             c1g |= c1g << 4;
-            var c1b = payload[3] & 0xF0;
+            int c1b = payload[3] & 0xF0;
             c1b |= c1b >> 4;
 
-            var distance = Etc2DistanceTable[((payload[3] & 0x0C) >> 1) | (payload[3] & 0x1)];
+            int distance = Etc2DistanceTable[((payload[3] & 0x0C) >> 1) | (payload[3] & 0x1)];
             paintColorR[0] = c0r;
             paintColorG[0] = c0g;
             paintColorB[0] = c0b;
@@ -289,7 +289,7 @@ namespace SixLabors.ImageSharp.Textures.TextureFormats.Decoding
             paintColorB[3] = Helper.Clamp(c1b - distance, 0, 255);
 
             uint pixel_index_word = (uint)((payload[4] << 24) | (payload[5] << 16) | (payload[6] << 8) | payload[7]);
-            var decodedPixelIdx = 0;
+            int decodedPixelIdx = 0;
             for (int i = 0; i < 16; i++)
             {
                 uint pixel_index = (uint)(((pixel_index_word & (1 << i)) >> i) | ((pixel_index_word & (0x10000 << i)) >> (16 + i - 1)));
@@ -308,24 +308,24 @@ namespace SixLabors.ImageSharp.Textures.TextureFormats.Decoding
             int[] paintColorG = new int[4];
             int[] paintColorB = new int[4];
 
-            var c0r = (payload[0] & 0x78) >> 3;
+            int c0r = (payload[0] & 0x78) >> 3;
             c0r |= c0r << 4;
-            var c0g = ((payload[0] & 0x07) << 1) | ((payload[1] & 0x10) >> 4);
+            int c0g = ((payload[0] & 0x07) << 1) | ((payload[1] & 0x10) >> 4);
             c0g |= c0g << 4;
-            var c0b = (payload[1] & 0x08) | ((payload[1] & 0x03) << 1) | ((payload[2] & 0x80) >> 7);
+            int c0b = (payload[1] & 0x08) | ((payload[1] & 0x03) << 1) | ((payload[2] & 0x80) >> 7);
             c0b |= c0b << 4;
-            var c1r = (payload[2] & 0x78) >> 3;
+            int c1r = (payload[2] & 0x78) >> 3;
             c1r |= c1r << 4;
-            var c1g = ((payload[2] & 0x07) << 1) | ((payload[3] & 0x80) >> 7);
+            int c1g = ((payload[2] & 0x07) << 1) | ((payload[3] & 0x80) >> 7);
             c1g |= c1g << 4;
-            var c1b = (payload[3] & 0x78) >> 3;
+            int c1b = (payload[3] & 0x78) >> 3;
             c1b |= c1b << 4;
 
             int baseColor0Value = (c0r << 16) + (c0g << 8) + c0b;
             int baseColor1Value = (c1r << 16) + (c1g << 8) + c1b;
             int bit = baseColor0Value >= baseColor1Value ? 1 : 0;
 
-            var distance = Etc2DistanceTable[(payload[3] & 0x04) | ((payload[3] & 0x01) << 1) | bit];
+            int distance = Etc2DistanceTable[(payload[3] & 0x04) | ((payload[3] & 0x01) << 1) | bit];
             paintColorR[0] = Helper.Clamp(c0r + distance, 0, 255);
             paintColorG[0] = Helper.Clamp(c0g + distance, 0, 255);
             paintColorB[0] = Helper.Clamp(c0b + distance, 0, 255);
@@ -340,7 +340,7 @@ namespace SixLabors.ImageSharp.Textures.TextureFormats.Decoding
             paintColorB[3] = Helper.Clamp(c1b - distance, 0, 255);
 
             uint pixel_index_word = (uint)((payload[4] << 24) | (payload[5] << 16) | (payload[6] << 8) | payload[7]);
-            var decodedPixelIdx = 0;
+            int decodedPixelIdx = 0;
             for (int i = 0; i < 16; i++)
             {
                 uint pixel_index = (uint)(((pixel_index_word & (1 << i)) >> i) | ((pixel_index_word & (0x10000 << i)) >> (16 + i - 1)));
@@ -356,7 +356,7 @@ namespace SixLabors.ImageSharp.Textures.TextureFormats.Decoding
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static int FiveToEightBit(int color)
         {
-            var c0r = color | ((color & 0xE0) >> 5);
+            int c0r = color | ((color & 0xE0) >> 5);
             return c0r;
         }
 
@@ -372,7 +372,7 @@ namespace SixLabors.ImageSharp.Textures.TextureFormats.Decoding
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void ProcessPixelEtc1(int i, uint pixelIndexWord, uint tableCodeword, byte redBaseColorSubBlock, byte greenBaseColorSubBlock, byte blueBaseColorSubBlock, Span<byte> pixelBuffer)
         {
-            var pixelIndex = ((pixelIndexWord & (1 << i)) >> i) | ((pixelIndexWord & (0x10000 << i)) >> (16 + i - 1));
+            long pixelIndex = ((pixelIndexWord & (1 << i)) >> i) | ((pixelIndexWord & (0x10000 << i)) >> (16 + i - 1));
             int modifier = ModifierTable[tableCodeword, pixelIndex];
             byte red = (byte)Helper.Clamp(0, redBaseColorSubBlock + modifier, 255);
             byte green = (byte)Helper.Clamp(0, greenBaseColorSubBlock + modifier, 255);

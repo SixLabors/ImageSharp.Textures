@@ -40,7 +40,7 @@ namespace SixLabors.ImageSharp.Textures.TextureFormats.Decoding
             byte[] decompressedData = new byte[(width + extraX) * (height + extraY) * 3];
             byte[] decodedPixels = new byte[16 * 3];
             Span<byte> decodedPixelSpan = decodedPixels.AsSpan();
-            var blockDataIdx = 0;
+            int blockDataIdx = 0;
 
             for (int y = 0; y < height; y += 4)
             {
@@ -48,14 +48,14 @@ namespace SixLabors.ImageSharp.Textures.TextureFormats.Decoding
                 {
                     EtcDecoder.DecodeEtc1Block(blockData.AsSpan(blockDataIdx, 8), decodedPixelSpan);
 
-                    var decodedPixelSpanIdx = 0;
+                    int decodedPixelSpanIdx = 0;
                     for (int b = 0; b < 4; b++)
                     {
                         for (int a = 0; a < 4; a++)
                         {
-                            var imageX = x + b;
-                            var imageY = y + a;
-                            var offset = (imageY * width * 3) + (imageX * 3);
+                            int imageX = x + b;
+                            int imageY = y + a;
+                            int offset = (imageY * width * 3) + (imageX * 3);
                             decompressedData[offset] = decodedPixelSpan[decodedPixelSpanIdx++];
                             decompressedData[offset + 1] = decodedPixelSpan[decodedPixelSpanIdx++];
                             decompressedData[offset + 2] = decodedPixelSpan[decodedPixelSpanIdx++];
