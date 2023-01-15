@@ -33,9 +33,6 @@
 
   <ItemGroup>
     <PackageReference Include="SixLabors.ImageSharp" Version="2.1.3" />
-
-    <!--TODO: Upgrade version in ImageSharp-->
-    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="5.0.0" />
   </ItemGroup>
 
   <ItemGroup>
