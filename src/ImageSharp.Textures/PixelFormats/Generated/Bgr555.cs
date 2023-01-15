@@ -62,7 +62,7 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         public static bool operator !=(Bgr555 left, Bgr555 right) => !left.Equals(right);
 
         /// <inheritdoc />
-        public PixelOperations<Bgr555> CreatePixelOperations() => new PixelOperations<Bgr555>();
+        public PixelOperations<Bgr555> CreatePixelOperations() => new();
 
         /// <inheritdoc/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -82,14 +82,11 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Vector4 ToVector4()
-        {
-            return new Vector4(
+        public Vector4 ToVector4() => new(
                 ((this.PackedValue >> 10) & 31) / 31F,
                 ((this.PackedValue >> 5) & 31) / 31F,
                 (this.PackedValue & 31) / 31F,
                 1.0f);
-        }
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -106,6 +103,10 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void FromBgra32(Bgra32 source) => this.FromScaledVector4(source.ToScaledVector4());
+
+        /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void FromAbgr32(Abgr32 source) => this.FromScaledVector4(source.ToScaledVector4());
 
         /// <inheritdoc/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -133,10 +134,7 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void ToRgba32(ref Rgba32 dest)
-        {
-            dest.FromScaledVector4(this.ToScaledVector4());
-        }
+        public void ToRgba32(ref Rgba32 dest) => dest.FromScaledVector4(this.ToScaledVector4());
 
         /// <inheritdoc/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

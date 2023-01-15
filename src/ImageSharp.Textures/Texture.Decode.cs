@@ -5,6 +5,7 @@ using System;
 using System.IO;
 using System.Linq;
 using SixLabors.ImageSharp.Memory;
+using SixLabors.ImageSharp.Textures.Common.Extensions;
 using SixLabors.ImageSharp.Textures.Formats;
 
 namespace SixLabors.ImageSharp.Textures
@@ -30,9 +31,10 @@ namespace SixLabors.ImageSharp.Textures
                 return null;
             }
 
-            using IManagedByteBuffer buffer = config.MemoryAllocator.AllocateManagedByteBuffer(headerSize, AllocationOptions.Clean);
+            using System.Buffers.IMemoryOwner<byte> buffer = config.MemoryAllocator.Allocate<byte>(headerSize, AllocationOptions.Clean);
             long startPosition = stream.Position;
-            stream.Read(buffer.Array, 0, headerSize);
+            Span<byte> bufferSpan = buffer.Memory.Span;
+            stream.Read(bufferSpan, 0, headerSize);
             stream.Position = startPosition;
 
             // Does the given stream contain enough data to fit in the header for the format

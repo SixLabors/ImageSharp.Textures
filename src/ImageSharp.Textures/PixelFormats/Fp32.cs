@@ -32,7 +32,7 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         public float PackedValue { get; set; }
 
         /// <inheritdoc />
-        public PixelOperations<Fp32> CreatePixelOperations() => new PixelOperations<Fp32>();
+        public PixelOperations<Fp32> CreatePixelOperations() => new();
 
         /// <inheritdoc/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -48,7 +48,7 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Vector4 ToVector4() => new Vector4(this.PackedValue);
+        public Vector4 ToVector4() => new(this.PackedValue);
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -61,6 +61,10 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void FromBgra32(Bgra32 source) => this.FromScaledVector4(source.ToScaledVector4());
+
+        /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void FromAbgr32(Abgr32 source) => this.FromScaledVector4(source.ToScaledVector4());
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

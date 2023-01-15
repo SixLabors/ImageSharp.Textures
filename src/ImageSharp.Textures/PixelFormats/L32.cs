@@ -70,33 +70,28 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
 
         /// <inheritdoc/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void FromArgb32(Argb32 source)
-        {
-            this.PackedValue = Get16BitBT709Luminance(
+        public void FromArgb32(Argb32 source) => this.PackedValue = Get16BitBT709Luminance(
                 UpscaleFrom8BitTo16Bit(source.R),
                 UpscaleFrom8BitTo16Bit(source.G),
                 UpscaleFrom8BitTo16Bit(source.B));
-        }
 
         /// <inheritdoc/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void FromBgr24(Bgr24 source)
-        {
-            this.PackedValue = Get16BitBT709Luminance(
+        public void FromBgr24(Bgr24 source) => this.PackedValue = Get16BitBT709Luminance(
                 UpscaleFrom8BitTo16Bit(source.R),
                 UpscaleFrom8BitTo16Bit(source.G),
                 UpscaleFrom8BitTo16Bit(source.B));
-        }
 
         /// <inheritdoc/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void FromBgra32(Bgra32 source)
-        {
-            this.PackedValue = Get16BitBT709Luminance(
+        public void FromBgra32(Bgra32 source) => this.PackedValue = Get16BitBT709Luminance(
                 UpscaleFrom8BitTo16Bit(source.R),
                 UpscaleFrom8BitTo16Bit(source.G),
                 UpscaleFrom8BitTo16Bit(source.B));
-        }
+
+        /// <inheritdoc/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void FromAbgr32(Abgr32 source) => throw new System.NotImplementedException();
 
         /// <inheritdoc/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -120,23 +115,17 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void FromRgb24(Rgb24 source)
-        {
-            this.PackedValue = Get16BitBT709Luminance(
+        public void FromRgb24(Rgb24 source) => this.PackedValue = Get16BitBT709Luminance(
                 UpscaleFrom8BitTo16Bit(source.R),
                 UpscaleFrom8BitTo16Bit(source.G),
                 UpscaleFrom8BitTo16Bit(source.B));
-        }
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void FromRgba32(Rgba32 source)
-        {
-            this.PackedValue = Get16BitBT709Luminance(
+        public void FromRgba32(Rgba32 source) => this.PackedValue = Get16BitBT709Luminance(
                 UpscaleFrom8BitTo16Bit(source.R),
                 UpscaleFrom8BitTo16Bit(source.G),
                 UpscaleFrom8BitTo16Bit(source.B));
-        }
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -158,7 +147,7 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         public void FromRgba64(Rgba64 source) => this.PackedValue = Get16BitBT709Luminance(source.R, source.G, source.B);
 
         /// <inheritdoc />
-        public PixelOperations<L32> CreatePixelOperations() => new PixelOperations<L32>();
+        public PixelOperations<L32> CreatePixelOperations() => new();
 
         /// <inheritdoc />
         public override readonly bool Equals(object obj) => obj is L16 other && this.Equals(other);

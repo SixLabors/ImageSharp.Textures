@@ -55,10 +55,6 @@ namespace SixLabors.ImageSharp.Textures.Common.Extensions
             }
         }
 
-        public static void Read(this Stream stream, IManagedByteBuffer buffer) => stream.Read(buffer.Array, 0, buffer.Memory.Length);
-
-        public static void Write(this Stream stream, IManagedByteBuffer buffer) => stream.Write(buffer.Array, 0, buffer.Memory.Length);
-
 #if NET472 || NETSTANDARD1_3 || NETSTANDARD2_0
         // This is a port of the CoreFX implementation and is MIT Licensed: https://github.com/dotnet/coreclr/blob/c4dca1072d15bdda64c754ad1ea474b1580fa554/src/System.Private.CoreLib/shared/System/IO/Stream.cs#L770
         public static void Write(this Stream stream, ReadOnlySpan<byte> buffer)

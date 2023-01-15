@@ -63,7 +63,7 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         public static bool operator !=(Rgba5551 left, Rgba5551 right) => !left.Equals(right);
 
         /// <inheritdoc />
-        public PixelOperations<Rgba5551> CreatePixelOperations() => new PixelOperations<Rgba5551>();
+        public PixelOperations<Rgba5551> CreatePixelOperations() => new();
 
         /// <inheritdoc/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -83,14 +83,11 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Vector4 ToVector4()
-        {
-            return new Vector4(
+        public Vector4 ToVector4() => new(
                 (this.PackedValue & 31) / 31F,
                 ((this.PackedValue >> 5) & 31) / 31F,
                 ((this.PackedValue >> 10) & 31) / 31F,
                 ((this.PackedValue >> 15) & 1) / 1F);
-        }
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -107,6 +104,10 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void FromBgra32(Bgra32 source) => this.FromScaledVector4(source.ToScaledVector4());
+
+        /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void FromAbgr32(Abgr32 source) => this.FromScaledVector4(source.ToScaledVector4());
 
         /// <inheritdoc/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -134,10 +135,7 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void ToRgba32(ref Rgba32 dest)
-        {
-            dest.FromScaledVector4(this.ToScaledVector4());
-        }
+        public void ToRgba32(ref Rgba32 dest) => dest.FromScaledVector4(this.ToScaledVector4());
 
         /// <inheritdoc/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

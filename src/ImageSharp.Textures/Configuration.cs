@@ -20,9 +20,11 @@ namespace SixLabors.ImageSharp.Textures
         /// <summary>
         /// A lazily initialized configuration default instance.
         /// </summary>
-        private static readonly Lazy<Configuration> Lazy = new Lazy<Configuration>(CreateDefaultInstance);
+        private static readonly Lazy<Configuration> Lazy = new(CreateDefaultInstance);
 
         private int maxDegreeOfParallelism = Environment.ProcessorCount;
+
+        private MemoryAllocator memoryAllocator = MemoryAllocator.Default;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Configuration" /> class.
@@ -83,12 +85,20 @@ namespace SixLabors.ImageSharp.Textures
         /// <summary>
         /// Gets or sets the <see cref="TextureFormatManager"/> that is currently in use.
         /// </summary>
-        public TextureFormatManager ImageFormatsManager { get; set; } = new TextureFormatManager();
+        public TextureFormatManager ImageFormatsManager { get; set; } = new();
 
         /// <summary>
         /// Gets or sets the <see cref="MemoryAllocator"/> that is currently in use.
         /// </summary>
-        public MemoryAllocator MemoryAllocator { get; set; } = ArrayPoolMemoryAllocator.CreateDefault();
+        public MemoryAllocator MemoryAllocator
+        {
+            get => this.memoryAllocator;
+            set
+            {
+                Guard.NotNull(value, nameof(this.MemoryAllocator));
+                this.memoryAllocator = value;
+            }
+        }
 
         /// <summary>
         /// Gets the maximum header size of all the formats.
@@ -123,7 +133,7 @@ namespace SixLabors.ImageSharp.Textures
         /// Creates a shallow copy of the <see cref="Configuration"/>.
         /// </summary>
         /// <returns>A new configuration instance.</returns>
-        public Configuration Clone() => new Configuration
+        public Configuration Clone() => new()
         {
             MaxDegreeOfParallelism = this.MaxDegreeOfParallelism,
             ImageFormatsManager = this.ImageFormatsManager,
@@ -138,7 +148,7 @@ namespace SixLabors.ImageSharp.Textures
         /// <see cref="DdsConfigurationModule"/>
         /// </summary>
         /// <returns>The default configuration of <see cref="Configuration"/>.</returns>
-        internal static Configuration CreateDefaultInstance() => new Configuration(
+        internal static Configuration CreateDefaultInstance() => new(
                 new DdsConfigurationModule(),
                 new KtxConfigurationModule(),
                 new Ktx2ConfigurationModule());

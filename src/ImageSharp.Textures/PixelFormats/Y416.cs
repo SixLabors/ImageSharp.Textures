@@ -41,7 +41,7 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
 
         /// <inheritdoc/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public PixelOperations<Y416> CreatePixelOperations() => new PixelOperations<Y416>();
+        public PixelOperations<Y416> CreatePixelOperations() => new();
 
         /// <inheritdoc/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -55,6 +55,9 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
 
         /// <inheritdoc/>
         public void FromBgra32(Bgra32 source) => throw new NotImplementedException();
+
+        /// <inheritdoc/>
+        public void FromAbgr32(Abgr32 source) => throw new NotImplementedException();
 
         /// <inheritdoc/>
         public void FromBgra5551(Bgra5551 source) => throw new NotImplementedException();

@@ -64,7 +64,7 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         public static bool operator !=(Rgba64Float left, Rgba64Float right) => !left.Equals(right);
 
         /// <inheritdoc />
-        public PixelOperations<Rgba64Float> CreatePixelOperations() => new PixelOperations<Rgba64Float>();
+        public PixelOperations<Rgba64Float> CreatePixelOperations() => new();
 
         /// <inheritdoc/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -84,14 +84,11 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Vector4 ToVector4()
-        {
-            return new Vector4(
+        public Vector4 ToVector4() => new(
                 FloatHelper.UnpackFloat16ToFloat((ushort)(this.PackedValue & 65535)),
                 FloatHelper.UnpackFloat16ToFloat((ushort)((this.PackedValue >> 16) & 65535)),
                 FloatHelper.UnpackFloat16ToFloat((ushort)((this.PackedValue >> 32) & 65535)),
                 FloatHelper.UnpackFloat16ToFloat((ushort)((this.PackedValue >> 48) & 65535)));
-        }
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -108,6 +105,10 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void FromBgra32(Bgra32 source) => this.FromScaledVector4(source.ToScaledVector4());
+
+        /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void FromAbgr32(Abgr32 source) => this.FromScaledVector4(source.ToScaledVector4());
 
         /// <inheritdoc/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

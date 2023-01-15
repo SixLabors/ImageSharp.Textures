@@ -3,7 +3,7 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <GenerateProgramFile>false</GenerateProgramFile>
-    <TargetFrameworks>net5.0;netcoreapp3.1;netcoreapp2.1;net472</TargetFrameworks>
+    <TargetFrameworks>net5.0;netcoreapp3.1;netcoreapp2.1</TargetFrameworks>
     <RuntimeIdentifiers>win-x64;osx-x64</RuntimeIdentifiers>
     <PublishTrimmed>false</PublishTrimmed>
     <AssemblyName>SixLabors.ImageSharp.Textures.InteractiveTest</AssemblyName>

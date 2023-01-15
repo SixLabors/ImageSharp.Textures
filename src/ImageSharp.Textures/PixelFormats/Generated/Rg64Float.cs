@@ -66,7 +66,7 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         public static bool operator !=(Rg64Float left, Rg64Float right) => !left.Equals(right);
 
         /// <inheritdoc />
-        public PixelOperations<Rg64Float> CreatePixelOperations() => new PixelOperations<Rg64Float>();
+        public PixelOperations<Rg64Float> CreatePixelOperations() => new();
 
         /// <inheritdoc/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -86,14 +86,11 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Vector4 ToVector4()
-        {
-            return new Vector4(
+        public Vector4 ToVector4() => new(
                 this.R,
                 this.G,
                 0.0f,
                 1.0f);
-        }
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -110,6 +107,10 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void FromBgra32(Bgra32 source) => this.FromScaledVector4(source.ToScaledVector4());
+
+        /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void FromAbgr32(Abgr32 source) => this.FromScaledVector4(source.ToScaledVector4());
 
         /// <inheritdoc/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -137,10 +138,7 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void ToRgba32(ref Rgba32 dest)
-        {
-            dest.FromScaledVector4(this.ToScaledVector4());
-        }
+        public void ToRgba32(ref Rgba32 dest) => dest.FromScaledVector4(this.ToScaledVector4());
 
         /// <inheritdoc/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -158,10 +156,7 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         public bool Equals(Rg64Float other) => this.R.Equals(other.R) && this.G.Equals(other.G);
 
         /// <inheritdoc />
-        public override string ToString()
-        {
-            return FormattableString.Invariant($"Rg64Float({this.R}, {this.G})");
-        }
+        public override string ToString() => FormattableString.Invariant($"Rg64Float({this.R}, {this.G})");
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

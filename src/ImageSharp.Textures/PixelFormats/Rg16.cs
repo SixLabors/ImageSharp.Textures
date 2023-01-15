@@ -16,7 +16,7 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
     /// </summary>
     public struct Rg16 : IPixel<Rg16>, IPackedVector<ushort>
     {
-        private static readonly Vector2 Max = new Vector2(byte.MaxValue);
+        private static readonly Vector2 Max = new(byte.MaxValue);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Rg16"/> struct.
@@ -60,7 +60,7 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         public static bool operator !=(Rg16 left, Rg16 right) => !left.Equals(right);
 
         /// <inheritdoc />
-        public PixelOperations<Rg16> CreatePixelOperations() => new PixelOperations<Rg16>();
+        public PixelOperations<Rg16> CreatePixelOperations() => new();
 
         /// <inheritdoc/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -80,7 +80,7 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Vector4 ToVector4() => new Vector4(this.ToVector2(), 0F, 1F);
+        public Vector4 ToVector4() => new(this.ToVector2(), 0F, 1F);
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -93,6 +93,10 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void FromBgra32(Bgra32 source) => this.FromScaledVector4(source.ToScaledVector4());
+
+        /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void FromAbgr32(Abgr32 source) => this.FromScaledVector4(source.ToScaledVector4());
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -124,10 +128,7 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void ToRgba32(ref Rgba32 dest)
-        {
-            dest.FromScaledVector4(this.ToScaledVector4());
-        }
+        public void ToRgba32(ref Rgba32 dest) => dest.FromScaledVector4(this.ToScaledVector4());
 
         /// <inheritdoc/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
