@@ -56,6 +56,7 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         /// <inheritdoc/>
         public void FromBgra32(Bgra32 source) => throw new NotImplementedException();
 
+        /// <inheritdoc/>
         public void FromAbgr32(Abgr32 source) => throw new NotImplementedException();
 
         /// <inheritdoc/>
