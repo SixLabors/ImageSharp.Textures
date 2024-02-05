@@ -64,7 +64,7 @@ jobs:
               run: git lfs pull
 
             - name: Install NuGet
-              uses: NuGet/setup-nuget@v1
+              uses: NuGet/setup-nuget@v2
 
             - name: Setup Git
               shell: bash
@@ -128,7 +128,7 @@ jobs:
             - uses: actions/checkout@v4
 
             - name: Install NuGet
-              uses: NuGet/setup-nuget@v1
+              uses: NuGet/setup-nuget@v2
 
             - name: Setup Git
               shell: bash
