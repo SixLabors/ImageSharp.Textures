@@ -13,10 +13,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Veldrid.ImageSharp" Version="4.9.0" />
+    <PackageReference Include="Veldrid.ImageSharp" />
     <PackageReference Include="Veldrid.ImGui" />
-    <PackageReference Include="Veldrid.StartupUtilities" Version="4.9.0" />
-    <PackageReference Include="Veldrid.Utilities" Version="4.9.0" />
+    <PackageReference Include="Veldrid.StartupUtilities" />
+    <PackageReference Include="Veldrid.Utilities" />
   </ItemGroup>
 
   <ItemGroup>

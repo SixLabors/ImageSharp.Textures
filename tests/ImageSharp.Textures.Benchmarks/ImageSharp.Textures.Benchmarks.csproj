@@ -12,9 +12,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Magick.NET-Q16-AnyCPU" Version="14.9.0" />
-    <PackageReference Include="BenchmarkDotNet" Version="0.15.4" />
-    <PackageReference Include="System.Drawing.Common" Version="9.0.10" />
+    <PackageReference Include="Magick.NET-Q16-AnyCPU" />
+    <PackageReference Include="BenchmarkDotNet" />
+    <PackageReference Include="System.Drawing.Common" />
   </ItemGroup>
 
   <Import Project="..\Images\Images.projitems" Label="Shared" />

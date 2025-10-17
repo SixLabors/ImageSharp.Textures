@@ -17,15 +17,15 @@
   <Import Project="$(MSBuildThisFileDirectory)..\Directory.Build.targets" />
 
   <ItemGroup>
-    <PackageReference Update="BenchmarkDotNet" Version="0.13.1" />
-    <PackageReference Update="Magick.NET-Q16-AnyCPU" Version="8.3.3" />
-    <PackageReference Update="Moq" Version="4.16.1" />
+    <PackageReference Update="BenchmarkDotNet" Version="0.15.4" />
+    <PackageReference Update="Magick.NET-Q16-AnyCPU" Version="14.9.0" />
+    <PackageReference Update="Moq" Version="4.20.72" />
     <PackageReference Update="Microsoft.NET.Test.Sdk" Version="16.2.0" />
-    <PackageReference Update="System.Drawing.Common" Version="5.0.2" />
-    <PackageReference Update="Veldrid.ImageSharp" Version="4.8.0" />
+    <PackageReference Update="System.Drawing.Common" Version="9.0.10" />
+    <PackageReference Update="Veldrid.ImageSharp" Version="4.9.0" />
     <PackageReference Update="Veldrid.ImGui" Version="5.72.0" />
-    <PackageReference Update="Veldrid.StartupUtilities" Version="4.8.0" />
-    <PackageReference Update="Veldrid.Utilities" Version="4.8.0" />
+    <PackageReference Update="Veldrid.StartupUtilities" Version="4.9.0" />
+    <PackageReference Update="Veldrid.Utilities" Version="4.9.0" />
     <PackageReference Update="Microsoft.DotNet.RemoteExecutor" Version="6.0.0-beta.21311.3" />
     <PackageReference Update="Microsoft.DotNet.XUnitExtensions" Version="6.0.0-beta.21311.3" />
   </ItemGroup>
