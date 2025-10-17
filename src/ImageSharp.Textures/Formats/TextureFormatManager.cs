@@ -92,7 +92,7 @@ namespace SixLabors.ImageSharp.Textures.Formats
         /// </summary>
         /// <param name="extension">The extension to discover</param>
         /// <returns>The <see cref="ITextureFormat"/> if found otherwise null</returns>
-        public ITextureFormat FindFormatByFileExtension(string extension)
+        public ITextureFormat? FindFormatByFileExtension(string extension)
         {
             Guard.NotNullOrWhiteSpace(extension, nameof(extension));
 
@@ -109,7 +109,7 @@ namespace SixLabors.ImageSharp.Textures.Formats
         /// </summary>
         /// <param name="mimeType">The mime-type to discover</param>
         /// <returns>The <see cref="ITextureFormat"/> if found; otherwise null</returns>
-        public ITextureFormat FindFormatByMimeType(string mimeType) => this.imageFormats.FirstOrDefault(x => x.MimeTypes.Contains(mimeType, StringComparer.OrdinalIgnoreCase));
+        public ITextureFormat? FindFormatByMimeType(string mimeType) => this.imageFormats.FirstOrDefault(x => x.MimeTypes.Contains(mimeType, StringComparer.OrdinalIgnoreCase));
 
         /// <summary>
         /// Sets a specific image encoder as the encoder for a specific image format.
@@ -158,11 +158,11 @@ namespace SixLabors.ImageSharp.Textures.Formats
         /// </summary>
         /// <param name="format">The format to discover</param>
         /// <returns>The <see cref="ITextureDecoder"/> if found otherwise null</returns>
-        public ITextureDecoder FindDecoder(ITextureFormat format)
+        public ITextureDecoder? FindDecoder(ITextureFormat format)
         {
             Guard.NotNull(format, nameof(format));
 
-            return this.mimeTypeDecoders.TryGetValue(format, out ITextureDecoder decoder)
+            return this.mimeTypeDecoders.TryGetValue(format, out ITextureDecoder? decoder)
                 ? decoder
                 : null;
         }
@@ -172,11 +172,11 @@ namespace SixLabors.ImageSharp.Textures.Formats
         /// </summary>
         /// <param name="format">The format to discover</param>
         /// <returns>The <see cref="ITextureEncoder"/> if found otherwise null</returns>
-        public ITextureEncoder FindEncoder(ITextureFormat format)
+        public ITextureEncoder? FindEncoder(ITextureFormat format)
         {
             Guard.NotNull(format, nameof(format));
 
-            return this.mimeTypeEncoders.TryGetValue(format, out ITextureEncoder encoder)
+            return this.mimeTypeEncoders.TryGetValue(format, out ITextureEncoder? encoder)
                 ? encoder
                 : null;
         }

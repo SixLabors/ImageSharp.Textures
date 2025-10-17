@@ -152,7 +152,7 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         public void FromRgba64(Rgba64 source) => this.FromScaledVector4(source.ToScaledVector4());
 
         /// <inheritdoc />
-        public override bool Equals(object obj) => obj is R11G11B10Float other && this.Equals(other);
+        public override bool Equals(object? obj) => obj is R11G11B10Float other && this.Equals(other);
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -17,7 +17,7 @@ namespace SixLabors.ImageSharp.Textures
         /// </summary>
         /// <param name="filePath">The image file to open and to read the header from.</param>
         /// <returns>The mime type or null if none found.</returns>
-        public static ITextureFormat DetectFormat(string filePath) => DetectFormat(Configuration.Default, filePath);
+        public static ITextureFormat? DetectFormat(string filePath) => DetectFormat(Configuration.Default, filePath);
 
         /// <summary>
         /// By reading the header on the provided file this calculates the images mime type.
@@ -25,7 +25,7 @@ namespace SixLabors.ImageSharp.Textures
         /// <param name="config">The configuration.</param>
         /// <param name="filePath">The image file to open and to read the header from.</param>
         /// <returns>The mime type or null if none found.</returns>
-        public static ITextureFormat DetectFormat(Configuration config, string filePath)
+        public static ITextureFormat? DetectFormat(Configuration config, string filePath)
         {
             config ??= Configuration.Default;
             using (Stream file = config.FileSystem.OpenRead(filePath))
@@ -41,8 +41,8 @@ namespace SixLabors.ImageSharp.Textures
         /// <returns>
         /// The <see cref="ITextureInfo"/> or null if suitable info detector not found.
         /// </returns>
-        public static ITextureInfo Identify(string filePath)
-            => Identify(filePath, out ITextureFormat _);
+        public static ITextureInfo? Identify(string filePath)
+            => Identify(filePath, out ITextureFormat? _);
 
         /// <summary>
         /// Reads the raw texture information from the specified stream without fully decoding it.
@@ -52,7 +52,7 @@ namespace SixLabors.ImageSharp.Textures
         /// <returns>
         /// The <see cref="ITextureInfo"/> or null if suitable info detector not found.
         /// </returns>
-        public static ITextureInfo Identify(string filePath, out ITextureFormat format)
+        public static ITextureInfo? Identify(string filePath, out ITextureFormat? format)
             => Identify(Configuration.Default, filePath, out format);
 
         /// <summary>
@@ -65,7 +65,7 @@ namespace SixLabors.ImageSharp.Textures
         /// <returns>
         /// The <see cref="ITextureInfo"/> or null if suitable info detector is not found.
         /// </returns>
-        public static ITextureInfo Identify(Configuration configuration, string filePath, out ITextureFormat format)
+        public static ITextureInfo? Identify(Configuration configuration, string filePath, out ITextureFormat? format)
         {
             Guard.NotNull(configuration, nameof(configuration));
             using (Stream file = configuration.FileSystem.OpenRead(filePath))
@@ -82,7 +82,7 @@ namespace SixLabors.ImageSharp.Textures
         /// Thrown if the stream is not readable nor seekable.
         /// </exception>
         /// <returns>The <see cref="Texture"/>.</returns>
-        public static Texture Load(string path) => Load(Configuration.Default, path);
+        public static Texture? Load(string path) => Load(Configuration.Default, path);
 
         /// <summary>
         /// Create a new instance of the <see cref="Texture"/> class from the given file.
@@ -93,7 +93,7 @@ namespace SixLabors.ImageSharp.Textures
         /// Thrown if the stream is not readable nor seekable.
         /// </exception>
         /// <returns>A new <see cref="Texture"/>.</returns>
-        public static Texture Load(string path, out ITextureFormat format) => Load(Configuration.Default, path, out format);
+        public static Texture? Load(string path, out ITextureFormat? format) => Load(Configuration.Default, path, out format);
 
         /// <summary>
         /// Create a new instance of the <see cref="Texture"/> class from the given file.
@@ -104,7 +104,7 @@ namespace SixLabors.ImageSharp.Textures
         /// Thrown if the stream is not readable nor seekable.
         /// </exception>
         /// <returns>The <see cref="Texture"/>.</returns>
-        public static Texture Load(Configuration config, string path) => Load(config, path, out _);
+        public static Texture? Load(Configuration config, string path) => Load(config, path, out _);
 
         /// <summary>
         /// Create a new instance of the <see cref="Texture"/> class from the given file.
@@ -146,7 +146,7 @@ namespace SixLabors.ImageSharp.Textures
         /// Thrown if the stream is not readable nor seekable.
         /// </exception>
         /// <returns>The <see cref="Texture"/>.</returns>
-        public static Texture Load(Configuration config, string path, out ITextureFormat format)
+        public static Texture? Load(Configuration config, string path, out ITextureFormat? format)
         {
             using (Stream stream = config.FileSystem.OpenRead(path))
             {

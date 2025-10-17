@@ -136,7 +136,7 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         public Vector<float> ToVector() => new Vector<float>(this.PackedValue);
 
         /// <inheritdoc />
-        public override readonly bool Equals(object obj) => obj is Fp32 other && this.Equals(other);
+        public override readonly bool Equals(object? obj) => obj is Fp32 other && this.Equals(other);
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

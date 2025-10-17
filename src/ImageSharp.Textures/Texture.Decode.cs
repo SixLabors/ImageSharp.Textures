@@ -21,7 +21,7 @@ namespace SixLabors.ImageSharp.Textures
         /// <param name="stream">The image stream to read the header from.</param>
         /// <param name="config">The configuration.</param>
         /// <returns>The mime type or null if none found.</returns>
-        private static ITextureFormat InternalDetectFormat(Stream stream, Configuration config)
+        private static ITextureFormat? InternalDetectFormat(Stream stream, Configuration config)
         {
             // We take a minimum of the stream length vs the max header size and always check below
             // to ensure that only formats that headers fit within the given buffer length are tested.
@@ -52,7 +52,7 @@ namespace SixLabors.ImageSharp.Textures
         /// <param name="config">The configuration.</param>
         /// <param name="format">The IImageFormat.</param>
         /// <returns>The image format or null if none found.</returns>
-        private static ITextureDecoder DiscoverDecoder(Stream stream, Configuration config, out ITextureFormat format)
+        private static ITextureDecoder? DiscoverDecoder(Stream stream, Configuration config, out ITextureFormat? format)
         {
             format = InternalDetectFormat(stream, config);
 
@@ -66,9 +66,9 @@ namespace SixLabors.ImageSharp.Textures
         /// </summary>
         /// <param name="stream">The stream.</param>
         /// <param name="config">the configuration.</param>
-        private static (Texture Texture, ITextureFormat Format) DecodeTexture(Stream stream, Configuration config)
+        private static (Texture? Texture, ITextureFormat? Format) DecodeTexture(Stream stream, Configuration config)
         {
-            ITextureDecoder decoder = DiscoverDecoder(stream, config, out ITextureFormat format);
+            ITextureDecoder? decoder = DiscoverDecoder(stream, config, out ITextureFormat? format);
             if (decoder is null)
             {
                 return (null, null);
@@ -86,9 +86,9 @@ namespace SixLabors.ImageSharp.Textures
         /// <returns>
         /// The <see cref="ITextureInfo"/> or null if suitable info detector not found.
         /// </returns>
-        private static (ITextureInfo Info, ITextureFormat Format) InternalIdentity(Stream stream, Configuration config)
+        private static (ITextureInfo? Info, ITextureFormat? Format) InternalIdentity(Stream stream, Configuration config)
         {
-            if (DiscoverDecoder(stream, config, out ITextureFormat format) is not ITextureInfoDetector detector)
+            if (DiscoverDecoder(stream, config, out ITextureFormat? format) is not ITextureInfoDetector detector)
             {
                 return (null, null);
             }

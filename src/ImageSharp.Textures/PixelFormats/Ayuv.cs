@@ -7,8 +7,6 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using SixLabors.ImageSharp.PixelFormats;
 
-#nullable enable
-
 namespace SixLabors.ImageSharp.Textures.PixelFormats
 {
     /// <summary>

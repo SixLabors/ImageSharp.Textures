@@ -13,6 +13,12 @@
     <Description>A texture loading and manipulation library; written in C#</Description>
   </PropertyGroup>
 
+  <!--  This enables the nullable analysis and treats all nullable warnings as error-->
+  <PropertyGroup>
+    <Nullable>enable</Nullable>
+    <WarningsAsErrors>Nullable</WarningsAsErrors>
+  </PropertyGroup>
+
   <Choose>
     <When Condition="$(SIXLABORS_TESTING_PREVIEW) == true">
       <PropertyGroup>

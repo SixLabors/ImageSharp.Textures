@@ -10,8 +10,6 @@ using SixLabors.ImageSharp.Textures.TextureFormats.Decoding;
 using Fp32 = SixLabors.ImageSharp.Textures.TextureFormats.Decoding.Fp32;
 using L32 = SixLabors.ImageSharp.Textures.TextureFormats.Decoding.L32;
 
-#nullable enable
-
 namespace SixLabors.ImageSharp.Textures.Formats.Dds
 {
     /// <summary>

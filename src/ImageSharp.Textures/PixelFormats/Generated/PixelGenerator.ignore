@@ -169,7 +169,7 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         public void FromRgba64(Rgba64 source) => this.FromScaledVector4(source.ToScaledVector4());
 
         /// <inheritdoc />
-        public override bool Equals(object obj) => obj is Rgba128Float other && this.Equals(other);
+        public override bool Equals(object? obj) => obj is Rgba128Float other && this.Equals(other);
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -357,7 +357,7 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         public void FromRgba64(Rgba64 source) => this.FromScaledVector4(source.ToScaledVector4());
 
         /// <inheritdoc />
-        public override bool Equals(object obj) => obj is Rgba128 other && this.Equals(other);
+        public override bool Equals(object? obj) => obj is Rgba128 other && this.Equals(other);
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -536,7 +536,7 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         public void FromRgba64(Rgba64 source) => this.FromScaledVector4(source.ToScaledVector4());
 
         /// <inheritdoc />
-        public override bool Equals(object obj) => obj is Rgb96Float other && this.Equals(other);
+        public override bool Equals(object? obj) => obj is Rgb96Float other && this.Equals(other);
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -715,7 +715,7 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         public void FromRgba64(Rgba64 source) => this.FromScaledVector4(source.ToScaledVector4());
 
         /// <inheritdoc />
-        public override bool Equals(object obj) => obj is Rgb96 other && this.Equals(other);
+        public override bool Equals(object? obj) => obj is Rgb96 other && this.Equals(other);
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -883,7 +883,7 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         public void FromRgba64(Rgba64 source) => this.FromScaledVector4(source.ToScaledVector4());
 
         /// <inheritdoc />
-        public override bool Equals(object obj) => obj is Rgba64Float other && this.Equals(other);
+        public override bool Equals(object? obj) => obj is Rgba64Float other && this.Equals(other);
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1061,7 +1061,7 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         public void FromRgba64(Rgba64 source) => this.FromScaledVector4(source.ToScaledVector4());
 
         /// <inheritdoc />
-        public override bool Equals(object obj) => obj is Rg32Float other && this.Equals(other);
+        public override bool Equals(object? obj) => obj is Rg32Float other && this.Equals(other);
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1241,7 +1241,7 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         public void FromRgba64(Rgba64 source) => this.FromScaledVector4(source.ToScaledVector4());
 
         /// <inheritdoc />
-        public override bool Equals(object obj) => obj is Rg64Float other && this.Equals(other);
+        public override bool Equals(object? obj) => obj is Rg64Float other && this.Equals(other);
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1411,7 +1411,7 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         public void FromRgba64(Rgba64 source) => this.FromScaledVector4(source.ToScaledVector4());
 
         /// <inheritdoc />
-        public override bool Equals(object obj) => obj is Rg64 other && this.Equals(other);
+        public override bool Equals(object? obj) => obj is Rg64 other && this.Equals(other);
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1577,7 +1577,7 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         public void FromRgba64(Rgba64 source) => this.FromScaledVector4(source.ToScaledVector4());
 
         /// <inheritdoc />
-        public override bool Equals(object obj) => obj is D32_FLOAT_S8X24_UINT other && this.Equals(other);
+        public override bool Equals(object? obj) => obj is D32_FLOAT_S8X24_UINT other && this.Equals(other);
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1753,7 +1753,7 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         public void FromRgba64(Rgba64 source) => this.FromScaledVector4(source.ToScaledVector4());
 
         /// <inheritdoc />
-        public override bool Equals(object obj) => obj is Bgr555 other && this.Equals(other);
+        public override bool Equals(object? obj) => obj is Bgr555 other && this.Equals(other);
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1931,7 +1931,7 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         public void FromRgba64(Rgba64 source) => this.FromScaledVector4(source.ToScaledVector4());
 
         /// <inheritdoc />
-        public override bool Equals(object obj) => obj is Rgba5551 other && this.Equals(other);
+        public override bool Equals(object? obj) => obj is Rgba5551 other && this.Equals(other);
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

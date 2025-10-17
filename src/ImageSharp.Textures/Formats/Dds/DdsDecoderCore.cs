@@ -108,7 +108,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds
                 }
                 else if (this.ddsHeader.IsCubemap())
                 {
-                    DdsSurfaceType[] faces = this.ddsHeader.GetExistingCubemapFaces();
+                    DdsSurfaceType[] faces = this.ddsHeader.GetExistingCubemapFaces() ?? Array.Empty<DdsSurfaceType>();
 
                     var texture = new CubemapTexture();
                     for (int face = 0; face < faces.Length; face++)

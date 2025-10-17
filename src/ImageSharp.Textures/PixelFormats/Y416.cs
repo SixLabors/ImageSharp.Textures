@@ -51,7 +51,7 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         public static bool operator !=(Y416 left, Y416 right) => !left.Equals(right);
 
         /// <inheritdoc />
-        public override readonly bool Equals(object obj) => obj is Y416 other && this.Equals(other);
+        public override readonly bool Equals(object? obj) => obj is Y416 other && this.Equals(other);
 
         /// <inheritdoc/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

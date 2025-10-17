@@ -14,7 +14,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx
         public int HeaderSize => 12;
 
         /// <inheritdoc/>
-        public ITextureFormat DetectFormat(ReadOnlySpan<byte> header) => this.IsSupportedFileFormat(header) ? KtxFormat.Instance : null;
+        public ITextureFormat? DetectFormat(ReadOnlySpan<byte> header) => this.IsSupportedFileFormat(header) ? KtxFormat.Instance : null;
 
         private bool IsSupportedFileFormat(ReadOnlySpan<byte> header)
         {

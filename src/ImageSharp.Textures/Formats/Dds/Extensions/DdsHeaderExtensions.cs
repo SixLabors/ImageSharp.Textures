@@ -156,7 +156,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Extensions
         /// <returns>
         /// Types of cube map faces stored in this cube map or null if this is not a cubemap.
         /// </returns>
-        public static DdsSurfaceType[] GetExistingCubemapFaces(this DdsHeader ddsHeader)
+        public static DdsSurfaceType[]? GetExistingCubemapFaces(this DdsHeader ddsHeader)
         {
             int depth = ddsHeader.ComputeDepth();
             var result = new DdsSurfaceType[depth];

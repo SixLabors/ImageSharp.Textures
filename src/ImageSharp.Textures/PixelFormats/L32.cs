@@ -150,7 +150,7 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         public PixelOperations<L32> CreatePixelOperations() => new();
 
         /// <inheritdoc />
-        public override readonly bool Equals(object obj) => obj is L16 other && this.Equals(other);
+        public override readonly bool Equals(object? obj) => obj is L16 other && this.Equals(other);
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

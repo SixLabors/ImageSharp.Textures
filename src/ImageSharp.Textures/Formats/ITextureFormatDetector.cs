@@ -21,6 +21,6 @@ namespace SixLabors.ImageSharp.Textures.Formats
         /// </summary>
         /// <param name="header">The <see cref="T:byte[]"/> containing the file header.</param>
         /// <returns>returns the mime type of detected otherwise returns null</returns>
-        ITextureFormat DetectFormat(ReadOnlySpan<byte> header);
+        ITextureFormat? DetectFormat(ReadOnlySpan<byte> header);
     }
 }

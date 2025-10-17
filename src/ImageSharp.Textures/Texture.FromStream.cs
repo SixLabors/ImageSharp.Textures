@@ -22,7 +22,7 @@ namespace SixLabors.ImageSharp.Textures
         /// <param name="stream">The image stream to read the header from.</param>
         /// <exception cref="NotSupportedException">Thrown if the stream is not readable.</exception>
         /// <returns>The format type or null if none found.</returns>
-        public static ITextureFormat DetectFormat(Stream stream) => DetectFormat(Configuration.Default, stream);
+        public static ITextureFormat? DetectFormat(Stream stream) => DetectFormat(Configuration.Default, stream);
 
         /// <summary>
         /// By reading the header on the provided stream this calculates the images format type.
@@ -31,7 +31,7 @@ namespace SixLabors.ImageSharp.Textures
         /// <param name="stream">The image stream to read the header from.</param>
         /// <exception cref="NotSupportedException">Thrown if the stream is not readable.</exception>
         /// <returns>The format type or null if none found.</returns>
-        public static ITextureFormat DetectFormat(Configuration config, Stream stream)
+        public static ITextureFormat? DetectFormat(Configuration config, Stream stream)
             => WithSeekableStream(config, stream, s => InternalDetectFormat(s, config));
 
         /// <summary>
@@ -42,7 +42,7 @@ namespace SixLabors.ImageSharp.Textures
         /// <returns>
         /// The <see cref="ITextureInfo"/> or null if suitable info detector not found.
         /// </returns>
-        public static ITextureInfo Identify(Stream stream) => Identify(stream, out ITextureFormat _);
+        public static ITextureInfo? Identify(Stream stream) => Identify(stream, out ITextureFormat? _);
 
         /// <summary>
         /// By reading the header on the provided stream this reads the raw image information.
@@ -53,7 +53,7 @@ namespace SixLabors.ImageSharp.Textures
         /// <returns>
         /// The <see cref="ITextureInfo"/> or null if suitable info detector not found.
         /// </returns>
-        public static ITextureInfo Identify(Stream stream, out ITextureFormat format) => Identify(Configuration.Default, stream, out format);
+        public static ITextureInfo? Identify(Stream stream, out ITextureFormat? format) => Identify(Configuration.Default, stream, out format);
 
         /// <summary>
         /// Reads the raw image information from the specified stream without fully decoding it.
@@ -65,9 +65,9 @@ namespace SixLabors.ImageSharp.Textures
         /// <returns>
         /// The <see cref="ITextureInfo"/> or null if suitable info detector is not found.
         /// </returns>
-        public static ITextureInfo Identify(Configuration config, Stream stream, out ITextureFormat format)
+        public static ITextureInfo? Identify(Configuration config, Stream stream, out ITextureFormat? format)
         {
-            (ITextureInfo Info, ITextureFormat Format) data = WithSeekableStream(config, stream, s => InternalIdentity(s, config ?? Configuration.Default));
+            (ITextureInfo? Info, ITextureFormat? Format) data = WithSeekableStream(config, stream, s => InternalIdentity(s, config ?? Configuration.Default));
 
             format = data.Format;
             return data.Info;
@@ -82,7 +82,7 @@ namespace SixLabors.ImageSharp.Textures
         /// <exception cref="NotSupportedException">Thrown if the stream is not readable.</exception>
         /// <exception cref="UnknownTextureFormatException">Image cannot be loaded.</exception>
         /// <returns>The <see cref="Texture"/>.</returns>
-        public static Texture Load(Stream stream, out ITextureFormat format) => Load(Configuration.Default, stream, out format);
+        public static Texture Load(Stream stream, out ITextureFormat? format) => Load(Configuration.Default, stream, out format);
 
         /// <summary>
         /// Decode a new instance of the <see cref="Texture"/> class from the given stream.
@@ -138,10 +138,10 @@ namespace SixLabors.ImageSharp.Textures
         /// <exception cref="NotSupportedException">Thrown if the stream is not readable.</exception>
         /// <exception cref="UnknownTextureFormatException">Image cannot be loaded.</exception>
         /// <returns>A new <see cref="Texture"/>.</returns>
-        public static Texture Load(Configuration config, Stream stream, out ITextureFormat format)
+        public static Texture Load(Configuration config, Stream stream, out ITextureFormat? format)
         {
             config ??= Configuration.Default;
-            (Texture Img, ITextureFormat Format) data = WithSeekableStream(config, stream, s => DecodeTexture(s, config));
+            (Texture? Img, ITextureFormat? Format) data = WithSeekableStream(config, stream, s => DecodeTexture(s, config));
 
             format = data.Format;
 
