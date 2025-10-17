@@ -12,12 +12,34 @@ using SixLabors.ImageSharp.PixelFormats;
 
 namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities
 {
+    /// <summary>
+    /// Utility class to provide information about the test image & the test case for the test code,
+    /// and help managing IO.
+    /// </summary>
     public class ImagingTestCaseUtility
     {
+        /// <summary>
+        /// Gets or sets the name of the TPixel in the owner.
+        /// </summary>
         public string PixelTypeName { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Gets or sets the name of the file which is provided by.
+        /// Or a short string describing the image in the case of a non-file based image provider.
+        /// </summary>
         public string SourceFileOrDescription { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Gets or sets the test group name.
+        /// By default this is the name of the test class, but it's possible to change it.
+        /// </summary>
         public string TestGroupName { get; set; } = string.Empty;
+
         public string OutputSubfolderName { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Gets or sets the name of the test case (by default).
+        /// </summary>
         public string TestName { get; set; } = string.Empty;
 
         private string GetTestOutputFileNameImpl(
@@ -75,10 +97,26 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities
                 details = '_' + details;
             }
 
-            string composed = string.Format(CultureInfo.InvariantCulture, "{0}{1}{2}{3}{4}{5}{6}", this.GetTestOutputDir(), Path.DirectorySeparatorChar, this.TestName, pixName, fn, details, extension);
-            return composed; // Already invariant
+            return string.Format(
+                CultureInfo.InvariantCulture,
+                "{0}{1}{2}{3}{4}{5}{6}",
+                this.GetTestOutputDir(),
+                Path.DirectorySeparatorChar,
+                this.TestName,
+                pixName,
+                fn,
+                details,
+                extension);
         }
 
+        /// <summary>
+        /// Gets the recommended file name for the output of the test
+        /// </summary>
+        /// <param name="extension">The required extension</param>
+        /// <param name="testOutputDetails">The settings modifying the output path</param>
+        /// <param name="appendPixelTypeToFileName">A boolean indicating whether to append the pixel type to output file name.</param>
+        /// <param name="appendSourceFileOrDescription">A boolean indicating whether to append SourceFileOrDescription to the test output file name.</param>
+        /// <returns>The file test name</returns>
         public string GetTestOutputFileName(
             string extension = null,
             object testOutputDetails = null,
@@ -121,6 +159,16 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities
                 appendSourceFileOrDescription);
         }
 
+        /// <summary>
+        /// Encodes image by the format matching the required extension, than saves it to the recommended output file.
+        /// </summary>
+        /// <param name="image">The image instance.</param>
+        /// <param name="extension">The requested extension.</param>
+        /// <param name="encoder">Optional encoder.</param>
+        /// <param name="testOutputDetails">Additional information to append to the test output file name.</param>
+        /// <param name="appendPixelTypeToFileName">A value indicating whether to append the pixel type to the test output file name.</param>
+        /// <param name="appendSourceFileOrDescription">A boolean indicating whether to append SourceFileOrDescription to the test output file name.</param>
+        /// <returns>The path to the saved image file.</returns>
         public string SaveTestOutputFile(
             Image image,
             string extension = null,

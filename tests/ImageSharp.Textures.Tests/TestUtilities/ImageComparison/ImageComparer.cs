@@ -13,10 +13,19 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.ImageComparison
     {
         public static ImageComparer Exact { get; } = Tolerant(0, 0);
 
+        /// <summary>
+        /// Returns an instance of <see cref="TolerantImageComparer"/>.
+        /// Individual manhattan pixel difference is only added to total image difference when the individual difference is over 'perPixelManhattanThreshold'.
+        /// </summary>
+        /// <returns>The comparer.</returns>
         public static ImageComparer Tolerant(
             float imageThreshold = TolerantImageComparer.DefaultImageThreshold,
             int perPixelManhattanThreshold = 0) => new TolerantImageComparer(imageThreshold, perPixelManhattanThreshold);
 
+        /// <summary>
+        /// Returns Tolerant(imageThresholdInPercents/100)
+        /// </summary>
+        /// <returns>The comparer.</returns>
         public static ImageComparer TolerantPercentage(float imageThresholdInPercents, int perPixelManhattanThreshold = 0)
             => Tolerant(imageThresholdInPercents / 100F, perPixelManhattanThreshold);
 

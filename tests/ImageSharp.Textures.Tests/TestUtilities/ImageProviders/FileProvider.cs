@@ -2,6 +2,7 @@
 // Licensed under the Six Labors Split License.
 
 using System.Collections.Concurrent;
+using System.Globalization;
 using System.Reflection;
 using SixLabors.ImageSharp.Formats;
 using SixLabors.ImageSharp.PixelFormats;
@@ -45,7 +46,7 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.ImageProviders
                         PropertyInfo[] properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
                         foreach (PropertyInfo p in properties)
                         {
-                            string key = string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0}.{1}", type.FullName, p.Name);
+                            string key = string.Format(CultureInfo.InvariantCulture, "{0}.{1}", type.FullName, p.Name);
                             object value = p.GetValue(customDecoder);
                             data[key] = value;
                         }
