@@ -7,7 +7,6 @@
     <RootNamespace>SixLabors.ImageSharp.Textures</RootNamespace>
     <PackageId>SixLabors.ImageSharp.Textures</PackageId>
     <PackageIcon>sixlabors.imagesharp.textures.128.png</PackageIcon>
-    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <RepositoryUrl Condition="'$(RepositoryUrl)' == ''">https://github.com/SixLabors/ImageSharp.Textures/</RepositoryUrl>
     <PackageProjectUrl>$(RepositoryUrl)</PackageProjectUrl>
     <PackageTags>Texture Surface BASIS DDS KTX KTX2 ETC1 ETC2 DXT1 DXT3 DXT5 BC5 BC6 BC7</PackageTags>
@@ -28,6 +27,7 @@
   </Choose>
   
   <ItemGroup>
+    <None Include="..\..\LICENSE" Pack="true" PackagePath="" />
     <None Include="..\..\shared-infrastructure\branding\icons\imagesharp\sixlabors.imagesharp.128.png" Pack="true" PackagePath="" />
     <None Include="..\..\SixLabors.ImageSharp.props" Pack="true" PackagePath="build" />
   </ItemGroup>

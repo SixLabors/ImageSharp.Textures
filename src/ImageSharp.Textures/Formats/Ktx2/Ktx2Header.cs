@@ -1,5 +1,5 @@
 // Copyright (c) Six Labors.
-// Licensed under the Apache License, Version 2.0.
+// Licensed under the Six Labors Split License.
 
 using System;
 using System.Buffers.Binary;
@@ -105,7 +105,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx2
         /// <summary>
         /// Gets the supercompression scheme.
         /// supercompressionScheme indicates if a supercompression scheme has been applied to the data in levelImages.
-        /// It must be one of the values from Table 2, ìSupercompression Schemesî. A value of 0 indicates no supercompression.
+        /// It must be one of the values from Table 2, ‚ÄúSupercompression Schemes‚Äù. A value of 0 indicates no supercompression.
         /// </summary>
         public uint SupercompressionScheme { get; }
 
@@ -139,7 +139,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx2
 
         /// <summary>
         /// Gets the number of bytes of supercompressionGlobalData.
-        /// For supercompression schemes for which no reference is provided in the Global Data Format column of Table 2, ìSupercompression Schemesî. the value must be 0.
+        /// For supercompression schemes for which no reference is provided in the Global Data Format column of Table 2, ‚ÄúSupercompression Schemes‚Äù. the value must be 0.
         /// </summary>
         public ulong SgdByteLength { get; }
 
