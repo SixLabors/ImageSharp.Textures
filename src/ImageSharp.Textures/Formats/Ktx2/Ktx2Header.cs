@@ -147,7 +147,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx2
         {
             if (data.Length < Ktx2Constants.KtxHeaderSize)
             {
-                throw new ArgumentException(nameof(data), $"Ktx2 header must be {Ktx2Constants.KtxHeaderSize} bytes. Was {data.Length} bytes.");
+                throw new ArgumentException($"Ktx2 header must be {Ktx2Constants.KtxHeaderSize} bytes. Was {data.Length} bytes.", nameof(data));
             }
 
             return new Ktx2Header(

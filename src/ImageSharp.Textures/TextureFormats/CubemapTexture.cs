@@ -79,11 +79,6 @@ namespace SixLabors.ImageSharp.Textures.TextureFormats
 
         /// <inheritdoc/>
         internal override void EnsureNotDisposed()
-        {
-            if (this.isDisposed)
-            {
-                throw new ObjectDisposedException("Trying to execute an operation on a disposed image.");
-            }
-        }
+            => ObjectDisposedException.ThrowIf(this.isDisposed, "Trying to execute an operation on a disposed image.");
     }
 }

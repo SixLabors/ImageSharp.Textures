@@ -110,7 +110,8 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.ImageComparison
             }
             else
             {
-                return ImageSimilarityReport<TPixelA, TPixelB>.Empty;
+                // Construct an empty generic report explicitly.
+                return new ImageSimilarityReport<TPixelA, TPixelB>(expected, actual, [], 0f);
             }
         }
 

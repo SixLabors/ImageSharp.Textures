@@ -2,6 +2,7 @@
 // Licensed under the Six Labors Split License.
 
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Textures.Tests.TestUtilities.ImageComparison.Exceptions;
@@ -12,17 +13,10 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.ImageComparison
     {
         public static ImageComparer Exact { get; } = Tolerant(0, 0);
 
-        /// <summary>
-        /// Returns an instance of <see cref="TolerantImageComparer"/>.
-        /// Individual manhattan pixel difference is only added to total image difference when the individual difference is over 'perPixelManhattanThreshold'.
-        /// </summary>
         public static ImageComparer Tolerant(
             float imageThreshold = TolerantImageComparer.DefaultImageThreshold,
             int perPixelManhattanThreshold = 0) => new TolerantImageComparer(imageThreshold, perPixelManhattanThreshold);
 
-        /// <summary>
-        /// Returns Tolerant(imageThresholdInPercents/100)
-        /// </summary>
         public static ImageComparer TolerantPercentage(float imageThresholdInPercents, int perPixelManhattanThreshold = 0)
             => Tolerant(imageThresholdInPercents / 100F, perPixelManhattanThreshold);
 
@@ -59,7 +53,7 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.ImageComparison
                 throw new ImagesSimilarityException("Image frame count does not match!");
             }
 
-            ImageSimilarityReport report = comparer.CompareImages(expected, actual);
+            ImageSimilarityReport<TPixelA, TPixelB> report = comparer.CompareImages(expected, actual);
             if ((report.TotalNormalizedDifference ?? 0F) != 0F)
             {
                 throw new ImagesSimilarityException(report.ToString());
@@ -84,7 +78,7 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.ImageComparison
                 throw new ImagesSimilarityException("Image frame count does not match!");
             }
 
-            ImageSimilarityReport report = comparer.CompareImages(expected, actual);
+            ImageSimilarityReport<TPixelA, TPixelB> report = comparer.CompareImages(expected, actual);
             if ((report.TotalNormalizedDifference ?? 0F) != 0F)
             {
                 IEnumerable<PixelDifference> outsideChanges = report.Differences.Where(

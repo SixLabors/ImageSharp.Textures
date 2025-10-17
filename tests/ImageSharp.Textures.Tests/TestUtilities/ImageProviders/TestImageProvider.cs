@@ -38,6 +38,9 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.ImageProviders
 
         public string OutputSubfolderName { get; private set; }
 
+        /// <summary>
+        /// Returns a file backed provider.
+        /// </summary>
         public static TestImageProvider<TPixel> File(
             string filePath,
             MethodInfo testMethod = null,
@@ -49,9 +52,9 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.ImageProviders
         /// <returns>A test image.</returns>
         public abstract Image<TPixel> GetImage();
 
-        public virtual Image<TPixel> GetImage(IImageFormat format, IImageDecoder decoder) => throw new NotSupportedException($"Decoder specific GetImage() is not supported with {this.GetType().Name}!");
+        public virtual Image<TPixel> GetImage(IImageFormat format, IImageDecoder decoder) => throw new NotSupportedException(string.Format(System.Globalization.CultureInfo.InvariantCulture, "Decoder specific GetImage() is not supported with {0}!", this.GetType().Name));
 
-        public virtual Task<Image<TPixel>> GetImageAsync(IImageFormat format, IImageDecoder decoder) => throw new NotSupportedException($"Decoder specific GetImageAsync() is not supported with {this.GetType().Name}!");
+        public virtual Task<Image<TPixel>> GetImageAsync(IImageFormat format, IImageDecoder decoder) => throw new NotSupportedException(string.Format(System.Globalization.CultureInfo.InvariantCulture, "Decoder specific GetImageAsync() is not supported with {0}!", this.GetType().Name));
 
         /// <summary>
         /// Returns an <see cref="Image{TPixel}"/> instance to the test case with the necessary traits.
@@ -118,6 +121,6 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.ImageProviders
             return this.Init(testMethod?.DeclaringType.Name, testMethod?.Name, subfolder, pixelTypeOverride);
         }
 
-        public override string ToString() => $"{this.SourceFileOrDescription}[{this.PixelType}]";
+        public override string ToString() => string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0}[{1}]", this.SourceFileOrDescription, this.PixelType);
     }
 }

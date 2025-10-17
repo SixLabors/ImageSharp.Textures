@@ -192,7 +192,7 @@ namespace SixLabors.ImageSharp.Textures.TextureFormats.Decoding
             int b = payload[2] & 0xF8;
             b += Complement3BitShifted(payload[2] & 7);
 
-            decodedPixelSpan.Fill(0);
+            decodedPixelSpan.Clear();
             if ((r & 0xFF07) != 0)
             {
                 ProcessBlockEtc2TMode(payload, decodedPixelSpan);

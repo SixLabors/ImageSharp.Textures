@@ -83,10 +83,7 @@ namespace SixLabors.ImageSharp.Textures.Formats
 
             lock (HashLock)
             {
-                if (!this.imageFormats.Contains(format))
-                {
-                    this.imageFormats.Add(format);
-                }
+                _ = this.imageFormats.Add(format);
             }
         }
 

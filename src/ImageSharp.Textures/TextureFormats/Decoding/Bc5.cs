@@ -38,7 +38,7 @@ namespace SixLabors.ImageSharp.Textures.TextureFormats.Decoding
         /// <inheritdoc/>
         public byte[] Decompress(byte[] blockData, int width, int height)
         {
-            IBlock self = this;
+            Bc5 self = this;
 
             byte[] firstGradient = new byte[8];
             byte[] secondGradient = new byte[8];

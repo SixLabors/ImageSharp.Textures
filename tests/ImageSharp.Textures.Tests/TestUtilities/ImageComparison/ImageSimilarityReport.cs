@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using SixLabors.ImageSharp.PixelFormats;
@@ -11,6 +12,9 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.ImageComparison
 {
     public class ImageSimilarityReport
     {
+        // Provide an empty non-generic instance to avoid CA1000 in generic type.
+        public static ImageSimilarityReport Empty => new ImageSimilarityReport(null, null, Array.Empty<PixelDifference>(), 0f);
+
         protected ImageSimilarityReport(
             object expectedImage,
             object actualImage,
@@ -44,7 +48,7 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.ImageComparison
                 }
                 else
                 {
-                    return $"{this.TotalNormalizedDifference.Value * 100:0.0000}%";
+                    return string.Format(CultureInfo.InvariantCulture, "{0:0.0000}%", this.TotalNormalizedDifference.Value * 100);
                 }
             }
         }
@@ -64,7 +68,7 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.ImageComparison
             if (this.TotalNormalizedDifference.HasValue)
             {
                 sb.AppendLine();
-                sb.AppendLine($"Total difference: {this.DifferencePercentageString}");
+                sb.AppendLine(string.Format(CultureInfo.InvariantCulture, "Total difference: {0}", this.DifferencePercentageString));
             }
 
             int max = Math.Min(5, this.Differences.Length);
@@ -74,7 +78,7 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.ImageComparison
                 sb.Append(this.Differences[i]);
                 if (i < max - 1)
                 {
-                    sb.AppendFormat(";{0}", Environment.NewLine);
+                    sb.AppendFormat(CultureInfo.InvariantCulture, ";{0}", Environment.NewLine);
                 }
             }
 
@@ -99,9 +103,6 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.ImageComparison
             : base(expectedImage, actualImage, differences, totalNormalizedDifference)
         {
         }
-
-        public static ImageSimilarityReport<TPixelA, TPixelB> Empty =>
-            new ImageSimilarityReport<TPixelA, TPixelB>(null, null, Enumerable.Empty<PixelDifference>(), 0f);
 
         public new Image<TPixelA> ExpectedImage => (Image<TPixelA>)base.ExpectedImage;
 

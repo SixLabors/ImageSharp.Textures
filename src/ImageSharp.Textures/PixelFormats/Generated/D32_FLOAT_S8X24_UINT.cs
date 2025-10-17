@@ -16,7 +16,9 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
     /// Ranges from [0, 0] to [1, 1] in vector form.
     /// </para>
     /// </summary>
+#pragma warning disable CA1707 // Identifiers should not contain underscores
     public partial struct D32_FLOAT_S8X24_UINT : IPixel<D32_FLOAT_S8X24_UINT>, IPackedVector<ulong>
+#pragma warning restore CA1707 // Identifiers should not contain underscores
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="D32_FLOAT_S8X24_UINT"/> struct.

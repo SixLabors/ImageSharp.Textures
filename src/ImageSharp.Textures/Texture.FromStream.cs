@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using SixLabors.ImageSharp.Textures.Common.Exceptions;
@@ -150,11 +151,11 @@ namespace SixLabors.ImageSharp.Textures
             }
 
             var sb = new StringBuilder();
-            sb.AppendLine("Image cannot be loaded. Available decoders:");
+            _ = sb.AppendLine("Image cannot be loaded. Available decoders:");
 
             foreach (KeyValuePair<ITextureFormat, ITextureDecoder> val in config.ImageFormatsManager.ImageDecoders)
             {
-                sb.AppendLine($" - {val.Key.Name} : {val.Value.GetType().Name}");
+                _ = sb.AppendLine(CultureInfo.InvariantCulture, $" - {val.Key.Name} : {val.Value.GetType().Name}");
             }
 
             throw new UnknownTextureFormatException(sb.ToString());

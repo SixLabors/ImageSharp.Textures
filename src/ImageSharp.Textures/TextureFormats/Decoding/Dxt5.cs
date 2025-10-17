@@ -35,7 +35,7 @@ namespace SixLabors.ImageSharp.Textures.TextureFormats.Decoding
         /// <inheritdoc/>
         public byte[] Decompress(byte[] blockData, int width, int height)
         {
-            IBlock self = this;
+            Dxt5 self = this;
             byte[] alpha = new byte[8];
             var colors = new ImageSharp.PixelFormats.Rgb24[4];
 

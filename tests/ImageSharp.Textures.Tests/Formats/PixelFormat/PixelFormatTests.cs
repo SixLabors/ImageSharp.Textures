@@ -1,6 +1,7 @@
 // Copyright (c) Six Labors.
 // Licensed under the Six Labors Split License.
 
+using System.Globalization;
 using SixLabors.ImageSharp.Textures.PixelFormats;
 using Xunit;
 using Rg16 = SixLabors.ImageSharp.Textures.PixelFormats.Rg16;
@@ -21,12 +22,12 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.PixelFormat
 
                 var testPixel = new Rg16(x, y);
 
-                Assert.Equal($"Rg16({x}, {y})", testPixel.ToString());
+                Assert.Equal(string.Format(CultureInfo.InvariantCulture, "Rg16({0}, {1})", x, y), testPixel.ToString());
 
                 var destPixel = new ImageSharp.PixelFormats.Rgba32(0);
                 testPixel.ToRgba32(ref destPixel);
 
-                Assert.Equal(hexValues[i], testPixel.PackedValue.ToString("X"));
+                Assert.Equal(hexValues[i], testPixel.PackedValue.ToString("X", CultureInfo.InvariantCulture));
 
                 Assert.Equal(i == 0 ? 255 : 0, destPixel.R);
                 Assert.Equal(i == 1 ? 255 : 0, destPixel.G);
@@ -54,7 +55,7 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.PixelFormat
                 var destPixel = new ImageSharp.PixelFormats.Rgba32(0);
                 testPixel.ToRgba32(ref destPixel);
 
-                Assert.Equal(hexValues[i], testPixel.PackedValue.ToString("X"));
+                Assert.Equal(hexValues[i], testPixel.PackedValue.ToString("X", CultureInfo.InvariantCulture));
 
                 Assert.Equal(i == 0 ? 255 : 0, destPixel.R);
                 Assert.Equal(i == 1 ? 255 : 0, destPixel.G);
@@ -82,7 +83,7 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.PixelFormat
                 var destPixel = new ImageSharp.PixelFormats.Rgba32(0);
                 testPixel.ToRgba32(ref destPixel);
 
-                Assert.Equal(hexValues[i], testPixel.PackedValue.ToString("X"));
+                Assert.Equal(hexValues[i], testPixel.PackedValue.ToString("X", CultureInfo.InvariantCulture));
 
                 Assert.Equal(i == 0 ? 255 : 0, destPixel.R);
                 Assert.Equal(i == 1 ? 255 : 0, destPixel.G);
@@ -110,7 +111,7 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.PixelFormat
                 var destPixel = new ImageSharp.PixelFormats.Rgba32(0);
                 testPixel.ToRgba32(ref destPixel);
 
-                Assert.Equal(hexValues[i], testPixel.PackedValue.ToString("X"));
+                Assert.Equal(hexValues[i], testPixel.PackedValue.ToString("X", CultureInfo.InvariantCulture));
 
                 Assert.Equal(i == 0 ? 255 : 0, destPixel.R);
                 Assert.Equal(i == 1 ? 255 : 0, destPixel.G);

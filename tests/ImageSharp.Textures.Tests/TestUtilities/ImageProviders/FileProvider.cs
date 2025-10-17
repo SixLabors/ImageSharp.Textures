@@ -13,11 +13,11 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.ImageProviders
     public abstract partial class TestImageProvider<TPixel> : IXunitSerializable
         where TPixel : unmanaged, IPixel<TPixel>
     {
-        internal class FileProvider : TestImageProvider<TPixel>, IXunitSerializable
+        internal sealed class FileProvider : TestImageProvider<TPixel>, IXunitSerializable
         {
             // Need PixelTypes in the dictionary key, because result images of TestImageProvider<TPixel>.FileProvider
             // are shared between PixelTypes.Color & PixelTypes.Rgba32
-            private class Key : IEquatable<Key>
+            private sealed class Key : IEquatable<Key>
             {
                 private readonly Tuple<PixelTypes, string, Type, int> commonValues;
 
@@ -45,7 +45,7 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.ImageProviders
                         PropertyInfo[] properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
                         foreach (PropertyInfo p in properties)
                         {
-                            string key = $"{type.FullName}.{p.Name}";
+                            string key = string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0}.{1}", type.FullName, p.Name);
                             object value = p.GetValue(customDecoder);
                             data[key] = value;
                         }

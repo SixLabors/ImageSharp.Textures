@@ -8,6 +8,7 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.Attributes
     /// <summary>
     /// The output produced by this test class should be grouped into the specified subfolder.
     /// </summary>
+    [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
     public class GroupOutputAttribute : Attribute
     {
         public GroupOutputAttribute(string subfolder) => this.Subfolder = subfolder;

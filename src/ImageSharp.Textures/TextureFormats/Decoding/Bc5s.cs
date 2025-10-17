@@ -35,7 +35,7 @@ namespace SixLabors.ImageSharp.Textures.TextureFormats.Decoding
         /// <inheritdoc/>
         public byte[] Decompress(byte[] blockData, int width, int height)
         {
-            IBlock self = this;
+            Bc5s self = this;
 
             return Helper.InMemoryDecode<Bc5s>(blockData, width, height, (stream, data, streamIndex, dataIndex, stride) =>
             {

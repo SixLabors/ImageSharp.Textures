@@ -22,11 +22,36 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         public uint Yuv
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            readonly get => Unsafe.As<Y410, uint>(ref Unsafe.AsRef(this));
+            readonly get => Unsafe.As<Y410, uint>(ref Unsafe.AsRef(in this));
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set => Unsafe.As<Y410, uint>(ref this) = value;
         }
+
+        /// <summary>
+        /// Compares two <see cref="Y410"/> objects for equality.
+        /// </summary>
+        /// <param name="left">The <see cref="Y410"/> on the left side of the operand.</param>
+        /// <param name="right">The <see cref="Y410"/> on the right side of the operand.</param>
+        /// <returns>
+        /// True if the <paramref name="left"/> parameter is equal to the <paramref name="right"/> parameter; otherwise, false.
+        /// </returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool operator ==(Y410 left, Y410 right) => left.Equals(right);
+
+        /// <summary>
+        /// Compares two <see cref="Y410"/> objects for equality.
+        /// </summary>
+        /// <param name="left">The <see cref="Y410"/> on the left side of the operand.</param>
+        /// <param name="right">The <see cref="Y410"/> on the right side of the operand.</param>
+        /// <returns>
+        /// True if the <paramref name="left"/> parameter is not equal to the <paramref name="right"/> parameter; otherwise, false.
+        /// </returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool operator !=(Y410 left, Y410 right) => !left.Equals(right);
+
+        /// <inheritdoc />
+        public override readonly bool Equals(object obj) => obj is Y410 other && this.Equals(other);
 
         /// <inheritdoc/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
