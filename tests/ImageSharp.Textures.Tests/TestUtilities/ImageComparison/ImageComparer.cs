@@ -49,9 +49,9 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.ImageComparison
             where TPixelA : unmanaged, IPixel<TPixelA>
             where TPixelB : unmanaged, IPixel<TPixelB>
         {
-            if (expected.Size() != actual.Size())
+            if (expected.Size != actual.Size)
             {
-                throw new ImageDimensionsMismatchException(expected.Size(), actual.Size());
+                throw new ImageDimensionsMismatchException(expected.Size, actual.Size);
             }
 
             if (expected.Frames.Count != actual.Frames.Count)
@@ -74,9 +74,9 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.ImageComparison
             where TPixelA : unmanaged, IPixel<TPixelA>
             where TPixelB : unmanaged, IPixel<TPixelB>
         {
-            if (expected.Size() != actual.Size())
+            if (expected.Size != actual.Size)
             {
-                throw new ImageDimensionsMismatchException(expected.Size(), actual.Size());
+                throw new ImageDimensionsMismatchException(expected.Size, actual.Size);
             }
 
             if (expected.Frames.Count != actual.Frames.Count)

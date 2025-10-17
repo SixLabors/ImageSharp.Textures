@@ -1,14 +1,9 @@
 // Copyright (c) Six Labors.
 // Licensed under the Apache License, Version 2.0.
 
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.IO;
 using System.Reflection;
-using System.Threading.Tasks;
 using SixLabors.ImageSharp.Formats;
-using SixLabors.ImageSharp.Memory;
 using SixLabors.ImageSharp.PixelFormats;
 
 using Xunit.Abstractions;
@@ -145,35 +140,45 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.ImageProviders
 
             public override Image<TPixel> GetImage()
             {
+                IImageFormat format = TestEnvironment.GetImageFormat(this.FilePath);
                 IImageDecoder decoder = TestEnvironment.GetReferenceDecoder(this.FilePath);
-                return this.GetImage(decoder);
+                return this.GetImage(format, decoder);
             }
 
-            public override Image<TPixel> GetImage(IImageDecoder decoder)
+            public override Image<TPixel> GetImage(IImageFormat format, IImageDecoder decoder)
             {
+                Guard.NotNull(format, nameof(format));
                 Guard.NotNull(decoder, nameof(decoder));
 
                 if (!TestEnvironment.Is64BitProcess)
                 {
-                    return this.LoadImage(decoder);
+                    return this.LoadImage(format, decoder);
                 }
 
                 // int bufferCapacity = this.Configuration.MemoryAllocator.GetBufferCapacityInBytes();
                 int bufferCapacity = 500;
                 var key = new Key(this.PixelType, this.FilePath, bufferCapacity, decoder);
 
-                Image<TPixel> cachedImage = Cache.GetOrAdd(key, _ => this.LoadImage(decoder));
+                Image<TPixel> cachedImage = Cache.GetOrAdd(key, _ => this.LoadImage(format, decoder));
 
                 return cachedImage.Clone(this.Configuration);
             }
 
-            public override Task<Image<TPixel>> GetImageAsync(IImageDecoder decoder)
+            public override Task<Image<TPixel>> GetImageAsync(IImageFormat format, IImageDecoder decoder)
             {
+                Guard.NotNull(format, nameof(format));
                 Guard.NotNull(decoder, nameof(decoder));
 
                 // Used in small subset of decoder tests, no caching.
                 string path = Path.Combine(TestEnvironment.InputImagesDirectoryFullPath, this.FilePath);
-                return Image.LoadAsync<TPixel>(this.Configuration, path, decoder);
+                ImageSharp.Configuration configuration = this.Configuration.Clone();
+                configuration.ImageFormatsManager.SetDecoder(format, decoder);
+                DecoderOptions options = new()
+                {
+                    Configuration = configuration
+                };
+
+                return Image.LoadAsync<TPixel>(options, path);
             }
 
             public override void Deserialize(IXunitSerializationInfo info)
@@ -189,10 +194,17 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.ImageProviders
                 info.AddValue("path", this.FilePath);
             }
 
-            private Image<TPixel> LoadImage(IImageDecoder decoder)
+            private Image<TPixel> LoadImage(IImageFormat format, IImageDecoder decoder)
             {
-                var testFile = TestFile.Create(this.FilePath);
-                return Image.Load<TPixel>(this.Configuration, testFile.Bytes, decoder);
+                TestFile testFile = TestFile.Create(this.FilePath);
+                ImageSharp.Configuration configuration = this.Configuration.Clone();
+                configuration.ImageFormatsManager.SetDecoder(format, decoder);
+                DecoderOptions options = new()
+                {
+                    Configuration = configuration
+                };
+
+                return Image.Load<TPixel>(options, testFile.Bytes);
             }
         }
 

@@ -49,9 +49,9 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.ImageProviders
         /// <returns>A test image.</returns>
         public abstract Image<TPixel> GetImage();
 
-        public virtual Image<TPixel> GetImage(IImageDecoder decoder) => throw new NotSupportedException($"Decoder specific GetImage() is not supported with {this.GetType().Name}!");
+        public virtual Image<TPixel> GetImage(IImageFormat format, IImageDecoder decoder) => throw new NotSupportedException($"Decoder specific GetImage() is not supported with {this.GetType().Name}!");
 
-        public virtual Task<Image<TPixel>> GetImageAsync(IImageDecoder decoder) => throw new NotSupportedException($"Decoder specific GetImageAsync() is not supported with {this.GetType().Name}!");
+        public virtual Task<Image<TPixel>> GetImageAsync(IImageFormat format, IImageDecoder decoder) => throw new NotSupportedException($"Decoder specific GetImageAsync() is not supported with {this.GetType().Name}!");
 
         /// <summary>
         /// Returns an <see cref="Image{TPixel}"/> instance to the test case with the necessary traits.

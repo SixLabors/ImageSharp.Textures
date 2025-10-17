@@ -267,20 +267,25 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities
         internal static IImageDecoder GetReferenceDecoder(string filePath)
         {
             IImageFormat format = GetImageFormat(filePath);
-            return Configuration.ImageFormatsManager.FindDecoder(format);
+            return Configuration.ImageFormatsManager.GetDecoder(format);
         }
 
         internal static IImageEncoder GetReferenceEncoder(string filePath)
         {
             IImageFormat format = GetImageFormat(filePath);
-            return Configuration.ImageFormatsManager.FindEncoder(format);
+            return Configuration.ImageFormatsManager.GetEncoder(format);
         }
 
         internal static IImageFormat GetImageFormat(string filePath)
         {
             string extension = Path.GetExtension(filePath);
 
-            return Configuration.ImageFormatsManager.FindFormatByFileExtension(extension);
+            if (!Configuration.ImageFormatsManager.TryFindFormatByFileExtension(extension, out IImageFormat format))
+            {
+                throw new NotSupportedException($"No image format found for extension '{extension}'!");
+            }
+
+            return format;
         }
 
         private static void ConfigureCodecs(
@@ -301,7 +306,7 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities
 
             cfg.ConfigureCodecs(
                 PngFormat.Instance,
-                new PngDecoder(),
+                PngDecoder.Instance,
                 new PngEncoder(),
                 new PngImageFormatDetector());
 

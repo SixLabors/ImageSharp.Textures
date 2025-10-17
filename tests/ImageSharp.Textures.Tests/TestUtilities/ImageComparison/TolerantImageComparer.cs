@@ -60,7 +60,7 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.ImageComparison
 
         public override ImageSimilarityReport<TPixelA, TPixelB> CompareImages<TPixelA, TPixelB>(Image<TPixelA> expected, Image<TPixelB> actual)
         {
-            if (expected.Size() != actual.Size())
+            if (expected.Size != actual.Size)
             {
                 throw new InvalidOperationException("Calling ImageComparer is invalid when dimensions mismatch!");
             }

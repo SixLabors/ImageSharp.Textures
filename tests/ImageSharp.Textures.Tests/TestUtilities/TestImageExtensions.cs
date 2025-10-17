@@ -213,9 +213,17 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities
                 throw new FileNotFoundException($"Reference output file {referenceOutputFile} is missing", referenceOutputFile);
             }
 
+            IImageFormat format = TestEnvironment.GetImageFormat(referenceOutputFile);
             decoder ??= TestEnvironment.GetReferenceDecoder(referenceOutputFile);
 
-            return Image.Load<TPixel>(referenceOutputFile, decoder);
+            ImageSharp.Configuration configuration = ImageSharp.Configuration.Default.Clone();
+            configuration.ImageFormatsManager.SetDecoder(format, decoder);
+            DecoderOptions options = new()
+            {
+                Configuration = configuration
+            };
+
+            return Image.Load<TPixel>(options, referenceOutputFile);
         }
     }
 }
