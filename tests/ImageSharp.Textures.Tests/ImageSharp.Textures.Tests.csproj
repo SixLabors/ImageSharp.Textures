@@ -6,12 +6,14 @@
     <Platforms>AnyCPU;x64;x86</Platforms>
     <AssemblyName>SixLabors.ImageSharp.Textures.Tests</AssemblyName>
     <RootNamespace>SixLabors.ImageSharp.Textures.Tests</RootNamespace>
+    <IsTestProject>true</IsTestProject>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Magick.NET-Q16-AnyCPU" />
     <PackageReference Include="System.Drawing.Common" />
     <PackageReference Include="Moq" />
+    <PackageReference Include="Microsoft.NET.Test.SDK" />
     <PackageReference Include="Microsoft.DotNet.RemoteExecutor" />
     <PackageReference Include="Microsoft.DotNet.XUnitExtensions" />
   </ItemGroup>
