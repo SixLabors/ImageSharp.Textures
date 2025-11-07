@@ -44,7 +44,10 @@ public abstract partial class Texture
             .Select(x => x.DetectFormat(buffer.Memory.Span))
             .LastOrDefault(x => x is not null);
 
-        TextureFormatManager.ThrowInvalidDecoder(config.ImageFormatsManager);
+        if (format is null)
+        {
+            TextureFormatManager.ThrowInvalidDecoder(config.ImageFormatsManager);
+        }
 
         return format;
     }
