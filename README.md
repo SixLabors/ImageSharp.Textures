@@ -18,9 +18,9 @@ SixLabors.ImageSharp.Textures
 
 Currently decoding the following texture formats are supported:
 
-- [DDS textures]()
-- [KTX textures](http://paulbourke.net/dataformats/ktx/)
-- [KTX2 textures](https://github.khronos.org/KTX-Specification/)
+- [DDS textures](https://learn.microsoft.com/en-us/windows/win32/direct3ddds/dx-graphics-dds)
+- [KTX textures](https://registry.khronos.org/KTX/specs/1.0/ktxspec.v1.html)
+- [KTX2 textures](https://registry.khronos.org/KTX/specs/2.0/ktxspec.v2.html)
 
 with the following compressions:
 
@@ -38,7 +38,7 @@ Encoding textures is **not** yet supported. PR are of course very welcome.
 
 ## License
 
-- ImageSharp.Textures is licensed under the [Apache License, Version 2.0](https://opensource.org/licenses/Apache-2.0)
+- ImageSharp.Textures is licensed under the [Six Labors Split License, Version 1.0](https://github.com/SixLabors/ImageSharp.Textures/blob/main/LICENSE)  
 
 ## Code of Conduct  
 This project has adopted the code of conduct defined by the [Contributor Covenant](https://contributor-covenant.org/) to clarify expected behavior in our community.
