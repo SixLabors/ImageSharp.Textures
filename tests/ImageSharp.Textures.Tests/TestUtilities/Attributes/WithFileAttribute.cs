@@ -1,5 +1,5 @@
 // Copyright (c) Six Labors.
-// Licensed under the Apache License, Version 2.0.
+// Licensed under the Six Labors Split License.
 
 using System;
 using System.Collections.Generic;
@@ -32,10 +32,7 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.Attributes
 
         public override IEnumerable<object[]> GetData(MethodInfo testMethod)
         {
-            if (testMethod == null)
-            {
-                throw new ArgumentNullException(nameof(testMethod));
-            }
+            ArgumentNullException.ThrowIfNull(testMethod);
 
             string[] featureLevels = this.textureTool == TestTextureTool.TexConv ? new[] { "9.1", "9.2", "9.3", "10.0", "10.1", "11.0", "11.1", "12.0", "12.1" } : new[] { string.Empty };
 
@@ -49,7 +46,7 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.Attributes
                 }
 
                 string[] files = Directory.GetFiles(path);
-                string[] filteredFiles = files.Where(f => this.isRegex ? new Regex(this.inputFile).IsMatch(Path.GetFileName(f)) : Path.GetFileName(f).Equals(this.inputFile, StringComparison.CurrentCultureIgnoreCase)).ToArray();
+                string[] filteredFiles = files.Where(f => this.isRegex ? new Regex(this.inputFile).IsMatch(Path.GetFileName(f)) : Path.GetFileName(f).Equals(this.inputFile, StringComparison.OrdinalIgnoreCase)).ToArray();
                 foreach (string file in filteredFiles)
                 {
                     var testTextureProvider = new TestTextureProvider(testMethod.Name, this.textureFormat, this.textureType, this.textureTool, file, false);

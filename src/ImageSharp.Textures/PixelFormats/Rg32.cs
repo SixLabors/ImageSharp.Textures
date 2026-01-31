@@ -1,5 +1,5 @@
 // Copyright (c) Six Labors.
-// Licensed under the Apache License, Version 2.0.
+// Licensed under the Six Labors Split License.
 
 using System;
 using System.Numerics;
@@ -147,7 +147,7 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         public Vector2 ToVector2() => new Vector2(this.PackedValue & 0xFF, (this.PackedValue >> 8) & 0xFF) / Max;
 
         /// <inheritdoc />
-        public override bool Equals(object obj) => obj is Rg32 other && this.Equals(other);
+        public override bool Equals(object? obj) => obj is Rg32 other && this.Equals(other);
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

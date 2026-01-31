@@ -1,5 +1,5 @@
 // Copyright (c) Six Labors.
-// Licensed under the Apache License, Version 2.0.
+// Licensed under the Six Labors Split License.
 
 using System;
 using System.Numerics;
@@ -30,6 +30,28 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
 
         /// <inheritdoc/>
         public float PackedValue { get; set; }
+
+        /// <summary>
+        /// Compares two <see cref="Fp32"/> objects for equality.
+        /// </summary>
+        /// <param name="left">The <see cref="Fp32"/> on the left side of the operand.</param>
+        /// <param name="right">The <see cref="Fp32"/> on the right side of the operand.</param>
+        /// <returns>
+        /// True if the <paramref name="left"/> parameter is equal to the <paramref name="right"/> parameter; otherwise, false.
+        /// </returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool operator ==(Fp32 left, Fp32 right) => left.Equals(right);
+
+        /// <summary>
+        /// Compares two <see cref="Fp32"/> objects for equality.
+        /// </summary>
+        /// <param name="left">The <see cref="Fp32"/> on the left side of the operand.</param>
+        /// <param name="right">The <see cref="Fp32"/> on the right side of the operand.</param>
+        /// <returns>
+        /// True if the <paramref name="left"/> parameter is not equal to the <paramref name="right"/> parameter; otherwise, false.
+        /// </returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool operator !=(Fp32 left, Fp32 right) => !left.Equals(right);
 
         /// <inheritdoc />
         public PixelOperations<Fp32> CreatePixelOperations() => new();
@@ -90,21 +112,20 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void FromRgb24(Rgb24 source) => this.FromScaledVector4(source.ToScaledVector4());
 
-        /// <inheritdoc />
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void FromRgba32(Rgba32 source) => this.FromScaledVector4(source.ToScaledVector4());
-
-        /// <inheritdoc />
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void ToRgba32(ref Rgba32 dest) => dest.FromScaledVector4(this.ToScaledVector4());
-
         /// <inheritdoc/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void FromRgb48(Rgb48 source) => this.FromScaledVector4(source.ToScaledVector4());
 
         /// <inheritdoc/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void FromRgba32(Rgba32 source) => this.FromScaledVector4(source.ToScaledVector4());
+
+        /// <inheritdoc/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void FromRgba64(Rgba64 source) => this.FromScaledVector4(source.ToScaledVector4());
+
+        /// <inheritdoc/>
+        public void ToRgba32(ref Rgba32 dest) => throw new NotImplementedException();
 
         /// <summary>
         /// Expands the packed representation into a <see cref="Vector"/>.
@@ -115,11 +136,11 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         public Vector<float> ToVector() => new Vector<float>(this.PackedValue);
 
         /// <inheritdoc />
-        public override bool Equals(object obj) => obj is Fp32 other && this.Equals(other);
+        public override readonly bool Equals(object? obj) => obj is Fp32 other && this.Equals(other);
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool Equals(Fp32 other) => this.PackedValue.Equals(other.PackedValue);
+        public readonly bool Equals(Fp32 other) => this.PackedValue.Equals(other.PackedValue);
 
         /// <inheritdoc />
         public override string ToString()
@@ -130,7 +151,7 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override int GetHashCode() => this.PackedValue.GetHashCode();
+        public override readonly int GetHashCode() => this.PackedValue.GetHashCode();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static float Pack(Vector<float> vector) => vector[0];

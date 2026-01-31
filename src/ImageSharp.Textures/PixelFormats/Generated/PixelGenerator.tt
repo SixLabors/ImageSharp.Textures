@@ -192,7 +192,7 @@
         manager.StartNewFile($"{pixelInfo.Name}.cs");
     
 #>// Copyright (c) Six Labors.
-// Licensed under the Apache License, Version 2.0.
+// Licensed under the Six Labors Split License.
 
 <#= Helper.GenerateUsings(pixelInfo) #>
 
@@ -296,7 +296,7 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         public void FromRgba64(Rgba64 source) => this.FromScaledVector4(source.ToScaledVector4());
 
         /// <inheritdoc />
-        public override bool Equals(object obj) => obj is <#= pixelInfo.Name #> other && this.Equals(other);
+        public override bool Equals(object? obj) => obj is <#= pixelInfo.Name #> other && this.Equals(other);
 
         <#= Helper.GenerateEquals(pixelInfo, 8) #>
 

@@ -1,8 +1,9 @@
 // Copyright (c) Six Labors.
-// Licensed under the Apache License, Version 2.0.
+// Licensed under the Six Labors Split License.
 
 using System.IO;
 using System.Text;
+using System.Globalization;
 using SixLabors.ImageSharp.Textures.Formats;
 using SixLabors.ImageSharp.Textures.Tests.Enums;
 using SixLabors.ImageSharp.Textures.TextureFormats;
@@ -70,14 +71,14 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.TextureProviders
 
             for (int i = 0; i < mipMaps.Length; i++)
             {
-                string filename = $"mipmap-{i + 1}";
+                string filename = string.Format(CultureInfo.InvariantCulture, "mipmap-{0}", i + 1);
                 if (!string.IsNullOrEmpty(name))
                 {
-                    filename = $"{filename}-{name}";
+                    filename = string.Format(CultureInfo.InvariantCulture, "{0}-{1}", filename, name);
                 }
 
                 using Image image = mipMaps[i].GetImage();
-                image.Save(Path.Combine(path, $"{filename}.png"));
+                image.Save(Path.Combine(path, string.Format(CultureInfo.InvariantCulture, "{0}.png", filename)));
             }
         }
 
@@ -107,7 +108,7 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.TextureProviders
             {
                 for (int i = 0; i < volumeTexture.Slices.Count; i++)
                 {
-                    this.SaveMipMaps(volumeTexture.Slices[i].MipMaps.ToArray(), $"slice{i + 1}");
+                    this.SaveMipMaps(volumeTexture.Slices[i].MipMaps.ToArray(), string.Format(CultureInfo.InvariantCulture, "slice{0}", i + 1));
                 }
             }
         }
@@ -116,12 +117,12 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.TextureProviders
         {
             var stringBuilder = new StringBuilder();
             stringBuilder.AppendLine();
-            stringBuilder.AppendLine($"Method Name: {this.MethodName}");
-            stringBuilder.AppendLine($"Texture Format: {this.TextureFormat}");
-            stringBuilder.AppendLine($"Texture Type: {this.TextureType}");
-            stringBuilder.AppendLine($"Texture Tool: {this.TextureTool}");
-            stringBuilder.AppendLine($"Input File: {this.InputFile}");
-            stringBuilder.AppendLine($"Is Regex: {this.IsRegex}");
+            stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, "Method Name: {0}", this.MethodName));
+            stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, "Texture Format: {0}", this.TextureFormat));
+            stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, "Texture Type: {0}", this.TextureType));
+            stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, "Texture Tool: {0}", this.TextureTool));
+            stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, "Input File: {0}", this.InputFile));
+            stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, "Is Regex: {0}", this.IsRegex));
             return stringBuilder.ToString();
         }
     }

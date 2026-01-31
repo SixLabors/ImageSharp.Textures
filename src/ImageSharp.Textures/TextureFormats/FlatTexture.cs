@@ -1,5 +1,5 @@
 // Copyright (c) Six Labors.
-// Licensed under the Apache License, Version 2.0.
+// Licensed under the Six Labors Split License.
 
 using System;
 using System.Collections.Generic;
@@ -45,11 +45,6 @@ namespace SixLabors.ImageSharp.Textures.TextureFormats
 
         /// <inheritdoc/>
         internal override void EnsureNotDisposed()
-        {
-            if (this.isDisposed)
-            {
-                throw new ObjectDisposedException("Trying to execute an operation on a disposed image.");
-            }
-        }
+            => ObjectDisposedException.ThrowIf(this.isDisposed, "Trying to execute an operation on a disposed image.");
     }
 }

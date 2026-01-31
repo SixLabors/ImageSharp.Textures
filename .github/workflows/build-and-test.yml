@@ -15,31 +15,15 @@ jobs:
             matrix:
                 options:
                     - os: ubuntu-latest
-                      framework: net5.0
+                      framework: net8.0
                       runtime: -x64
                       codecov: false
                     - os: macos-latest
-                      framework: net5.0
+                      framework: net8.0
                       runtime: -x64
                       codecov: false
                     - os: windows-latest
-                      framework: net5.0
-                      runtime: -x64
-                      codecov: false
-                    - os: ubuntu-latest
-                      framework: netcoreapp3.1
-                      runtime: -x64
-                      codecov: true
-                    - os: macos-latest
-                      framework: netcoreapp3.1
-                      runtime: -x64
-                      codecov: false
-                    - os: windows-latest
-                      framework: netcoreapp3.1
-                      runtime: -x64
-                      codecov: false
-                    - os: windows-latest
-                      framework: netcoreapp2.1
+                      framework: net8.0
                       runtime: -x64
                       codecov: false
 
@@ -47,7 +31,17 @@ jobs:
         if: "!contains(github.event.head_commit.message, '[skip ci]')"
 
         steps:
-            - uses: actions/checkout@v4
+            - name: Git Config
+              shell: bash
+              run: |
+                git config --global core.autocrlf false
+                git config --global core.longpaths true
+
+            - name: Git Checkout
+              uses: actions/checkout@v4
+              with:
+                fetch-depth: 0
+                submodules: recursive
 
             # See https://github.com/actions/checkout/issues/165#issuecomment-657673315
             - name: Create LFS file list
@@ -66,14 +60,6 @@ jobs:
             - name: Install NuGet
               uses: NuGet/setup-nuget@v2
 
-            - name: Setup Git
-              shell: bash
-              run: |
-                  git config --global core.autocrlf false
-                  git config --global core.longpaths true
-                  git fetch --prune --unshallow
-                  git submodule -q update --init --recursive
-
             - name: Setup NuGet Cache
               uses: actions/cache@v4
               id: nuget-cache
@@ -86,10 +72,7 @@ jobs:
               uses: actions/setup-dotnet@v4
               with:
                 dotnet-version: |
-                  6.0.x
-                  5.0.x
-                  3.1.x
-                  2.1.x
+                  8.0.x
 
             - name: Build
               shell: pwsh

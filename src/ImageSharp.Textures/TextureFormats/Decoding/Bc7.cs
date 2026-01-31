@@ -1,5 +1,5 @@
 // Copyright (c) Six Labors.
-// Licensed under the Apache License, Version 2.0.
+// Licensed under the Six Labors Split License.
 
 using System;
 using System.Diagnostics;
@@ -67,7 +67,7 @@ namespace SixLabors.ImageSharp.Textures.TextureFormats.Decoding
         public byte[] Decompress(byte[] blockData, int width, int height)
         {
             byte[] currentBlock = new byte[this.CompressedBytesPerBlock];
-            IBlock self = this;
+            Bc7 self = this;
 
             return Helper.InMemoryDecode<Bc7>(blockData, width, height, (stream, data, streamIndex, dataIndex, stride) =>
             {

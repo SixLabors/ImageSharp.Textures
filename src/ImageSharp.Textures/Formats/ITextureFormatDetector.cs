@@ -1,5 +1,5 @@
 // Copyright (c) Six Labors.
-// Licensed under the Apache License, Version 2.0.
+// Licensed under the Six Labors Split License.
 
 using System;
 
@@ -21,6 +21,6 @@ namespace SixLabors.ImageSharp.Textures.Formats
         /// </summary>
         /// <param name="header">The <see cref="T:byte[]"/> containing the file header.</param>
         /// <returns>returns the mime type of detected otherwise returns null</returns>
-        ITextureFormat DetectFormat(ReadOnlySpan<byte> header);
+        ITextureFormat? DetectFormat(ReadOnlySpan<byte> header);
     }
 }

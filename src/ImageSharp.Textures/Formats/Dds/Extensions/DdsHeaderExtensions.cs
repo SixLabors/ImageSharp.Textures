@@ -1,5 +1,5 @@
 // Copyright (c) Six Labors.
-// Licensed under the Apache License, Version 2.0.
+// Licensed under the Six Labors Split License.
 
 using SixLabors.ImageSharp.Textures.Formats.Dds.Emums;
 
@@ -156,7 +156,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds.Extensions
         /// <returns>
         /// Types of cube map faces stored in this cube map or null if this is not a cubemap.
         /// </returns>
-        public static DdsSurfaceType[] GetExistingCubemapFaces(this DdsHeader ddsHeader)
+        public static DdsSurfaceType[]? GetExistingCubemapFaces(this DdsHeader ddsHeader)
         {
             int depth = ddsHeader.ComputeDepth();
             var result = new DdsSurfaceType[depth];

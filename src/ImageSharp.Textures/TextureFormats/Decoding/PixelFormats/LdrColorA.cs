@@ -1,5 +1,5 @@
 // Copyright (c) Six Labors.
-// Licensed under the Apache License, Version 2.0.
+// Licensed under the Six Labors Split License.
 
 using System;
 using System.Diagnostics;
@@ -52,22 +52,14 @@ namespace SixLabors.ImageSharp.Textures.TextureFormats.Decoding.PixelFormats
 
         public byte this[int uElement]
         {
-            get
+            get => uElement switch
             {
-                switch (uElement)
-                {
-                    case 0:
-                        return this.R;
-                    case 1:
-                        return this.G;
-                    case 2:
-                        return this.B;
-                    case 3:
-                        return this.A;
-                    default:
-                        throw new IndexOutOfRangeException();
-                }
-            }
+                0 => this.R,
+                1 => this.G,
+                2 => this.B,
+                3 => this.A,
+                _ => throw new ArgumentOutOfRangeException(nameof(uElement)),
+            };
 
             set
             {
@@ -86,7 +78,7 @@ namespace SixLabors.ImageSharp.Textures.TextureFormats.Decoding.PixelFormats
                         this.A = value;
                         break;
                     default:
-                        throw new IndexOutOfRangeException();
+                        throw new ArgumentOutOfRangeException(nameof(uElement));
                 }
             }
         }

@@ -1,5 +1,5 @@
 // Copyright (c) Six Labors.
-// Licensed under the Apache License, Version 2.0.
+// Licensed under the Six Labors Split License.
 
 using System;
 using System.Collections.Generic;
@@ -18,7 +18,7 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.ImageComparison
             Image<TPixelA> expected,
             Image<TPixelB> actual)
         {
-            if (expected.Size() != actual.Size())
+            if (expected.Size != actual.Size)
             {
                 throw new InvalidOperationException("Calling ImageComparer is invalid when dimensions mismatch!");
             }
@@ -33,7 +33,7 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.ImageComparison
             Buffer2D<TPixelB> actualBuffer = actual.Frames.RootFrame.PixelBuffer;
 
             var differences = new List<PixelDifference>();
-            ImageSharp.Configuration configuration = expected.GetConfiguration();
+            ImageSharp.Configuration configuration = expected.Configuration;
 
             for (int y = 0; y < actual.Height; y++)
             {

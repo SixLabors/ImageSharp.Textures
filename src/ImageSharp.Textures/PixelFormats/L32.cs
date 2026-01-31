@@ -1,5 +1,5 @@
 // Copyright (c) Six Labors.
-// Licensed under the Apache License, Version 2.0.
+// Licensed under the Six Labors Split License.
 
 using System.Numerics;
 using System.Runtime.CompilerServices;
@@ -150,7 +150,7 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         public PixelOperations<L32> CreatePixelOperations() => new();
 
         /// <inheritdoc />
-        public override readonly bool Equals(object obj) => obj is L16 other && this.Equals(other);
+        public override readonly bool Equals(object? obj) => obj is L16 other && this.Equals(other);
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

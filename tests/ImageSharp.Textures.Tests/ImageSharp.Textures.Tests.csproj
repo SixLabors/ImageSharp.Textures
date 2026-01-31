@@ -1,19 +1,18 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net5.0;netcoreapp3.1;netcoreapp2.1</TargetFrameworks>
+    <TargetFrameworks>net8.0</TargetFrameworks>
     <DebugSymbols>True</DebugSymbols>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <AssemblyName>SixLabors.ImageSharp.Textures.Tests</AssemblyName>
     <RootNamespace>SixLabors.ImageSharp.Textures.Tests</RootNamespace>
+    <IsTestProject>true</IsTestProject>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Magick.NET-Q16-AnyCPU" />
     <PackageReference Include="System.Drawing.Common" />
     <PackageReference Include="Moq" />
-    <PackageReference Include="Microsoft.DotNet.RemoteExecutor" />
-    <PackageReference Include="Microsoft.DotNet.XUnitExtensions" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,5 +1,5 @@
 // Copyright (c) Six Labors.
-// Licensed under the Apache License, Version 2.0.
+// Licensed under the Six Labors Split License.
 
 using System;
 using System.Collections.Generic;
@@ -60,7 +60,7 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.ImageComparison
 
         public override ImageSimilarityReport<TPixelA, TPixelB> CompareImages<TPixelA, TPixelB>(Image<TPixelA> expected, Image<TPixelB> actual)
         {
-            if (expected.Size() != actual.Size())
+            if (expected.Size != actual.Size)
             {
                 throw new InvalidOperationException("Calling ImageComparer is invalid when dimensions mismatch!");
             }
@@ -110,7 +110,8 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.ImageComparison
             }
             else
             {
-                return ImageSimilarityReport<TPixelA, TPixelB>.Empty;
+                // Construct an empty generic report explicitly.
+                return new ImageSimilarityReport<TPixelA, TPixelB>(expected, actual, [], 0f);
             }
         }
 

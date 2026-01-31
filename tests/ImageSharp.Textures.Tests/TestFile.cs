@@ -1,5 +1,5 @@
 // Copyright (c) Six Labors.
-// Licensed under the Apache License, Version 2.0.
+// Licensed under the Six Labors Split License.
 
 using System;
 using System.Collections.Concurrent;
@@ -124,6 +124,15 @@ namespace SixLabors.ImageSharp.Textures.Tests
         /// <returns>
         /// The <see cref="ImageSharp.Image"/>.
         /// </returns>
-        public Image<Rgba32> CreateRgba32Image(IImageDecoder decoder) => ImageSharp.Image.Load<Rgba32>(this.Image.GetConfiguration(), this.Bytes, decoder);
+        public Image<Rgba32> CreateRgba32Image(IImageFormat format, IImageDecoder decoder)
+        {
+            var options = new DecoderOptions
+            {
+                Configuration = this.Image.Configuration
+            };
+            options.Configuration.ImageFormatsManager.SetDecoder(format, decoder);
+
+            return ImageSharp.Image.Load<Rgba32>(options, this.Bytes);
+        }
     }
 }

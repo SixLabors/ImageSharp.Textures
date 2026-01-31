@@ -1,5 +1,5 @@
 // Copyright (c) Six Labors.
-// Licensed under the Apache License, Version 2.0.
+// Licensed under the Six Labors Split License.
 
 using System;
 using System.Buffers.Binary;
@@ -137,7 +137,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx
         {
             if (data.Length < KtxConstants.KtxHeaderSize)
             {
-                throw new ArgumentException(nameof(data), $"Ktx header must be {KtxConstants.KtxHeaderSize} bytes. Was {data.Length} bytes.");
+                throw new ArgumentException($"Ktx header must be {KtxConstants.KtxHeaderSize} bytes. Was {data.Length} bytes.", nameof(data));
             }
 
             var endianness = (KtxEndianness)BinaryPrimitives.ReadUInt32LittleEndian(data);

@@ -1,5 +1,5 @@
 // Copyright (c) Six Labors.
-// Licensed under the Apache License, Version 2.0.
+// Licensed under the Six Labors Split License.
 
 using System;
 using System.IO;
@@ -47,14 +47,14 @@ namespace SixLabors.ImageSharp.Textures
                 }
                 catch (Exception ex)
                 {
-                    throw new Exception(
+                    throw new DirectoryNotFoundException(
                         $"Unable to find ImageSharp solution directory from {assemblyLocation} because of {ex.GetType().Name}!",
                         ex);
                 }
 
                 if (directory == null)
                 {
-                    throw new Exception($"Unable to find ImageSharp solution directory from {assemblyLocation}!");
+                    throw new DirectoryNotFoundException($"Unable to find ImageSharp solution directory from {assemblyLocation}!");
                 }
             }
 

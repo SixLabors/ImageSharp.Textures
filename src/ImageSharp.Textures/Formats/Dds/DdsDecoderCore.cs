@@ -1,5 +1,5 @@
 // Copyright (c) Six Labors.
-// Licensed under the Apache License, Version 2.0.
+// Licensed under the Six Labors Split License.
 
 using System;
 using System.Buffers.Binary;
@@ -108,7 +108,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Dds
                 }
                 else if (this.ddsHeader.IsCubemap())
                 {
-                    DdsSurfaceType[] faces = this.ddsHeader.GetExistingCubemapFaces();
+                    DdsSurfaceType[] faces = this.ddsHeader.GetExistingCubemapFaces() ?? Array.Empty<DdsSurfaceType>();
 
                     var texture = new CubemapTexture();
                     for (int face = 0; face < faces.Length; face++)

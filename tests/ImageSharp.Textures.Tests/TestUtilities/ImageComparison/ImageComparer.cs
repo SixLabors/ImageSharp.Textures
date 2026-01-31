@@ -1,7 +1,8 @@
 // Copyright (c) Six Labors.
-// Licensed under the Apache License, Version 2.0.
+// Licensed under the Six Labors Split License.
 
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Textures.Tests.TestUtilities.ImageComparison.Exceptions;
@@ -16,6 +17,7 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.ImageComparison
         /// Returns an instance of <see cref="TolerantImageComparer"/>.
         /// Individual manhattan pixel difference is only added to total image difference when the individual difference is over 'perPixelManhattanThreshold'.
         /// </summary>
+        /// <returns>The comparer.</returns>
         public static ImageComparer Tolerant(
             float imageThreshold = TolerantImageComparer.DefaultImageThreshold,
             int perPixelManhattanThreshold = 0) => new TolerantImageComparer(imageThreshold, perPixelManhattanThreshold);
@@ -23,6 +25,7 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.ImageComparison
         /// <summary>
         /// Returns Tolerant(imageThresholdInPercents/100)
         /// </summary>
+        /// <returns>The comparer.</returns>
         public static ImageComparer TolerantPercentage(float imageThresholdInPercents, int perPixelManhattanThreshold = 0)
             => Tolerant(imageThresholdInPercents / 100F, perPixelManhattanThreshold);
 
@@ -49,9 +52,9 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.ImageComparison
             where TPixelA : unmanaged, IPixel<TPixelA>
             where TPixelB : unmanaged, IPixel<TPixelB>
         {
-            if (expected.Size() != actual.Size())
+            if (expected.Size != actual.Size)
             {
-                throw new ImageDimensionsMismatchException(expected.Size(), actual.Size());
+                throw new ImageDimensionsMismatchException(expected.Size, actual.Size);
             }
 
             if (expected.Frames.Count != actual.Frames.Count)
@@ -59,7 +62,7 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.ImageComparison
                 throw new ImagesSimilarityException("Image frame count does not match!");
             }
 
-            ImageSimilarityReport report = comparer.CompareImages(expected, actual);
+            ImageSimilarityReport<TPixelA, TPixelB> report = comparer.CompareImages(expected, actual);
             if ((report.TotalNormalizedDifference ?? 0F) != 0F)
             {
                 throw new ImagesSimilarityException(report.ToString());
@@ -74,9 +77,9 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.ImageComparison
             where TPixelA : unmanaged, IPixel<TPixelA>
             where TPixelB : unmanaged, IPixel<TPixelB>
         {
-            if (expected.Size() != actual.Size())
+            if (expected.Size != actual.Size)
             {
-                throw new ImageDimensionsMismatchException(expected.Size(), actual.Size());
+                throw new ImageDimensionsMismatchException(expected.Size, actual.Size);
             }
 
             if (expected.Frames.Count != actual.Frames.Count)
@@ -84,7 +87,7 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.ImageComparison
                 throw new ImagesSimilarityException("Image frame count does not match!");
             }
 
-            ImageSimilarityReport report = comparer.CompareImages(expected, actual);
+            ImageSimilarityReport<TPixelA, TPixelB> report = comparer.CompareImages(expected, actual);
             if ((report.TotalNormalizedDifference ?? 0F) != 0F)
             {
                 IEnumerable<PixelDifference> outsideChanges = report.Differences.Where(

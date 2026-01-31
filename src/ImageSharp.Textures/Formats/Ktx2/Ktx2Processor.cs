@@ -1,5 +1,5 @@
 // Copyright (c) Six Labors.
-// Licensed under the Apache License, Version 2.0.
+// Licensed under the Six Labors Split License.
 
 using System;
 using System.IO;
@@ -51,112 +51,112 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx2
                 case VkFormat.VK_FORMAT_R8_SINT:
                 case VkFormat.VK_FORMAT_R8_SRGB:
                     // Single channel textures will be decoded to luminance image.
-                    return this.AllocateMipMaps<L8>(memoryStream, width, height, levelIndices);
+                    return AllocateMipMaps<L8>(memoryStream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_R16_UNORM:
                 case VkFormat.VK_FORMAT_R16_SNORM:
                 case VkFormat.VK_FORMAT_R16_UINT:
                 case VkFormat.VK_FORMAT_R16_SINT:
                     // Single channel textures will be decoded to luminance image.
-                    return this.AllocateMipMaps<L16>(memoryStream, width, height, levelIndices);
+                    return AllocateMipMaps<L16>(memoryStream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_R16_SFLOAT:
-                    return this.AllocateMipMaps<R16Float>(memoryStream, width, height, levelIndices);
+                    return AllocateMipMaps<R16Float>(memoryStream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_R8G8_UNORM:
                 case VkFormat.VK_FORMAT_R8G8_SNORM:
                 case VkFormat.VK_FORMAT_R8G8_UINT:
                 case VkFormat.VK_FORMAT_R8G8_SINT:
                 case VkFormat.VK_FORMAT_R8G8_SRGB:
-                    return this.AllocateMipMaps<Rg16>(memoryStream, width, height, levelIndices);
+                    return AllocateMipMaps<Rg16>(memoryStream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_R16G16_UNORM:
                 case VkFormat.VK_FORMAT_R16G16_SNORM:
                 case VkFormat.VK_FORMAT_R16G16_UINT:
                 case VkFormat.VK_FORMAT_R16G16_SINT:
-                    return this.AllocateMipMaps<Rg32>(memoryStream, width, height, levelIndices);
+                    return AllocateMipMaps<Rg32>(memoryStream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_R32G32_UINT:
                 case VkFormat.VK_FORMAT_R32G32_SINT:
-                    return this.AllocateMipMaps<Rg64>(memoryStream, width, height, levelIndices);
+                    return AllocateMipMaps<Rg64>(memoryStream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_R32G32_SFLOAT:
-                    return this.AllocateMipMaps<Rg64Float>(memoryStream, width, height, levelIndices);
+                    return AllocateMipMaps<Rg64Float>(memoryStream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_R16G16B16_UNORM:
                 case VkFormat.VK_FORMAT_R16G16B16_SNORM:
                 case VkFormat.VK_FORMAT_R16G16B16_UINT:
                 case VkFormat.VK_FORMAT_R16G16B16_SINT:
-                    return this.AllocateMipMaps<Rgb48>(memoryStream, width, height, levelIndices);
+                    return AllocateMipMaps<Rgb48>(memoryStream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_R16G16B16A16_UNORM:
                 case VkFormat.VK_FORMAT_R16G16B16A16_SNORM:
                 case VkFormat.VK_FORMAT_R16G16B16A16_UINT:
                 case VkFormat.VK_FORMAT_R16G16B16A16_SINT:
-                    return this.AllocateMipMaps<Rgba64>(memoryStream, width, height, levelIndices);
+                    return AllocateMipMaps<Rgba64>(memoryStream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_R16G16B16A16_SFLOAT:
-                    return this.AllocateMipMaps<Rg32Float>(memoryStream, width, height, levelIndices);
+                    return AllocateMipMaps<Rg32Float>(memoryStream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_R32G32B32_UINT:
                 case VkFormat.VK_FORMAT_R32G32B32_SINT:
-                    return this.AllocateMipMaps<Rgb96>(memoryStream, width, height, levelIndices);
+                    return AllocateMipMaps<Rgb96>(memoryStream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_R32G32B32_SFLOAT:
-                    return this.AllocateMipMaps<Rgb96Float>(memoryStream, width, height, levelIndices);
+                    return AllocateMipMaps<Rgb96Float>(memoryStream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_R32G32B32A32_UINT:
                 case VkFormat.VK_FORMAT_R32G32B32A32_SINT:
-                    return this.AllocateMipMaps<Rgba128>(memoryStream, width, height, levelIndices);
+                    return AllocateMipMaps<Rgba128>(memoryStream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_R32G32B32A32_SFLOAT:
-                    return this.AllocateMipMaps<Rgba128Float>(memoryStream, width, height, levelIndices);
+                    return AllocateMipMaps<Rgba128Float>(memoryStream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_B8G8R8_UNORM:
                 case VkFormat.VK_FORMAT_B8G8R8_SNORM:
                 case VkFormat.VK_FORMAT_B8G8R8_UINT:
                 case VkFormat.VK_FORMAT_B8G8R8_SINT:
                 case VkFormat.VK_FORMAT_B8G8R8_SRGB:
-                    return this.AllocateMipMaps<Bgr24>(memoryStream, width, height, levelIndices);
+                    return AllocateMipMaps<Bgr24>(memoryStream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_R8G8B8_UNORM:
                 case VkFormat.VK_FORMAT_R8G8B8_SNORM:
                 case VkFormat.VK_FORMAT_R8G8B8_UINT:
                 case VkFormat.VK_FORMAT_R8G8B8_SINT:
                 case VkFormat.VK_FORMAT_R8G8B8_SRGB:
-                    return this.AllocateMipMaps<Rgb24>(memoryStream, width, height, levelIndices);
+                    return AllocateMipMaps<Rgb24>(memoryStream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_R5G6B5_UNORM_PACK16:
-                    return this.AllocateMipMaps<Rgb565>(memoryStream, width, height, levelIndices);
+                    return AllocateMipMaps<Rgb565>(memoryStream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_R4G4B4A4_UNORM_PACK16:
-                    return this.AllocateMipMaps<Rgba4444>(memoryStream, width, height, levelIndices);
+                    return AllocateMipMaps<Rgba4444>(memoryStream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_B8G8R8A8_UNORM:
                 case VkFormat.VK_FORMAT_B8G8R8A8_SNORM:
                 case VkFormat.VK_FORMAT_B8G8R8A8_UINT:
                 case VkFormat.VK_FORMAT_B8G8R8A8_SINT:
                 case VkFormat.VK_FORMAT_B8G8R8A8_SRGB:
-                    return this.AllocateMipMaps<Bgra32>(memoryStream, width, height, levelIndices);
+                    return AllocateMipMaps<Bgra32>(memoryStream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_B5G5R5A1_UNORM_PACK16:
-                    return this.AllocateMipMaps<Bgra5551>(memoryStream, width, height, levelIndices);
+                    return AllocateMipMaps<Bgra5551>(memoryStream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_B5G6R5_UNORM_PACK16:
-                    return this.AllocateMipMaps<Bgr565>(memoryStream, width, height, levelIndices);
+                    return AllocateMipMaps<Bgr565>(memoryStream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_B4G4R4A4_UNORM_PACK16:
-                    return this.AllocateMipMaps<Bgra4444>(memoryStream, width, height, levelIndices);
+                    return AllocateMipMaps<Bgra4444>(memoryStream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_R8G8B8A8_UNORM:
                 case VkFormat.VK_FORMAT_R8G8B8A8_SNORM:
                 case VkFormat.VK_FORMAT_R8G8B8A8_UINT:
                 case VkFormat.VK_FORMAT_R8G8B8A8_SINT:
                 case VkFormat.VK_FORMAT_R8G8B8A8_SRGB:
-                    return this.AllocateMipMaps<Rgba32>(memoryStream, width, height, levelIndices);
+                    return AllocateMipMaps<Rgba32>(memoryStream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_R5G5B5A1_UNORM_PACK16:
-                    return this.AllocateMipMaps<Rgba5551>(memoryStream, width, height, levelIndices);
+                    return AllocateMipMaps<Rgba5551>(memoryStream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_BC1_RGB_UNORM_BLOCK:
                 case VkFormat.VK_FORMAT_BC1_RGBA_UNORM_BLOCK:
-                    return this.AllocateMipMaps<Dxt1>(memoryStream, width, height, levelIndices);
+                    return AllocateMipMaps<Dxt1>(memoryStream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_BC2_UNORM_BLOCK:
-                    return this.AllocateMipMaps<Dxt3>(memoryStream, width, height, levelIndices);
+                    return AllocateMipMaps<Dxt3>(memoryStream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_BC3_UNORM_BLOCK:
-                    return this.AllocateMipMaps<Dxt5>(memoryStream, width, height, levelIndices);
+                    return AllocateMipMaps<Dxt5>(memoryStream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_BC4_UNORM_BLOCK:
-                    return this.AllocateMipMaps<Bc4>(memoryStream, width, height, levelIndices);
+                    return AllocateMipMaps<Bc4>(memoryStream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_BC4_SNORM_BLOCK:
-                    return this.AllocateMipMaps<Bc4s>(memoryStream, width, height, levelIndices);
+                    return AllocateMipMaps<Bc4s>(memoryStream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_BC5_UNORM_BLOCK:
-                    return this.AllocateMipMaps<Bc5>(memoryStream, width, height, levelIndices);
+                    return AllocateMipMaps<Bc5>(memoryStream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_BC5_SNORM_BLOCK:
-                    return this.AllocateMipMaps<Bc5s>(memoryStream, width, height, levelIndices);
+                    return AllocateMipMaps<Bc5s>(memoryStream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_BC6H_UFLOAT_BLOCK:
-                    return this.AllocateMipMaps<Bc6h>(memoryStream, width, height, levelIndices);
+                    return AllocateMipMaps<Bc6h>(memoryStream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_BC6H_SFLOAT_BLOCK:
-                    return this.AllocateMipMaps<Bc6hs>(memoryStream, width, height, levelIndices);
+                    return AllocateMipMaps<Bc6hs>(memoryStream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_BC7_UNORM_BLOCK:
-                    return this.AllocateMipMaps<Bc7>(memoryStream, width, height, levelIndices);
+                    return AllocateMipMaps<Bc7>(memoryStream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_ETC2_R8G8B8_UNORM_BLOCK:
-                    return this.AllocateMipMaps<Etc1>(memoryStream, width, height, levelIndices);
+                    return AllocateMipMaps<Etc1>(memoryStream, width, height, levelIndices);
             }
 
             throw new NotSupportedException("The pixel format is not supported");
@@ -183,109 +183,109 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx2
                 case VkFormat.VK_FORMAT_R8_UINT:
                 case VkFormat.VK_FORMAT_R8_SINT:
                 case VkFormat.VK_FORMAT_R8_SRGB:
-                    return this.AllocateCubeMap<L8>(stream, width, height, levelIndices);
+                    return AllocateCubeMap<L8>(stream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_R16_UNORM:
                 case VkFormat.VK_FORMAT_R16_SNORM:
                 case VkFormat.VK_FORMAT_R16_UINT:
                 case VkFormat.VK_FORMAT_R16_SINT:
-                    return this.AllocateCubeMap<L16>(stream, width, height, levelIndices);
+                    return AllocateCubeMap<L16>(stream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_R8G8_UNORM:
                 case VkFormat.VK_FORMAT_R8G8_SNORM:
                 case VkFormat.VK_FORMAT_R8G8_UINT:
                 case VkFormat.VK_FORMAT_R8G8_SINT:
                 case VkFormat.VK_FORMAT_R8G8_SRGB:
-                    return this.AllocateCubeMap<Rg16>(stream, width, height, levelIndices);
+                    return AllocateCubeMap<Rg16>(stream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_R16G16_UNORM:
                 case VkFormat.VK_FORMAT_R16G16_SNORM:
                 case VkFormat.VK_FORMAT_R16G16_UINT:
                 case VkFormat.VK_FORMAT_R16G16_SINT:
-                    return this.AllocateCubeMap<Rg32>(stream, width, height, levelIndices);
+                    return AllocateCubeMap<Rg32>(stream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_R16G16B16_UNORM:
                 case VkFormat.VK_FORMAT_R16G16B16_SNORM:
                 case VkFormat.VK_FORMAT_R16G16B16_UINT:
                 case VkFormat.VK_FORMAT_R16G16B16_SINT:
-                    return this.AllocateCubeMap<Rgb48>(stream, width, height, levelIndices);
+                    return AllocateCubeMap<Rgb48>(stream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_R16G16B16A16_UNORM:
                 case VkFormat.VK_FORMAT_R16G16B16A16_SNORM:
                 case VkFormat.VK_FORMAT_R16G16B16A16_UINT:
                 case VkFormat.VK_FORMAT_R16G16B16A16_SINT:
-                    return this.AllocateCubeMap<Rgba64>(stream, width, height, levelIndices);
+                    return AllocateCubeMap<Rgba64>(stream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_R16_SFLOAT:
-                    return this.AllocateCubeMap<R16Float>(stream, width, height, levelIndices);
+                    return AllocateCubeMap<R16Float>(stream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_R16G16B16A16_SFLOAT:
-                    return this.AllocateCubeMap<Rg32Float>(stream, width, height, levelIndices);
+                    return AllocateCubeMap<Rg32Float>(stream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_R32G32_UINT:
                 case VkFormat.VK_FORMAT_R32G32_SINT:
-                    return this.AllocateCubeMap<Rg64>(stream, width, height, levelIndices);
+                    return AllocateCubeMap<Rg64>(stream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_R32G32_SFLOAT:
-                    return this.AllocateCubeMap<Rg64Float>(stream, width, height, levelIndices);
+                    return AllocateCubeMap<Rg64Float>(stream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_R32G32B32_UINT:
                 case VkFormat.VK_FORMAT_R32G32B32_SINT:
-                    return this.AllocateCubeMap<Rgb96>(stream, width, height, levelIndices);
+                    return AllocateCubeMap<Rgb96>(stream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_R32G32B32_SFLOAT:
-                    return this.AllocateCubeMap<Rgb96Float>(stream, width, height, levelIndices);
+                    return AllocateCubeMap<Rgb96Float>(stream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_R32G32B32A32_UINT:
                 case VkFormat.VK_FORMAT_R32G32B32A32_SINT:
-                    return this.AllocateCubeMap<Rgba128>(stream, width, height, levelIndices);
+                    return AllocateCubeMap<Rgba128>(stream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_R32G32B32A32_SFLOAT:
-                    return this.AllocateCubeMap<Rgba128Float>(stream, width, height, levelIndices);
+                    return AllocateCubeMap<Rgba128Float>(stream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_B8G8R8_UNORM:
                 case VkFormat.VK_FORMAT_B8G8R8_SNORM:
                 case VkFormat.VK_FORMAT_B8G8R8_UINT:
                 case VkFormat.VK_FORMAT_B8G8R8_SINT:
                 case VkFormat.VK_FORMAT_B8G8R8_SRGB:
-                    return this.AllocateCubeMap<Bgr24>(stream, width, height, levelIndices);
+                    return AllocateCubeMap<Bgr24>(stream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_R8G8B8_UNORM:
                 case VkFormat.VK_FORMAT_R8G8B8_SNORM:
                 case VkFormat.VK_FORMAT_R8G8B8_UINT:
                 case VkFormat.VK_FORMAT_R8G8B8_SINT:
                 case VkFormat.VK_FORMAT_R8G8B8_SRGB:
-                    return this.AllocateCubeMap<Rgb24>(stream, width, height, levelIndices);
+                    return AllocateCubeMap<Rgb24>(stream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_R5G6B5_UNORM_PACK16:
-                    return this.AllocateCubeMap<Rgb565>(stream, width, height, levelIndices);
+                    return AllocateCubeMap<Rgb565>(stream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_R4G4B4A4_UNORM_PACK16:
-                    return this.AllocateCubeMap<Rgba4444>(stream, width, height, levelIndices);
+                    return AllocateCubeMap<Rgba4444>(stream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_B8G8R8A8_UNORM:
                 case VkFormat.VK_FORMAT_B8G8R8A8_SNORM:
                 case VkFormat.VK_FORMAT_B8G8R8A8_UINT:
                 case VkFormat.VK_FORMAT_B8G8R8A8_SINT:
                 case VkFormat.VK_FORMAT_B8G8R8A8_SRGB:
-                    return this.AllocateCubeMap<Bgra32>(stream, width, height, levelIndices);
+                    return AllocateCubeMap<Bgra32>(stream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_B5G5R5A1_UNORM_PACK16:
-                    return this.AllocateCubeMap<Bgra5551>(stream, width, height, levelIndices);
+                    return AllocateCubeMap<Bgra5551>(stream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_B5G6R5_UNORM_PACK16:
-                    return this.AllocateCubeMap<Bgr565>(stream, width, height, levelIndices);
+                    return AllocateCubeMap<Bgr565>(stream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_B4G4R4A4_UNORM_PACK16:
-                    return this.AllocateCubeMap<Bgra4444>(stream, width, height, levelIndices);
+                    return AllocateCubeMap<Bgra4444>(stream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_R8G8B8A8_UNORM:
                 case VkFormat.VK_FORMAT_R8G8B8A8_SNORM:
                 case VkFormat.VK_FORMAT_R8G8B8A8_UINT:
                 case VkFormat.VK_FORMAT_R8G8B8A8_SINT:
                 case VkFormat.VK_FORMAT_R8G8B8A8_SRGB:
-                    return this.AllocateCubeMap<Rgba32>(stream, width, height, levelIndices);
+                    return AllocateCubeMap<Rgba32>(stream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_R5G5B5A1_UNORM_PACK16:
-                    return this.AllocateCubeMap<Rgba5551>(stream, width, height, levelIndices);
+                    return AllocateCubeMap<Rgba5551>(stream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_BC1_RGB_UNORM_BLOCK:
                 case VkFormat.VK_FORMAT_BC1_RGBA_UNORM_BLOCK:
-                    return this.AllocateCubeMap<Dxt1>(stream, width, height, levelIndices);
+                    return AllocateCubeMap<Dxt1>(stream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_BC2_UNORM_BLOCK:
-                    return this.AllocateCubeMap<Dxt3>(stream, width, height, levelIndices);
+                    return AllocateCubeMap<Dxt3>(stream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_BC4_UNORM_BLOCK:
-                    return this.AllocateCubeMap<Bc4>(stream, width, height, levelIndices);
+                    return AllocateCubeMap<Bc4>(stream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_BC4_SNORM_BLOCK:
-                    return this.AllocateCubeMap<Bc4s>(stream, width, height, levelIndices);
+                    return AllocateCubeMap<Bc4s>(stream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_BC5_UNORM_BLOCK:
-                    return this.AllocateCubeMap<Bc5>(stream, width, height, levelIndices);
+                    return AllocateCubeMap<Bc5>(stream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_BC5_SNORM_BLOCK:
-                    return this.AllocateCubeMap<Bc5s>(stream, width, height, levelIndices);
+                    return AllocateCubeMap<Bc5s>(stream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_BC6H_UFLOAT_BLOCK:
-                    return this.AllocateCubeMap<Bc6h>(stream, width, height, levelIndices);
+                    return AllocateCubeMap<Bc6h>(stream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_BC6H_SFLOAT_BLOCK:
-                    return this.AllocateCubeMap<Bc6hs>(stream, width, height, levelIndices);
+                    return AllocateCubeMap<Bc6hs>(stream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_BC7_UNORM_BLOCK:
-                    return this.AllocateCubeMap<Bc7>(stream, width, height, levelIndices);
+                    return AllocateCubeMap<Bc7>(stream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_ETC2_R8G8B8_UNORM_BLOCK:
-                    return this.AllocateCubeMap<Etc1>(stream, width, height, levelIndices);
+                    return AllocateCubeMap<Etc1>(stream, width, height, levelIndices);
             }
 
             throw new NotSupportedException("The pixel format is not supported");
@@ -299,7 +299,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx2
         /// <param name="height">The height of the texture at level 0.</param>
         /// <param name="levelIndices">The start offsets and byte length of each texture.</param>
         /// <returns>The decoded mipmaps.</returns>
-        private MipMap[] AllocateMipMaps<TBlock>(Stream stream, int width, int height, LevelIndex[] levelIndices)
+        private static MipMap[] AllocateMipMaps<TBlock>(Stream stream, int width, int height, LevelIndex[] levelIndices)
             where TBlock : struct, IBlock<TBlock>
         {
             var blockFormat = default(TBlock);
@@ -318,7 +318,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx2
             return mipMaps;
         }
 
-        private CubemapTexture AllocateCubeMap<TBlock>(Stream stream, int width, int height, LevelIndex[] levelIndices)
+        private static CubemapTexture AllocateCubeMap<TBlock>(Stream stream, int width, int height, LevelIndex[] levelIndices)
             where TBlock : struct, IBlock<TBlock>
         {
             var numberOfMipMaps = levelIndices.Length;
