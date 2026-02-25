@@ -3,7 +3,6 @@
 
 using SixLabors.ImageSharp.Textures.Astc;
 using SixLabors.ImageSharp.Textures.Astc.IO;
-using SixLabors.ImageSharp.Textures.Tests.Formats.Astc.Utils;
 using AwesomeAssertions;
 
 namespace SixLabors.ImageSharp.Textures.Tests.Formats.Astc;
@@ -46,7 +45,7 @@ public class IntegrationTests
     [InlineData("rgb_12x12")]
     public void DecompressToImage_WithTestdataFile_ShouldDecodeSuccessfully(string basename)
     {
-        var filePath = FileBasedHelpers.GetInputPath(basename + ".astc");
+        var filePath = TestFile.GetInputFileFullPath(Path.Combine(TestImages.Astc.InputFolder, basename + ".astc"));
         var bytes = File.ReadAllBytes(filePath);
         var astc = AstcFile.FromMemory(bytes);
 

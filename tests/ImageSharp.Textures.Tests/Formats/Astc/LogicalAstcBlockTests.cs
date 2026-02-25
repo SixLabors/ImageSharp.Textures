@@ -5,7 +5,6 @@ using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Textures.Astc.ColorEncoding;
 using SixLabors.ImageSharp.Textures.Astc.Core;
 using SixLabors.ImageSharp.Textures.Astc.TexelBlock;
-using SixLabors.ImageSharp.Textures.Tests.Formats.Astc.Utils;
 using SixLabors.ImageSharp.Textures.Tests.TestUtilities.ImageComparison;
 using AwesomeAssertions;
 
@@ -383,11 +382,11 @@ public class LogicalAstcBlockTests
         int height)
     {
         Footprint footprint = Footprint.FromFootprintType(footprintType);
-        byte[] astcData = FileBasedHelpers.LoadASTCFile(imageName);
+        byte[] astcData = TestFile.Create(Path.Combine(TestImages.Astc.InputFolder, imageName + ".astc")).Bytes[16..];
 
         using Image<Rgba32> decodedImage = DecodeAstcBlocksToImage(footprint, astcData, width, height);
 
-        string expectedPath = FileBasedHelpers.GetExpectedPath(imageName + ".bmp");
+        string expectedPath = TestFile.GetInputFileFullPath(Path.Combine(TestImages.Astc.ExpectedFolder, imageName + ".bmp"));
         using Image<Rgba32> expectedImage = Image.Load<Rgba32>(expectedPath);
         ImageComparer.TolerantPercentage(1.0f).VerifySimilarity(expectedImage, decodedImage);
     }

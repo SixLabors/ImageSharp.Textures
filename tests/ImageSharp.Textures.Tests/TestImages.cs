@@ -8,6 +8,13 @@ namespace SixLabors.ImageSharp.Textures.Tests;
 /// </summary>
 public static class TestImages
 {
+    public static class Astc
+    {
+        public const string InputFolder = "Astc/Input";
+        public const string ExpectedFolder = "Astc/Expected";
+        public const string HdrFolder = "Astc/HDR";
+    }
+
     public static class Ktx
     {
         public const string Rgba = "rgba8888.ktx";

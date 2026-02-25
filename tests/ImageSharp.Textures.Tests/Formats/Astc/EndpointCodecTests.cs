@@ -5,7 +5,6 @@ using System.Buffers.Binary;
 using SixLabors.ImageSharp.Textures.Astc.ColorEncoding;
 using SixLabors.ImageSharp.Textures.Astc.Core;
 using SixLabors.ImageSharp.Textures.Astc.TexelBlock;
-using SixLabors.ImageSharp.Textures.Tests.Formats.Astc.Utils;
 using AwesomeAssertions;
 
 namespace SixLabors.ImageSharp.Textures.Tests.Formats.Astc;
@@ -306,7 +305,7 @@ public class EndpointCodecTests
     [Fact]
     public void DecodeCheckerboard_ShouldDecodeToGrayscaleEndpoints()
     {
-        string astcFilePath = FileBasedHelpers.GetInputPath("checkerboard.astc");
+        string astcFilePath = TestFile.GetInputFileFullPath(Path.Combine(TestImages.Astc.InputFolder, "checkerboard.astc"));
         byte[] astcData = File.ReadAllBytes(astcFilePath);
 
         int blocksDecoded = 0;

@@ -4,7 +4,6 @@
 using SixLabors.ImageSharp.Textures.Astc.ColorEncoding;
 using SixLabors.ImageSharp.Textures.Astc.Core;
 using SixLabors.ImageSharp.Textures.Astc.TexelBlock;
-using SixLabors.ImageSharp.Textures.Tests.Formats.Astc.Utils;
 using AwesomeAssertions;
 
 namespace SixLabors.ImageSharp.Textures.Tests.Formats.Astc;
@@ -448,7 +447,7 @@ public class IntermediateBlockTests
 
     private static byte[] LoadASTCFile(string basename)
     {
-        var filename = FileBasedHelpers.GetInputPath(basename + ".astc");
+        var filename = TestFile.GetInputFileFullPath(Path.Combine(TestImages.Astc.InputFolder, basename + ".astc"));
         File.Exists(filename).Should().BeTrue($"Testdata missing: {filename}");
         var data = File.ReadAllBytes(filename);
         data.Length.Should().BeGreaterThanOrEqualTo(16, "ASTC file too small");

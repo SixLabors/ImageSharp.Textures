@@ -4,7 +4,6 @@
 using SixLabors.ImageSharp.Textures.Astc;
 using SixLabors.ImageSharp.Textures.Astc.Core;
 using SixLabors.ImageSharp.Textures.Astc.IO;
-using SixLabors.ImageSharp.Textures.Tests.Formats.Astc.Utils;
 using AwesomeAssertions;
 
 namespace SixLabors.ImageSharp.Textures.Tests.Formats.Astc.HDR;
@@ -18,7 +17,7 @@ public class HdrComparisonTests
     public void HdrFile_DecodedWithHdrApi_ShouldPreserveExtendedRange()
     {
         // HDR files should decode to values potentially exceeding 1.0
-        var astcPath = FileBasedHelpers.GetHdrPath("HDR-A-1x1.astc");
+        var astcPath = TestFile.GetInputFileFullPath(Path.Combine(TestImages.Astc.HdrFolder, "HDR-A-1x1.astc"));
 
         var astcData = File.ReadAllBytes(astcPath);
         var astcFile = AstcFile.FromMemory(astcData);
@@ -43,7 +42,7 @@ public class HdrComparisonTests
     public void LdrFile_DecodedWithHdrApi_ShouldUpscaleToHdrRange()
     {
         // LDR files decoded with HDR API should produce values in 0.0-1.0 range
-        var astcPath = FileBasedHelpers.GetHdrPath("LDR-A-1x1.astc");
+        var astcPath = TestFile.GetInputFileFullPath(Path.Combine(TestImages.Astc.HdrFolder, "LDR-A-1x1.astc"));
 
         var astcData = File.ReadAllBytes(astcPath);
         var astcFile = AstcFile.FromMemory(astcData);
@@ -66,7 +65,7 @@ public class HdrComparisonTests
     public void HdrFile_DecodedWithLdrApi_ShouldClampToByteRange()
     {
         // HDR files decoded with LDR API should clamp to 0-255
-        var astcPath = FileBasedHelpers.GetHdrPath("HDR-A-1x1.astc");
+        var astcPath = TestFile.GetInputFileFullPath(Path.Combine(TestImages.Astc.HdrFolder, "HDR-A-1x1.astc"));
 
         var astcData = File.ReadAllBytes(astcPath);
         var astcFile = AstcFile.FromMemory(astcData);
@@ -88,7 +87,7 @@ public class HdrComparisonTests
     public void LdrFile_DecodedWithBothApis_ShouldProduceConsistentValues()
     {
         // LDR content should produce equivalent results with both APIs
-        var astcPath = FileBasedHelpers.GetHdrPath("LDR-A-1x1.astc");
+        var astcPath = TestFile.GetInputFileFullPath(Path.Combine(TestImages.Astc.HdrFolder, "LDR-A-1x1.astc"));
 
         var astcData = File.ReadAllBytes(astcPath);
         var astcFile = AstcFile.FromMemory(astcData);
@@ -114,7 +113,7 @@ public class HdrComparisonTests
     public void HdrTile_ShouldDecodeSuccessfully()
     {
         // Test larger HDR tile decoding
-        var astcPath = FileBasedHelpers.GetHdrPath("hdr-tile.astc");
+        var astcPath = TestFile.GetInputFileFullPath(Path.Combine(TestImages.Astc.HdrFolder, "hdr-tile.astc"));
 
         var astcData = File.ReadAllBytes(astcPath);
         var astcFile = AstcFile.FromMemory(astcData);
@@ -136,7 +135,7 @@ public class HdrComparisonTests
     public void LdrTile_ShouldDecodeSuccessfully()
     {
         // Test larger LDR tile decoding
-        var astcPath = FileBasedHelpers.GetHdrPath("ldr-tile.astc");
+        var astcPath = TestFile.GetInputFileFullPath(Path.Combine(TestImages.Astc.HdrFolder, "ldr-tile.astc"));
 
         var astcData = File.ReadAllBytes(astcPath);
         var astcFile = AstcFile.FromMemory(astcData);
@@ -155,8 +154,8 @@ public class HdrComparisonTests
     public void SameFootprint_HdrVsLdr_ShouldBothDecode()
     {
         // Verify files with same footprint decode correctly
-        var hdrPath = FileBasedHelpers.GetHdrPath("HDR-A-1x1.astc");
-        var ldrPath = FileBasedHelpers.GetHdrPath("LDR-A-1x1.astc");
+        var hdrPath = TestFile.GetInputFileFullPath(Path.Combine(TestImages.Astc.HdrFolder, "HDR-A-1x1.astc"));
+        var ldrPath = TestFile.GetInputFileFullPath(Path.Combine(TestImages.Astc.HdrFolder, "LDR-A-1x1.astc"));
 
         var hdrData = File.ReadAllBytes(hdrPath);
         var ldrData = File.ReadAllBytes(ldrPath);
@@ -184,7 +183,7 @@ public class HdrComparisonTests
     public void HdrColor_FromLdr_ShouldMatchLdrToHdrApiConversion()
     {
         // Verify that HdrColor.FromRgba() produces same results as decoding LDR with HDR API
-        var astcPath = FileBasedHelpers.GetHdrPath("LDR-A-1x1.astc");
+        var astcPath = TestFile.GetInputFileFullPath(Path.Combine(TestImages.Astc.HdrFolder, "LDR-A-1x1.astc"));
 
         var astcData = File.ReadAllBytes(astcPath);
         var astcFile = AstcFile.FromMemory(astcData);

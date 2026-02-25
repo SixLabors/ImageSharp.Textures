@@ -5,7 +5,6 @@ using System.ComponentModel;
 using SixLabors.ImageSharp.Textures.Astc;
 using SixLabors.ImageSharp.Textures.Astc.Core;
 using SixLabors.ImageSharp.Textures.Astc.IO;
-using SixLabors.ImageSharp.Textures.Tests.Formats.Astc.Utils;
 using AwesomeAssertions;
 
 namespace SixLabors.ImageSharp.Textures.Tests.Formats.Astc.HDR;
@@ -21,7 +20,7 @@ public class HdrImageTests
     [Description("Verify that the ASTC file header is correctly parsed for HDR content, including footprint detection")]
     public void DecodeHdrFile_VerifyFootprintDetection()
     {
-        var astcPath = FileBasedHelpers.GetHdrPath("HDR-A-1x1.astc");
+        var astcPath = TestFile.GetInputFileFullPath(Path.Combine(TestImages.Astc.HdrFolder, "HDR-A-1x1.astc"));
 
         var astcData = File.ReadAllBytes(astcPath);
         var astcFile = AstcFile.FromMemory(astcData);
@@ -35,7 +34,7 @@ public class HdrImageTests
     [Fact]
     public void DecodeHdrAstcFile_1x1Pixel_ShouldProduceValidHdrOutput()
     {
-        var astcPath = FileBasedHelpers.GetHdrPath("HDR-A-1x1.astc");
+        var astcPath = TestFile.GetInputFileFullPath(Path.Combine(TestImages.Astc.HdrFolder, "HDR-A-1x1.astc"));
 
         var astcData = File.ReadAllBytes(astcPath);
         var astcFile = AstcFile.FromMemory(astcData);
@@ -61,7 +60,7 @@ public class HdrImageTests
     [Fact]
     public void DecodeHdrAstcFile_Tile_ShouldProduceValidHdrOutput()
     {
-        var astcPath = FileBasedHelpers.GetHdrPath("hdr-tile.astc");
+        var astcPath = TestFile.GetInputFileFullPath(Path.Combine(TestImages.Astc.HdrFolder, "hdr-tile.astc"));
 
         var astcData = File.ReadAllBytes(astcPath);
         var astcFile = AstcFile.FromMemory(astcData);
@@ -89,7 +88,7 @@ public class HdrImageTests
     [Description("Verify that HDR ASTC files can be decoded with the LDR API, producing clamped values")]
     public void DecodeHdrAstcFile_WithLdrApi_ShouldClampValues()
     {
-        var astcPath = FileBasedHelpers.GetHdrPath("HDR-A-1x1.astc");
+        var astcPath = TestFile.GetInputFileFullPath(Path.Combine(TestImages.Astc.HdrFolder, "HDR-A-1x1.astc"));
 
         if (!File.Exists(astcPath))
         {
@@ -117,7 +116,7 @@ public class HdrImageTests
     [Description("Verify that HDR and LDR APIs produce consistent relative channel values for the same HDR ASTC file")]
     public void HdrAndLdrApis_OnSameHdrFile_ShouldProduceConsistentRelativeValues()
     {
-        var astcPath = FileBasedHelpers.GetHdrPath("HDR-A-1x1.astc");
+        var astcPath = TestFile.GetInputFileFullPath(Path.Combine(TestImages.Astc.HdrFolder, "HDR-A-1x1.astc"));
 
         var astcData = File.ReadAllBytes(astcPath);
         var astcFile = AstcFile.FromMemory(astcData);
