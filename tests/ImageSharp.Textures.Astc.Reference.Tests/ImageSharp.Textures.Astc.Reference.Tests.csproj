@@ -25,7 +25,7 @@
   <!-- Copy test data into the output directory. -->
   <Target Name="CopyTestData" AfterTargets="Build">
     <ItemGroup>
-      <_TestData Include="..\ImageSharp.Textures.Astc.Tests\TestData\**\*.*" />
+      <_TestData Include="..\Images\Input\Astc\**\*.*" />
     </ItemGroup>
     <Copy SourceFiles="@(_TestData)"
           DestinationFiles="@(_TestData -> '$(TargetDir)TestData\%(RecursiveDir)%(Filename)%(Extension)')"

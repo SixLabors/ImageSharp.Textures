@@ -5,7 +5,7 @@ using SixLabors.ImageSharp.Textures.Astc.ColorEncoding;
 using SixLabors.ImageSharp.Textures.Astc.TexelBlock;
 using AwesomeAssertions;
 
-namespace SixLabors.ImageSharp.Textures.Astc.Tests;
+namespace SixLabors.ImageSharp.Textures.Tests.Formats.Astc;
 
 public class PhysicalAstcBlockTests
 {

@@ -3,11 +3,11 @@
 
 using SixLabors.ImageSharp.Textures.Astc.ColorEncoding;
 using SixLabors.ImageSharp.Textures.Astc.Core;
-using SixLabors.ImageSharp.Textures.Astc.Tests.Utils;
+using SixLabors.ImageSharp.Textures.Tests.Formats.Astc.Utils;
 using SixLabors.ImageSharp.Textures.Astc.TexelBlock;
 using AwesomeAssertions;
 
-namespace SixLabors.ImageSharp.Textures.Astc.Tests;
+namespace SixLabors.ImageSharp.Textures.Tests.Formats.Astc;
 
 public class LogicalAstcBlockTests
 {
@@ -385,7 +385,7 @@ public class LogicalAstcBlockTests
 
         var decodedImage = ImageBuffer.FromAstcBuffer(footprint, astcData, width, height, hasAlpha);
 
-        var expectedPath = Path.Combine("TestData", "Expected", imageName + ".bmp");
+        var expectedPath = FileBasedHelpers.GetExpectedPath(imageName + ".bmp");
         var expectedImage = FileBasedHelpers.LoadExpectedImage(expectedPath);
         ImageUtils.CompareSumOfSquaredDifferences(expectedImage, decodedImage, 0.1);
     }

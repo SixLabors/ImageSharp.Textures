@@ -4,7 +4,7 @@
 using SixLabors.ImageSharp.Textures.Astc.IO;
 using AwesomeAssertions;
 
-namespace SixLabors.ImageSharp.Textures.Astc.Tests;
+namespace SixLabors.ImageSharp.Textures.Tests.Formats.Astc;
 
 public class BitStreamTests
 {

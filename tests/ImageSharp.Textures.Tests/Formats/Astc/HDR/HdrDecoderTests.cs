@@ -1,10 +1,11 @@
 // Copyright (c) Six Labors.
 // Licensed under the Six Labors Split License.
 
+using SixLabors.ImageSharp.Textures.Astc;
 using SixLabors.ImageSharp.Textures.Astc.Core;
 using AwesomeAssertions;
 
-namespace SixLabors.ImageSharp.Textures.Astc.Tests.HDR;
+namespace SixLabors.ImageSharp.Textures.Tests.Formats.Astc.HDR;
 
 public class HdrDecoderTests
 {

@@ -1,10 +1,12 @@
 // Copyright (c) Six Labors.
 // Licensed under the Six Labors Split License.
 
+using SixLabors.ImageSharp.Textures.Astc;
 using SixLabors.ImageSharp.Textures.Astc.IO;
+using SixLabors.ImageSharp.Textures.Tests.Formats.Astc.Utils;
 using AwesomeAssertions;
 
-namespace SixLabors.ImageSharp.Textures.Astc.Tests;
+namespace SixLabors.ImageSharp.Textures.Tests.Formats.Astc;
 
 public class IntegrationTests
 {
@@ -44,7 +46,7 @@ public class IntegrationTests
     [InlineData("rgb_12x12")]
     public void DecompressToImage_WithTestdataFile_ShouldDecodeSuccessfully(string basename)
     {
-        var filePath = Path.Combine("TestData", "Input", basename + ".astc");
+        var filePath = FileBasedHelpers.GetInputPath(basename + ".astc");
         var bytes = File.ReadAllBytes(filePath);
         var astc = AstcFile.FromMemory(bytes);
 

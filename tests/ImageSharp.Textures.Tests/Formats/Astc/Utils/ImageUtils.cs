@@ -3,7 +3,7 @@
 
 using AwesomeAssertions;
 
-namespace SixLabors.ImageSharp.Textures.Astc.Tests.Utils;
+namespace SixLabors.ImageSharp.Textures.Tests.Formats.Astc.Utils;
 
 internal static class ImageUtils
 {

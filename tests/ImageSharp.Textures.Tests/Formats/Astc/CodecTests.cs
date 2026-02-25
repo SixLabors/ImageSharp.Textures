@@ -1,13 +1,14 @@
 // Copyright (c) Six Labors.
 // Licensed under the Six Labors Split License.
 
+using SixLabors.ImageSharp.Textures.Astc;
 using SixLabors.ImageSharp.Textures.Astc.Core;
 using SixLabors.ImageSharp.Textures.Astc.IO;
-using SixLabors.ImageSharp.Textures.Astc.Tests.Utils;
+using SixLabors.ImageSharp.Textures.Tests.Formats.Astc.Utils;
 using SixLabors.ImageSharp.Textures.Astc.TexelBlock;
 using AwesomeAssertions;
 
-namespace SixLabors.ImageSharp.Textures.Astc.Tests;
+namespace SixLabors.ImageSharp.Textures.Tests.Formats.Astc;
 
 public class CodecTests
 {
@@ -96,7 +97,7 @@ public class CodecTests
         var decodedPixels = AstcDecoder.DecompressImage(astcData, width, height, footprintType);
         var actualImage = new ImageBuffer(decodedPixels.ToArray(), width, height, 4);
 
-        var expectedImagePath = Path.Combine("TestData", "Expected", imageName + ".bmp");
+        var expectedImagePath = FileBasedHelpers.GetExpectedPath(imageName + ".bmp");
         var expectedImage = FileBasedHelpers.LoadExpectedImage(expectedImagePath);
         ImageUtils.CompareSumOfSquaredDifferences(expectedImage, actualImage, 0.1);
     }
@@ -112,7 +113,7 @@ public class CodecTests
         int width,
         int height)
     {
-        var astcPath = Path.Combine("TestData", "Input", imageName + ".astc");
+        var astcPath = FileBasedHelpers.GetInputPath(imageName + ".astc");
         var astcBytes = File.ReadAllBytes(astcPath);
         var file = AstcFile.FromMemory(astcBytes);
 
@@ -124,7 +125,7 @@ public class CodecTests
         var decodedPixels = AstcDecoder.DecompressImage(file);
         var actualImage = new ImageBuffer(decodedPixels.ToArray(), width, height, 4);
 
-        var expectedImagePath = Path.Combine("TestData", "Expected", imageName + ".bmp");
+        var expectedImagePath = FileBasedHelpers.GetExpectedPath(imageName + ".bmp");
         var expectedImage = FileBasedHelpers.LoadExpectedImage(expectedImagePath);
         ImageUtils.CompareSumOfSquaredDifferences(expectedImage, actualImage, 0.1);
     }

@@ -10,9 +10,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="AwesomeAssertions" Version="9.3.0" />
     <PackageReference Include="Magick.NET-Q16-AnyCPU" />
     <PackageReference Include="System.Drawing.Common" />
     <PackageReference Include="Moq" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\ImageSharp.Textures.Astc\ImageSharp.Textures.Astc.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -5,7 +5,7 @@ using SixLabors.ImageSharp.Textures.Astc.Core;
 using SixLabors.ImageSharp.Textures.Astc.TexelBlock;
 using AwesomeAssertions;
 
-namespace SixLabors.ImageSharp.Textures.Astc.Tests.Utils;
+namespace SixLabors.ImageSharp.Textures.Tests.Formats.Astc.Utils;
 
 internal class ImageBuffer
 {
