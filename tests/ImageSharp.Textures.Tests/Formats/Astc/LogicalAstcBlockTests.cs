@@ -1,10 +1,12 @@
 // Copyright (c) Six Labors.
 // Licensed under the Six Labors Split License.
 
+using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Textures.Astc.ColorEncoding;
 using SixLabors.ImageSharp.Textures.Astc.Core;
-using SixLabors.ImageSharp.Textures.Tests.Formats.Astc.Utils;
 using SixLabors.ImageSharp.Textures.Astc.TexelBlock;
+using SixLabors.ImageSharp.Textures.Tests.Formats.Astc.Utils;
+using SixLabors.ImageSharp.Textures.Tests.TestUtilities.ImageComparison;
 using AwesomeAssertions;
 
 namespace SixLabors.ImageSharp.Textures.Tests.Formats.Astc;
@@ -380,13 +382,55 @@ public class LogicalAstcBlockTests
         int width,
         int height)
     {
-        var footprint = Footprint.FromFootprintType(footprintType);
-        var astcData = FileBasedHelpers.LoadASTCFile(imageName);
+        Footprint footprint = Footprint.FromFootprintType(footprintType);
+        byte[] astcData = FileBasedHelpers.LoadASTCFile(imageName);
 
-        var decodedImage = ImageBuffer.FromAstcBuffer(footprint, astcData, width, height, hasAlpha);
+        using Image<Rgba32> decodedImage = DecodeAstcBlocksToImage(footprint, astcData, width, height);
 
-        var expectedPath = FileBasedHelpers.GetExpectedPath(imageName + ".bmp");
-        var expectedImage = FileBasedHelpers.LoadExpectedImage(expectedPath);
-        ImageUtils.CompareSumOfSquaredDifferences(expectedImage, decodedImage, 0.1);
+        string expectedPath = FileBasedHelpers.GetExpectedPath(imageName + ".bmp");
+        using Image<Rgba32> expectedImage = Image.Load<Rgba32>(expectedPath);
+        ImageComparer.TolerantPercentage(1.0f).VerifySimilarity(expectedImage, decodedImage);
+    }
+
+    private static Image<Rgba32> DecodeAstcBlocksToImage(Footprint footprint, byte[] astcData, int width, int height)
+    {
+        // ASTC uses x/y ordering, so we flip Y to match ImageSharp's row/column origin.
+        var image = new Image<Rgba32>(width, height);
+        int blockWidth = footprint.Width;
+        int blockHeight = footprint.Height;
+        int blocksWide = (width + blockWidth - 1) / blockWidth;
+
+        for (int i = 0; i < astcData.Length; i += PhysicalBlock.SizeInBytes)
+        {
+            int blockIndex = i / PhysicalBlock.SizeInBytes;
+            int blockX = blockIndex % blocksWide;
+            int blockY = blockIndex / blocksWide;
+
+            byte[] blockSpan = astcData.AsSpan(i, PhysicalBlock.SizeInBytes).ToArray();
+            var bits = new UInt128(
+                BitConverter.ToUInt64(blockSpan, 8),
+                BitConverter.ToUInt64(blockSpan, 0));
+            BlockInfo info = BlockInfo.Decode(bits);
+            LogicalBlock? logicalBlock = LogicalBlock.UnpackLogicalBlock(footprint, bits, in info);
+            Assert.NotNull(logicalBlock);
+
+            for (int y = 0; y < blockHeight; ++y)
+            {
+                for (int x = 0; x < blockWidth; ++x)
+                {
+                    int px = (blockWidth * blockX) + x;
+                    int py = (blockHeight * blockY) + y;
+                    if (px >= width || py >= height)
+                    {
+                        continue;
+                    }
+
+                    RgbaColor decoded = logicalBlock!.ColorAt(x, y);
+                    image[px, height - 1 - py] = new Rgba32(decoded.R, decoded.G, decoded.B, decoded.A);
+                }
+            }
+        }
+
+        return image;
     }
 }

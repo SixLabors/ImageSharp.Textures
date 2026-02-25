@@ -1,11 +1,14 @@
 // Copyright (c) Six Labors.
 // Licensed under the Six Labors Split License.
 
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
 using SixLabors.ImageSharp.Textures.Astc;
 using SixLabors.ImageSharp.Textures.Astc.Core;
 using SixLabors.ImageSharp.Textures.Astc.IO;
-using SixLabors.ImageSharp.Textures.Tests.Formats.Astc.Utils;
 using SixLabors.ImageSharp.Textures.Astc.TexelBlock;
+using SixLabors.ImageSharp.Textures.Tests.Formats.Astc.Utils;
+using SixLabors.ImageSharp.Textures.Tests.TestUtilities.ImageComparison;
 using AwesomeAssertions;
 
 namespace SixLabors.ImageSharp.Textures.Tests.Formats.Astc;
@@ -94,12 +97,13 @@ public class CodecTests
             logicalBlock.Should().NotBeNull("all blocks should unpack successfully");
         }
 
-        var decodedPixels = AstcDecoder.DecompressImage(astcData, width, height, footprintType);
-        var actualImage = new ImageBuffer(decodedPixels.ToArray(), width, height, 4);
+        byte[] decodedPixels = AstcDecoder.DecompressImage(astcData, width, height, footprintType).ToArray();
+        using Image<Rgba32> actualImage = Image.LoadPixelData<Rgba32>(decodedPixels, width, height);
+        actualImage.Mutate(x => x.Flip(FlipMode.Vertical));
 
-        var expectedImagePath = FileBasedHelpers.GetExpectedPath(imageName + ".bmp");
-        var expectedImage = FileBasedHelpers.LoadExpectedImage(expectedImagePath);
-        ImageUtils.CompareSumOfSquaredDifferences(expectedImage, actualImage, 0.1);
+        string expectedImagePath = FileBasedHelpers.GetExpectedPath(imageName + ".bmp");
+        using Image<Rgba32> expectedImage = Image.Load<Rgba32>(expectedImagePath);
+        ImageComparer.TolerantPercentage(0.1f).VerifySimilarity(expectedImage, actualImage);
     }
 
     [Theory]
@@ -113,21 +117,22 @@ public class CodecTests
         int width,
         int height)
     {
-        var astcPath = FileBasedHelpers.GetInputPath(imageName + ".astc");
-        var astcBytes = File.ReadAllBytes(astcPath);
-        var file = AstcFile.FromMemory(astcBytes);
+        string astcPath = FileBasedHelpers.GetInputPath(imageName + ".astc");
+        byte[] astcBytes = File.ReadAllBytes(astcPath);
+        AstcFile file = AstcFile.FromMemory(astcBytes);
 
         // Check file header
         file.Footprint.Type.Should().Be(footprint);
         file.Width.Should().Be(width);
         file.Height.Should().Be(height);
 
-        var decodedPixels = AstcDecoder.DecompressImage(file);
-        var actualImage = new ImageBuffer(decodedPixels.ToArray(), width, height, 4);
+        byte[] decodedPixels = AstcDecoder.DecompressImage(file).ToArray();
+        using Image<Rgba32> actualImage = Image.LoadPixelData<Rgba32>(decodedPixels, width, height);
+        actualImage.Mutate(x => x.Flip(FlipMode.Vertical));
 
-        var expectedImagePath = FileBasedHelpers.GetExpectedPath(imageName + ".bmp");
-        var expectedImage = FileBasedHelpers.LoadExpectedImage(expectedImagePath);
-        ImageUtils.CompareSumOfSquaredDifferences(expectedImage, actualImage, 0.1);
+        string expectedImagePath = FileBasedHelpers.GetExpectedPath(imageName + ".bmp");
+        using Image<Rgba32> expectedImage = Image.Load<Rgba32>(expectedImagePath);
+        ImageComparer.TolerantPercentage(0.1f).VerifySimilarity(expectedImage, actualImage);
     }
 
 }
