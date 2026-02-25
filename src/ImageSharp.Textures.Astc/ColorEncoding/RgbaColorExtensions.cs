@@ -34,8 +34,8 @@ internal static class RgbaColorExtensions
     /// </summary>
     public static RgbaColor WithInvertedBlueContract(this RgbaColor color)
         => new(
-            r: 2 * color.R - color.B,
-            g: 2 * color.G - color.B,
+            r: (2 * color.R) - color.B,
+            g: (2 * color.G) - color.B,
             b: color.B,
             a: color.A);
 

@@ -64,8 +64,10 @@ internal static class FusedLdrBlockDecoder
             for (; i < limit; i += 4)
             {
                 var weights = Vector128.Create(
-                    texelWeights[i], texelWeights[i + 1],
-                    texelWeights[i + 2], texelWeights[i + 3]);
+                    texelWeights[i],
+                    texelWeights[i + 1],
+                    texelWeights[i + 2],
+                    texelWeights[i + 3]);
                 SimdHelpers.Write4PixelLdr(
                     buffer,
                     i * 4,
@@ -120,7 +122,7 @@ internal static class FusedLdrBlockDecoder
 
         for (int pixelY = 0; pixelY < footprintHeight; pixelY++)
         {
-            int dstRowOffset = (dstBaseY + pixelY) * rowStride + dstBaseX * BytesPerPixelUnorm8;
+            int dstRowOffset = ((dstBaseY + pixelY) * rowStride) + (dstBaseX * BytesPerPixelUnorm8);
             int srcRowBase = pixelY * footprintWidth;
             int pixelX = 0;
 
@@ -131,11 +133,21 @@ internal static class FusedLdrBlockDecoder
                 {
                     int texelIndex = srcRowBase + pixelX;
                     var weights = Vector128.Create(
-                        texelWeights[texelIndex], texelWeights[texelIndex + 1],
-                        texelWeights[texelIndex + 2], texelWeights[texelIndex + 3]);
+                        texelWeights[texelIndex],
+                        texelWeights[texelIndex + 1],
+                        texelWeights[texelIndex + 2],
+                        texelWeights[texelIndex + 3]);
                     SimdHelpers.Write4PixelLdr(
-                        imageBuffer, dstRowOffset + pixelX * BytesPerPixelUnorm8,
-                        lowR, lowG, lowB, lowA, highR, highG, highB, highA,
+                        imageBuffer,
+                        dstRowOffset + (pixelX * BytesPerPixelUnorm8),
+                        lowR,
+                        lowG,
+                        lowB,
+                        lowA,
+                        highR,
+                        highG,
+                        highB,
+                        highA,
                         weights);
                 }
             }
@@ -143,8 +155,16 @@ internal static class FusedLdrBlockDecoder
             for (; pixelX < footprintWidth; pixelX++)
             {
                 SimdHelpers.WriteSinglePixelLdr(
-                    imageBuffer, dstRowOffset + pixelX * BytesPerPixelUnorm8,
-                    lowR, lowG, lowB, lowA, highR, highG, highB, highA,
+                    imageBuffer,
+                    dstRowOffset + (pixelX * BytesPerPixelUnorm8),
+                    lowR,
+                    lowG,
+                    lowB,
+                    lowA,
+                    highR,
+                    highG,
+                    highB,
+                    highA,
                     texelWeights[srcRowBase + pixelX]);
             }
         }

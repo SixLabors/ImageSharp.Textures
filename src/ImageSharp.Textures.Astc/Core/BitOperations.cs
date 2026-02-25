@@ -11,11 +11,15 @@ internal static class BitOperations
     public static UInt128 GetBits(UInt128 value, int start, int length)
     {
         if (length <= 0)
+        {
             return UInt128.Zero;
+        }
 
         var shifted = value >> start;
         if (length >= 128)
+        {
             return shifted;
+        }
 
         if (length >= 64)
         {
@@ -43,7 +47,9 @@ internal static class BitOperations
     public static ulong GetBits(ulong value, int start, int length)
     {
         if (length <= 0)
+        {
             return 0UL;
+        }
 
         int totalBits = sizeof(ulong) * 8;
         ulong mask = length == totalBits
@@ -59,7 +65,7 @@ internal static class BitOperations
     /// <remarks>
     /// The 'bit_transfer_signed' function defined in Section C.2.14 of the ASTC specification
     /// </remarks>
-    public static (int a, int b) TransferPrecision(int a, int b)
+    public static (int A, int B) TransferPrecision(int a, int b)
     {
         b >>= 1;
         b |= a & 0x80;
@@ -67,7 +73,9 @@ internal static class BitOperations
         a &= 0x3F;
 
         if ((a & 0x20) != 0)
+        {
             a -= 0x40;
+        }
 
         return (a, b);
     }
@@ -77,7 +85,7 @@ internal static class BitOperations
     /// and returns the two values in [0, 255] that will reconstruct |a| and |b| when
     /// passed to the <see cref="TransferPrecision"/> function.
     /// </summary>
-    public static (int a, int b) TransferPrecisionInverse(int a, int b)
+    public static (int A, int B) TransferPrecisionInverse(int a, int b)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(a, -32);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(a, 31);
@@ -85,7 +93,9 @@ internal static class BitOperations
         ArgumentOutOfRangeException.ThrowIfGreaterThan(b, byte.MaxValue);
 
         if (a < 0)
+        {
             a += 0x40;
+        }
 
         a <<= 1;
         a |= b & 0x80;

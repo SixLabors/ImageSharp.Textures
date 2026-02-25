@@ -8,9 +8,9 @@ namespace SixLabors.ImageSharp.Textures.Astc.IO;
 /// </summary>
 /// <remarks>
 /// ASTC block and decoded image dimensions in texels.
-/// 
+///
 /// For 2D images the Z dimension must be set to 1.
-/// 
+///
 /// Note that the image is not required to be an exact multiple of the compressed block
 /// size; the compressed data may include padding that is discarded during decompression.
 /// </remarks>

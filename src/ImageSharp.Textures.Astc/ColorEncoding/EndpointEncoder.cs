@@ -17,27 +17,37 @@ internal static class EndpointEncoder
         {
             case ColorEndpointMode.LdrRgbDirect:
             case ColorEndpointMode.LdrRgbaDirect:
+            {
+                int maxValueCount = Math.Max(ColorEndpointMode.LdrRgbDirect.GetColorValuesCount(), ColorEndpointMode.LdrRgbaDirect.GetColorValuesCount());
+                var v = new int[maxValueCount];
+                for (int i = 0; i < maxValueCount; ++i)
                 {
-                    int maxValueCount = Math.Max(ColorEndpointMode.LdrRgbDirect.GetColorValuesCount(), ColorEndpointMode.LdrRgbaDirect.GetColorValuesCount());
-                    var v = new int[maxValueCount];
-                    for (int i = 0; i < maxValueCount; ++i) v[i] = i < values.Count ? values[i] : 0;
-                    var unquantizedValues = EndpointCodec.UnquantizeArray(v, maxValue);
-                    int s0 = unquantizedValues[0] + unquantizedValues[2] + unquantizedValues[4];
-                    int s1 = unquantizedValues[1] + unquantizedValues[3] + unquantizedValues[5];
-                    return s0 > s1;
+                    v[i] = i < values.Count ? values[i] : 0;
                 }
+
+                var unquantizedValues = EndpointCodec.UnquantizeArray(v, maxValue);
+                int s0 = unquantizedValues[0] + unquantizedValues[2] + unquantizedValues[4];
+                int s1 = unquantizedValues[1] + unquantizedValues[3] + unquantizedValues[5];
+                return s0 > s1;
+            }
+
             case ColorEndpointMode.LdrRgbBaseOffset:
             case ColorEndpointMode.LdrRgbaBaseOffset:
+            {
+                int maxValueCount = Math.Max(ColorEndpointMode.LdrRgbBaseOffset.GetColorValuesCount(), ColorEndpointMode.LdrRgbaBaseOffset.GetColorValuesCount());
+                var v = new int[maxValueCount];
+                for (int i = 0; i < maxValueCount; ++i)
                 {
-                    int maxValueCount = Math.Max(ColorEndpointMode.LdrRgbBaseOffset.GetColorValuesCount(), ColorEndpointMode.LdrRgbaBaseOffset.GetColorValuesCount());
-                    var v = new int[maxValueCount];
-                    for (int i = 0; i < maxValueCount; ++i) v[i] = i < values.Count ? values[i] : 0;
-                    var unquantizedValues = EndpointCodec.UnquantizeArray(v, maxValue);
-                    var (b0, a0) = BitOperations.TransferPrecision(unquantizedValues[1], unquantizedValues[0]);
-                    var (b1, a1) = BitOperations.TransferPrecision(unquantizedValues[3], unquantizedValues[2]);
-                    var (b2, a2) = BitOperations.TransferPrecision(unquantizedValues[5], unquantizedValues[4]);
-                    return (b0 + b1 + b2) < 0;
+                    v[i] = i < values.Count ? values[i] : 0;
                 }
+
+                var unquantizedValues = EndpointCodec.UnquantizeArray(v, maxValue);
+                var (b0, a0) = BitOperations.TransferPrecision(unquantizedValues[1], unquantizedValues[0]);
+                var (b1, a1) = BitOperations.TransferPrecision(unquantizedValues[3], unquantizedValues[2]);
+                var (b2, a2) = BitOperations.TransferPrecision(unquantizedValues[5], unquantizedValues[4]);
+                return (b0 + b1 + b2) < 0;
+            }
+
             default:
                 return false;
         }
@@ -49,75 +59,87 @@ internal static class EndpointEncoder
         bool needsWeightSwap = false;
         astcMode = ColorEndpointMode.LdrLumaDirect;
         int valueCount = encodingMode.GetValuesCount();
-        for (int i = values.Count; i < valueCount; ++i) values.Add(0);
+        for (int i = values.Count; i < valueCount; ++i)
+        {
+            values.Add(0);
+        }
 
         switch (encodingMode)
         {
             case EndpointEncodingMode.DirectLuma:
                 return EncodeColorsLuma(endpointLowRgba, endpointHighRgba, maxValue, out astcMode, values);
             case EndpointEncodingMode.DirectLumaAlpha:
-                {
-                    int avg1 = endpointLowRgba.Average;
-                    int avg2 = endpointHighRgba.Average;
-                    values[0] = Quantization.QuantizeCEValueToRange(avg1, maxValue);
-                    values[1] = Quantization.QuantizeCEValueToRange(avg2, maxValue);
-                    values[2] = Quantization.QuantizeCEValueToRange(endpointLowRgba[3], maxValue);
-                    values[3] = Quantization.QuantizeCEValueToRange(endpointHighRgba[3], maxValue);
-                    astcMode = ColorEndpointMode.LdrLumaAlphaDirect;
-                }
+            {
+                int avg1 = endpointLowRgba.Average;
+                int avg2 = endpointHighRgba.Average;
+                values[0] = Quantization.QuantizeCEValueToRange(avg1, maxValue);
+                values[1] = Quantization.QuantizeCEValueToRange(avg2, maxValue);
+                values[2] = Quantization.QuantizeCEValueToRange(endpointLowRgba[3], maxValue);
+                values[3] = Quantization.QuantizeCEValueToRange(endpointHighRgba[3], maxValue);
+                astcMode = ColorEndpointMode.LdrLumaAlphaDirect;
                 break;
+            }
+
             case EndpointEncodingMode.BaseScaleRgb:
             case EndpointEncodingMode.BaseScaleRgba:
+            {
+                var baseColor = endpointHighRgba;
+                var scaled = endpointLowRgba;
+
+                int numChannelsGe = 0;
+                for (int i = 0; i < 3; ++i)
                 {
-                    var baseColor = endpointHighRgba;
-                    var scaled = endpointLowRgba;
+                    numChannelsGe += endpointHighRgba[i] >= endpointLowRgba[i] ? 1 : 0;
+                }
 
-                    int numChannelsGe = 0;
-                    for (int i = 0; i < 3; ++i) numChannelsGe += endpointHighRgba[i] >= endpointLowRgba[i] ? 1 : 0;
+                if (numChannelsGe < 2)
+                {
+                    needsWeightSwap = true;
+                    var temp = baseColor;
+                    baseColor = scaled;
+                    scaled = temp;
+                }
 
-                    if (numChannelsGe < 2)
+                var quantizedBase = QuantizeColorArray(baseColor, maxValue);
+                var unquantizedBase = EndpointCodec.UnquantizeArray(quantizedBase, maxValue);
+
+                int numSamples = 0;
+                int scaleSum = 0;
+                for (int i = 0; i < 3; ++i)
+                {
+                    int x = unquantizedBase[i];
+                    if (x != 0)
                     {
-                        needsWeightSwap = true;
-                        var temp = baseColor; baseColor = scaled; scaled = temp;
-                    }
-
-                    var quantizedBase = QuantizeColorArray(baseColor, maxValue);
-                    var unquantizedBase = EndpointCodec.UnquantizeArray(quantizedBase, maxValue);
-
-                    int numSamples = 0;
-                    int scaleSum = 0;
-                    for (int i = 0; i < 3; ++i)
-                    {
-                        int x = unquantizedBase[i];
-                        if (x != 0)
-                        {
-                            ++numSamples;
-                            scaleSum += (scaled[i] * 256) / x;
-                        }
-                    }
-
-                    values[0] = quantizedBase[0];
-                    values[1] = quantizedBase[1];
-                    values[2] = quantizedBase[2];
-                    if (numSamples > 0)
-                    {
-                        int avgScale = Math.Clamp(scaleSum / numSamples, 0, 255);
-                        values[3] = Quantization.QuantizeCEValueToRange(avgScale, maxValue);
-                    }
-                    else
-                    {
-                        values[3] = maxValue;
-                    }
-                    astcMode = ColorEndpointMode.LdrRgbBaseScale;
-
-                    if (encodingMode == EndpointEncodingMode.BaseScaleRgba)
-                    {
-                        values[4] = Quantization.QuantizeCEValueToRange(scaled[3], maxValue);
-                        values[5] = Quantization.QuantizeCEValueToRange(baseColor[3], maxValue);
-                        astcMode = ColorEndpointMode.LdrRgbBaseScaleTwoA;
+                        ++numSamples;
+                        scaleSum += (scaled[i] * 256) / x;
                     }
                 }
+
+                values[0] = quantizedBase[0];
+                values[1] = quantizedBase[1];
+                values[2] = quantizedBase[2];
+                if (numSamples > 0)
+                {
+                    int avgScale = Math.Clamp(scaleSum / numSamples, 0, 255);
+                    values[3] = Quantization.QuantizeCEValueToRange(avgScale, maxValue);
+                }
+                else
+                {
+                    values[3] = maxValue;
+                }
+
+                astcMode = ColorEndpointMode.LdrRgbBaseScale;
+
+                if (encodingMode == EndpointEncodingMode.BaseScaleRgba)
+                {
+                    values[4] = Quantization.QuantizeCEValueToRange(scaled[3], maxValue);
+                    values[5] = Quantization.QuantizeCEValueToRange(baseColor[3], maxValue);
+                    astcMode = ColorEndpointMode.LdrRgbBaseScaleTwoA;
+                }
+
                 break;
+            }
+
             case EndpointEncodingMode.DirectRbg:
             case EndpointEncodingMode.DirectRgba:
                 return EncodeColorsRGBA(endpointLowRgba, endpointHighRgba, maxValue, encodingMode == EndpointEncodingMode.DirectRgba, out astcMode, values);
@@ -131,7 +153,11 @@ internal static class EndpointEncoder
     private static int[] QuantizeColorArray(RgbaColor c, int maxValue)
     {
         var array = new int[RgbaColor.BytesPerPixel];
-        for (int i = 0; i < RgbaColor.BytesPerPixel; ++i) array[i] = Quantization.QuantizeCEValueToRange(c[i], maxValue);
+        for (int i = 0; i < RgbaColor.BytesPerPixel; ++i)
+        {
+            array[i] = Quantization.QuantizeCEValueToRange(c[i], maxValue);
+        }
+
         return array;
     }
 
@@ -144,7 +170,13 @@ internal static class EndpointEncoder
         int avg2 = endpointHigh.Average;
 
         bool needsWeightSwap = false;
-        if (avg1 > avg2) { needsWeightSwap = true; var temp = avg1; avg1 = avg2; avg2 = temp; }
+        if (avg1 > avg2)
+        {
+            needsWeightSwap = true;
+            var temp = avg1;
+            avg1 = avg2;
+            avg2 = temp;
+        }
 
         int offset = Math.Min(avg2 - avg1, 0x3F);
         int quantOffLow = Quantization.QuantizeCEValueToRange((avg1 & 0x3F) << 2, maxValue);
@@ -263,6 +295,7 @@ internal static class EndpointEncoder
             var blueContractUnquantizedHigh = bcQuantized.UnquantizedHigh();
             var blueContractLow = RgbaColorExtensions.WithBlueContract(blueContractUnquantizedLow[0], blueContractUnquantizedLow[1], blueContractUnquantizedLow[2], blueContractUnquantizedLow[3]);
             var blueContractHigh = RgbaColorExtensions.WithBlueContract(blueContractUnquantizedHigh[0], blueContractUnquantizedHigh[1], blueContractUnquantizedHigh[2], blueContractUnquantizedHigh[3]);
+
             // TODO: How to handle alpha for this entire functions??
             var blueContractSquaredError = withAlpha
                 ? RgbaColor.SquaredError(blueContractLow, endpointLowRgba) + RgbaColor.SquaredError(blueContractHigh, endpointHighRgba)
@@ -348,38 +381,43 @@ internal static class EndpointEncoder
 
     private class QuantizedEndpointPair
     {
-        private readonly RgbaColor _originalLow;
-        private readonly RgbaColor _originalHigh;
-        private readonly int[] _quantizedLow;
-        private readonly int[] _quantizedHigh;
-        private readonly int[] _unquantizedLow;
-        private readonly int[] _unquantizedHigh;
+        private readonly RgbaColor originalLow;
+        private readonly RgbaColor originalHigh;
+        private readonly int[] quantizedLow;
+        private readonly int[] quantizedHigh;
+        private readonly int[] unquantizedLow;
+        private readonly int[] unquantizedHigh;
 
         public QuantizedEndpointPair(RgbaColor low, RgbaColor high, int maxValue)
         {
-            _originalLow = low;
-            _originalHigh = high;
-            _quantizedLow = QuantizeColorArray(low, maxValue);
-            _quantizedHigh = QuantizeColorArray(high, maxValue);
-            _unquantizedLow = EndpointCodec.UnquantizeArray(_quantizedLow, maxValue);
-            _unquantizedHigh = EndpointCodec.UnquantizeArray(_quantizedHigh, maxValue);
+            this.originalLow = low;
+            this.originalHigh = high;
+            this.quantizedLow = QuantizeColorArray(low, maxValue);
+            this.quantizedHigh = QuantizeColorArray(high, maxValue);
+            this.unquantizedLow = EndpointCodec.UnquantizeArray(this.quantizedLow, maxValue);
+            this.unquantizedHigh = EndpointCodec.UnquantizeArray(this.quantizedHigh, maxValue);
         }
 
-        public int[] QuantizedLow() => _quantizedLow;
-        public int[] QuantizedHigh() => _quantizedHigh;
-        public int[] UnquantizedLow() => _unquantizedLow;
-        public int[] UnquantizedHigh() => _unquantizedHigh;
-        public RgbaColor OriginalLow() => _originalLow;
-        public RgbaColor OriginalHigh() => _originalHigh;
+        public int[] QuantizedLow() => this.quantizedLow;
+
+        public int[] QuantizedHigh() => this.quantizedHigh;
+
+        public int[] UnquantizedLow() => this.unquantizedLow;
+
+        public int[] UnquantizedHigh() => this.unquantizedHigh;
+
+        public RgbaColor OriginalLow() => this.originalLow;
+
+        public RgbaColor OriginalHigh() => this.originalHigh;
     }
 
     private class CEEncodingOption
     {
-        private readonly int _squaredError;
-        private readonly QuantizedEndpointPair _quantizedEndpoints;
-        private readonly bool _swapEndpoints;
-        private readonly bool _blueContract;
-        private readonly bool _useOffsetMode;
+        private readonly int squaredError;
+        private readonly QuantizedEndpointPair quantizedEndpoints;
+        private readonly bool swapEndpoints;
+        private readonly bool blueContract;
+        private readonly bool useOffsetMode;
 
         public CEEncodingOption(
             int squaredError,
@@ -388,23 +426,23 @@ internal static class EndpointEncoder
             bool blueContract,
             bool useOffsetMode)
         {
-            _squaredError = squaredError;
-            _quantizedEndpoints = quantizedEndpoints;
-            _swapEndpoints = swapEndpoints;
-            _blueContract = blueContract;
-            _useOffsetMode = useOffsetMode;
+            this.squaredError = squaredError;
+            this.quantizedEndpoints = quantizedEndpoints;
+            this.swapEndpoints = swapEndpoints;
+            this.blueContract = blueContract;
+            this.useOffsetMode = useOffsetMode;
         }
 
         public bool Pack(bool hasAlpha, out ColorEndpointMode endpointMode, List<int> values, ref bool needsWeightSwap)
         {
             endpointMode = ColorEndpointMode.LdrLumaDirect;
-            var unquantizedLowOriginal = _quantizedEndpoints.UnquantizedLow();
-            var unquantizedHighOriginal = _quantizedEndpoints.UnquantizedHigh();
+            var unquantizedLowOriginal = this.quantizedEndpoints.UnquantizedLow();
+            var unquantizedHighOriginal = this.quantizedEndpoints.UnquantizedHigh();
 
             var unquantizedLow = (int[])unquantizedLowOriginal.Clone();
             var unquantizedHigh = (int[])unquantizedHighOriginal.Clone();
 
-            if (_useOffsetMode)
+            if (this.useOffsetMode)
             {
                 for (int i = 0; i < 4; ++i)
                 {
@@ -420,9 +458,9 @@ internal static class EndpointEncoder
             }
 
             bool swapVals = false;
-            if (_useOffsetMode)
+            if (this.useOffsetMode)
             {
-                if (_blueContract)
+                if (this.blueContract)
                 {
                     swapVals = sum1 >= 0;
                 }
@@ -431,13 +469,20 @@ internal static class EndpointEncoder
                     swapVals = sum1 < 0;
                 }
 
-                if (swapVals) return false;
+                if (swapVals)
+                {
+                    return false;
+                }
             }
             else
             {
-                if (_blueContract)
+                if (this.blueContract)
                 {
-                    if (sum1 == sum0) return false;
+                    if (sum1 == sum0)
+                    {
+                        return false;
+                    }
+
                     swapVals = sum1 > sum0;
                     needsWeightSwap = !needsWeightSwap;
                 }
@@ -447,16 +492,22 @@ internal static class EndpointEncoder
                 }
             }
 
-            var quantizedLowOriginal = _quantizedEndpoints.QuantizedLow();
-            var quantizedHighOriginal = _quantizedEndpoints.QuantizedHigh();
+            var quantizedLowOriginal = this.quantizedEndpoints.QuantizedLow();
+            var quantizedHighOriginal = this.quantizedEndpoints.QuantizedHigh();
 
             var quantizedLow = (int[])quantizedLowOriginal.Clone();
             var quantizedHigh = (int[])quantizedHighOriginal.Clone();
 
             if (swapVals)
             {
-                if (_useOffsetMode) throw new InvalidOperationException();
-                var tmp = quantizedLow; quantizedLow = quantizedHigh; quantizedHigh = tmp;
+                if (this.useOffsetMode)
+                {
+                    throw new InvalidOperationException();
+                }
+
+                var tmp = quantizedLow;
+                quantizedLow = quantizedHigh;
+                quantizedHigh = tmp;
                 needsWeightSwap = !needsWeightSwap;
             }
 
@@ -467,7 +518,7 @@ internal static class EndpointEncoder
             values[4] = quantizedLow[2];
             values[5] = quantizedHigh[2];
 
-            if (_useOffsetMode)
+            if (this.useOffsetMode)
             {
                 endpointMode = ColorEndpointMode.LdrRgbBaseOffset;
             }
@@ -480,11 +531,17 @@ internal static class EndpointEncoder
             {
                 values[6] = quantizedLow[3];
                 values[7] = quantizedHigh[3];
-                if (_useOffsetMode) endpointMode = ColorEndpointMode.LdrRgbaBaseOffset;
-                else endpointMode = ColorEndpointMode.LdrRgbaDirect;
+                if (this.useOffsetMode)
+                {
+                    endpointMode = ColorEndpointMode.LdrRgbaBaseOffset;
+                }
+                else
+                {
+                    endpointMode = ColorEndpointMode.LdrRgbaDirect;
+                }
             }
 
-            if (_swapEndpoints)
+            if (this.swapEndpoints)
             {
                 needsWeightSwap = !needsWeightSwap;
             }
@@ -492,7 +549,8 @@ internal static class EndpointEncoder
             return true;
         }
 
-        public bool BlueContract() => _blueContract;
-        public int Error() => _squaredError;
+        public bool BlueContract() => this.blueContract;
+
+        public int Error() => this.squaredError;
     }
 }

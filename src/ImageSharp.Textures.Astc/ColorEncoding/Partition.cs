@@ -7,28 +7,35 @@ namespace SixLabors.ImageSharp.Textures.Astc.ColorEncoding;
 
 internal sealed class Partition
 {
-
-    private static readonly System.Collections.Concurrent.ConcurrentDictionary<(Footprint, int, int), Partition> _partitionCache = new();
-
-    public Footprint Footprint;
-    public int PartitionCount;
-    public int? PartitionId;
-    public int[] Assignment;
-
+    private static readonly System.Collections.Concurrent.ConcurrentDictionary<(Footprint, int, int), Partition> PartitionCache = new();
 
     public Partition(Footprint footprint, int partitionCount, int? id = null)
     {
-        Footprint = footprint; PartitionCount = partitionCount; PartitionId = id; Assignment = [];
+        this.Footprint = footprint;
+        this.PartitionCount = partitionCount;
+        this.PartitionId = id;
+        this.Assignment = [];
     }
 
+    public Footprint Footprint { get; set; }
+
+    public int PartitionCount { get; set; }
+
+    public int? PartitionId { get; set; }
+
+    public int[] Assignment { get; set; }
 
     public override bool Equals(object? obj)
     {
-        if (obj is not Partition other) return false;
+        if (obj is not Partition other)
+        {
+            return false;
+        }
+
         return PartitionMetric(this, other) == 0;
     }
 
-    public override int GetHashCode() => HashCode.Combine(Footprint, PartitionCount, PartitionId);
+    public override int GetHashCode() => HashCode.Combine(this.Footprint, this.PartitionCount, this.PartitionId);
 
     public static int PartitionMetric(Partition a, Partition b)
     {
@@ -38,21 +45,27 @@ internal sealed class Partition
         int width = a.Footprint.Width;
         int height = a.Footprint.Height;
 
-        var pairCounts = new List<(int a, int b, int count)>();
-        for (int y = 0; y < 4; ++y) for (int x = 0; x < 4; ++x) pairCounts.Add((x, y, 0));
+        var pairCounts = new List<(int A, int B, int Count)>();
+        for (int y = 0; y < 4; ++y)
+        {
+            for (int x = 0; x < 4; ++x)
+            {
+                pairCounts.Add((x, y, 0));
+            }
+        }
 
         for (int y = 0; y < height; ++y)
         {
             for (int x = 0; x < width; ++x)
             {
-                int idx = y * width + x;
+                int idx = (y * width) + x;
                 int aVal = a.Assignment[idx];
                 int bVal = b.Assignment[idx];
-                pairCounts[bVal * 4 + aVal] = (aVal, bVal, pairCounts[bVal * 4 + aVal].count + 1);
+                pairCounts[(bVal * 4) + aVal] = (aVal, bVal, pairCounts[(bVal * 4) + aVal].Count + 1);
             }
         }
 
-        var sorted = pairCounts.OrderByDescending(p => p.count).ToList();
+        var sorted = pairCounts.OrderByDescending(p => p.Count).ToList();
         var assigned = new bool[MaxNumSubsets, MaxNumSubsets];
         int pixelsMatched = 0;
         foreach (var pairCount in sorted)
@@ -60,24 +73,31 @@ internal sealed class Partition
             bool isAssigned = false;
             for (int i = 0; i < MaxNumSubsets; ++i)
             {
-                if (assigned[pairCount.a, i] || assigned[i, pairCount.b]) { isAssigned = true; break; }
+                if (assigned[pairCount.A, i] || assigned[i, pairCount.B])
+                {
+                    isAssigned = true;
+                    break;
+                }
             }
+
             if (!isAssigned)
             {
-                assigned[pairCount.a, pairCount.b] = true;
-                pixelsMatched += pairCount.count;
+                assigned[pairCount.A, pairCount.B] = true;
+                pixelsMatched += pairCount.Count;
             }
         }
 
-        return width * height - pixelsMatched;
+        return (width * height) - pixelsMatched;
     }
 
     // Basic GetASTCPartition implementation using selection function from C++
     public static Partition GetASTCPartition(Footprint footprint, int partitionCount, int partitionId)
     {
         var key = (footprint, partitionCount, partitionId);
-        if (_partitionCache.TryGetValue(key, out var cached))
+        if (PartitionCache.TryGetValue(key, out var cached))
+        {
             return cached;
+        }
 
         var part = new Partition(footprint, partitionCount, partitionId);
         int w = footprint.Width;
@@ -85,10 +105,15 @@ internal sealed class Partition
         var assignment = new int[w * h];
         int idx = 0;
         for (int y = 0; y < h; ++y)
+        {
             for (int x = 0; x < w; ++x)
+            {
                 assignment[idx++] = SelectASTCPartition(partitionId, x, y, 0, partitionCount, footprint.PixelCount);
+            }
+        }
+
         part.Assignment = assignment;
-        _partitionCache.TryAdd(key, part);
+        PartitionCache.TryAdd(key, part);
         return part;
     }
 
@@ -103,12 +128,21 @@ internal sealed class Partition
         return best;
     }
 
-
     // Very small port of selection function; behavior taken from C++ file.
     private static int SelectASTCPartition(int seed, int x, int y, int z, int partitionCount, int pixelCount)
     {
-        if (partitionCount <= 1) return 0;
-        if (pixelCount < 31) { x <<= 1; y <<= 1; z <<= 1; }
+        if (partitionCount <= 1)
+        {
+            return 0;
+        }
+
+        if (pixelCount < 31)
+        {
+            x <<= 1;
+            y <<= 1;
+            z <<= 1;
+        }
+
         seed += (partitionCount - 1) * 1024;
         uint randomNumber = (uint)seed;
         randomNumber ^= randomNumber >> 15;
@@ -135,31 +169,80 @@ internal sealed class Partition
         uint seed11 = (randomNumber >> 26) & 0xF;
         uint seed12 = ((randomNumber >> 30) | (randomNumber << 2)) & 0xF;
 
-        seed1 *= seed1; seed2 *= seed2; seed3 *= seed3; seed4 *= seed4;
-        seed5 *= seed5; seed6 *= seed6; seed7 *= seed7; seed8 *= seed8;
-        seed9 *= seed9; seed10 *= seed10; seed11 *= seed11; seed12 *= seed12;
+        seed1 *= seed1;
+        seed2 *= seed2;
+        seed3 *= seed3;
+        seed4 *= seed4;
+        seed5 *= seed5;
+        seed6 *= seed6;
+        seed7 *= seed7;
+        seed8 *= seed8;
+        seed9 *= seed9;
+        seed10 *= seed10;
+        seed11 *= seed11;
+        seed12 *= seed12;
 
         int sh1, sh2, sh3;
-        if ((seed & 1) != 0) { sh1 = (seed & 2) != 0 ? 4 : 5; sh2 = (partitionCount == 3) ? 6 : 5; }
-        else { sh1 = (partitionCount == 3) ? 6 : 5; sh2 = (seed & 2) != 0 ? 4 : 5; }
+        if ((seed & 1) != 0)
+        {
+            sh1 = (seed & 2) != 0 ? 4 : 5;
+            sh2 = (partitionCount == 3) ? 6 : 5;
+        }
+        else
+        {
+            sh1 = (partitionCount == 3) ? 6 : 5;
+            sh2 = (seed & 2) != 0 ? 4 : 5;
+        }
+
         sh3 = (seed & 0x10) != 0 ? sh1 : sh2;
 
-        seed1 >>= sh1; seed2 >>= sh2; seed3 >>= sh1; seed4 >>= sh2;
-        seed5 >>= sh1; seed6 >>= sh2; seed7 >>= sh1; seed8 >>= sh2;
-        seed9 >>= sh3; seed10 >>= sh3; seed11 >>= sh3; seed12 >>= sh3;
+        seed1 >>= sh1;
+        seed2 >>= sh2;
+        seed3 >>= sh1;
+        seed4 >>= sh2;
+        seed5 >>= sh1;
+        seed6 >>= sh2;
+        seed7 >>= sh1;
+        seed8 >>= sh2;
+        seed9 >>= sh3;
+        seed10 >>= sh3;
+        seed11 >>= sh3;
+        seed12 >>= sh3;
 
-        int a = (int)(seed1 * x + seed2 * y + seed11 * z + (randomNumber >> 14));
-        int b = (int)(seed3 * x + seed4 * y + seed12 * z + (randomNumber >> 10));
-        int c = (int)(seed5 * x + seed6 * y + seed9 * z + (randomNumber >> 6));
-        int d = (int)(seed7 * x + seed8 * y + seed10 * z + (randomNumber >> 2));
+        int a = (int)((seed1 * x) + (seed2 * y) + (seed11 * z) + (randomNumber >> 14));
+        int b = (int)((seed3 * x) + (seed4 * y) + (seed12 * z) + (randomNumber >> 10));
+        int c = (int)((seed5 * x) + (seed6 * y) + (seed9 * z) + (randomNumber >> 6));
+        int d = (int)((seed7 * x) + (seed8 * y) + (seed10 * z) + (randomNumber >> 2));
 
-        a &= 0x3F; b &= 0x3F; c &= 0x3F; d &= 0x3F;
-        if (partitionCount <= 3) d = 0;
-        if (partitionCount <= 2) c = 0;
+        a &= 0x3F;
+        b &= 0x3F;
+        c &= 0x3F;
+        d &= 0x3F;
+        if (partitionCount <= 3)
+        {
+            d = 0;
+        }
 
-        if (a >= b && a >= c && a >= d) return 0;
-        else if (b >= c && b >= d) return 1;
-        else if (c >= d) return 2;
-        else return 3;
+        if (partitionCount <= 2)
+        {
+            c = 0;
+        }
+
+        if (a >= b && a >= c && a >= d)
+        {
+            return 0;
+        }
+        else if (b >= c && b >= d)
+        {
+            return 1;
+        }
+        else if (c >= d)
+        {
+            return 2;
+        }
+        else
+        {
+            return 3;
+        }
     }
 }

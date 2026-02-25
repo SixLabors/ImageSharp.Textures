@@ -14,21 +14,25 @@ namespace SixLabors.ImageSharp.Textures.Astc.IO;
 /// </remarks>
 internal record AstcFile
 {
-    private readonly AstcFileHeader _header;
-    private readonly byte[] _blocks;
-
-    public ReadOnlySpan<byte> Blocks => _blocks;
-    public Footprint Footprint { get; }
-    public int Width => _header.ImageWidth;
-    public int Height => _header.ImageHeight;
-    public int Depth => _header.ImageDepth;
+    private readonly AstcFileHeader header;
+    private readonly byte[] blocks;
 
     internal AstcFile(AstcFileHeader header, byte[] blocks)
     {
-        _header = header;
-        _blocks = blocks;
-        Footprint = GetFootprint();
+        this.header = header;
+        this.blocks = blocks;
+        this.Footprint = this.GetFootprint();
     }
+
+    public ReadOnlySpan<byte> Blocks => this.blocks;
+
+    public Footprint Footprint { get; }
+
+    public int Width => this.header.ImageWidth;
+
+    public int Height => this.header.ImageHeight;
+
+    public int Depth => this.header.ImageDepth;
 
     public static AstcFile FromMemory(byte[] data)
     {
@@ -44,7 +48,7 @@ internal record AstcFile
     /// <summary>
     /// Map the block dimensions in the header to a Footprint, if possible.
     /// </summary>
-    private Footprint GetFootprint() => (_header.BlockWidth, _header.BlockHeight) switch
+    private Footprint GetFootprint() => (this.header.BlockWidth, this.header.BlockHeight) switch
     {
         (4, 4) => Footprint.FromFootprintType(FootprintType.Footprint4x4),
         (5, 4) => Footprint.FromFootprintType(FootprintType.Footprint5x4),
@@ -60,6 +64,6 @@ internal record AstcFile
         (10, 10) => Footprint.FromFootprintType(FootprintType.Footprint10x10),
         (12, 10) => Footprint.FromFootprintType(FootprintType.Footprint12x10),
         (12, 12) => Footprint.FromFootprintType(FootprintType.Footprint12x12),
-        _ => throw new ArgumentOutOfRangeException($"Unsupported block dimensions: {_header.BlockWidth}x{_header.BlockHeight}"),
+        _ => throw new ArgumentOutOfRangeException($"Unsupported block dimensions: {this.header.BlockWidth}x{this.header.BlockHeight}"),
     };
 }

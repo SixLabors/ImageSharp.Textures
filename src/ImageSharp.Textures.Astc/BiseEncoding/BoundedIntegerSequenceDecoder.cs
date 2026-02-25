@@ -7,21 +7,22 @@ namespace SixLabors.ImageSharp.Textures.Astc.BiseEncoding;
 
 internal sealed class BoundedIntegerSequenceDecoder : BoundedIntegerSequenceCodec
 {
+    private static readonly BoundedIntegerSequenceDecoder?[] Cache = new BoundedIntegerSequenceDecoder?[256];
 
-    private static readonly BoundedIntegerSequenceDecoder?[] _cache = new BoundedIntegerSequenceDecoder?[256];
-
-
-    public BoundedIntegerSequenceDecoder(int range) : base(range) { }
-
+    public BoundedIntegerSequenceDecoder(int range)
+        : base(range)
+    {
+    }
 
     public static BoundedIntegerSequenceDecoder GetCached(int range)
     {
-        var decoder = _cache[range];
+        var decoder = Cache[range];
         if (decoder is null)
         {
             decoder = new BoundedIntegerSequenceDecoder(range);
-            _cache[range] = decoder;
+            Cache[range] = decoder;
         }
+
         return decoder;
     }
 
@@ -31,12 +32,12 @@ internal sealed class BoundedIntegerSequenceDecoder : BoundedIntegerSequenceCode
     /// <param name="valuesCount">The number of values to decode.</param>
     /// <param name="bitSource">The source of values to decode from.</param>
     /// <param name="result">The span to write decoded values into.</param>
-    /// <exception cref="ArgumentOutOfRangeException"></exception>
-    /// <exception cref="InvalidOperationException"></exception>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when the encoded block size is too large.</exception>
+    /// <exception cref="InvalidOperationException">Thrown when there are not enough bits to decode.</exception>
     public void Decode(int valuesCount, ref BitStream bitSource, Span<int> result)
     {
-        int totalBitCount = GetBitCount(_encoding, valuesCount, _bitCount);
-        int bitsPerBlock = GetEncodedBlockSize();
+        int totalBitCount = GetBitCount(this.Encoding, valuesCount, this.BitCount);
+        int bitsPerBlock = this.GetEncodedBlockSize();
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(bitsPerBlock, 64);
 
         Span<int> blockResult = stackalloc int[5];
@@ -47,25 +48,33 @@ internal sealed class BoundedIntegerSequenceDecoder : BoundedIntegerSequenceCode
         {
             int bitsToRead = Math.Min(bitsRemaining, bitsPerBlock);
             if (!bitSource.TryGetBits(bitsToRead, out ulong blockBits))
+            {
                 throw new InvalidOperationException("Not enough bits in BitStream to decode BISE block");
+            }
 
-            if (_encoding == BiseEncodingMode.BitEncoding)
+            if (this.Encoding == BiseEncodingMode.BitEncoding)
             {
                 if (resultIndex < valuesCount)
+                {
                     result[resultIndex++] = (int)blockBits;
+                }
             }
             else
             {
-                int decoded = DecodeISEBlock(_encoding, blockBits, _bitCount, blockResult);
+                int decoded = DecodeISEBlock(this.Encoding, blockBits, this.BitCount, blockResult);
                 for (int i = 0; i < decoded && resultIndex < valuesCount; ++i)
+                {
                     result[resultIndex++] = blockResult[i];
+                }
             }
 
             bitsRemaining -= bitsPerBlock;
         }
 
         if (resultIndex < valuesCount)
+        {
             throw new InvalidOperationException("Decoded fewer values than expected from BISE block");
+        }
     }
 
     /// <summary>
@@ -76,12 +85,12 @@ internal sealed class BoundedIntegerSequenceDecoder : BoundedIntegerSequenceCode
     /// <param name="valuesCount">The number of values to decode.</param>
     /// <param name="bitSource">The source of values to decode from.</param>
     /// <returns>The decoded values. The collection always contains exactly <paramref name="valuesCount"/> elements.</returns>
-    /// <exception cref="ArgumentOutOfRangeException"></exception>
-    /// <exception cref="InvalidOperationException"></exception>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when the encoded block size is too large.</exception>
+    /// <exception cref="InvalidOperationException">Thrown when there are not enough bits to decode.</exception>
     public int[] Decode(int valuesCount, ref BitStream bitSource)
     {
         var result = new int[valuesCount];
-        Decode(valuesCount, ref bitSource, result);
+        this.Decode(valuesCount, ref bitSource, result);
         return result;
     }
 
@@ -98,14 +107,22 @@ internal sealed class BoundedIntegerSequenceDecoder : BoundedIntegerSequenceCode
         {
             // 5 values, interleaved bits = [2, 2, 1, 2, 1] = 8 bits total
             int bitPosition = 0;
-            int mantissa0 = (int)((encodedBlock >> bitPosition) & mantissaMask); bitPosition += encodedBitCount;
-            ulong encodedTrits = (encodedBlock >> bitPosition) & 0x3; bitPosition += 2;
-            int mantissa1 = (int)((encodedBlock >> bitPosition) & mantissaMask); bitPosition += encodedBitCount;
-            encodedTrits |= ((encodedBlock >> bitPosition) & 0x3) << 2; bitPosition += 2;
-            int mantissa2 = (int)((encodedBlock >> bitPosition) & mantissaMask); bitPosition += encodedBitCount;
-            encodedTrits |= ((encodedBlock >> bitPosition) & 0x1) << 4; bitPosition += 1;
-            int mantissa3 = (int)((encodedBlock >> bitPosition) & mantissaMask); bitPosition += encodedBitCount;
-            encodedTrits |= ((encodedBlock >> bitPosition) & 0x3) << 5; bitPosition += 2;
+            int mantissa0 = (int)((encodedBlock >> bitPosition) & mantissaMask);
+            bitPosition += encodedBitCount;
+            ulong encodedTrits = (encodedBlock >> bitPosition) & 0x3;
+            bitPosition += 2;
+            int mantissa1 = (int)((encodedBlock >> bitPosition) & mantissaMask);
+            bitPosition += encodedBitCount;
+            encodedTrits |= ((encodedBlock >> bitPosition) & 0x3) << 2;
+            bitPosition += 2;
+            int mantissa2 = (int)((encodedBlock >> bitPosition) & mantissaMask);
+            bitPosition += encodedBitCount;
+            encodedTrits |= ((encodedBlock >> bitPosition) & 0x1) << 4;
+            bitPosition += 1;
+            int mantissa3 = (int)((encodedBlock >> bitPosition) & mantissaMask);
+            bitPosition += encodedBitCount;
+            encodedTrits |= ((encodedBlock >> bitPosition) & 0x3) << 5;
+            bitPosition += 2;
             int mantissa4 = (int)((encodedBlock >> bitPosition) & mantissaMask);
             encodedTrits |= ((encodedBlock >> (bitPosition + encodedBitCount)) & 0x1) << 7;
 
@@ -121,10 +138,14 @@ internal sealed class BoundedIntegerSequenceDecoder : BoundedIntegerSequenceCode
         {
             // 3 values, interleaved bits = [3, 2, 2] = 7 bits total
             int bitPosition = 0;
-            int mantissa0 = (int)((encodedBlock >> bitPosition) & mantissaMask); bitPosition += encodedBitCount;
-            ulong encodedQuints = (encodedBlock >> bitPosition) & 0x7; bitPosition += 3;
-            int mantissa1 = (int)((encodedBlock >> bitPosition) & mantissaMask); bitPosition += encodedBitCount;
-            encodedQuints |= ((encodedBlock >> bitPosition) & 0x3) << 3; bitPosition += 2;
+            int mantissa0 = (int)((encodedBlock >> bitPosition) & mantissaMask);
+            bitPosition += encodedBitCount;
+            ulong encodedQuints = (encodedBlock >> bitPosition) & 0x7;
+            bitPosition += 3;
+            int mantissa1 = (int)((encodedBlock >> bitPosition) & mantissaMask);
+            bitPosition += encodedBitCount;
+            encodedQuints |= ((encodedBlock >> bitPosition) & 0x3) << 3;
+            bitPosition += 2;
             int mantissa2 = (int)((encodedBlock >> bitPosition) & mantissaMask);
             encodedQuints |= ((encodedBlock >> (bitPosition + encodedBitCount)) & 0x3) << 5;
 

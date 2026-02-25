@@ -13,11 +13,15 @@ internal sealed class TritQuantizationMap : QuantizationMap
         int bitCount = bitsPowerOfTwo == 0 ? 0 : Log2Floor(bitsPowerOfTwo);
 
         for (int trit = 0; trit < 3; ++trit)
+        {
             for (int bits = 0; bits < (1 << bitCount); ++bits)
-                _unquantizationMapBuilder.Add(unquantFunc(trit, bits, range));
+            {
+                this.UnquantizationMapBuilder.Add(unquantFunc(trit, bits, range));
+            }
+        }
 
-        GenerateQuantizationMap();
-        Freeze();
+        this.GenerateQuantizationMap();
+        this.Freeze();
     }
 
     internal static int GetUnquantizedValue(int trit, int bits, int range)
@@ -33,7 +37,7 @@ internal sealed class TritQuantizationMap : QuantizationMap
             191 => ((bits >> 1) & 0x1F) is var x ? ((x >> 4) | (x << 4), 5) : default,
             _ => throw new ArgumentException("Illegal trit encoding")
         };
-        int t = trit * c + b;
+        int t = (trit * c) + b;
         t ^= a;
         t = (a & 0x80) | (t >> 2);
         return t;
@@ -42,12 +46,14 @@ internal sealed class TritQuantizationMap : QuantizationMap
     internal static int GetUnquantizedWeight(int trit, int bits, int range)
     {
         if (range == 2)
+        {
             return trit switch
             {
                 0 => 0,
                 1 => 32,
                 _ => 63
             };
+        }
 
         int a = (bits & 1) != 0 ? 0x7F : 0;
         var (b, c) = range switch
@@ -61,7 +67,7 @@ internal sealed class TritQuantizationMap : QuantizationMap
                 : default,
             _ => throw new ArgumentException("Illegal trit encoding")
         };
-        int t = trit * c + b;
+        int t = (trit * c) + b;
         t ^= a;
         return (a & 0x20) | (t >> 2);
     }

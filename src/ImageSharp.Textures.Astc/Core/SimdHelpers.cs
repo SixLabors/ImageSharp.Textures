@@ -29,10 +29,10 @@ internal static class SimdHelpers
         // NOTE: Using >> 6 instead of / 64 because Vector128<int> division
         // has no hardware support and decomposes to scalar operations.
         var w64 = Vec64 - weights;
-        var c = (c0 * w64 + c1 * weights + Vec32) >> 6;
+        var c = ((c0 * w64) + (c1 * weights) + Vec32) >> 6;
 
         // Quantize: (c * 255 + 32767) >> 16, clamped to [0, 255]
-        var result = (c * Vec255 + Vec32767) >>> 16;
+        var result = ((c * Vec255) + Vec32767) >>> 16;
         return Vector128.Min(Vector128.Max(result, Vector128<int>.Zero), Vec255);
     }
 
@@ -110,13 +110,21 @@ internal static class SimdHelpers
         int dpChannel,
         int dpWeight)
     {
-        output[offset + 0] = (byte)InterpolateChannelScalar(lowR, highR,
+        output[offset + 0] = (byte)InterpolateChannelScalar(
+            lowR,
+            highR,
             dpChannel == 0 ? dpWeight : weight);
-        output[offset + 1] = (byte)InterpolateChannelScalar(lowG, highG,
+        output[offset + 1] = (byte)InterpolateChannelScalar(
+            lowG,
+            highG,
             dpChannel == 1 ? dpWeight : weight);
-        output[offset + 2] = (byte)InterpolateChannelScalar(lowB, highB,
+        output[offset + 2] = (byte)InterpolateChannelScalar(
+            lowB,
+            highB,
             dpChannel == 2 ? dpWeight : weight);
-        output[offset + 3] = (byte)InterpolateChannelScalar(lowA, highA,
+        output[offset + 3] = (byte)InterpolateChannelScalar(
+            lowA,
+            highA,
             dpChannel == 3 ? dpWeight : weight);
     }
 
@@ -131,16 +139,27 @@ internal static class SimdHelpers
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static RgbaColor InterpolateColorLdrDualPlane(
-        RgbaColor low, RgbaColor high,
-        int weight, int dualPlaneChannel, int dualPlaneWeight)
+        RgbaColor low,
+        RgbaColor high,
+        int weight,
+        int dualPlaneChannel,
+        int dualPlaneWeight)
         => new(
-            r: InterpolateChannelScalar(low.R, high.R,
+            r: InterpolateChannelScalar(
+                low.R,
+                high.R,
                 dualPlaneChannel == 0 ? dualPlaneWeight : weight),
-            g: InterpolateChannelScalar(low.G, high.G,
+            g: InterpolateChannelScalar(
+                low.G,
+                high.G,
                 dualPlaneChannel == 1 ? dualPlaneWeight : weight),
-            b: InterpolateChannelScalar(low.B, high.B,
+            b: InterpolateChannelScalar(
+                low.B,
+                high.B,
                 dualPlaneChannel == 2 ? dualPlaneWeight : weight),
-            a: InterpolateChannelScalar(low.A, high.A,
+            a: InterpolateChannelScalar(
+                low.A,
+                high.A,
                 dualPlaneChannel == 3 ? dualPlaneWeight : weight));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -148,7 +167,7 @@ internal static class SimdHelpers
     {
         int c0 = (p0 << 8) | p0;
         int c1 = (p1 << 8) | p1;
-        int c = (c0 * (64 - weight) + c1 * weight + 32) / 64;
+        int c = ((c0 * (64 - weight)) + (c1 * weight) + 32) / 64;
         int quantized = ((c * 255) + 32767) / 65536;
 
         return Math.Clamp(quantized, 0, 255);

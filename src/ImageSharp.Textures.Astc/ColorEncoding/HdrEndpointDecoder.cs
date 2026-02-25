@@ -15,13 +15,16 @@ namespace SixLabors.ImageSharp.Textures.Astc.ColorEncoding;
 /// </remarks>
 internal static class HdrEndpointDecoder
 {
-    public static (RgbaHdrColor low, RgbaHdrColor high) DecodeHdrMode(ReadOnlySpan<int> values, int maxValue, ColorEndpointMode mode)
+    public static (RgbaHdrColor Low, RgbaHdrColor High) DecodeHdrMode(ReadOnlySpan<int> values, int maxValue, ColorEndpointMode mode)
     {
         int count = mode.GetColorValuesCount();
         Span<int> unquantizedValues = stackalloc int[count];
         int copyLength = Math.Min(count, values.Length);
         for (int i = 0; i < copyLength; i++)
+        {
             unquantizedValues[i] = Quantization.UnquantizeCEValueFromRange(values[i], maxValue);
+        }
+
         return DecodeHdrModeUnquantized(unquantizedValues, mode);
     }
 
@@ -30,7 +33,7 @@ internal static class HdrEndpointDecoder
     /// Called from the fused decode path where BISE decode + batch unquantize
     /// have already been performed.
     /// </summary>
-    public static (RgbaHdrColor low, RgbaHdrColor high) DecodeHdrModeUnquantized(ReadOnlySpan<int> value, ColorEndpointMode mode)
+    public static (RgbaHdrColor Low, RgbaHdrColor High) DecodeHdrModeUnquantized(ReadOnlySpan<int> value, ColorEndpointMode mode)
     {
         return mode switch
         {
@@ -50,7 +53,7 @@ internal static class HdrEndpointDecoder
     /// </summary>
     private static int SafeSignedLeftShift(int value, int shift) => (int)((uint)value << shift);
 
-    private static (RgbaHdrColor low, RgbaHdrColor high) UnpackHdrLuminanceLargeRangeCore(int v0, int v1)
+    private static (RgbaHdrColor Low, RgbaHdrColor High) UnpackHdrLuminanceLargeRangeCore(int v0, int v1)
     {
         int y0, y1;
         if (v1 >= v0)
@@ -69,7 +72,7 @@ internal static class HdrEndpointDecoder
         return (low, high);
     }
 
-    private static (RgbaHdrColor low, RgbaHdrColor high) UnpackHdrLuminanceSmallRangeCore(int v0, int v1)
+    private static (RgbaHdrColor Low, RgbaHdrColor High) UnpackHdrLuminanceSmallRangeCore(int v0, int v1)
     {
         int y0, y1;
         if ((v0 & 0x80) != 0)
@@ -85,14 +88,16 @@ internal static class HdrEndpointDecoder
 
         y1 += y0;
         if (y1 > 0xFFF)
+        {
             y1 = 0xFFF;
+        }
 
         var low = new RgbaHdrColor((ushort)(y0 << 4), (ushort)(y0 << 4), (ushort)(y0 << 4), 0x7800);
         var high = new RgbaHdrColor((ushort)(y1 << 4), (ushort)(y1 << 4), (ushort)(y1 << 4), 0x7800);
         return (low, high);
     }
 
-    private static (RgbaHdrColor low, RgbaHdrColor high) UnpackHdrRgbBaseScaleCore(int v0, int v1, int v2, int v3)
+    private static (RgbaHdrColor Low, RgbaHdrColor High) UnpackHdrRgbBaseScaleCore(int v0, int v1, int v2, int v3)
     {
         int modeValue = ((v0 & 0xC0) >> 6) | (((v1 & 0x80) >> 7) << 2) | (((v2 & 0x80) >> 7) << 3);
 
@@ -121,29 +126,90 @@ internal static class HdrEndpointDecoder
 
         int oneHotMode = 1 << mode;
 
-        if ((oneHotMode & 0x30) != 0) green |= bit0 << 6;
-        if ((oneHotMode & 0x3A) != 0) green |= bit1 << 5;
-        if ((oneHotMode & 0x30) != 0) blue |= bit2 << 6;
-        if ((oneHotMode & 0x3A) != 0) blue |= bit3 << 5;
+        if ((oneHotMode & 0x30) != 0)
+        {
+            green |= bit0 << 6;
+        }
 
-        if ((oneHotMode & 0x3D) != 0) scale |= bit6 << 5;
-        if ((oneHotMode & 0x2D) != 0) scale |= bit5 << 6;
-        if ((oneHotMode & 0x04) != 0) scale |= bit4 << 7;
+        if ((oneHotMode & 0x3A) != 0)
+        {
+            green |= bit1 << 5;
+        }
 
-        if ((oneHotMode & 0x3B) != 0) red |= bit4 << 6;
-        if ((oneHotMode & 0x04) != 0) red |= bit3 << 6;
+        if ((oneHotMode & 0x30) != 0)
+        {
+            blue |= bit2 << 6;
+        }
 
-        if ((oneHotMode & 0x10) != 0) red |= bit5 << 7;
-        if ((oneHotMode & 0x0F) != 0) red |= bit2 << 7;
+        if ((oneHotMode & 0x3A) != 0)
+        {
+            blue |= bit3 << 5;
+        }
 
-        if ((oneHotMode & 0x05) != 0) red |= bit1 << 8;
-        if ((oneHotMode & 0x0A) != 0) red |= bit0 << 8;
+        if ((oneHotMode & 0x3D) != 0)
+        {
+            scale |= bit6 << 5;
+        }
 
-        if ((oneHotMode & 0x05) != 0) red |= bit0 << 9;
-        if ((oneHotMode & 0x02) != 0) red |= bit6 << 9;
+        if ((oneHotMode & 0x2D) != 0)
+        {
+            scale |= bit5 << 6;
+        }
 
-        if ((oneHotMode & 0x01) != 0) red |= bit3 << 10;
-        if ((oneHotMode & 0x02) != 0) red |= bit5 << 10;
+        if ((oneHotMode & 0x04) != 0)
+        {
+            scale |= bit4 << 7;
+        }
+
+        if ((oneHotMode & 0x3B) != 0)
+        {
+            red |= bit4 << 6;
+        }
+
+        if ((oneHotMode & 0x04) != 0)
+        {
+            red |= bit3 << 6;
+        }
+
+        if ((oneHotMode & 0x10) != 0)
+        {
+            red |= bit5 << 7;
+        }
+
+        if ((oneHotMode & 0x0F) != 0)
+        {
+            red |= bit2 << 7;
+        }
+
+        if ((oneHotMode & 0x05) != 0)
+        {
+            red |= bit1 << 8;
+        }
+
+        if ((oneHotMode & 0x0A) != 0)
+        {
+            red |= bit0 << 8;
+        }
+
+        if ((oneHotMode & 0x05) != 0)
+        {
+            red |= bit0 << 9;
+        }
+
+        if ((oneHotMode & 0x02) != 0)
+        {
+            red |= bit6 << 9;
+        }
+
+        if ((oneHotMode & 0x01) != 0)
+        {
+            red |= bit3 << 10;
+        }
+
+        if ((oneHotMode & 0x02) != 0)
+        {
+            red |= bit5 << 10;
+        }
 
         // Shift amounts per mode (from ARM reference)
         ReadOnlySpan<int> shiftAmounts = [1, 1, 2, 3, 4, 5];
@@ -186,7 +252,7 @@ internal static class HdrEndpointDecoder
         return (low, high);
     }
 
-    private static (RgbaHdrColor low, RgbaHdrColor high) UnpackHdrRgbDirectCore(int v0, int v1, int v2, int v3, int v4, int v5)
+    private static (RgbaHdrColor Low, RgbaHdrColor High) UnpackHdrRgbDirectCore(int v0, int v1, int v2, int v3, int v4, int v5)
     {
         int modeValue = ((v1 & 0x80) >> 7) | (((v2 & 0x80) >> 7) << 1) | (((v3 & 0x80) >> 7) << 2);
         int majorComponent = ((v4 & 0x80) >> 7) | (((v5 & 0x80) >> 7) << 1);
@@ -228,25 +294,77 @@ internal static class HdrEndpointDecoder
         int oneHotModeValue = 1 << modeValue;
 
         // Bit placement for 'a'
-        if ((oneHotModeValue & 0xA4) != 0) a |= bit0 << 9;
-        if ((oneHotModeValue & 0x8) != 0) a |= bit2 << 9;
-        if ((oneHotModeValue & 0x50) != 0) a |= bit4 << 9;
-        if ((oneHotModeValue & 0x50) != 0) a |= bit5 << 10;
-        if ((oneHotModeValue & 0xA0) != 0) a |= bit1 << 10;
-        if ((oneHotModeValue & 0xC0) != 0) a |= bit2 << 11;
+        if ((oneHotModeValue & 0xA4) != 0)
+        {
+            a |= bit0 << 9;
+        }
+
+        if ((oneHotModeValue & 0x8) != 0)
+        {
+            a |= bit2 << 9;
+        }
+
+        if ((oneHotModeValue & 0x50) != 0)
+        {
+            a |= bit4 << 9;
+        }
+
+        if ((oneHotModeValue & 0x50) != 0)
+        {
+            a |= bit5 << 10;
+        }
+
+        if ((oneHotModeValue & 0xA0) != 0)
+        {
+            a |= bit1 << 10;
+        }
+
+        if ((oneHotModeValue & 0xC0) != 0)
+        {
+            a |= bit2 << 11;
+        }
 
         // Bit placement for 'c'
-        if ((oneHotModeValue & 0x4) != 0) c |= bit1 << 6;
-        if ((oneHotModeValue & 0xE8) != 0) c |= bit3 << 6;
-        if ((oneHotModeValue & 0x20) != 0) c |= bit2 << 7;
+        if ((oneHotModeValue & 0x4) != 0)
+        {
+            c |= bit1 << 6;
+        }
+
+        if ((oneHotModeValue & 0xE8) != 0)
+        {
+            c |= bit3 << 6;
+        }
+
+        if ((oneHotModeValue & 0x20) != 0)
+        {
+            c |= bit2 << 7;
+        }
 
         // Bit placement for 'b0' and 'b1'
-        if ((oneHotModeValue & 0x5B) != 0) { b0 |= bit0 << 6; b1 |= bit1 << 6; }
-        if ((oneHotModeValue & 0x12) != 0) { b0 |= bit2 << 7; b1 |= bit3 << 7; }
+        if ((oneHotModeValue & 0x5B) != 0)
+        {
+            b0 |= bit0 << 6;
+            b1 |= bit1 << 6;
+        }
+
+        if ((oneHotModeValue & 0x12) != 0)
+        {
+            b0 |= bit2 << 7;
+            b1 |= bit3 << 7;
+        }
 
         // Bit placement for 'd0' and 'd1'
-        if ((oneHotModeValue & 0xAF) != 0) { d0 |= bit4 << 5; d1 |= bit5 << 5; }
-        if ((oneHotModeValue & 0x5) != 0) { d0 |= bit2 << 6; d1 |= bit3 << 6; }
+        if ((oneHotModeValue & 0xAF) != 0)
+        {
+            d0 |= bit4 << 5;
+            d1 |= bit5 << 5;
+        }
+
+        if ((oneHotModeValue & 0x5) != 0)
+        {
+            d0 |= bit2 << 6;
+            d1 |= bit3 << 6;
+        }
 
         // Sign-extend d0 and d1 based on dataBits
         int signExtendShift = 32 - dataBits;
@@ -291,7 +409,7 @@ internal static class HdrEndpointDecoder
         return (lowResult, highResult);
     }
 
-    private static (RgbaHdrColor low, RgbaHdrColor high) UnpackHdrRgbDirectLdrAlphaCore(ReadOnlySpan<int> unquantizedValues)
+    private static (RgbaHdrColor Low, RgbaHdrColor High) UnpackHdrRgbDirectLdrAlphaCore(ReadOnlySpan<int> unquantizedValues)
     {
         var (rgbLow, rgbHigh) = UnpackHdrRgbDirectCore(unquantizedValues[0], unquantizedValues[1], unquantizedValues[2], unquantizedValues[3], unquantizedValues[4], unquantizedValues[5]);
 
@@ -303,7 +421,7 @@ internal static class HdrEndpointDecoder
         return (low, high);
     }
 
-    private static (RgbaHdrColor low, RgbaHdrColor high) UnpackHdrRgbDirectHdrAlphaCore(ReadOnlySpan<int> unquantizedValues)
+    private static (RgbaHdrColor Low, RgbaHdrColor High) UnpackHdrRgbDirectHdrAlphaCore(ReadOnlySpan<int> unquantizedValues)
     {
         var (rgbLow, rgbHigh) = UnpackHdrRgbDirectCore(unquantizedValues[0], unquantizedValues[1], unquantizedValues[2], unquantizedValues[3], unquantizedValues[4], unquantizedValues[5]);
 
@@ -317,7 +435,7 @@ internal static class HdrEndpointDecoder
     /// <summary>
     /// Decodes HDR alpha values
     /// </summary>
-    private static (ushort low, ushort high) UnpackHdrAlpha(int v6, int v7)
+    private static (ushort Low, ushort High) UnpackHdrAlpha(int v6, int v7)
     {
         int selector = ((v6 >> 7) & 1) | ((v7 >> 6) & 2);
         v6 &= 0x7F;
@@ -334,18 +452,22 @@ internal static class HdrEndpointDecoder
         else
         {
             // Complex mode: base + sign-extended offset
-            v6 |= (v7 << (selector + 1)) & 0x780;
-            v7 &= (0x3F >> selector);
+            v6 |= v7 << (selector + 1) & 0x780;
+            v7 &= 0x3F >> selector;
             v7 ^= 32 >> selector;
             v7 -= 32 >> selector;
-            v6 <<= (4 - selector);
-            v7 <<= (4 - selector);
+            v6 <<= 4 - selector;
+            v7 <<= 4 - selector;
             v7 += v6;
 
             if (v7 < 0)
+            {
                 v7 = 0;
+            }
             else if (v7 > 0xFFF)
+            {
                 v7 = 0xFFF;
+            }
 
             a0 = v6;
             a1 = v7;

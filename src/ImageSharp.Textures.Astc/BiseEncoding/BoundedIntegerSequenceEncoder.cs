@@ -7,50 +7,61 @@ namespace SixLabors.ImageSharp.Textures.Astc.BiseEncoding;
 
 internal sealed class BoundedIntegerSequenceEncoder : BoundedIntegerSequenceCodec
 {
-    private readonly List<int> _values = [];
+    private readonly List<int> values = [];
 
-    public BoundedIntegerSequenceEncoder(int range) : base(range) { }
+    public BoundedIntegerSequenceEncoder(int range)
+        : base(range)
+    {
+    }
 
     /// <summary>
     /// Adds a value to the encoding sequence.
     /// </summary>
-    public void AddValue(int val) => _values.Add(val);
+    public void AddValue(int val) => this.values.Add(val);
 
     /// <summary>
     /// Encodes and writes the stored values encoding to the sink. Repeated calls  will produce the same result.
     /// </summary>
     public void Encode(ref BitStream bitSink)
     {
-        int totalBitCount = GetBitCount(_encoding, _values.Count, _bitCount);
+        int totalBitCount = GetBitCount(this.Encoding, this.values.Count, this.BitCount);
 
         int index = 0;
         int bitsWrittenCount = 0;
-        while (index < _values.Count)
+        while (index < this.values.Count)
         {
-            switch (_encoding)
+            switch (this.Encoding)
             {
                 case BiseEncodingMode.TritEncoding:
                     var trits = new List<int>();
                     for (int i = 0; i < 5; ++i)
                     {
-                        if (index < _values.Count) trits.Add(_values[index++]);
-                        else trits.Add(0);
+                        if (index < this.values.Count)
+                        {
+                            trits.Add(this.values[index++]);
+                        }
+                        else
+                        {
+                            trits.Add(0);
+                        }
                     }
-                    EncodeISEBlock<int>(trits, _bitCount, ref bitSink, ref bitsWrittenCount, totalBitCount);
+
+                    EncodeISEBlock<int>(trits, this.BitCount, ref bitSink, ref bitsWrittenCount, totalBitCount);
                     break;
                 case BiseEncodingMode.QuintEncoding:
                     var quints = new List<int>();
                     for (int i = 0; i < 3; ++i)
                     {
-                        var value = index < _values.Count
-                            ? _values[index++]
+                        var value = index < this.values.Count
+                            ? this.values[index++]
                             : 0;
                         quints.Add(value);
                     }
-                    EncodeISEBlock<int>(quints, _bitCount, ref bitSink, ref bitsWrittenCount, totalBitCount);
+
+                    EncodeISEBlock<int>(quints, this.BitCount, ref bitSink, ref bitsWrittenCount, totalBitCount);
                     break;
                 case BiseEncodingMode.BitEncoding:
-                    bitSink.PutBits((uint)_values[index++], GetEncodedBlockSize());
+                    bitSink.PutBits((uint)this.values[index++], this.GetEncodedBlockSize());
                     break;
             }
         }
@@ -59,9 +70,10 @@ internal sealed class BoundedIntegerSequenceEncoder : BoundedIntegerSequenceCode
     /// <summary>
     /// Clear the stored values.
     /// </summary>
-    public void Reset() => _values.Clear();
+    public void Reset() => this.values.Clear();
 
-    private static void EncodeISEBlock<T>(List<int> values, int bitsPerValue, ref BitStream bitSink, ref int bitsWritten, int totalBitCount) where T : unmanaged
+    private static void EncodeISEBlock<T>(List<int> values, int bitsPerValue, ref BitStream bitSink, ref int bitsWritten, int totalBitCount)
+        where T : unmanaged
     {
         int valueCount = values.Count;
         int valueRange = (valueCount == 3) ? 5 : 3;
@@ -85,10 +97,17 @@ internal sealed class BoundedIntegerSequenceEncoder : BoundedIntegerSequenceCode
         for (int i = 0; i < valueCount; ++i)
         {
             tempBitsAdded += bitsPerValue;
-            if (tempBitsAdded >= totalBitCount) break;
+            if (tempBitsAdded >= totalBitCount)
+            {
+                break;
+            }
+
             encodedBitCount += interleavedBits[i];
             tempBitsAdded += interleavedBits[i];
-            if (tempBitsAdded >= totalBitCount) break;
+            if (tempBitsAdded >= totalBitCount)
+            {
+                break;
+            }
         }
 
         int nonBitEncoding = -1;
@@ -99,17 +118,33 @@ internal sealed class BoundedIntegerSequenceEncoder : BoundedIntegerSequenceCode
             {
                 if (valueRange == 5)
                 {
-                    if (QuintEncodings[j][i] != nonBitComponents[i]) { matches = false; break; }
+                    if (QuintEncodings[j][i] != nonBitComponents[i])
+                    {
+                        matches = false;
+                        break;
+                    }
                 }
                 else
                 {
-                    if (TritEncodings[j][i] != nonBitComponents[i]) { matches = false; break; }
+                    if (TritEncodings[j][i] != nonBitComponents[i])
+                    {
+                        matches = false;
+                        break;
+                    }
                 }
             }
-            if (matches) { nonBitEncoding = j; break; }
+
+            if (matches)
+            {
+                nonBitEncoding = j;
+                break;
+            }
         }
 
-        if (nonBitEncoding < 0) throw new InvalidOperationException();
+        if (nonBitEncoding < 0)
+        {
+            throw new InvalidOperationException();
+        }
 
         int nonBitEncodingCopy = nonBitEncoding;
         for (int i = 0; i < valueCount; ++i)
@@ -119,6 +154,7 @@ internal sealed class BoundedIntegerSequenceEncoder : BoundedIntegerSequenceCode
                 bitSink.PutBits((uint)bitComponents[i], bitsPerValue);
                 bitsWritten += bitsPerValue;
             }
+
             int interleavedBitCount = interleavedBits[i];
             int interleavedBitsValue = nonBitEncodingCopy & ((1 << interleavedBitCount) - 1);
             if (bitsWritten + interleavedBitCount <= totalBitCount)

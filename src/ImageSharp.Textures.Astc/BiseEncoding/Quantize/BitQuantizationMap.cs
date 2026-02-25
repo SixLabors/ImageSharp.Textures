@@ -25,25 +25,41 @@ internal sealed class BitQuantizationMap : QuantizationMap
                 unquantized |= bits >> sourceShiftDown;
                 unquantizedBitCount += destinationShiftUp;
             }
-            if (unquantizedBitCount != totalUnquantizedBits) throw new InvalidOperationException();
-            _unquantizationMapBuilder.Add(unquantized);
+
+            if (unquantizedBitCount != totalUnquantizedBits)
+            {
+                throw new InvalidOperationException();
+            }
+
+            this.UnquantizationMapBuilder.Add(unquantized);
 
             if (bits > 0)
             {
-                int previousUnquantized = _unquantizationMapBuilder[bits - 1];
-                while (_quantizationMapBuilder.Count <= (previousUnquantized + unquantized) / 2)
-                    _quantizationMapBuilder.Add(bits - 1);
+                int previousUnquantized = this.UnquantizationMapBuilder[bits - 1];
+                while (this.QuantizationMapBuilder.Count <= (previousUnquantized + unquantized) / 2)
+                {
+                    this.QuantizationMapBuilder.Add(bits - 1);
+                }
             }
-            while (_quantizationMapBuilder.Count <= unquantized) _quantizationMapBuilder.Add(bits);
+
+            while (this.QuantizationMapBuilder.Count <= unquantized)
+            {
+                this.QuantizationMapBuilder.Add(bits);
+            }
         }
 
-        Freeze();
+        this.Freeze();
     }
 
     private static int CountOnes(int value)
     {
         int count = 0;
-        while (value != 0) { count += value & 1; value >>= 1; }
+        while (value != 0)
+        {
+            count += value & 1;
+            value >>= 1;
+        }
+
         return count;
     }
 }

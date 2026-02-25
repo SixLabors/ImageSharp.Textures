@@ -95,16 +95,21 @@ internal static class FusedBlockDecoder
                     {
                         ulong val = (lowBits >> bitPos) & mask;
                         if (bitPos + bitsPerValue > 64)
+                        {
                             val |= (highBits << (64 - bitPos)) & mask;
+                        }
+
                         result[i] = (int)val;
                     }
                     else
                     {
                         result[i] = (int)((highBits >> (bitPos - 64)) & mask);
                     }
+
                     bitPos += bitsPerValue;
                 }
             }
+
             return;
         }
 
@@ -152,16 +157,21 @@ internal static class FusedBlockDecoder
                     {
                         ulong val = (lowBits >> bitPos) & mask;
                         if (bitPos + bitsPerValue > 64)
+                        {
                             val |= (highBits << (64 - bitPos)) & mask;
+                        }
+
                         result[i] = (int)val;
                     }
                     else
                     {
                         result[i] = (int)((highBits >> (bitPos - 64)) & mask);
                     }
+
                     bitPos += bitsPerValue;
                 }
             }
+
             return;
         }
 

@@ -5,27 +5,32 @@ namespace SixLabors.ImageSharp.Textures.Astc.BiseEncoding.Quantize;
 
 internal class QuantizationMap
 {
-    protected List<int> _quantizationMapBuilder = [];
-    protected List<int> _unquantizationMapBuilder = [];
-
     // Flat arrays for O(1) lookup on the hot path (set by Freeze)
-    private int[] _quantizationMap = [];
-    private int[] _unquantizationMap = [];
+    private int[] quantizationMap = [];
+    private int[] unquantizationMap = [];
+
+    protected List<int> QuantizationMapBuilder { get; set; } = [];
+
+    protected List<int> UnquantizationMapBuilder { get; set; } = [];
 
     public int Quantize(int x)
-        => (uint)x < (uint)_quantizationMap.Length
-            ? _quantizationMap[x]
+        => (uint)x < (uint)this.quantizationMap.Length
+            ? this.quantizationMap[x]
             : 0;
 
     public int Unquantize(int x)
-        => (uint)x < (uint)_unquantizationMap.Length
-            ? _unquantizationMap[x]
+        => (uint)x < (uint)this.unquantizationMap.Length
+            ? this.unquantizationMap[x]
             : 0;
 
     internal static int Log2Floor(int value)
     {
         int result = 0;
-        while ((1 << (result + 1)) <= value) result++;
+        while ((1 << (result + 1)) <= value)
+        {
+            result++;
+        }
+
         return result;
     }
 
@@ -34,27 +39,36 @@ internal class QuantizationMap
     /// </summary>
     protected void Freeze()
     {
-        _unquantizationMap = [.. _unquantizationMapBuilder];
-        _quantizationMap = [.. _quantizationMapBuilder];
-        _unquantizationMapBuilder = [];
-        _quantizationMapBuilder = [];
+        this.unquantizationMap = [.. this.UnquantizationMapBuilder];
+        this.quantizationMap = [.. this.QuantizationMapBuilder];
+        this.UnquantizationMapBuilder = [];
+        this.QuantizationMapBuilder = [];
     }
 
     protected void GenerateQuantizationMap()
     {
-        if (_unquantizationMapBuilder.Count <= 1) return;
-        _quantizationMapBuilder.Clear();
+        if (this.UnquantizationMapBuilder.Count <= 1)
+        {
+            return;
+        }
+
+        this.QuantizationMapBuilder.Clear();
         for (int i = 0; i < 256; ++i)
         {
             int bestIndex = 0;
             int bestScore = int.MaxValue;
-            for (int index = 0; index < _unquantizationMapBuilder.Count; ++index)
+            for (int index = 0; index < this.UnquantizationMapBuilder.Count; ++index)
             {
-                int diff = i - _unquantizationMapBuilder[index];
+                int diff = i - this.UnquantizationMapBuilder[index];
                 int score = diff * diff;
-                if (score < bestScore) { bestIndex = index; bestScore = score; }
+                if (score < bestScore)
+                {
+                    bestIndex = index;
+                    bestScore = score;
+                }
             }
-            _quantizationMapBuilder.Add(bestIndex);
+
+            this.QuantizationMapBuilder.Add(bestIndex);
         }
     }
 }

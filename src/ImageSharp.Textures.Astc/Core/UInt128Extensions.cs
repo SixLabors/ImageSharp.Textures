@@ -22,8 +22,16 @@ internal static class UInt128Extensions
     /// </summary>
     public static UInt128 OnesMask(int n)
     {
-        if (n <= 0) return UInt128.Zero;
-        if (n >= 128) return new UInt128(~0UL, ~0UL);
+        if (n <= 0)
+        {
+            return UInt128.Zero;
+        }
+
+        if (n >= 128)
+        {
+            return new UInt128(~0UL, ~0UL);
+        }
+
         if (n <= 64)
         {
             ulong low = (n == 64)

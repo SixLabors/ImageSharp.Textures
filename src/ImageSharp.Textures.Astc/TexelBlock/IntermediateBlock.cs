@@ -20,11 +20,15 @@ internal static class IntermediateBlock
     public static IntermediateBlockData? UnpackIntermediateBlock(PhysicalBlock physicalBlock)
     {
         if (physicalBlock.IsIllegalEncoding || physicalBlock.IsVoidExtent)
+        {
             return null;
+        }
 
         var info = BlockInfo.Decode(physicalBlock.BlockBits);
         if (!info.IsValid || info.IsVoidExtent)
+        {
             return null;
+        }
 
         return UnpackIntermediateBlock(physicalBlock.BlockBits, in info);
     }
@@ -34,9 +38,12 @@ internal static class IntermediateBlock
     /// </summary>
     public static IntermediateBlockData? UnpackIntermediateBlock(UInt128 bits, in BlockInfo info)
     {
-        if (!info.IsValid || info.IsVoidExtent) return null;
+        if (!info.IsValid || info.IsVoidExtent)
+        {
+            return null;
+        }
 
-        var data = new IntermediateBlockData();
+        var data = default(IntermediateBlockData);
 
         // Use cached values from BlockInfo instead of PhysicalBlock getters
         var colorBitMask = UInt128Extensions.OnesMask(info.ColorBitCount);
@@ -70,6 +77,7 @@ internal static class IntermediateBlock
             {
                 ep.Colors[j] = colors[colorIndex++];
             }
+
             data.Endpoints[i] = ep;
         }
 
@@ -80,7 +88,11 @@ internal static class IntermediateBlock
 
         var weightDecoder = BoundedIntegerSequenceDecoder.GetCached(data.WeightRange);
         int weightsCount = data.WeightGridX * data.WeightGridY;
-        if (info.IsDualPlane) weightsCount *= 2;
+        if (info.IsDualPlane)
+        {
+            weightsCount *= 2;
+        }
+
         data.Weights = new int[weightsCount];
         data.WeightsCount = weightsCount;
         weightDecoder.Decode(weightsCount, ref weightBitStream, data.Weights);
@@ -94,7 +106,9 @@ internal static class IntermediateBlock
             ? 2
             : 1;
         if (BoundedIntegerSequenceCodec.GetBitCountForRange(data.WeightGridX * data.WeightGridY * dualPlaneMultiplier, data.WeightRange) > 96)
+        {
             return EndpointRangeInvalidWeightDimensions;
+        }
 
         int partitionCount = data.EndpointCount;
         int bitsWrittenCount = 11 + 2
@@ -103,17 +117,27 @@ internal static class IntermediateBlock
         int availableColorBitsCount = ExtraConfigBitPosition(data) - bitsWrittenCount;
 
         int colorValuesCount = 0;
-        for (int i = 0; i < data.EndpointCount; i++) colorValuesCount += data.Endpoints[i].Mode.GetColorValuesCount();
+        for (int i = 0; i < data.EndpointCount; i++)
+        {
+            colorValuesCount += data.Endpoints[i].Mode.GetColorValuesCount();
+        }
 
-        int bitsNeededCount = (13 * colorValuesCount + 4) / 5;
-        if (availableColorBitsCount < bitsNeededCount) return EndpointRangeNotEnoughColorBits;
+        int bitsNeededCount = ((13 * colorValuesCount) + 4) / 5;
+        if (availableColorBitsCount < bitsNeededCount)
+        {
+            return EndpointRangeNotEnoughColorBits;
+        }
 
         int colorValueRange = byte.MaxValue;
         for (; colorValueRange > 1; --colorValueRange)
         {
             int bitCountForRange = BoundedIntegerSequenceCodec.GetBitCountForRange(colorValuesCount, colorValueRange);
-            if (bitCountForRange <= availableColorBitsCount) break;
+            if (bitCountForRange <= availableColorBitsCount)
+            {
+                break;
+            }
         }
+
         return colorValueRange;
     }
 
@@ -122,13 +146,17 @@ internal static class IntermediateBlock
         var colorStartBit = physicalBlock.GetColorStartBit();
         var colorBitCount = physicalBlock.GetColorBitCount();
         if (physicalBlock.IsIllegalEncoding || !physicalBlock.IsVoidExtent || colorStartBit is null || colorBitCount is null)
+        {
             return null;
+        }
 
         var colorBits = (physicalBlock.BlockBits >> colorStartBit.Value) & UInt128Extensions.OnesMask(colorBitCount.Value);
+
         // We expect low 64 bits contain the 4x16-bit channels
         var low = colorBits.Low();
 
-        var data = new VoidExtentData();
+        var data = default(VoidExtentData);
+
         // Bit 9 of the block mode indicates HDR (1) vs LDR (0) void extent
         data.IsHdr = (physicalBlock.BlockBits.Low() & (1UL << 9)) != 0;
         data.R = (ushort)((low >> 0) & 0xFFFF);
@@ -148,7 +176,10 @@ internal static class IntermediateBlock
         else
         {
             ushort allOnes = (ushort)((1 << 13) - 1);
-            for (int i = 0; i < 4; ++i) data.Coords[i] = allOnes;
+            for (int i = 0; i < 4; ++i)
+            {
+                data.Coords[i] = allOnes;
+            }
         }
 
         return data;
@@ -159,10 +190,20 @@ internal static class IntermediateBlock
     /// </summary>
     internal static bool SharedEndpointModes(in IntermediateBlockData data)
     {
-        if (data.EndpointCount == 0) return true;
+        if (data.EndpointCount == 0)
+        {
+            return true;
+        }
+
         var first = data.Endpoints[0].Mode;
         for (int i = 1; i < data.EndpointCount; i++)
-            if (data.Endpoints[i].Mode != first) return false;
+        {
+            if (data.Endpoints[i].Mode != first)
+            {
+                return false;
+            }
+        }
+
         return true;
     }
 
@@ -175,11 +216,14 @@ internal static class IntermediateBlock
         int extraConfigBitCount = 0;
         if (!SharedEndpointModes(data))
         {
-            int encodedCemBitCount = 2 + data.EndpointCount * 3;
+            int encodedCemBitCount = 2 + (data.EndpointCount * 3);
             extraConfigBitCount = encodedCemBitCount - 6;
         }
 
-        if (hasDualChannel) extraConfigBitCount += 2;
+        if (hasDualChannel)
+        {
+            extraConfigBitCount += 2;
+        }
 
         return 128 - weightBitCount - extraConfigBitCount;
     }
@@ -199,7 +243,7 @@ internal static class IntermediateBlock
     {
         public const int MaxColorValues = 8;
 #pragma warning disable CS0169, S1144 // Accessed by runtime via [InlineArray]
-        private int _element0;
+        private int element0;
 #pragma warning restore CS0169, S1144
     }
 
@@ -233,7 +277,7 @@ internal static class IntermediateBlock
     {
         public const int MaxPartitions = 4;
 #pragma warning disable CS0169, S1144 // Accessed by runtime via [InlineArray]
-        private IntermediateEndpointData _element0;
+        private IntermediateEndpointData element0;
 #pragma warning restore CS0169, S1144
     }
 }

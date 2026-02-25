@@ -13,13 +13,13 @@ namespace SixLabors.ImageSharp.Textures.Astc.TexelBlock;
 /// </summary>
 internal struct BlockInfo
 {
-    private static readonly int[] _weightRanges =
+    private static readonly int[] WeightRanges =
         [-1, -1, 1, 2, 3, 4, 5, 7, -1, -1, 9, 11, 15, 19, 23, 31];
 
-    private static readonly int[] _extraCemBitsForPartition = [0, 2, 5, 8];
+    private static readonly int[] ExtraCemBitsForPartition = [0, 2, 5, 8];
 
     // Valid BISE endpoint ranges in descending order (only these produce valid encodings)
-    private static readonly int[] _validEndpointRanges =
+    private static readonly int[] ValidEndpointRanges =
         [255, 191, 159, 127, 95, 79, 63, 47, 39, 31, 23, 19, 15, 11, 9, 7, 5];
 
     public bool IsValid;
@@ -53,11 +53,11 @@ internal struct BlockInfo
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly ColorEndpointMode GetEndpointMode(int partition) => partition switch
     {
-        0 => EndpointMode0,
-        1 => EndpointMode1,
-        2 => EndpointMode2,
-        3 => EndpointMode3,
-        _ => EndpointMode0
+        0 => this.EndpointMode0,
+        1 => this.EndpointMode1,
+        2 => this.EndpointMode2,
+        3 => this.EndpointMode3,
+        _ => this.EndpointMode0
     };
 
     /// <summary>
@@ -87,7 +87,8 @@ internal struct BlockInfo
         bool isWidthA6HeightB6 = false;
         uint rBits; // 3-bit range index component
 
-        if ((lowBits & 0x3) != 0) // bits[0:2] != 0
+        // bits[0:2] != 0
+        if ((lowBits & 0x3) != 0)
         {
             ulong modeBits = (lowBits >> 2) & 0x3; // bits[2:4]
             int a = (int)((lowBits >> 5) & 0x3); // bits[5:7]
@@ -105,8 +106,9 @@ internal struct BlockInfo
             // Range r[2:0] = {bit4, bit1, bit0} for these modes
             rBits = (uint)(((lowBits >> 4) & 1) | (((lowBits >> 0) & 0x3) << 1));
         }
-        else // bits[0:2] == 0
+        else
         {
+            // bits[0:2] == 0
             ulong modeBits = (lowBits >> 5) & 0xF; // bits[5:9]
             int a = (int)((lowBits >> 5) & 0x3); // bits[5:7]
 
@@ -114,7 +116,10 @@ internal struct BlockInfo
             {
                 case var _ when (modeBits & 0xC) == 0x0:
                     if ((lowBits & 0xF) == 0)
+                    {
                         return default; // reserved block mode
+                    }
+
                     gridWidth = 12;
                     gridHeight = a + 2;
                     break;
@@ -148,11 +153,16 @@ internal struct BlockInfo
             ? 0u
             : (uint)((lowBits >> 9) & 1);
         int rangeIdx = (int)((hBit << 3) | rBits);
-        if ((uint)rangeIdx >= (uint)_weightRanges.Length)
+        if ((uint)rangeIdx >= (uint)WeightRanges.Length)
+        {
             return default;
-        int weightRange = _weightRanges[rangeIdx];
+        }
+
+        int weightRange = WeightRanges[rangeIdx];
         if (weightRange < 0)
+        {
             return default;
+        }
 
         // ---- Step 4: Dual plane ----
         // WidthA6HeightB6 mode never has dual plane; otherwise check bit 10
@@ -163,18 +173,28 @@ internal struct BlockInfo
 
         // ---- Step 6: Validate weight count ----
         int numWeights = gridWidth * gridHeight;
-        if (isDualPlane) numWeights *= 2;
+        if (isDualPlane)
+        {
+            numWeights *= 2;
+        }
+
         if (numWeights > 64)
+        {
             return default;
+        }
 
         // 4 partitions + dual plane is illegal
         if (partitionCount == 4 && isDualPlane)
+        {
             return default;
+        }
 
         // ---- Step 7: Weight bit count ----
         int weightBitCount = BoundedIntegerSequenceCodec.GetBitCountForRange(numWeights, weightRange);
         if (weightBitCount < 24 || weightBitCount > 96)
+        {
             return default;
+        }
 
         // ---- Step 8: Endpoint modes + extra CEM bits ----
         ColorEndpointMode cem0 = default, cem1 = default, cem2 = default, cem3 = default;
@@ -197,12 +217,14 @@ internal struct BlockInfo
                 var sharedCem = (ColorEndpointMode)((lowBits >> 25) & 0xF);
                 cem0 = cem1 = cem2 = cem3 = sharedCem;
                 for (int i = 0; i < partitionCount; i++)
+                {
                     colorValuesCount += sharedCem.GetColorValuesCount();
+                }
             }
             else
             {
                 // Non-shared CEM: per-partition modes
-                numExtraCEMBits = _extraCemBitsForPartition[partitionCount - 1];
+                numExtraCEMBits = ExtraCemBitsForPartition[partitionCount - 1];
 
                 int extraCemStartPos = 128 - numExtraCEMBits - weightBitCount;
                 var extraCem = BitOperations.GetBits(bits, extraCemStartPos, numExtraCEMBits);
@@ -221,30 +243,45 @@ internal struct BlockInfo
                     c[i] = (int)(cembits & 0x1);
                     cembits >>= 1;
                 }
+
                 // Extract m bits (2 bits per partition)
                 for (int i = 0; i < partitionCount; i++)
                 {
                     int m = (int)(cembits & 0x3);
                     cembits >>= 2;
-                    var mode = (ColorEndpointMode)(baseCem + 4 * c[i] + m);
+                    var mode = (ColorEndpointMode)(baseCem + (4 * c[i]) + m);
                     switch (i)
                     {
-                        case 0: cem0 = mode; break;
-                        case 1: cem1 = mode; break;
-                        case 2: cem2 = mode; break;
-                        case 3: cem3 = mode; break;
+                        case 0:
+                            cem0 = mode;
+                            break;
+                        case 1:
+                            cem1 = mode;
+                            break;
+                        case 2:
+                            cem2 = mode;
+                            break;
+                        case 3:
+                            cem3 = mode;
+                            break;
                     }
+
                     colorValuesCount += mode.GetColorValuesCount();
                 }
             }
         }
 
         if (colorValuesCount > 18)
+        {
             return default;
+        }
 
         // ---- Step 9: Dual plane start position and channel ----
         int dualPlaneBitStartPos = 128 - weightBitCount - numExtraCEMBits;
-        if (isDualPlane) dualPlaneBitStartPos -= 2;
+        if (isDualPlane)
+        {
+            dualPlaneBitStartPos -= 2;
+        }
 
         int dualPlaneChannel = isDualPlane
             ? (int)BitOperations.GetBits(bits, dualPlaneBitStartPos, 2).Low()
@@ -257,11 +294,13 @@ internal struct BlockInfo
         // Minimum bits needed check
         int requiredColorBits = ((13 * colorValuesCount) + 4) / 5;
         if (maxColorBits < requiredColorBits)
+        {
             return default;
+        }
 
         // Find max color range that fits (only check valid BISE ranges: 17 vs up to 255)
         int colorValuesRange = 0, colorBitCount = 0;
-        foreach (int rv in _validEndpointRanges)
+        foreach (int rv in ValidEndpointRanges)
         {
             int bitCount = BoundedIntegerSequenceCodec.GetBitCountForRange(colorValuesCount, rv);
             if (bitCount <= maxColorBits)
@@ -273,11 +312,12 @@ internal struct BlockInfo
         }
 
         if (colorValuesRange == 0)
+        {
             return default;
+        }
 
         // ---- Step 11: Validate endpoint modes are not HDR for batchable checks ----
         // (HDR blocks are still valid, just flagged for downstream use)
-
         return new BlockInfo
         {
             IsValid = true,
@@ -306,7 +346,9 @@ internal struct BlockInfo
     private static bool CheckVoidExtentIsIllegal(UInt128 bits, ulong lowBits)
     {
         if (BitOperations.GetBits(bits, 10, 2).Low() != 0x3UL)
+        {
             return true;
+        }
 
         int c0 = (int)BitOperations.GetBits(lowBits, 12, 13);
         int c1 = (int)BitOperations.GetBits(lowBits, 25, 13);

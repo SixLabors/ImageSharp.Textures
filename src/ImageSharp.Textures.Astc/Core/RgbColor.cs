@@ -5,35 +5,36 @@ namespace SixLabors.ImageSharp.Textures.Astc.Core;
 
 internal readonly record struct RgbColor(byte R, byte G, byte B)
 {
-    public static int BytesPerPixel => 3;
-
-    public static RgbColor Empty => default;
-
-    /// <summary>
-    /// The rounded arithmetic mean of the R, G, and B channels
-    /// </summary>
-    public byte Average
-    {
-        get
-        {
-            var sum = R + G + B;
-            return (byte)((sum * 256 + 384) / 768);
-        }
-    }
-
-    public RgbColor(int r, int g, int b) : this(
+    public RgbColor(int r, int g, int b)
+        : this(
         (byte)Math.Clamp(r, byte.MinValue, byte.MaxValue),
         (byte)Math.Clamp(g, byte.MinValue, byte.MaxValue),
         (byte)Math.Clamp(b, byte.MinValue, byte.MaxValue))
     {
     }
 
+    public static int BytesPerPixel => 3;
+
+    public static RgbColor Empty => default;
+
+    /// <summary>
+    /// Gets the rounded arithmetic mean of the R, G, and B channels.
+    /// </summary>
+    public byte Average
+    {
+        get
+        {
+            var sum = this.R + this.G + this.B;
+            return (byte)(((sum * 256) + 384) / 768);
+        }
+    }
+
     public int this[int i]
         => i switch
         {
-            0 => R,
-            1 => G,
-            2 => B,
+            0 => this.R,
+            1 => this.G,
+            2 => this.B,
             _ => throw new ArgumentOutOfRangeException(nameof(i), $"Index must be between 0 and {BytesPerPixel - 1}. Actual value: {i}.")
         };
 
@@ -45,6 +46,7 @@ internal readonly record struct RgbColor(byte R, byte G, byte B)
             int diff = a[i] - b[i];
             result += diff * diff;
         }
+
         return result;
     }
 
@@ -56,6 +58,6 @@ internal readonly record struct RgbColor(byte R, byte G, byte B)
         int dr = a.R - b.R;
         int dg = a.G - b.G;
         int db = a.B - b.B;
-        return dr * dr + dg * dg + db * db;
+        return (dr * dr) + (dg * dg) + (db * db);
     }
 }

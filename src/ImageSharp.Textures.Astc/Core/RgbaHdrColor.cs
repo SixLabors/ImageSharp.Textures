@@ -20,10 +20,10 @@ internal readonly record struct RgbaHdrColor(ushort R, ushort G, ushort B, ushor
     /// </summary>
     public ushort this[int i] => i switch
     {
-        0 => R,
-        1 => G,
-        2 => B,
-        3 => A,
+        0 => this.R,
+        1 => this.G,
+        2 => this.B,
+        3 => this.A,
         _ => throw new ArgumentOutOfRangeException(nameof(i), $"Index must be between 0 and 3. Actual value: {i}.")
     };
 
@@ -41,11 +41,11 @@ internal readonly record struct RgbaHdrColor(ushort R, ushort G, ushort B, ushor
     /// the standard white point will be clipped.
     /// </remarks>
     public RgbaColor ToLowDynamicRange()
-        => new((byte)(R >> 8), (byte)(G >> 8), (byte)(B >> 8), (byte)(A >> 8));
+        => new((byte)(this.R >> 8), (byte)(this.G >> 8), (byte)(this.B >> 8), (byte)(this.A >> 8));
 
     public bool IsCloseTo(RgbaHdrColor other, int tolerance)
-        => Math.Abs(R - other.R) <= tolerance &&
-           Math.Abs(G - other.G) <= tolerance &&
-           Math.Abs(B - other.B) <= tolerance &&
-           Math.Abs(A - other.A) <= tolerance;
+        => Math.Abs(this.R - other.R) <= tolerance &&
+           Math.Abs(this.G - other.G) <= tolerance &&
+           Math.Abs(this.B - other.B) <= tolerance &&
+           Math.Abs(this.A - other.A) <= tolerance;
 }
