@@ -1,0 +1,45 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <TargetFrameworks></TargetFrameworks>
+    <AssemblyName>SixLabors.ImageSharp.Textures.Astc.Reference.Tests</AssemblyName>
+    <RootNamespace>SixLabors.ImageSharp.Textures.Astc.Reference.Tests</RootNamespace>
+    <IsTestProject>true</IsTestProject>
+    <NoWarn>$(NoWarn);CS8002</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AstcEncoderCSharp" Version="5.3.0" />
+    <PackageReference Include="AwesomeAssertions" Version="9.3.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\ImageSharp.Textures.Astc\ImageSharp.Textures.Astc.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <!-- Copy test data into the output directory. -->
+  <Target Name="CopyTestData" AfterTargets="Build">
+    <ItemGroup>
+      <_TestData Include="..\ImageSharp.Textures.Astc.Tests\TestData\**\*.*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_TestData)"
+          DestinationFiles="@(_TestData -> '$(TargetDir)TestData\%(RecursiveDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="true" />
+  </Target>
+
+  <!-- Copy AstcEncoderCSharp native runtimes to the output directory. -->
+  <Target Name="CopyAstcEncNativeRuntimes" AfterTargets="Build">
+    <ItemGroup>
+      <_AstcEncNativeFiles Include="$(NuGetPackageRoot)astcencodercsharp\5.3.0\runtimes\**\*.*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_AstcEncNativeFiles)"
+          DestinationFiles="@(_AstcEncNativeFiles -> '$(TargetDir)runtimes\%(RecursiveDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="true" />
+  </Target>
+
+</Project>

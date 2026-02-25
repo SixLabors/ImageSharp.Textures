@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net8.0</TargetFrameworks>
+    <AssemblyName>SixLabors.ImageSharp.Textures.Astc.Tests</AssemblyName>
+    <RootNamespace>SixLabors.ImageSharp.Textures.Astc.Tests</RootNamespace>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AwesomeAssertions" Version="9.3.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\ImageSharp.Textures.Astc\ImageSharp.Textures.Astc.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <!-- Copy test data into the test output directory. -->
+  <Target Name="CopyTestData" AfterTargets="Build">
+    <ItemGroup>
+      <_TestData Include="TestData\**\*.*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_TestData)" DestinationFiles="@(_TestData -> '$(TargetDir)TestData\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+  </Target>
+
+</Project>

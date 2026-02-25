@@ -17,5 +17,9 @@
     <PackageReference Include="System.Drawing.Common" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\ImageSharp.Textures.Astc\ImageSharp.Textures.Astc.csproj" />
+  </ItemGroup>
+
   <Import Project="..\Images\Images.projitems" Label="Shared" />
 </Project>
