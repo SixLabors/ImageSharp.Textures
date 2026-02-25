@@ -1,10 +1,10 @@
 // Copyright (c) Six Labors.
 // Licensed under the Six Labors Split License.
 
+using AwesomeAssertions;
 using SixLabors.ImageSharp.Textures.Astc.ColorEncoding;
 using SixLabors.ImageSharp.Textures.Astc.Core;
 using SixLabors.ImageSharp.Textures.Astc.TexelBlock;
-using AwesomeAssertions;
 
 namespace SixLabors.ImageSharp.Textures.Tests.Formats.Astc;
 

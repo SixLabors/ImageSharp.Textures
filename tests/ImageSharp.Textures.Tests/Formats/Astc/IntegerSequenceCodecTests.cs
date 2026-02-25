@@ -2,9 +2,9 @@
 // Licensed under the Six Labors Split License.
 
 using System.ComponentModel;
+using AwesomeAssertions;
 using SixLabors.ImageSharp.Textures.Astc.BiseEncoding;
 using SixLabors.ImageSharp.Textures.Astc.IO;
-using AwesomeAssertions;
 
 namespace SixLabors.ImageSharp.Textures.Tests.Formats.Astc;
 
@@ -56,7 +56,7 @@ public class IntegerSequenceCodecTests
             (BiseEncodingMode.BitEncoding, 5),    // Range 28
             (BiseEncodingMode.BitEncoding, 5),    // Range 29
             (BiseEncodingMode.BitEncoding, 5),    // Range 30
-            (BiseEncodingMode.BitEncoding, 5)     // Range 31
+            (BiseEncodingMode.BitEncoding, 5) // Range 31
         ];
 
         for (int i = 1; i < 32; ++i)
@@ -154,9 +154,9 @@ public class IntegerSequenceCodecTests
     {
         const int valueCount = 7;
         const int bits = 3;
-        int expectedBitCount = 7 * 2 +  // First two quint blocks
-                       6 * 3 +  // First two blocks of bits
-                       3 +      // Last quint block without high order four bits
+        int expectedBitCount = 7 * 2 + // First two quint blocks
+                       6 * 3 + // First two blocks of bits
+                       3 + // Last quint block without high order four bits
                        3;       // Last block with one set of three bits
 
         var bitCount = BoundedIntegerSequenceCodec.GetBitCount(BiseEncodingMode.QuintEncoding, valueCount, bits);
@@ -175,7 +175,7 @@ public class IntegerSequenceCodecTests
             encoder.AddValue(value);
 
         // Encode
-        var bitSink = new BitStream();
+        var bitSink = default(BitStream);
         encoder.Encode(ref bitSink);
 
         // Verify encoded data
@@ -208,7 +208,7 @@ public class IntegerSequenceCodecTests
         decoded.Should().Equal(expectedValues);
 
         // Re-encode
-        var bitSink = new BitStream();
+        var bitSink = default(BitStream);
         var encoder = new BoundedIntegerSequenceEncoder(range);
         foreach (var value in expectedValues)
             encoder.AddValue(value);
@@ -231,7 +231,7 @@ public class IntegerSequenceCodecTests
             encoder.AddValue(value);
 
         // Encode
-        var bitSink = new BitStream();
+        var bitSink = default(BitStream);
         encoder.Encode(ref bitSink);
 
         // Verify encoded data
@@ -264,7 +264,7 @@ public class IntegerSequenceCodecTests
         decoded.Should().Equal(expectedValues);
 
         // Re-encode
-        var bitSink = new BitStream();
+        var bitSink = default(BitStream);
         var encoder = new BoundedIntegerSequenceEncoder(range);
         foreach (var value in expectedValues)
             encoder.AddValue(value);
@@ -275,8 +275,6 @@ public class IntegerSequenceCodecTests
         bitSink.TryGetBits<ulong>(58, out var reencoded).Should().BeTrue();
         reencoded.Should().Be(encoding);
     }
-
-
 
     [Fact]
     public void EncodeDecode_WithRandomValues_ShouldAlwaysRoundTripCorrectly()
@@ -290,7 +288,8 @@ public class IntegerSequenceCodecTests
             int range = 1 + random.Next(0, 256) % 63;
 
             int bitCount = BoundedIntegerSequenceCodec.GetBitCountForRange(valueCount, range);
-            if (bitCount >= 64) continue;
+            if (bitCount >= 64)
+                continue;
 
             // Generate random values
             var generated = new List<int>(valueCount);
@@ -298,7 +297,7 @@ public class IntegerSequenceCodecTests
                 generated.Add(random.Next(range + 1));
 
             // Encode
-            var bitSink = new BitStream();
+            var bitSink = default(BitStream);
             var encoder = new BoundedIntegerSequenceEncoder(range);
             foreach (var value in generated)
                 encoder.AddValue(value);
@@ -316,5 +315,4 @@ public class IntegerSequenceCodecTests
             decoded.Should().Equal(generated);
         }
     }
-
 }

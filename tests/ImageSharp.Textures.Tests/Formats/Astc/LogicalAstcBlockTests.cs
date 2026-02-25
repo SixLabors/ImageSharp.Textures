@@ -1,12 +1,12 @@
 // Copyright (c) Six Labors.
 // Licensed under the Six Labors Split License.
 
+using AwesomeAssertions;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Textures.Astc.ColorEncoding;
 using SixLabors.ImageSharp.Textures.Astc.Core;
 using SixLabors.ImageSharp.Textures.Astc.TexelBlock;
 using SixLabors.ImageSharp.Textures.Tests.TestUtilities.ImageComparison;
-using AwesomeAssertions;
 
 namespace SixLabors.ImageSharp.Textures.Tests.Formats.Astc;
 
@@ -348,6 +348,7 @@ public class LogicalAstcBlockTests
     }
 
     [Theory]
+
     // Synthetic test images
     [InlineData("footprint_4x4", false, FootprintType.Footprint4x4, 32, 32)]
     [InlineData("footprint_5x4", false, FootprintType.Footprint5x4, 32, 32)]
@@ -363,12 +364,14 @@ public class LogicalAstcBlockTests
     [InlineData("footprint_10x10", false, FootprintType.Footprint10x10, 32, 32)]
     [InlineData("footprint_12x10", false, FootprintType.Footprint12x10, 32, 32)]
     [InlineData("footprint_12x12", false, FootprintType.Footprint12x12, 32, 32)]
+
     // RGB without alpha images
     [InlineData("rgb_4x4", false, FootprintType.Footprint4x4, 224, 288)]
     [InlineData("rgb_5x4", false, FootprintType.Footprint5x4, 224, 288)]
     [InlineData("rgb_6x6", false, FootprintType.Footprint6x6, 224, 288)]
     [InlineData("rgb_8x8", false, FootprintType.Footprint8x8, 224, 288)]
     [InlineData("rgb_12x12", false, FootprintType.Footprint12x12, 224, 288)]
+
     // RGB with alpha images
     [InlineData("atlas_small_4x4", true, FootprintType.Footprint4x4, 256, 256)]
     [InlineData("atlas_small_5x5", true, FootprintType.Footprint5x5, 256, 256)]

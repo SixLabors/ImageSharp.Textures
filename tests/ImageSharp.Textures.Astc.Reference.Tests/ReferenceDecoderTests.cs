@@ -1,10 +1,10 @@
 // Copyright (c) Six Labors.
 // Licensed under the Six Labors Split License.
 
+using AwesomeAssertions;
 using SixLabors.ImageSharp.Textures.Astc.Core;
 using SixLabors.ImageSharp.Textures.Astc.IO;
 using SixLabors.ImageSharp.Textures.Astc.Reference.Tests.Utils;
-using AwesomeAssertions;
 
 namespace SixLabors.ImageSharp.Textures.Astc.Reference.Tests;
 
@@ -118,6 +118,7 @@ public class ReferenceDecoderTests
     public void DecompressLdr_Gradient_ShouldMatch(FootprintType footprintType)
     {
         var (blockX, blockY) = ReferenceDecoder.ToBlockDimensions(footprintType);
+
         // 2×2 blocks for gradient
         int width = blockX * 2;
         int height = blockY * 2;
@@ -149,6 +150,7 @@ public class ReferenceDecoderTests
     public void DecompressLdr_RandomNoise_ShouldMatch(FootprintType footprintType)
     {
         var (blockX, blockY) = ReferenceDecoder.ToBlockDimensions(footprintType);
+
         // 2×2 blocks
         int width = blockX * 2;
         int height = blockY * 2;
@@ -156,6 +158,7 @@ public class ReferenceDecoderTests
         var rng = new Random(42); // Fixed seed for reproducibility
         var pixels = new byte[width * height * RgbaColor.BytesPerPixel];
         rng.NextBytes(pixels);
+
         // Force alpha to 255 so compression doesn't introduce alpha-related variance
         for (int index = 3; index < pixels.Length; index += RgbaColor.BytesPerPixel)
             pixels[index] = byte.MaxValue;
@@ -206,10 +209,9 @@ public class ReferenceDecoderTests
         // Bits [80..95]  = G (UNORM16)
         // Bits [96..111] = B (UNORM16)
         // Bits [112..127]= A (UNORM16)
-
         var block = new byte[16];
         ulong low = 0xFFFFFFFFFFFFFDFC;
-        ulong high = ((ulong)0xFFFF << 48) | ((ulong)0xC000 << 32) | ((ulong)0x4000 << 16) | 0x8000;
+        ulong high = (0xFFFFUL << 48) | ((ulong)0xC000 << 32) | (0x4000UL << 16) | 0x8000;
         BitConverter.TryWriteBytes(block.AsSpan(0, 8), low);
         BitConverter.TryWriteBytes(block.AsSpan(8, 8), high);
 

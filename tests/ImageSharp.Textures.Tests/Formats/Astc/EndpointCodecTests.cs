@@ -2,10 +2,10 @@
 // Licensed under the Six Labors Split License.
 
 using System.Buffers.Binary;
+using AwesomeAssertions;
 using SixLabors.ImageSharp.Textures.Astc.ColorEncoding;
 using SixLabors.ImageSharp.Textures.Astc.Core;
 using SixLabors.ImageSharp.Textures.Astc.TexelBlock;
-using AwesomeAssertions;
 
 namespace SixLabors.ImageSharp.Textures.Tests.Formats.Astc;
 
@@ -185,10 +185,10 @@ public class EndpointCodecTests
         {
             var low = new RgbaColor(random.Next(0, 256), random.Next(0, 256), random.Next(0, 256), 255);
             var high = new RgbaColor(random.Next(0, 256), random.Next(0, 256), random.Next(0, 256), 255);
-            var (Low, High) = EncodeAndDecodeColors(low, high, 255, mode);
+            var (low1, high1) = EncodeAndDecodeColors(low, high, 255, mode);
 
-            (Low == low).Should().BeTrue();
-            (High == high).Should().BeTrue();
+            (low1 == low).Should().BeTrue();
+            (high1 == high).Should().BeTrue();
         }
     }
 
@@ -277,7 +277,8 @@ public class EndpointCodecTests
             int b = random.Next(0, 256);
 
             // Ensure even channels (reference test skips odd)
-            if (((r | g | b) & 1) != 0) continue;
+            if (((r | g | b) & 1) != 0)
+                continue;
 
             var color = new RgbaColor(r, g, b, 255);
             var values = EncodeRgbBaseOffset(color, color);
@@ -296,9 +297,11 @@ public class EndpointCodecTests
             bool isLarge = low[i] >= 128;
             values.Add((low[i] * 2) & 0xFF);
             int diff = (high[i] - low[i]) * 2;
-            if (isLarge) diff |= 0x80;
+            if (isLarge)
+                diff |= 0x80;
             values.Add(diff);
         }
+
         return values.ToArray();
     }
 

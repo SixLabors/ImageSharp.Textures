@@ -1,8 +1,8 @@
 // Copyright (c) Six Labors.
 // Licensed under the Six Labors Split License.
 
-using SixLabors.ImageSharp.Textures.Astc.Core;
 using AwesomeAssertions;
+using SixLabors.ImageSharp.Textures.Astc.Core;
 
 namespace SixLabors.ImageSharp.Textures.Tests.Formats.Astc;
 

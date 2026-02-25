@@ -327,5 +327,4 @@ public class AstcDecoderTests
 
         Assert.Equal(256 * 256 * 4, result.Length);
     }
-
 }

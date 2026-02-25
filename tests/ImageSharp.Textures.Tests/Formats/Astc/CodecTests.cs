@@ -1,6 +1,7 @@
 // Copyright (c) Six Labors.
 // Licensed under the Six Labors Split License.
 
+using AwesomeAssertions;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using SixLabors.ImageSharp.Textures.Astc;
@@ -8,7 +9,6 @@ using SixLabors.ImageSharp.Textures.Astc.Core;
 using SixLabors.ImageSharp.Textures.Astc.IO;
 using SixLabors.ImageSharp.Textures.Astc.TexelBlock;
 using SixLabors.ImageSharp.Textures.Tests.TestUtilities.ImageComparison;
-using AwesomeAssertions;
 
 namespace SixLabors.ImageSharp.Textures.Tests.Formats.Astc;
 
@@ -133,5 +133,4 @@ public class CodecTests
         using Image<Rgba32> expectedImage = Image.Load<Rgba32>(expectedImagePath);
         ImageComparer.TolerantPercentage(0.1f).VerifySimilarity(expectedImage, actualImage);
     }
-
 }

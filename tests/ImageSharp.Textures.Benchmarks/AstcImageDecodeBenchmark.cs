@@ -10,20 +10,20 @@ namespace SixLabors.ImageSharp.Textures.Benchmarks;
 [MemoryDiagnoser]
 public class AstcImageDecodeBenchmark
 {
-    private AstcFile? _astcFile;
+    private AstcFile? astcFile;
 
     [GlobalSetup]
     public void Setup()
     {
         string path = BenchmarkTestDataLocator.FindAstcTestData(Path.Combine("Input", "atlas_small_4x4.astc"));
         byte[] astcData = File.ReadAllBytes(path);
-        _astcFile = AstcFile.FromMemory(astcData);
+        this.astcFile = AstcFile.FromMemory(astcData);
     }
 
     [Benchmark]
     public void ImageDecode()
     {
-        ReadOnlySpan<byte> blocks = _astcFile!.Blocks;
+        ReadOnlySpan<byte> blocks = this.astcFile!.Blocks;
         int numBlocks = blocks.Length / 16;
         Span<byte> blockBytes = stackalloc byte[16];
         for (int i = 0; i < numBlocks; ++i)

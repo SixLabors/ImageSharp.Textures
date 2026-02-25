@@ -2,10 +2,10 @@
 // Licensed under the Six Labors Split License.
 
 using System.ComponentModel;
+using AwesomeAssertions;
 using SixLabors.ImageSharp.Textures.Astc;
 using SixLabors.ImageSharp.Textures.Astc.Core;
 using SixLabors.ImageSharp.Textures.Astc.IO;
-using AwesomeAssertions;
 
 namespace SixLabors.ImageSharp.Textures.Tests.Formats.Astc.HDR;
 
@@ -81,6 +81,7 @@ public class HdrImageTests
             if (v > 1.0f)
                 valuesGreaterThanOne++;
         }
+
         valuesGreaterThanOne.Should().Be(64);
     }
 

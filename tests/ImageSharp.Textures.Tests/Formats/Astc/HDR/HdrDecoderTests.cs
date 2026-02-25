@@ -1,9 +1,9 @@
 // Copyright (c) Six Labors.
 // Licensed under the Six Labors Split License.
 
+using AwesomeAssertions;
 using SixLabors.ImageSharp.Textures.Astc;
 using SixLabors.ImageSharp.Textures.Astc.Core;
-using AwesomeAssertions;
 
 namespace SixLabors.ImageSharp.Textures.Tests.Formats.Astc.HDR;
 
@@ -27,6 +27,7 @@ public class HdrDecoderTests
         {
             float.IsNaN(value).Should().BeFalse();
             float.IsInfinity(value).Should().BeFalse();
+
             // Values should be in reasonable range for normalized colors
             value.Should().BeGreaterThanOrEqualTo(0.0f);
             value.Should().BeLessThanOrEqualTo(1.1f); // Allow slight overshoot for HDR

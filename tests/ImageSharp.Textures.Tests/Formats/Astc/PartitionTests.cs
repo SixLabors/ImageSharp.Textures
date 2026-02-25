@@ -1,15 +1,14 @@
 // Copyright (c) Six Labors.
 // Licensed under the Six Labors Split License.
 
+using AwesomeAssertions;
 using SixLabors.ImageSharp.Textures.Astc.ColorEncoding;
 using SixLabors.ImageSharp.Textures.Astc.Core;
-using AwesomeAssertions;
 
 namespace SixLabors.ImageSharp.Textures.Tests.Formats.Astc;
 
 public class PartitionTests
 {
-
     [Fact]
     public void PartitionMetric_WithSimplePartitions_ShouldCalculateCorrectDistance()
     {
@@ -17,12 +16,12 @@ public class PartitionTests
         {
             Assignment =
             [
-                0,0,0,0,0,0,
-                0,0,0,0,0,0,
-                0,0,0,0,0,0,
-                0,0,0,0,0,0,
-                0,0,0,0,0,0,
-                0,0,0,0,0,1
+                0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 1
             ]
         };
 
@@ -30,12 +29,12 @@ public class PartitionTests
         {
             Assignment =
             [
-                1,0,0,0,0,0,
-                0,0,0,0,0,0,
-                0,0,0,0,0,0,
-                0,0,0,0,0,0,
-                0,0,0,0,0,0,
-                0,0,0,0,0,0
+                1, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0
             ]
         };
 
@@ -51,10 +50,10 @@ public class PartitionTests
         {
             Assignment =
             [
-                2,2,2,0,
-                0,0,0,0,
-                0,0,0,0,
-                0,0,0,1
+                2, 2, 2, 0,
+                0, 0, 0, 0,
+                0, 0, 0, 0,
+                0, 0, 0, 1
             ]
         };
 
@@ -62,10 +61,10 @@ public class PartitionTests
         {
             Assignment =
             [
-                1,0,0,0,
-                0,0,0,0,
-                0,0,0,0,
-                0,0,0,0
+                1, 0, 0, 0,
+                0, 0, 0, 0,
+                0, 0, 0, 0,
+                0, 0, 0, 0
             ]
         };
 
@@ -81,10 +80,10 @@ public class PartitionTests
         {
             Assignment =
             [
-                0,1,2,2,
-                2,2,2,2,
-                2,2,2,2,
-                2,2,2,2
+                0, 1, 2, 2,
+                2, 2, 2, 2,
+                2, 2, 2, 2,
+                2, 2, 2, 2
             ]
         };
 
@@ -92,10 +91,10 @@ public class PartitionTests
         {
             Assignment =
             [
-                1,0,0,0,
-                0,0,0,0,
-                0,0,0,0,
-                0,0,0,0
+                1, 0, 0, 0,
+                0, 0, 0, 0,
+                0, 0, 0, 0,
+                0, 0, 0, 0
             ]
         };
 
@@ -109,12 +108,12 @@ public class PartitionTests
     {
         int[] expected =
         [
-            0,0,0,0,1,1,1,2,2,2,
-            0,0,0,0,1,1,1,2,2,2,
-            0,0,0,0,1,1,1,2,2,2,
-            0,0,0,0,1,1,1,2,2,2,
-            0,0,0,0,1,1,1,2,2,2,
-            0,0,0,0,1,1,1,2,2,2
+            0, 0, 0, 0, 1, 1, 1, 2, 2, 2,
+            0, 0, 0, 0, 1, 1, 1, 2, 2, 2,
+            0, 0, 0, 0, 1, 1, 1, 2, 2, 2,
+            0, 0, 0, 0, 1, 1, 1, 2, 2, 2,
+            0, 0, 0, 0, 1, 1, 1, 2, 2, 2,
+            0, 0, 0, 0, 1, 1, 1, 2, 2, 2
         ];
 
         var partition = Partition.GetASTCPartition(Footprint.Get10x6(), 3, 557);
@@ -131,8 +130,6 @@ public class PartitionTests
         partition0.Assignment.Should().NotEqual(partition1.Assignment);
     }
 
-
-
     [Fact]
     public void FindClosestASTCPartition_ShouldPreservePartitionCount()
     {
@@ -140,12 +137,12 @@ public class PartitionTests
         {
             Assignment =
             [
-                0,0,1,1,1,0,
-                0,0,0,0,0,0,
-                0,0,0,0,0,0,
-                0,1,1,1,1,1,
-                0,0,0,0,0,0,
-                1,1,1,1,1,1
+                0, 0, 1, 1, 1, 0,
+                0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0,
+                0, 1, 1, 1, 1, 1,
+                0, 0, 0, 0, 0, 0,
+                1, 1, 1, 1, 1, 1
             ]
         };
 
@@ -210,6 +207,7 @@ public class PartitionTests
             {
                 assignment[j] = random.Next(numParts);
             }
+
             var partition = new Partition(footprint, numParts)
             {
                 Assignment = assignment

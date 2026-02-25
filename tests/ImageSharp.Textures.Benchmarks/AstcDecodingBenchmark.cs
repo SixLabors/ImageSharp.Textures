@@ -11,20 +11,20 @@ namespace SixLabors.ImageSharp.Textures.Benchmarks;
 [MemoryDiagnoser]
 public class AstcDecodingBenchmark
 {
-    private AstcFile? _astcFile;
+    private AstcFile? astcFile;
 
     [GlobalSetup]
     public void Setup()
     {
         string path = BenchmarkTestDataLocator.FindAstcTestData(Path.Combine("Input", "atlas_small_4x4.astc"));
         byte[] astcData = File.ReadAllBytes(path);
-        _astcFile = AstcFile.FromMemory(astcData);
+        this.astcFile = AstcFile.FromMemory(astcData);
     }
 
     [Benchmark]
     public bool ParseBlock()
     {
-        ReadOnlySpan<byte> blocks = _astcFile!.Blocks;
+        ReadOnlySpan<byte> blocks = this.astcFile!.Blocks;
         Span<byte> blockBytes = stackalloc byte[16];
         blocks.Slice(0, 16).CopyTo(blockBytes);
         ulong low = BitConverter.ToUInt64(blockBytes);
@@ -37,7 +37,7 @@ public class AstcDecodingBenchmark
     [Benchmark]
     public bool DecodeEndpoints()
     {
-        ReadOnlySpan<byte> blocks = _astcFile!.Blocks;
+        ReadOnlySpan<byte> blocks = this.astcFile!.Blocks;
         Span<byte> blockBytes = stackalloc byte[16];
         blocks.Slice(0, 16).CopyTo(blockBytes);
         ulong low = BitConverter.ToUInt64(blockBytes);
@@ -52,7 +52,7 @@ public class AstcDecodingBenchmark
     [Benchmark]
     public bool Partitioning()
     {
-        ReadOnlySpan<byte> blocks = _astcFile!.Blocks;
+        ReadOnlySpan<byte> blocks = this.astcFile!.Blocks;
         Span<byte> blockBytes = stackalloc byte[16];
         blocks.Slice(0, 16).CopyTo(blockBytes);
         ulong low = BitConverter.ToUInt64(blockBytes);

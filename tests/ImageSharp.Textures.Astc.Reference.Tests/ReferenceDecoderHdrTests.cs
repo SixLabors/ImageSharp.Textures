@@ -107,6 +107,7 @@ public class ReferenceDecoderHdrTests
     public void DecompressHdr_Gradient_ShouldMatch(FootprintType footprintType)
     {
         var (blockX, blockY) = ReferenceDecoder.ToBlockDimensions(footprintType);
+
         // 2×2 blocks for HDR gradient
         int width = blockX * 2;
         int height = blockY * 2;
@@ -143,6 +144,7 @@ public class ReferenceDecoderHdrTests
     public void DecompressHdr_MixedLdrHdr_ShouldMatch(FootprintType footprintType)
     {
         var (blockX, blockY) = ReferenceDecoder.ToBlockDimensions(footprintType);
+
         // 2×2 blocks
         int width = blockX * 2;
         int height = blockY * 2;
@@ -170,6 +172,7 @@ public class ReferenceDecoderHdrTests
                     pixels[idx + 1] = (Half)(0.5f + fraction * 2.0f);
                     pixels[idx + 2] = (Half)(0.2f + fraction * 1.5f);
                 }
+
                 pixels[idx + 3] = (Half)1.0f;
             }
         }

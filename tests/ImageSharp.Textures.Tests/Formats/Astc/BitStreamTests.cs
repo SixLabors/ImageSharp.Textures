@@ -1,8 +1,8 @@
 // Copyright (c) Six Labors.
 // Licensed under the Six Labors Split License.
 
-using SixLabors.ImageSharp.Textures.Astc.IO;
 using AwesomeAssertions;
+using SixLabors.ImageSharp.Textures.Astc.IO;
 
 namespace SixLabors.ImageSharp.Textures.Tests.Formats.Astc;
 
@@ -19,7 +19,7 @@ public class BitStreamTests
     [Fact]
     public void Constructor_WithoutParameters_ShouldInitializeEmpty()
     {
-        var stream = new BitStream();
+        var stream = default(BitStream);
 
         stream.Bits.Should().Be(0);
     }
@@ -121,7 +121,7 @@ public class BitStreamTests
     [Fact]
     public void PutBits_WithSmallValues_ShouldAccumulateCorrectly()
     {
-        var stream = new BitStream();
+        var stream = default(BitStream);
 
         stream.PutBits(0U, 1);
         stream.PutBits(0b11U, 2);
@@ -135,7 +135,7 @@ public class BitStreamTests
     public void PutBits_With64BitsOfOnes_ShouldStoreCorrectly()
     {
         const ulong allBits = 0xFFFFFFFFFFFFFFFFUL;
-        var stream = new BitStream();
+        var stream = default(BitStream);
 
         stream.PutBits(allBits, 64);
 
@@ -150,7 +150,7 @@ public class BitStreamTests
     {
         const ulong allBits = 0xFFFFFFFFFFFFFFFFUL;
         const ulong expected40Bits = 0x000000FFFFFFFFFFUL;
-        var stream = new BitStream();
+        var stream = default(BitStream);
 
         stream.PutBits(allBits, 40);
 
@@ -164,7 +164,7 @@ public class BitStreamTests
     {
         const ulong allBits = 0xFFFFFFFFFFFFFFFFUL;
         const ulong expected40Bits = 0x000000FFFFFFFFFFUL;
-        var stream = new BitStream();
+        var stream = default(BitStream);
 
         stream.PutBits(0U, 0);
         stream.PutBits((uint)(allBits & 0xFFFFFFFFUL), 32);
@@ -178,7 +178,7 @@ public class BitStreamTests
     [Fact]
     public void PutBits_ThenGetBits_ShouldReturnValue()
     {
-        var stream = new BitStream();
+        var stream = default(BitStream);
         const uint value1 = 0b101;
         const uint value2 = 0b11001100;
 
