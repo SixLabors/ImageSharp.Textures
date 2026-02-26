@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -11,7 +11,7 @@
 
   <ItemGroup>
     <PackageReference Include="AstcEncoderCSharp" Version="5.3.0" />
-    <PackageReference Include="AwesomeAssertions" Version="9.3.0" />
+    <PackageReference Include="AwesomeAssertions" Version="9.4.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -27,9 +27,7 @@
     <ItemGroup>
       <_TestData Include="..\Images\Input\Astc\**\*.*" />
     </ItemGroup>
-    <Copy SourceFiles="@(_TestData)"
-          DestinationFiles="@(_TestData -> '$(TargetDir)TestData\%(RecursiveDir)%(Filename)%(Extension)')"
-          SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(_TestData)" DestinationFiles="@(_TestData -> '$(TargetDir)TestData\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
   </Target>
 
   <!-- Copy AstcEncoderCSharp native runtimes to the output directory. -->
@@ -37,9 +35,7 @@
     <ItemGroup>
       <_AstcEncNativeFiles Include="$(NuGetPackageRoot)astcencodercsharp\5.3.0\runtimes\**\*.*" />
     </ItemGroup>
-    <Copy SourceFiles="@(_AstcEncNativeFiles)"
-          DestinationFiles="@(_AstcEncNativeFiles -> '$(TargetDir)runtimes\%(RecursiveDir)%(Filename)%(Extension)')"
-          SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(_AstcEncNativeFiles)" DestinationFiles="@(_AstcEncNativeFiles -> '$(TargetDir)runtimes\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
   </Target>
 
 </Project>

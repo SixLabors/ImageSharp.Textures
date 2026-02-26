@@ -10,9 +10,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AwesomeAssertions" Version="9.3.0" />
-    <PackageReference Include="Magick.NET-Q16-AnyCPU" />
-    <PackageReference Include="System.Drawing.Common" />
+    <PackageReference Include="AwesomeAssertions" Version="9.4.0" />
+    <PackageReference Include="Magick.NET-Q16-AnyCPU" Version="14.10.3" />
+    <PackageReference Include="System.Drawing.Common" Version="10.0.3" />
     <PackageReference Include="Moq" />
   </ItemGroup>
 
