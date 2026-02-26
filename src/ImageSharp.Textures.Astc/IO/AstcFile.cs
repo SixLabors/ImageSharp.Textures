@@ -36,10 +36,10 @@ internal record AstcFile
 
     public static AstcFile FromMemory(byte[] data)
     {
-        var header = AstcFileHeader.FromMemory(data.AsSpan(0, AstcFileHeader.SizeInBytes));
+        AstcFileHeader header = AstcFileHeader.FromMemory(data.AsSpan(0, AstcFileHeader.SizeInBytes));
 
         // Remaining bytes are blocks; C++ reference keeps them as string; here we keep as byte[]
-        var blocks = new byte[data.Length - AstcFileHeader.SizeInBytes];
+        byte[] blocks = new byte[data.Length - AstcFileHeader.SizeInBytes];
         Array.Copy(data, AstcFileHeader.SizeInBytes, blocks, 0, blocks.Length);
 
         return new AstcFile(header, blocks);

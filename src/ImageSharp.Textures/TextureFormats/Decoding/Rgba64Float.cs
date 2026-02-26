@@ -1,38 +1,35 @@
 // Copyright (c) Six Labors.
 // Licensed under the Six Labors Split License.
 
-using SixLabors.ImageSharp.Textures.PixelFormats;
+namespace SixLabors.ImageSharp.Textures.TextureFormats.Decoding;
 
-namespace SixLabors.ImageSharp.Textures.TextureFormats.Decoding
+/// <summary>
+/// Texture format for pixels with 16 bit floating point values for each channel (including the alpha channel).
+/// </summary>
+internal struct Rgba64Float : IBlock<Rgba64Float>
 {
-    /// <summary>
-    /// Texture format for pixels with 16 bit floating point values for each channel (including the alpha channel).
-    /// </summary>
-    internal struct Rgba64Float : IBlock<Rgba64Float>
+    /// <inheritdoc/>
+    public readonly int BitsPerPixel => 64;
+
+    /// <inheritdoc/>
+    public readonly byte PixelDepthBytes => 8;
+
+    /// <inheritdoc/>
+    public readonly byte DivSize => 1;
+
+    /// <inheritdoc/>
+    public readonly byte CompressedBytesPerBlock => 8;
+
+    /// <inheritdoc/>
+    public readonly bool Compressed => false;
+
+    /// <inheritdoc/>
+    public Image GetImage(byte[] blockData, int width, int height)
     {
-        /// <inheritdoc/>
-        public int BitsPerPixel => 64;
-
-        /// <inheritdoc/>
-        public byte PixelDepthBytes => 8;
-
-        /// <inheritdoc/>
-        public byte DivSize => 1;
-
-        /// <inheritdoc/>
-        public byte CompressedBytesPerBlock => 8;
-
-        /// <inheritdoc/>
-        public bool Compressed => false;
-
-        /// <inheritdoc/>
-        public Image GetImage(byte[] blockData, int width, int height)
-        {
-            byte[] decompressedData = this.Decompress(blockData, width, height);
-            return Image.LoadPixelData<Textures.PixelFormats.Rgba64Float>(decompressedData, width, height);
-        }
-
-        /// <inheritdoc/>
-        public byte[] Decompress(byte[] blockData, int width, int height) => blockData;
+        byte[] decompressedData = this.Decompress(blockData, width, height);
+        return Image.LoadPixelData<Textures.PixelFormats.Rgba64Float>(decompressedData, width, height);
     }
+
+    /// <inheritdoc/>
+    public readonly byte[] Decompress(byte[] blockData, int width, int height) => blockData;
 }

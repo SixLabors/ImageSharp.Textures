@@ -25,7 +25,7 @@ internal static class FusedLdrBlockDecoder
     internal static void DecompressBlockFusedLdr(UInt128 bits, in BlockInfo info, Footprint footprint, Span<byte> buffer)
     {
         Span<int> texelWeights = stackalloc int[footprint.PixelCount];
-        var endpointPair = FusedBlockDecoder.DecodeFusedCore(bits, in info, footprint, texelWeights);
+        ColorEndpointPair endpointPair = FusedBlockDecoder.DecodeFusedCore(bits, in info, footprint, texelWeights);
         WriteLdrPixels(buffer, footprint.PixelCount, in endpointPair, texelWeights);
     }
 
@@ -44,7 +44,7 @@ internal static class FusedLdrBlockDecoder
         Span<byte> imageBuffer)
     {
         Span<int> texelWeights = stackalloc int[footprint.PixelCount];
-        var endpointPair = FusedBlockDecoder.DecodeFusedCore(bits, in info, footprint, texelWeights);
+        ColorEndpointPair endpointPair = FusedBlockDecoder.DecodeFusedCore(bits, in info, footprint, texelWeights);
         WriteLdrPixelsToImage(imageBuffer, footprint, dstBaseX, dstBaseY, imageWidth, in endpointPair, texelWeights);
     }
 
@@ -63,7 +63,7 @@ internal static class FusedLdrBlockDecoder
             int limit = pixelCount - 3;
             for (; i < limit; i += 4)
             {
-                var weights = Vector128.Create(
+                Vector128<int> weights = Vector128.Create(
                     texelWeights[i],
                     texelWeights[i + 1],
                     texelWeights[i + 2],
@@ -132,7 +132,7 @@ internal static class FusedLdrBlockDecoder
                 for (; pixelX < limit; pixelX += 4)
                 {
                     int texelIndex = srcRowBase + pixelX;
-                    var weights = Vector128.Create(
+                    Vector128<int> weights = Vector128.Create(
                         texelWeights[texelIndex],
                         texelWeights[texelIndex + 1],
                         texelWeights[texelIndex + 2],

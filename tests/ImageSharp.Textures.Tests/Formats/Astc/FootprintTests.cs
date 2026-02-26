@@ -26,7 +26,7 @@ public class FootprintTests
     public void FromFootprintType_WithValidType_ShouldReturnCorrectDimensions(
         FootprintType type, int expectedWidth, int expectedHeight)
     {
-        var footprint = Footprint.FromFootprintType(type);
+        Footprint footprint = Footprint.FromFootprintType(type);
 
         footprint.Type.Should().Be(type);
         footprint.Width.Should().Be(expectedWidth);
@@ -37,16 +37,16 @@ public class FootprintTests
     [Fact]
     public void FromFootprintType_WithAllValidTypes_ShouldReturnUniqueFootprints()
     {
-        var allTypes = new[]
-        {
+        FootprintType[] allTypes =
+        [
             FootprintType.Footprint4x4, FootprintType.Footprint5x4, FootprintType.Footprint5x5,
             FootprintType.Footprint6x5, FootprintType.Footprint6x6, FootprintType.Footprint8x5,
             FootprintType.Footprint8x6, FootprintType.Footprint8x8, FootprintType.Footprint10x5,
             FootprintType.Footprint10x6, FootprintType.Footprint10x8, FootprintType.Footprint10x10,
             FootprintType.Footprint12x10, FootprintType.Footprint12x12
-        };
+        ];
 
-        var footprints = allTypes.Select(Footprint.FromFootprintType).ToList();
+        List<Footprint> footprints = [.. allTypes.Select(Footprint.FromFootprintType)];
 
         footprints.Should().HaveCount(allTypes.Length);
         footprints.Should().OnlyHaveUniqueItems();
@@ -55,7 +55,7 @@ public class FootprintTests
     [Fact]
     public void Footprint_PixelCount_ShouldEqualWidthTimesHeight()
     {
-        var footprint = Footprint.FromFootprintType(FootprintType.Footprint10x8);
+        Footprint footprint = Footprint.FromFootprintType(FootprintType.Footprint10x8);
 
         footprint.PixelCount.Should().Be(footprint.Width * footprint.Height);
         footprint.PixelCount.Should().Be(80);
@@ -64,8 +64,8 @@ public class FootprintTests
     [Fact]
     public void Footprint_ValueEquality_WithSameType_ShouldBeEqual()
     {
-        var footprint1 = Footprint.FromFootprintType(FootprintType.Footprint6x6);
-        var footprint2 = Footprint.FromFootprintType(FootprintType.Footprint6x6);
+        Footprint footprint1 = Footprint.FromFootprintType(FootprintType.Footprint6x6);
+        Footprint footprint2 = Footprint.FromFootprintType(FootprintType.Footprint6x6);
 
         footprint1.Should().Be(footprint2);
         (footprint1 == footprint2).Should().BeTrue();
@@ -74,8 +74,8 @@ public class FootprintTests
     [Fact]
     public void Footprint_ValueEquality_WithDifferentType_ShouldNotBeEqual()
     {
-        var footprint1 = Footprint.FromFootprintType(FootprintType.Footprint6x6);
-        var footprint2 = Footprint.FromFootprintType(FootprintType.Footprint8x8);
+        Footprint footprint1 = Footprint.FromFootprintType(FootprintType.Footprint6x6);
+        Footprint footprint2 = Footprint.FromFootprintType(FootprintType.Footprint8x8);
 
         footprint1.Should().NotBe(footprint2);
         (footprint1 != footprint2).Should().BeTrue();

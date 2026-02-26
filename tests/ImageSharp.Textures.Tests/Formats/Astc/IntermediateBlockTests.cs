@@ -8,6 +8,7 @@ using SixLabors.ImageSharp.Textures.Astc.TexelBlock;
 
 namespace SixLabors.ImageSharp.Textures.Tests.Formats.Astc;
 
+#nullable enable
 public class IntermediateBlockTests
 {
     private static readonly UInt128 ErrorBlock = UInt128.Zero;
@@ -15,9 +16,9 @@ public class IntermediateBlockTests
     [Fact]
     public void UnpackVoidExtent_WithErrorBlock_ShouldReturnNull()
     {
-        var errorBlock = PhysicalBlock.Create(ErrorBlock);
+        PhysicalBlock errorBlock = PhysicalBlock.Create(ErrorBlock);
 
-        var result = IntermediateBlock.UnpackVoidExtent(errorBlock);
+        IntermediateBlock.VoidExtentData? result = IntermediateBlock.UnpackVoidExtent(errorBlock);
 
         result.Should().BeNull();
     }
@@ -25,9 +26,9 @@ public class IntermediateBlockTests
     [Fact]
     public void UnpackIntermediateBlock_WithErrorBlock_ShouldReturnNull()
     {
-        var errorBlock = PhysicalBlock.Create(ErrorBlock);
+        PhysicalBlock errorBlock = PhysicalBlock.Create(ErrorBlock);
 
-        var result = IntermediateBlock.UnpackIntermediateBlock(errorBlock);
+        IntermediateBlock.IntermediateBlockData? result = IntermediateBlock.UnpackIntermediateBlock(errorBlock);
 
         result.Should().BeNull();
     }
@@ -35,14 +36,14 @@ public class IntermediateBlockTests
     [Fact]
     public void EndpointRangeForBlock_WithoutWeights_ShouldReturnNegativeOne()
     {
-        var data = new IntermediateBlock.IntermediateBlockData
+        IntermediateBlock.IntermediateBlockData data = new()
         {
             WeightRange = 15,
             WeightGridX = 6,
             WeightGridY = 6
         };
 
-        var result = IntermediateBlock.EndpointRangeForBlock(data);
+        int result = IntermediateBlock.EndpointRangeForBlock(data);
 
         result.Should().Be(-1);
     }
@@ -50,14 +51,14 @@ public class IntermediateBlockTests
     [Fact]
     public void Pack_WithIncorrectNumberOfWeights_ShouldReturnError()
     {
-        var data = new IntermediateBlock.IntermediateBlockData
+        IntermediateBlock.IntermediateBlockData data = new()
         {
             WeightRange = 15,
             WeightGridX = 6,
             WeightGridY = 6
         };
 
-        var (error, _) = IntermediateBlockPacker.Pack(data);
+        (string? error, UInt128 _) = IntermediateBlockPacker.Pack(data);
 
         error.Should().NotBeNull();
         error.Should().Contain("Incorrect number of weights");
@@ -66,7 +67,7 @@ public class IntermediateBlockTests
     [Fact]
     public void EndpointRangeForBlock_WithNotEnoughBits_ShouldReturnNegativeTwo()
     {
-        var data = new IntermediateBlock.IntermediateBlockData
+        IntermediateBlock.IntermediateBlockData data = new()
         {
             WeightRange = 1,
             PartitionId = 0,
@@ -78,7 +79,7 @@ public class IntermediateBlockTests
         data.Endpoints[1] = new() { Mode = ColorEndpointMode.LdrRgbDirect };
         data.Endpoints[2] = new() { Mode = ColorEndpointMode.LdrRgbDirect };
 
-        var result = IntermediateBlock.EndpointRangeForBlock(data);
+        int result = IntermediateBlock.EndpointRangeForBlock(data);
 
         result.Should().Be(-2);
     }
@@ -86,7 +87,7 @@ public class IntermediateBlockTests
     [Fact]
     public void Pack_WithNotEnoughBitsForColors_ShouldReturnError()
     {
-        var data = new IntermediateBlock.IntermediateBlockData
+        IntermediateBlock.IntermediateBlockData data = new()
         {
             WeightRange = 1,
             PartitionId = 0,
@@ -99,7 +100,7 @@ public class IntermediateBlockTests
         data.Endpoints[1] = new() { Mode = ColorEndpointMode.LdrRgbDirect };
         data.Endpoints[2] = new() { Mode = ColorEndpointMode.LdrRgbDirect };
 
-        var (error, _) = IntermediateBlockPacker.Pack(data);
+        (string? error, UInt128 _) = IntermediateBlockPacker.Pack(data);
 
         error.Should().NotBeNull();
         error.Should().Contain("illegal color range");
@@ -108,7 +109,7 @@ public class IntermediateBlockTests
     [Fact]
     public void EndpointRangeForBlock_WithIncreasingWeightGrid_ShouldDecreaseColorRange()
     {
-        var data = new IntermediateBlock.IntermediateBlockData
+        IntermediateBlock.IntermediateBlockData data = new()
         {
             WeightRange = 2,
             DualPlaneChannel = null,
@@ -117,15 +118,19 @@ public class IntermediateBlockTests
         data.Endpoints[0] = new() { Mode = ColorEndpointMode.LdrRgbDirect };
         data.Endpoints[1] = new() { Mode = ColorEndpointMode.LdrRgbDirect };
 
-        var weightParams = new List<(int w, int h)>();
+        List<(int W, int H)> weightParams = [];
         for (int y = 2; y < 8; ++y)
+        {
             for (int x = 2; x < 8; ++x)
+            {
                 weightParams.Add((x, y));
+            }
+        }
 
-        weightParams.Sort((a, b) => (a.w * a.h).CompareTo(b.w * b.h));
+        weightParams.Sort((a, b) => (a.W * a.H).CompareTo(b.W * b.H));
 
         int lastColorRange = byte.MaxValue;
-        foreach (var (w, h) in weightParams)
+        foreach ((int w, int h) in weightParams)
         {
             data.WeightGridX = w;
             data.WeightGridY = h;
@@ -141,13 +146,13 @@ public class IntermediateBlockTests
     [Fact]
     public void EndpointRange_WithStandardBlock_ShouldBe255()
     {
-        var block = PhysicalBlock.Create((UInt128)0x0000000001FE000173UL);
+        PhysicalBlock block = PhysicalBlock.Create((UInt128)0x0000000001FE000173UL);
 
-        var data = IntermediateBlock.UnpackIntermediateBlock(block);
+        IntermediateBlock.IntermediateBlockData? data = IntermediateBlock.UnpackIntermediateBlock(block);
 
         block.GetColorValuesRange().Should().Be(255);
         data.Should().NotBeNull();
-        var ib = data!.Value;
+        IntermediateBlock.IntermediateBlockData ib = data!.Value;
         ib.EndpointCount.Should().Be(1);
         ib.Endpoints[0].Mode.Should().Be(ColorEndpointMode.LdrLumaDirect);
         ib.Endpoints[0].Colors[0].Should().Be(byte.MinValue);
@@ -159,12 +164,12 @@ public class IntermediateBlockTests
     [Fact]
     public void UnpackIntermediateBlock_WithStandardBlock_ShouldReturnCorrectData()
     {
-        var block = PhysicalBlock.Create((UInt128)0x0000000001FE000173UL);
+        PhysicalBlock block = PhysicalBlock.Create((UInt128)0x0000000001FE000173UL);
 
-        var result = IntermediateBlock.UnpackIntermediateBlock(block);
+        IntermediateBlock.IntermediateBlockData? result = IntermediateBlock.UnpackIntermediateBlock(block);
 
         result.Should().NotBeNull();
-        var data = result!.Value;
+        IntermediateBlock.IntermediateBlockData data = result!.Value;
 
         data.WeightGridX.Should().Be(6);
         data.WeightGridY.Should().Be(5);
@@ -176,7 +181,7 @@ public class IntermediateBlockTests
         data.Weights.AsSpan(0, data.WeightsCount).ToArray().Should().AllBeEquivalentTo(0);
 
         data.EndpointCount.Should().Be(1);
-        var endpoint = data.Endpoints[0];
+        IntermediateBlock.IntermediateEndpointData endpoint = data.Endpoints[0];
         endpoint.Mode.Should().Be(ColorEndpointMode.LdrLumaDirect);
         endpoint.ColorCount.Should().Be(2);
         endpoint.Colors[0].Should().Be(byte.MinValue);
@@ -186,7 +191,7 @@ public class IntermediateBlockTests
     [Fact]
     public void Pack_WithStandardBlockData_ShouldProduceExpectedBits()
     {
-        var data = new IntermediateBlock.IntermediateBlockData
+        IntermediateBlock.IntermediateBlockData data = new()
         {
             WeightGridX = 6,
             WeightGridY = 5,
@@ -196,7 +201,7 @@ public class IntermediateBlockTests
             Weights = new int[30]
         };
 
-        var endpoint = new IntermediateBlock.IntermediateEndpointData
+        IntermediateBlock.IntermediateEndpointData endpoint = new()
         {
             Mode = ColorEndpointMode.LdrLumaDirect,
             ColorCount = 2
@@ -206,7 +211,7 @@ public class IntermediateBlockTests
         data.Endpoints[0] = endpoint;
         data.EndpointCount = 1;
 
-        var (error, packed) = IntermediateBlockPacker.Pack(data);
+        (string? error, UInt128 packed) = IntermediateBlockPacker.Pack(data);
 
         error.Should().BeNull();
         packed.Should().Be((UInt128)0x0000000001FE000173UL);
@@ -215,12 +220,12 @@ public class IntermediateBlockTests
     [Fact]
     public void Pack_WithLargeGapInBits_ShouldPreserveOriginalEncoding()
     {
-        var original = new UInt128(0xBEDEAD0000000000UL, 0x0000000001FE032EUL);
-        var block = PhysicalBlock.Create(original);
-        var data = IntermediateBlock.UnpackIntermediateBlock(block);
+        UInt128 original = new(0xBEDEAD0000000000UL, 0x0000000001FE032EUL);
+        PhysicalBlock block = PhysicalBlock.Create(original);
+        IntermediateBlock.IntermediateBlockData? data = IntermediateBlock.UnpackIntermediateBlock(block);
 
         data.Should().NotBeNull();
-        var intermediate = data!.Value;
+        IntermediateBlock.IntermediateBlockData intermediate = data!.Value;
 
         // Check unpacked values
         intermediate.WeightGridX.Should().Be(2);
@@ -235,7 +240,7 @@ public class IntermediateBlockTests
         intermediate.Endpoints[0].Colors[1].Should().Be(0);
 
         // Repack
-        var (error, repacked) = IntermediateBlockPacker.Pack(intermediate);
+        (string? error, UInt128 repacked) = IntermediateBlockPacker.Pack(intermediate);
 
         error.Should().BeNull();
         repacked.Should().Be(original);
@@ -244,12 +249,12 @@ public class IntermediateBlockTests
     [Fact]
     public void UnpackVoidExtent_WithAllOnesPattern_ShouldReturnZeroColors()
     {
-        var block = PhysicalBlock.Create((UInt128)0xFFFFFFFFFFFFFDFCUL);
+        PhysicalBlock block = PhysicalBlock.Create((UInt128)0xFFFFFFFFFFFFFDFCUL);
 
-        var result = IntermediateBlock.UnpackVoidExtent(block);
+        IntermediateBlock.VoidExtentData? result = IntermediateBlock.UnpackVoidExtent(block);
 
         result.Should().NotBeNull();
-        var data = result!.Value;
+        IntermediateBlock.VoidExtentData data = result!.Value;
 
         data.R.Should().Be(0);
         data.G.Should().Be(0);
@@ -262,13 +267,13 @@ public class IntermediateBlockTests
     [Fact]
     public void UnpackVoidExtent_WithColorData_ShouldReturnCorrectColors()
     {
-        var blockBits = new UInt128(0xdeadbeefdeadbeefUL, 0xFFF8003FFE000DFCUL);
-        var block = PhysicalBlock.Create(blockBits);
+        UInt128 blockBits = new(0xdeadbeefdeadbeefUL, 0xFFF8003FFE000DFCUL);
+        PhysicalBlock block = PhysicalBlock.Create(blockBits);
 
-        var result = IntermediateBlock.UnpackVoidExtent(block);
+        IntermediateBlock.VoidExtentData? result = IntermediateBlock.UnpackVoidExtent(block);
 
         result.Should().NotBeNull();
-        var data = result!.Value;
+        IntermediateBlock.VoidExtentData data = result!.Value;
 
         data.R.Should().Be(0xbeef);
         data.G.Should().Be(0xdead);
@@ -284,7 +289,7 @@ public class IntermediateBlockTests
     [Fact]
     public void Pack_WithZeroColorVoidExtent_ShouldProduceAllOnesPattern()
     {
-        var data = new IntermediateBlock.VoidExtentData
+        IntermediateBlock.VoidExtentData data = new()
         {
             R = 0,
             G = 0,
@@ -294,9 +299,11 @@ public class IntermediateBlockTests
         };
 
         for (int i = 0; i < 4; ++i)
-            data.Coords[i] = (ushort)((1 << 13) - 1);
+        {
+            data.Coords[i] = (1 << 13) - 1;
+        }
 
-        var (error, packed) = IntermediateBlockPacker.Pack(data);
+        (string? error, UInt128 packed) = IntermediateBlockPacker.Pack(data);
 
         error.Should().BeNull();
         packed.Should().Be((UInt128)0xFFFFFFFFFFFFFDFCUL);
@@ -305,16 +312,16 @@ public class IntermediateBlockTests
     [Fact]
     public void Pack_WithColorVoidExtent_ShouldProduceExpectedBits()
     {
-        var data = new IntermediateBlock.VoidExtentData
+        IntermediateBlock.VoidExtentData data = new()
         {
             R = 0xbeef,
             G = 0xdead,
             B = 0xbeef,
             A = 0xdead,
-            Coords = new ushort[4] { 0, 8191, 0, 8191 }
+            Coords = [0, 8191, 0, 8191]
         };
 
-        var (error, packed) = IntermediateBlockPacker.Pack(data);
+        (string? error, UInt128 packed) = IntermediateBlockPacker.Pack(data);
 
         error.Should().BeNull();
         packed.Should().Be(new UInt128(0xdeadbeefdeadbeefUL, 0xFFF8003FFE000DFCUL));
@@ -325,15 +332,15 @@ public class IntermediateBlockTests
     [InlineData(0x3300c30700cb01c5UL, 0x0573907b8c0f6879UL)]
     public void PackUnpack_WithSameCEM_ShouldRoundTripCorrectly(ulong high, ulong low)
     {
-        var original = new UInt128(high, low);
-        var block = PhysicalBlock.Create(original);
+        UInt128 original = new(high, low);
+        PhysicalBlock block = PhysicalBlock.Create(original);
 
-        var unpacked = IntermediateBlock.UnpackIntermediateBlock(block);
+        IntermediateBlock.IntermediateBlockData? unpacked = IntermediateBlock.UnpackIntermediateBlock(block);
 
         unpacked.Should().NotBeNull();
-        var ib = unpacked!.Value;
+        IntermediateBlock.IntermediateBlockData ib = unpacked!.Value;
 
-        var (error, repacked) = IntermediateBlockPacker.Pack(ib);
+        (string? error, UInt128 repacked) = IntermediateBlockPacker.Pack(ib);
 
         error.Should().BeNull();
         repacked.Should().Be(original);
@@ -353,48 +360,48 @@ public class IntermediateBlockTests
     {
         const int astcDim = 8;
         int imgDim = checkeredDim * astcDim;
-        var astcData = LoadASTCFile(imageName);
+        byte[] astcData = LoadASTCFile(imageName);
         int numBlocks = (imgDim / astcDim) * (imgDim / astcDim);
 
         (astcData.Length % PhysicalBlock.SizeInBytes).Should().Be(0);
 
         for (int i = 0; i < numBlocks; ++i)
         {
-            var slice = new ReadOnlySpan<byte>(astcData, i * PhysicalBlock.SizeInBytes, PhysicalBlock.SizeInBytes);
-            var blockBits = new UInt128(
+            ReadOnlySpan<byte> slice = new(astcData, i * PhysicalBlock.SizeInBytes, PhysicalBlock.SizeInBytes);
+            UInt128 blockBits = new(
                 BitConverter.ToUInt64(slice.Slice(8, 8)),
-                BitConverter.ToUInt64(slice.Slice(0, 8)));
-            var originalBlock = PhysicalBlock.Create(blockBits);
+                BitConverter.ToUInt64(slice[..8]));
+            PhysicalBlock originalBlock = PhysicalBlock.Create(blockBits);
 
             // Unpack and repack
             UInt128 repacked;
             if (originalBlock.IsVoidExtent)
             {
-                var voidData = IntermediateBlock.UnpackVoidExtent(originalBlock);
+                IntermediateBlock.VoidExtentData? voidData = IntermediateBlock.UnpackVoidExtent(originalBlock);
                 voidData.Should().NotBeNull();
 
-                var (error, packed) = IntermediateBlockPacker.Pack(voidData!.Value);
+                (string? error, UInt128 packed) = IntermediateBlockPacker.Pack(voidData!.Value);
                 error.Should().BeNull();
                 repacked = packed;
             }
             else
             {
-                var intermediateData = IntermediateBlock.UnpackIntermediateBlock(originalBlock);
+                IntermediateBlock.IntermediateBlockData? intermediateData = IntermediateBlock.UnpackIntermediateBlock(originalBlock);
                 intermediateData.Should().NotBeNull();
-                var ibData = intermediateData!.Value;
+                IntermediateBlock.IntermediateBlockData ibData = intermediateData!.Value;
 
                 // Verify endpoint range was set
                 ibData.EndpointRange.Should().Be(originalBlock.GetColorValuesRange());
 
                 // Clear endpoint range before repacking (to test calculation)
                 ibData.EndpointRange = null;
-                var (error, packed) = IntermediateBlockPacker.Pack(ibData);
+                (string? error, UInt128 packed) = IntermediateBlockPacker.Pack(ibData);
                 error.Should().BeNull();
                 repacked = packed;
             }
 
             // Verify repacked block
-            var repackedBlock = PhysicalBlock.Create(repacked);
+            PhysicalBlock repackedBlock = PhysicalBlock.Create(repacked);
             VerifyBlockPropertiesMatch(repackedBlock, originalBlock);
         }
     }
@@ -404,13 +411,13 @@ public class IntermediateBlockTests
         repacked.IsIllegalEncoding.Should().BeFalse();
 
         // Verify color bits match
-        var repackedColorBitCount = repacked.GetColorBitCount().Value;
-        var repackedColorMask = UInt128Extensions.OnesMask(repackedColorBitCount);
-        var repackedColorBits = (repacked.BlockBits >> repacked.GetColorStartBit().Value) & repackedColorMask;
+        int repackedColorBitCount = repacked.GetColorBitCount().Value;
+        UInt128 repackedColorMask = UInt128Extensions.OnesMask(repackedColorBitCount);
+        UInt128 repackedColorBits = (repacked.BlockBits >> repacked.GetColorStartBit().Value) & repackedColorMask;
 
-        var originalColorBitCount = original.GetColorBitCount().Value;
-        var originalColorMask = UInt128Extensions.OnesMask(originalColorBitCount);
-        var originalColorBits = (original.BlockBits >> original.GetColorStartBit().Value) & originalColorMask;
+        int originalColorBitCount = original.GetColorBitCount().Value;
+        UInt128 originalColorMask = UInt128Extensions.OnesMask(originalColorBitCount);
+        UInt128 originalColorBits = (original.BlockBits >> original.GetColorStartBit().Value) & originalColorMask;
 
         repackedColorMask.Should().Be(originalColorMask);
         repackedColorBits.Should().Be(originalColorBits);
@@ -438,7 +445,7 @@ public class IntermediateBlockTests
         repacked.GetColorValuesRange().Should().Be(original.GetColorValuesRange());
 
         // Verify endpoint modes for all partitions
-        var numParts = repacked.GetPartitionsCount().GetValueOrDefault(0);
+        int numParts = repacked.GetPartitionsCount().GetValueOrDefault(0);
         for (int j = 0; j < numParts; ++j)
         {
             repacked.GetEndpointMode(j).Should().Be(original.GetEndpointMode(j));
@@ -447,10 +454,10 @@ public class IntermediateBlockTests
 
     private static byte[] LoadASTCFile(string basename)
     {
-        var filename = TestFile.GetInputFileFullPath(Path.Combine(TestImages.Astc.InputFolder, basename + ".astc"));
+        string filename = TestFile.GetInputFileFullPath(Path.Combine(TestImages.Astc.InputFolder, basename + ".astc"));
         File.Exists(filename).Should().BeTrue($"Testdata missing: {filename}");
-        var data = File.ReadAllBytes(filename);
+        byte[] data = File.ReadAllBytes(filename);
         data.Length.Should().BeGreaterThanOrEqualTo(16, "ASTC file too small");
-        return data.Skip(16).ToArray();
+        return [.. data.Skip(16)];
     }
 }

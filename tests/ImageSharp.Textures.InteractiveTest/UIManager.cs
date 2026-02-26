@@ -6,97 +6,96 @@ using ImGuiNET;
 using SixLabors.ImageSharp.Textures.InteractiveTest.UI;
 using SixLabors.ImageSharp.Textures.InteractiveTest.UI.WizardPages;
 
-namespace SixLabors.ImageSharp.Textures.InteractiveTest
+namespace SixLabors.ImageSharp.Textures.InteractiveTest;
+
+public class UiManager
 {
-    public class UiManager
+    private readonly MenuBar menuBar;
+    private readonly TitleBar titleBar;
+    private readonly Wizard wizard;
+    private readonly WizardPage[] wizardPages;
+
+    public UiManager()
     {
-        private readonly MenuBar menuBar;
-        private readonly TitleBar titleBar;
-        private readonly Wizard wizard;
-        private readonly WizardPage[] wizardPages;
+        this.menuBar = new MenuBar();
+        this.titleBar = new TitleBar();
 
-        public UiManager()
+        this.wizard = new Wizard();
+        this.wizardPages =
+        [
+            new Welcome(this.wizard),
+            new Preview(this.wizard)
+        ];
+        this.wizard.Pages = this.wizardPages.Length;
+
+        this.wizard.OnCancel += this.CancelButton_Action;
+        this.wizard.OnValidate += this.ValidateButton_Action;
+        this.wizard.OnPrevious += this.PreviousButton_Action;
+        this.wizard.OnNext += this.NextButton_Action;
+    }
+
+    public void Render(float width, float height)
+    {
+        uint backgroundColor = ImGui.GetColorU32(ImGuiCol.WindowBg);
+        Vector4 newBackgroundColor = ImGui.ColorConvertU32ToFloat4(backgroundColor);
+        newBackgroundColor.W = 1.0f;
+        ImGui.PushStyleColor(ImGuiCol.WindowBg, newBackgroundColor);
+
+        this.menuBar.Render(out float menuHeight);
+        if (this.menuBar.DemoMode)
         {
-            this.menuBar = new MenuBar();
-            this.titleBar = new TitleBar();
-
-            this.wizard = new Wizard();
-            this.wizardPages = new WizardPage[]
-            {
-                new Welcome(this.wizard),
-                new Preview(this.wizard)
-            };
-            this.wizard.Pages = this.wizardPages.Length;
-
-            this.wizard.OnCancel += this.CancelButton_Action;
-            this.wizard.OnValidate += this.ValidateButton_Action;
-            this.wizard.OnPrevious += this.PreviousButton_Action;
-            this.wizard.OnNext += this.NextButton_Action;
+            ImGui.ShowDemoWindow();
+            return;
         }
 
-        public void Render(float width, float height)
+        ImGui.PushStyleVar(ImGuiStyleVar.WindowRounding, 0);
+        if (ImGui.Begin(string.Empty, ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoNav | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse))
         {
-            uint backgroundColor = ImGui.GetColorU32(ImGuiCol.WindowBg);
-            Vector4 newBackgroundColor = ImGui.ColorConvertU32ToFloat4(backgroundColor);
-            newBackgroundColor.W = 1.0f;
-            ImGui.PushStyleColor(ImGuiCol.WindowBg, newBackgroundColor);
+            ImGui.SetWindowPos(new Vector2(0.0f, menuHeight));
+            ImGui.SetWindowSize(new Vector2(width, height - menuHeight));
 
-            this.menuBar.Render(out float menuHeight);
-            if (this.menuBar.DemoMode)
-            {
-                ImGui.ShowDemoWindow();
-                return;
-            }
+            this.titleBar.Render(this.wizard.CurrentPageIndex);
 
-            ImGui.PushStyleVar(ImGuiStyleVar.WindowRounding, 0);
-            if (ImGui.Begin(string.Empty, ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoNav | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse))
-            {
-                ImGui.SetWindowPos(new Vector2(0.0f, menuHeight));
-                ImGui.SetWindowSize(new Vector2(width, height - menuHeight));
+            this.wizard.CancelButton.Visible = false;
+            this.wizard.CancelButton.Enabled = true;
+            this.wizard.CancelButton.Title = "Cancel";
 
-                this.titleBar.Render(this.wizard.CurrentPageIndex);
+            this.wizard.ValidateButton.Visible = false;
+            this.wizard.ValidateButton.Enabled = true;
+            this.wizard.ValidateButton.Title = "Validate";
 
-                this.wizard.CancelButton.Visible = false;
-                this.wizard.CancelButton.Enabled = true;
-                this.wizard.CancelButton.Title = "Cancel";
+            this.wizard.PreviousButton.Visible = true;
+            this.wizard.PreviousButton.Enabled = this.wizard.CurrentPageIndex > 0;
+            this.wizard.PreviousButton.Title = "Previous";
 
-                this.wizard.ValidateButton.Visible = false;
-                this.wizard.ValidateButton.Enabled = true;
-                this.wizard.ValidateButton.Title = "Validate";
+            this.wizard.NextButton.Visible = true;
+            this.wizard.NextButton.Enabled = this.wizard.CurrentPageIndex < (this.wizard.Pages - 1);
+            this.wizard.NextButton.Title = "Next";
+            this.wizard.Render(this.RenderPage_Action);
 
-                this.wizard.PreviousButton.Visible = true;
-                this.wizard.PreviousButton.Enabled = this.wizard.CurrentPageIndex > 0;
-                this.wizard.PreviousButton.Title = "Previous";
-
-                this.wizard.NextButton.Visible = true;
-                this.wizard.NextButton.Enabled = this.wizard.CurrentPageIndex < (this.wizard.Pages - 1);
-                this.wizard.NextButton.Title = "Next";
-                this.wizard.Render(this.RenderPage_Action);
-
-                ImGui.End();
-            }
-
-            ImGui.PopStyleVar();
-            ImGui.PopStyleColor();
+            ImGui.End();
         }
 
-        private void RenderPage_Action() => this.wizardPages[this.wizard.CurrentPageIndex].Render();
+        ImGui.PopStyleVar();
+        ImGui.PopStyleColor();
+    }
 
-        private void CancelButton_Action() => this.wizardPages[this.wizard.CurrentPageIndex].Cancel();
+    private void RenderPage_Action() => this.wizardPages[this.wizard.CurrentPageIndex].Render();
 
-        private void ValidateButton_Action() => this.wizardPages[this.wizard.CurrentPageIndex].Validate();
+    private void CancelButton_Action() => this.wizardPages[this.wizard.CurrentPageIndex].Cancel();
 
-        private bool PreviousButton_Action(int newPageIndex) => this.wizardPages[this.wizard.CurrentPageIndex].Previous(this.wizardPages[newPageIndex]);
+    private void ValidateButton_Action() => this.wizardPages[this.wizard.CurrentPageIndex].Validate();
 
-        private bool NextButton_Action(int newPageIndex)
+    private bool PreviousButton_Action(int newPageIndex) => this.wizardPages[this.wizard.CurrentPageIndex].Previous(this.wizardPages[newPageIndex]);
+
+    private bool NextButton_Action(int newPageIndex)
+    {
+        bool value = this.wizardPages[this.wizard.CurrentPageIndex].Next(this.wizardPages[newPageIndex]);
+        if (value)
         {
-            bool value = this.wizardPages[this.wizard.CurrentPageIndex].Next(this.wizardPages[newPageIndex]);
-            if (value)
-            {
-                this.wizardPages[newPageIndex].Initialize();
-            }
-
-            return value;
+            this.wizardPages[newPageIndex].Initialize();
         }
+
+        return value;
     }
 }

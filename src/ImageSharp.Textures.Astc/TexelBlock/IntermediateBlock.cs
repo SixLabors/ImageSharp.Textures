@@ -24,7 +24,7 @@ internal static class IntermediateBlock
             return null;
         }
 
-        var info = BlockInfo.Decode(physicalBlock.BlockBits);
+        BlockInfo info = BlockInfo.Decode(physicalBlock.BlockBits);
         if (!info.IsValid || info.IsVoidExtent)
         {
             return null;
@@ -43,14 +43,14 @@ internal static class IntermediateBlock
             return null;
         }
 
-        var data = default(IntermediateBlockData);
+        IntermediateBlockData data = default;
 
         // Use cached values from BlockInfo instead of PhysicalBlock getters
-        var colorBitMask = UInt128Extensions.OnesMask(info.ColorBitCount);
-        var colorBits = (bits >> info.ColorStartBit) & colorBitMask;
-        var colorBitStream = new BitStream(colorBits, 128);
+        UInt128 colorBitMask = UInt128Extensions.OnesMask(info.ColorBitCount);
+        UInt128 colorBits = (bits >> info.ColorStartBit) & colorBitMask;
+        BitStream colorBitStream = new(colorBits, 128);
 
-        var colorDecoder = BoundedIntegerSequenceDecoder.GetCached(info.ColorValuesRange);
+        BoundedIntegerSequenceDecoder colorDecoder = BoundedIntegerSequenceDecoder.GetCached(info.ColorValuesRange);
         Span<int> colors = stackalloc int[info.ColorValuesCount];
         colorDecoder.Decode(info.ColorValuesCount, ref colorBitStream, colors);
 
@@ -70,9 +70,10 @@ internal static class IntermediateBlock
         data.EndpointCount = info.PartitionCount;
         for (int i = 0; i < info.PartitionCount; ++i)
         {
-            var mode = info.GetEndpointMode(i);
+            ColorEndpointMode mode = info.GetEndpointMode(i);
             int colorCount = mode.GetColorValuesCount();
-            var ep = new IntermediateEndpointData { Mode = mode, ColorCount = colorCount };
+            IntermediateEndpointData ep = new()
+            { Mode = mode, ColorCount = colorCount };
             for (int j = 0; j < colorCount; ++j)
             {
                 ep.Colors[j] = colors[colorIndex++];
@@ -83,10 +84,10 @@ internal static class IntermediateBlock
 
         data.EndpointRange = info.ColorValuesRange;
 
-        var weightBits = UInt128Extensions.ReverseBits(bits) & UInt128Extensions.OnesMask(info.WeightBitCount);
-        var weightBitStream = new BitStream(weightBits, 128);
+        UInt128 weightBits = UInt128Extensions.ReverseBits(bits) & UInt128Extensions.OnesMask(info.WeightBitCount);
+        BitStream weightBitStream = new(weightBits, 128);
 
-        var weightDecoder = BoundedIntegerSequenceDecoder.GetCached(data.WeightRange);
+        BoundedIntegerSequenceDecoder weightDecoder = BoundedIntegerSequenceDecoder.GetCached(data.WeightRange);
         int weightsCount = data.WeightGridX * data.WeightGridY;
         if (info.IsDualPlane)
         {
@@ -143,19 +144,19 @@ internal static class IntermediateBlock
 
     public static VoidExtentData? UnpackVoidExtent(PhysicalBlock physicalBlock)
     {
-        var colorStartBit = physicalBlock.GetColorStartBit();
-        var colorBitCount = physicalBlock.GetColorBitCount();
+        int? colorStartBit = physicalBlock.GetColorStartBit();
+        int? colorBitCount = physicalBlock.GetColorBitCount();
         if (physicalBlock.IsIllegalEncoding || !physicalBlock.IsVoidExtent || colorStartBit is null || colorBitCount is null)
         {
             return null;
         }
 
-        var colorBits = (physicalBlock.BlockBits >> colorStartBit.Value) & UInt128Extensions.OnesMask(colorBitCount.Value);
+        UInt128 colorBits = (physicalBlock.BlockBits >> colorStartBit.Value) & UInt128Extensions.OnesMask(colorBitCount.Value);
 
         // We expect low 64 bits contain the 4x16-bit channels
-        var low = colorBits.Low();
+        ulong low = colorBits.Low();
 
-        var data = default(VoidExtentData);
+        VoidExtentData data = default;
 
         // Bit 9 of the block mode indicates HDR (1) vs LDR (0) void extent
         data.IsHdr = (physicalBlock.BlockBits.Low() & (1UL << 9)) != 0;
@@ -164,7 +165,7 @@ internal static class IntermediateBlock
         data.B = (ushort)((low >> 32) & 0xFFFF);
         data.A = (ushort)((low >> 48) & 0xFFFF);
 
-        var coords = physicalBlock.GetVoidExtentCoordinates();
+        int[]? coords = physicalBlock.GetVoidExtentCoordinates();
         data.Coords = new ushort[4];
         if (coords != null)
         {
@@ -175,7 +176,7 @@ internal static class IntermediateBlock
         }
         else
         {
-            ushort allOnes = (ushort)((1 << 13) - 1);
+            ushort allOnes = (1 << 13) - 1;
             for (int i = 0; i < 4; ++i)
             {
                 data.Coords[i] = allOnes;
@@ -195,7 +196,7 @@ internal static class IntermediateBlock
             return true;
         }
 
-        var first = data.Endpoints[0].Mode;
+        ColorEndpointMode first = data.Endpoints[0].Mode;
         for (int i = 1; i < data.EndpointCount; i++)
         {
             if (data.Endpoints[i].Mode != first)

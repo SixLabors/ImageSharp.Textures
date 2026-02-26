@@ -178,7 +178,7 @@ internal readonly struct PhysicalBlock
     internal static int[] DecodeVoidExtentCoordinates(UInt128 astcBits)
     {
         ulong lowBits = astcBits.Low();
-        var coords = new int[4];
+        int[] coords = new int[4];
         for (int i = 0; i < 4; ++i)
         {
             coords[i] = (int)BitOperations.GetBits(lowBits, 12 + (13 * i), 13);

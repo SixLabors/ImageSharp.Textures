@@ -2,7 +2,6 @@
 // Licensed under the Six Labors Split License.
 
 using SixLabors.ImageSharp.Textures.Astc.BiseEncoding;
-using SixLabors.ImageSharp.Textures.Astc.ColorEncoding;
 using SixLabors.ImageSharp.Textures.Astc.Core;
 using SixLabors.ImageSharp.Textures.Astc.IO;
 
@@ -38,10 +37,10 @@ internal static class IntermediateBlockPacker
             return ("Incorrect number of weights!", 0);
         }
 
-        var bitSink = new BitStream(0UL, 0);
+        BitStream bitSink = new(0UL, 0);
 
         // First we need to encode the block mode.
-        var errorMessage = PackBlockMode(data.WeightGridX, data.WeightGridY, data.WeightRange, data.DualPlaneChannel.HasValue, ref bitSink);
+        string? errorMessage = PackBlockMode(data.WeightGridX, data.WeightGridY, data.WeightRange, data.DualPlaneChannel.HasValue, ref bitSink);
         if (errorMessage != null)
         {
             return (errorMessage, 0);
@@ -58,17 +57,15 @@ internal static class IntermediateBlockPacker
             bitSink.PutBits((uint)id, 10);
         }
 
-        var (weightSink, weightBitsCount) = EncodeWeights(data);
+        (BitStream weightSink, int weightBitsCount) = EncodeWeights(data);
 
-        var (error, extraConfig) = EncodeColorEndpointModes(data, partitionCount, ref bitSink);
+        (string? error, int extraConfig) = EncodeColorEndpointModes(data, partitionCount, ref bitSink);
         if (error != null)
         {
             return (error, 0);
         }
 
-        int colorValueRange = data.EndpointRange.HasValue
-            ? data.EndpointRange.Value
-            : IntermediateBlock.EndpointRangeForBlock(data);
+        int colorValueRange = data.EndpointRange ?? IntermediateBlock.EndpointRangeForBlock(data);
         if (colorValueRange == -1)
         {
             throw new InvalidOperationException($"{nameof(colorValueRange)} must not be EndpointRangeInvalidWeightDimensions");
@@ -79,10 +76,10 @@ internal static class IntermediateBlockPacker
             return ("Intermediate block emits illegal color range", 0);
         }
 
-        var colorEncoder = new BoundedIntegerSequenceEncoder(colorValueRange);
+        BoundedIntegerSequenceEncoder colorEncoder = new(colorValueRange);
         for (int i = 0; i < data.EndpointCount; i++)
         {
-            var ep = data.Endpoints[i];
+            IntermediateBlock.IntermediateEndpointData ep = data.Endpoints[i];
             for (int j = 0; j < ep.ColorCount; j++)
             {
                 int color = ep.Colors[j];
@@ -120,21 +117,21 @@ internal static class IntermediateBlockPacker
         ArgumentOutOfRangeException.ThrowIfNotEqual(bitSink.Bits, 128u - weightBitsCount);
 
         // Flush out the bit writer
-        if (!bitSink.TryGetBits<UInt128>(128 - weightBitsCount, out var astcBits))
+        if (!bitSink.TryGetBits(128 - weightBitsCount, out UInt128 astcBits))
         {
             throw new InvalidOperationException();
         }
 
-        if (!weightSink.TryGetBits<UInt128>(weightBitsCount, out var revWeightBits))
+        if (!weightSink.TryGetBits(weightBitsCount, out UInt128 revWeightBits))
         {
             throw new InvalidOperationException();
         }
 
-        var combined = astcBits | UInt128Extensions.ReverseBits(revWeightBits);
+        UInt128 combined = astcBits | UInt128Extensions.ReverseBits(revWeightBits);
         physicalBlockBits = combined;
 
-        var block = PhysicalBlock.Create(physicalBlockBits);
-        var illegal = block.IdentifyInvalidEncodingIssues();
+        PhysicalBlock block = PhysicalBlock.Create(physicalBlockBits);
+        string? illegal = block.IdentifyInvalidEncodingIssues();
 
         return (illegal, physicalBlockBits);
     }
@@ -144,7 +141,7 @@ internal static class IntermediateBlockPacker
         // Pack void extent
         // Assemble the 128-bit value explicitly: low 64 bits = RGBA (4x16)
         // high 64 bits = 12-bit header (0xDFC) followed by four 13-bit coords.
-        ulong high64 = ((ulong)data.A << 48) | ((ulong)data.B << 32) | ((ulong)data.G << 16) | (ulong)data.R;
+        ulong high64 = ((ulong)data.A << 48) | ((ulong)data.B << 32) | ((ulong)data.G << 16) | data.R;
         ulong low64 = 0UL;
 
         // Header occupies lowest 12 bits of the high word
@@ -173,8 +170,8 @@ internal static class IntermediateBlockPacker
             // using full void extent representation
         }
 
-        var block = PhysicalBlock.Create(physicalBlockBits);
-        var illegal = block.IdentifyInvalidEncodingIssues();
+        PhysicalBlock block = PhysicalBlock.Create(physicalBlockBits);
+        string? illegal = block.IdentifyInvalidEncodingIssues();
         if (illegal is not null)
         {
             throw new InvalidOperationException($"{nameof(Pack)}(void extent) produced illegal encoding");
@@ -203,14 +200,14 @@ internal static class IntermediateBlockPacker
             index = IntermediateBlock.ValidWeightRanges.Length - 1;
         }
 
-        var encoding = validRangeEncodings[index];
+        int[] encoding = validRangeEncodings[index];
         return (null, [encoding[0], encoding[1], encoding[2]]);
     }
 
     private static string? PackBlockMode(int dimX, int dimY, int range, bool dualPlane, ref BitStream bitSink)
     {
         bool highPrec = range > 7;
-        var (maybeErr, rangeValues) = GetEncodedWeightRange(range);
+        (string? maybeErr, int[]? rangeValues) = GetEncodedWeightRange(range);
         if (maybeErr != null)
         {
             return maybeErr;
@@ -224,7 +221,7 @@ internal static class IntermediateBlockPacker
 
         for (int mode = 0; mode < BlockModeInfoTable.Length; ++mode)
         {
-            var blockMode = BlockModeInfoTable[mode];
+            BlockModeInfo blockMode = BlockModeInfoTable[mode];
             bool isValidMode = true;
             isValidMode &= blockMode.MinWeightGridDimX <= dimX;
             isValidMode &= dimX <= blockMode.MaxWeightGridDimX;
@@ -276,8 +273,8 @@ internal static class IntermediateBlockPacker
 
             if (!blockMode.RequireSinglePlaneLowPrec)
             {
-                SetBit((uint)(highPrec ? 1u : 0u), 9);
-                SetBit((uint)(dualPlane ? 1u : 0u), 10);
+                SetBit(highPrec ? 1u : 0u, 9);
+                SetBit(dualPlane ? 1u : 0u, 10);
             }
 
             if (bitSink.Bits != 0)
@@ -294,8 +291,8 @@ internal static class IntermediateBlockPacker
 
     private static (BitStream WeightSink, int WeightBitsCount) EncodeWeights(in IntermediateBlock.IntermediateBlockData data)
     {
-        var weightSink = new BitStream(0UL, 0);
-        var weightsEncoder = new BoundedIntegerSequenceEncoder(data.WeightRange);
+        BitStream weightSink = new(0UL, 0);
+        BoundedIntegerSequenceEncoder weightsEncoder = new(data.WeightRange);
         int weightCount = data.WeightsCount > 0
             ? data.WeightsCount
             : (data.Weights?.Length ?? 0);
@@ -304,7 +301,7 @@ internal static class IntermediateBlockPacker
             throw new InvalidOperationException($"{nameof(data.Weights)} is null in {nameof(EncodeWeights)}");
         }
 
-        for (var i = 0; i < weightCount; i++)
+        for (int i = 0; i < weightCount; i++)
         {
             weightsEncoder.AddValue(data.Weights[i]);
         }
@@ -351,7 +348,7 @@ internal static class IntermediateBlockPacker
                 return ("Endpoint modes are invalid", 0);
             }
 
-            var cemEncoder = new BitStream(0UL, 0);
+            BitStream cemEncoder = new(0UL, 0);
             cemEncoder.PutBits((uint)(minClass + 1), 2);
 
             for (int i = 0; i < data.EndpointCount; i++)

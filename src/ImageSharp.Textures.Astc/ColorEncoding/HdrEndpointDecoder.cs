@@ -33,19 +33,16 @@ internal static class HdrEndpointDecoder
     /// Called from the fused decode path where BISE decode + batch unquantize
     /// have already been performed.
     /// </summary>
-    public static (RgbaHdrColor Low, RgbaHdrColor High) DecodeHdrModeUnquantized(ReadOnlySpan<int> value, ColorEndpointMode mode)
+    public static (RgbaHdrColor Low, RgbaHdrColor High) DecodeHdrModeUnquantized(ReadOnlySpan<int> value, ColorEndpointMode mode) => mode switch
     {
-        return mode switch
-        {
-            ColorEndpointMode.HdrLumaLargeRange => UnpackHdrLuminanceLargeRangeCore(value[0], value[1]),
-            ColorEndpointMode.HdrLumaSmallRange => UnpackHdrLuminanceSmallRangeCore(value[0], value[1]),
-            ColorEndpointMode.HdrRgbBaseScale => UnpackHdrRgbBaseScaleCore(value[0], value[1], value[2], value[3]),
-            ColorEndpointMode.HdrRgbDirect => UnpackHdrRgbDirectCore(value[0], value[1], value[2], value[3], value[4], value[5]),
-            ColorEndpointMode.HdrRgbDirectLdrAlpha => UnpackHdrRgbDirectLdrAlphaCore(value),
-            ColorEndpointMode.HdrRgbDirectHdrAlpha => UnpackHdrRgbDirectHdrAlphaCore(value),
-            _ => throw new InvalidOperationException($"Mode {mode} is not an HDR mode")
-        };
-    }
+        ColorEndpointMode.HdrLumaLargeRange => UnpackHdrLuminanceLargeRangeCore(value[0], value[1]),
+        ColorEndpointMode.HdrLumaSmallRange => UnpackHdrLuminanceSmallRangeCore(value[0], value[1]),
+        ColorEndpointMode.HdrRgbBaseScale => UnpackHdrRgbBaseScaleCore(value[0], value[1], value[2], value[3]),
+        ColorEndpointMode.HdrRgbDirect => UnpackHdrRgbDirectCore(value[0], value[1], value[2], value[3], value[4], value[5]),
+        ColorEndpointMode.HdrRgbDirectLdrAlpha => UnpackHdrRgbDirectLdrAlphaCore(value),
+        ColorEndpointMode.HdrRgbDirectHdrAlpha => UnpackHdrRgbDirectHdrAlphaCore(value),
+        _ => throw new InvalidOperationException($"Mode {mode} is not an HDR mode")
+    };
 
     /// <summary>
     /// Performs an unsigned left shift of a signed value, avoiding undefined behavior
@@ -67,8 +64,8 @@ internal static class HdrEndpointDecoder
             y1 = (v0 << 4) - 8;
         }
 
-        var low = new RgbaHdrColor((ushort)(y0 << 4), (ushort)(y0 << 4), (ushort)(y0 << 4), 0x7800);
-        var high = new RgbaHdrColor((ushort)(y1 << 4), (ushort)(y1 << 4), (ushort)(y1 << 4), 0x7800);
+        RgbaHdrColor low = new((ushort)(y0 << 4), (ushort)(y0 << 4), (ushort)(y0 << 4), 0x7800);
+        RgbaHdrColor high = new((ushort)(y1 << 4), (ushort)(y1 << 4), (ushort)(y1 << 4), 0x7800);
         return (low, high);
     }
 
@@ -92,8 +89,8 @@ internal static class HdrEndpointDecoder
             y1 = 0xFFF;
         }
 
-        var low = new RgbaHdrColor((ushort)(y0 << 4), (ushort)(y0 << 4), (ushort)(y0 << 4), 0x7800);
-        var high = new RgbaHdrColor((ushort)(y1 << 4), (ushort)(y1 << 4), (ushort)(y1 << 4), 0x7800);
+        RgbaHdrColor low = new((ushort)(y0 << 4), (ushort)(y0 << 4), (ushort)(y0 << 4), 0x7800);
+        RgbaHdrColor high = new((ushort)(y1 << 4), (ushort)(y1 << 4), (ushort)(y1 << 4), 0x7800);
         return (low, high);
     }
 
@@ -247,8 +244,8 @@ internal static class HdrEndpointDecoder
         green0 = Math.Max(green0, 0);
         blue0 = Math.Max(blue0, 0);
 
-        var low = new RgbaHdrColor((ushort)(red0 << 4), (ushort)(green0 << 4), (ushort)(blue0 << 4), 0x7800);
-        var high = new RgbaHdrColor((ushort)(red << 4), (ushort)(green << 4), (ushort)(blue << 4), 0x7800);
+        RgbaHdrColor low = new((ushort)(red0 << 4), (ushort)(green0 << 4), (ushort)(blue0 << 4), 0x7800);
+        RgbaHdrColor high = new((ushort)(red << 4), (ushort)(green << 4), (ushort)(blue << 4), 0x7800);
         return (low, high);
     }
 
@@ -260,12 +257,12 @@ internal static class HdrEndpointDecoder
         // Special case: majorComponent == 3 (direct passthrough)
         if (majorComponent == 3)
         {
-            var low = new RgbaHdrColor(
+            RgbaHdrColor low = new(
                 (ushort)(v0 << 8),
                 (ushort)(v2 << 8),
                 (ushort)((v4 & 0x7F) << 9),
                 0x7800);
-            var high = new RgbaHdrColor(
+            RgbaHdrColor high = new(
                 (ushort)(v1 << 8),
                 (ushort)(v3 << 8),
                 (ushort)((v5 & 0x7F) << 9),
@@ -404,31 +401,31 @@ internal static class HdrEndpointDecoder
             _ => (red0, green0, blue0, red1, green1, blue1)
         };
 
-        var lowResult = new RgbaHdrColor((ushort)(red0 << 4), (ushort)(green0 << 4), (ushort)(blue0 << 4), 0x7800);
-        var highResult = new RgbaHdrColor((ushort)(red1 << 4), (ushort)(green1 << 4), (ushort)(blue1 << 4), 0x7800);
+        RgbaHdrColor lowResult = new((ushort)(red0 << 4), (ushort)(green0 << 4), (ushort)(blue0 << 4), 0x7800);
+        RgbaHdrColor highResult = new((ushort)(red1 << 4), (ushort)(green1 << 4), (ushort)(blue1 << 4), 0x7800);
         return (lowResult, highResult);
     }
 
     private static (RgbaHdrColor Low, RgbaHdrColor High) UnpackHdrRgbDirectLdrAlphaCore(ReadOnlySpan<int> unquantizedValues)
     {
-        var (rgbLow, rgbHigh) = UnpackHdrRgbDirectCore(unquantizedValues[0], unquantizedValues[1], unquantizedValues[2], unquantizedValues[3], unquantizedValues[4], unquantizedValues[5]);
+        (RgbaHdrColor rgbLow, RgbaHdrColor rgbHigh) = UnpackHdrRgbDirectCore(unquantizedValues[0], unquantizedValues[1], unquantizedValues[2], unquantizedValues[3], unquantizedValues[4], unquantizedValues[5]);
 
         ushort alpha0 = (ushort)(unquantizedValues[6] * 257);
         ushort alpha1 = (ushort)(unquantizedValues[7] * 257);
 
-        var low = new RgbaHdrColor(rgbLow.R, rgbLow.G, rgbLow.B, alpha0);
-        var high = new RgbaHdrColor(rgbHigh.R, rgbHigh.G, rgbHigh.B, alpha1);
+        RgbaHdrColor low = new(rgbLow.R, rgbLow.G, rgbLow.B, alpha0);
+        RgbaHdrColor high = new(rgbHigh.R, rgbHigh.G, rgbHigh.B, alpha1);
         return (low, high);
     }
 
     private static (RgbaHdrColor Low, RgbaHdrColor High) UnpackHdrRgbDirectHdrAlphaCore(ReadOnlySpan<int> unquantizedValues)
     {
-        var (rgbLow, rgbHigh) = UnpackHdrRgbDirectCore(unquantizedValues[0], unquantizedValues[1], unquantizedValues[2], unquantizedValues[3], unquantizedValues[4], unquantizedValues[5]);
+        (RgbaHdrColor rgbLow, RgbaHdrColor rgbHigh) = UnpackHdrRgbDirectCore(unquantizedValues[0], unquantizedValues[1], unquantizedValues[2], unquantizedValues[3], unquantizedValues[4], unquantizedValues[5]);
 
-        var (alpha0, alpha1) = UnpackHdrAlpha(unquantizedValues[6], unquantizedValues[7]);
+        (ushort alpha0, ushort alpha1) = UnpackHdrAlpha(unquantizedValues[6], unquantizedValues[7]);
 
-        var low = new RgbaHdrColor(rgbLow.R, rgbLow.G, rgbLow.B, alpha0);
-        var high = new RgbaHdrColor(rgbHigh.R, rgbHigh.G, rgbHigh.B, alpha1);
+        RgbaHdrColor low = new(rgbLow.R, rgbLow.G, rgbLow.B, alpha0);
+        RgbaHdrColor high = new(rgbHigh.R, rgbHigh.G, rgbHigh.B, alpha1);
         return (low, high);
     }
 
@@ -452,7 +449,7 @@ internal static class HdrEndpointDecoder
         else
         {
             // Complex mode: base + sign-extended offset
-            v6 |= v7 << (selector + 1) & 0x780;
+            v6 |= (v7 << (selector + 1)) & 0x780;
             v7 &= 0x3F >> selector;
             v7 ^= 32 >> selector;
             v7 -= 32 >> selector;

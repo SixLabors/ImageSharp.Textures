@@ -27,7 +27,7 @@ internal sealed class TritQuantizationMap : QuantizationMap
     internal static int GetUnquantizedValue(int trit, int bits, int range)
     {
         int a = (bits & 1) != 0 ? 0x1FF : 0;
-        var (b, c) = range switch
+        (int b, int c) = range switch
         {
             5 => (0, 204),
             11 => ((bits >> 1) & 0x1) is var x ? ((x << 1) | (x << 2) | (x << 4) | (x << 8), 93) : default,
@@ -56,7 +56,7 @@ internal sealed class TritQuantizationMap : QuantizationMap
         }
 
         int a = (bits & 1) != 0 ? 0x7F : 0;
-        var (b, c) = range switch
+        (int b, int c) = range switch
         {
             5 => (0, 50),
             11 => ((bits >> 1) & 1) is var x

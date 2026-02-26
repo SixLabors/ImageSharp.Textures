@@ -16,7 +16,7 @@ internal sealed class BoundedIntegerSequenceDecoder : BoundedIntegerSequenceCode
 
     public static BoundedIntegerSequenceDecoder GetCached(int range)
     {
-        var decoder = Cache[range];
+        BoundedIntegerSequenceDecoder? decoder = Cache[range];
         if (decoder is null)
         {
             decoder = new BoundedIntegerSequenceDecoder(range);
@@ -89,7 +89,7 @@ internal sealed class BoundedIntegerSequenceDecoder : BoundedIntegerSequenceCode
     /// <exception cref="InvalidOperationException">Thrown when there are not enough bits to decode.</exception>
     public int[] Decode(int valuesCount, ref BitStream bitSource)
     {
-        var result = new int[valuesCount];
+        int[] result = new int[valuesCount];
         this.Decode(valuesCount, ref bitSource, result);
         return result;
     }

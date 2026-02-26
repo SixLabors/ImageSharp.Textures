@@ -73,14 +73,14 @@ public class ReferenceDecoderTests
     [InlineData("rgb_12x12")]
     public void DecompressLdr_WithImage_ShouldMatch(string basename)
     {
-        var filePath = Path.Combine("TestData", "Input", basename + ".astc");
-        var bytes = File.ReadAllBytes(filePath);
-        var astcFile = AstcFile.FromMemory(bytes);
-        var (blockX, blockY) = ReferenceDecoder.ToBlockDimensions(astcFile.Footprint.Type);
+        string filePath = Path.Combine("TestData", "Input", basename + ".astc");
+        byte[] bytes = File.ReadAllBytes(filePath);
+        AstcFile astcFile = AstcFile.FromMemory(bytes);
+        (int blockX, int blockY) = ReferenceDecoder.ToBlockDimensions(astcFile.Footprint.Type);
 
-        var expected = ReferenceDecoder.DecompressLdr(
+        byte[] expected = ReferenceDecoder.DecompressLdr(
             astcFile.Blocks, astcFile.Width, astcFile.Height, blockX, blockY);
-        var actual = AstcDecoder.DecompressImage(
+        Span<byte> actual = AstcDecoder.DecompressImage(
             astcFile.Blocks, astcFile.Width, astcFile.Height, astcFile.Footprint);
 
         CompareRgba8(actual, expected, astcFile.Width, astcFile.Height, basename);
@@ -90,25 +90,25 @@ public class ReferenceDecoderTests
     [MemberData(nameof(AllFootprintTypes))]
     public void DecompressLdr_SolidColor_ShouldMatch(FootprintType footprintType)
     {
-        var (blockX, blockY) = ReferenceDecoder.ToBlockDimensions(footprintType);
+        (int blockX, int blockY) = ReferenceDecoder.ToBlockDimensions(footprintType);
         int width = blockX;
         int height = blockY;
 
         // Single solid color block
-        var pixels = new byte[width * height * RgbaColor.BytesPerPixel];
+        byte[] pixels = new byte[width * height * RgbaColor.BytesPerPixel];
         for (int index = 0; index < width * height; index++)
         {
-            pixels[index * 4 + 0] = 128; // R
-            pixels[index * 4 + 1] = 64; // G
-            pixels[index * 4 + 2] = 200; // B
-            pixels[index * 4 + 3] = 255; // A
+            pixels[(index * 4) + 0] = 128; // R
+            pixels[(index * 4) + 1] = 64; // G
+            pixels[(index * 4) + 2] = 200; // B
+            pixels[(index * 4) + 3] = 255; // A
         }
 
-        var compressed = ReferenceDecoder.CompressLdr(pixels, width, height, blockX, blockY);
-        var footprint = Footprint.FromFootprintType(footprintType);
+        byte[] compressed = ReferenceDecoder.CompressLdr(pixels, width, height, blockX, blockY);
+        Footprint footprint = Footprint.FromFootprintType(footprintType);
 
-        var expected = ReferenceDecoder.DecompressLdr(compressed, width, height, blockX, blockY);
-        var actual = AstcDecoder.DecompressImage(compressed, width, height, footprint);
+        byte[] expected = ReferenceDecoder.DecompressLdr(compressed, width, height, blockX, blockY);
+        Span<byte> actual = AstcDecoder.DecompressImage(compressed, width, height, footprint);
 
         CompareRgba8(actual, expected, width, height, $"SolidColor_{footprintType}");
     }
@@ -117,30 +117,30 @@ public class ReferenceDecoderTests
     [MemberData(nameof(AllFootprintTypes))]
     public void DecompressLdr_Gradient_ShouldMatch(FootprintType footprintType)
     {
-        var (blockX, blockY) = ReferenceDecoder.ToBlockDimensions(footprintType);
+        (int blockX, int blockY) = ReferenceDecoder.ToBlockDimensions(footprintType);
 
         // 2×2 blocks for gradient
         int width = blockX * 2;
         int height = blockY * 2;
 
-        var pixels = new byte[width * height * RgbaColor.BytesPerPixel];
+        byte[] pixels = new byte[width * height * RgbaColor.BytesPerPixel];
         for (int row = 0; row < height; row++)
         {
             for (int col = 0; col < width; col++)
             {
-                int idx = (row * width + col) * 4;
+                int idx = ((row * width) + col) * 4;
                 pixels[idx + 0] = (byte)(255 * col / (width - 1)); // R: left-to-right
                 pixels[idx + 1] = (byte)(255 * row / (height - 1)); // G: top-to-bottom
-                pixels[idx + 2] = (byte)(255 - 255 * col / (width - 1)); // B: inverse of R
+                pixels[idx + 2] = (byte)(255 - (255 * col / (width - 1))); // B: inverse of R
                 pixels[idx + 3] = 255;
             }
         }
 
-        var compressed = ReferenceDecoder.CompressLdr(pixels, width, height, blockX, blockY);
-        var footprint = Footprint.FromFootprintType(footprintType);
+        byte[] compressed = ReferenceDecoder.CompressLdr(pixels, width, height, blockX, blockY);
+        Footprint footprint = Footprint.FromFootprintType(footprintType);
 
-        var expected = ReferenceDecoder.DecompressLdr(compressed, width, height, blockX, blockY);
-        var actual = AstcDecoder.DecompressImage(compressed, width, height, footprint);
+        byte[] expected = ReferenceDecoder.DecompressLdr(compressed, width, height, blockX, blockY);
+        Span<byte> actual = AstcDecoder.DecompressImage(compressed, width, height, footprint);
 
         CompareRgba8(actual, expected, width, height, $"Gradient_{footprintType}");
     }
@@ -149,25 +149,27 @@ public class ReferenceDecoderTests
     [MemberData(nameof(AllFootprintTypes))]
     public void DecompressLdr_RandomNoise_ShouldMatch(FootprintType footprintType)
     {
-        var (blockX, blockY) = ReferenceDecoder.ToBlockDimensions(footprintType);
+        (int blockX, int blockY) = ReferenceDecoder.ToBlockDimensions(footprintType);
 
         // 2×2 blocks
         int width = blockX * 2;
         int height = blockY * 2;
 
-        var rng = new Random(42); // Fixed seed for reproducibility
-        var pixels = new byte[width * height * RgbaColor.BytesPerPixel];
+        Random rng = new(42); // Fixed seed for reproducibility
+        byte[] pixels = new byte[width * height * RgbaColor.BytesPerPixel];
         rng.NextBytes(pixels);
 
         // Force alpha to 255 so compression doesn't introduce alpha-related variance
         for (int index = 3; index < pixels.Length; index += RgbaColor.BytesPerPixel)
+        {
             pixels[index] = byte.MaxValue;
+        }
 
-        var compressed = ReferenceDecoder.CompressLdr(pixels, width, height, blockX, blockY);
-        var footprint = Footprint.FromFootprintType(footprintType);
+        byte[] compressed = ReferenceDecoder.CompressLdr(pixels, width, height, blockX, blockY);
+        Footprint footprint = Footprint.FromFootprintType(footprintType);
 
-        var expected = ReferenceDecoder.DecompressLdr(compressed, width, height, blockX, blockY);
-        var actual = AstcDecoder.DecompressImage(compressed, width, height, footprint);
+        byte[] expected = ReferenceDecoder.DecompressLdr(compressed, width, height, blockX, blockY);
+        Span<byte> actual = AstcDecoder.DecompressImage(compressed, width, height, footprint);
 
         CompareRgba8(actual, expected, width, height, $"RandomNoise_{footprintType}");
     }
@@ -176,23 +178,25 @@ public class ReferenceDecoderTests
     [MemberData(nameof(AllFootprintTypes))]
     public void DecompressLdr_NonBlockAlignedDimensions_ShouldMatch(FootprintType footprintType)
     {
-        var (blockX, blockY) = ReferenceDecoder.ToBlockDimensions(footprintType);
+        (int blockX, int blockY) = ReferenceDecoder.ToBlockDimensions(footprintType);
 
         // Non-block-aligned dimensions: use dimensions that don't evenly divide by block size
-        int width = blockX + blockX / 2 + 1; // e.g. for 4x4: 7, for 8x8: 13
-        int height = blockY + blockY / 2 + 1;
+        int width = blockX + (blockX / 2) + 1; // e.g. for 4x4: 7, for 8x8: 13
+        int height = blockY + (blockY / 2) + 1;
 
-        var rng = new Random(123);
-        var pixels = new byte[width * height * RgbaColor.BytesPerPixel];
+        Random rng = new(123);
+        byte[] pixels = new byte[width * height * RgbaColor.BytesPerPixel];
         rng.NextBytes(pixels);
         for (int index = 3; index < pixels.Length; index += RgbaColor.BytesPerPixel)
+        {
             pixels[index] = byte.MaxValue;
+        }
 
-        var compressed = ReferenceDecoder.CompressLdr(pixels, width, height, blockX, blockY);
-        var footprint = Footprint.FromFootprintType(footprintType);
+        byte[] compressed = ReferenceDecoder.CompressLdr(pixels, width, height, blockX, blockY);
+        Footprint footprint = Footprint.FromFootprintType(footprintType);
 
-        var expected = ReferenceDecoder.DecompressLdr(compressed, width, height, blockX, blockY);
-        var actual = AstcDecoder.DecompressImage(compressed, width, height, footprint);
+        byte[] expected = ReferenceDecoder.DecompressLdr(compressed, width, height, blockX, blockY);
+        Span<byte> actual = AstcDecoder.DecompressImage(compressed, width, height, footprint);
 
         CompareRgba8(actual, expected, width, height, $"NonAligned_{footprintType}");
     }
@@ -209,18 +213,18 @@ public class ReferenceDecoderTests
         // Bits [80..95]  = G (UNORM16)
         // Bits [96..111] = B (UNORM16)
         // Bits [112..127]= A (UNORM16)
-        var block = new byte[16];
+        byte[] block = new byte[16];
         ulong low = 0xFFFFFFFFFFFFFDFC;
-        ulong high = (0xFFFFUL << 48) | ((ulong)0xC000 << 32) | (0x4000UL << 16) | 0x8000;
+        ulong high = (0xFFFFUL << 48) | (0xC000UL << 32) | (0x4000UL << 16) | 0x8000;
         BitConverter.TryWriteBytes(block.AsSpan(0, 8), low);
         BitConverter.TryWriteBytes(block.AsSpan(8, 8), high);
 
         const int blockX = 4;
         const int blockY = 4;
-        var footprint = Footprint.FromFootprintType(FootprintType.Footprint4x4);
+        Footprint footprint = Footprint.FromFootprintType(FootprintType.Footprint4x4);
 
-        var expected = ReferenceDecoder.DecompressLdr(block, blockX, blockY, blockX, blockY);
-        var actual = AstcDecoder.DecompressImage(block, blockX, blockY, footprint);
+        byte[] expected = ReferenceDecoder.DecompressLdr(block, blockX, blockY, blockX, blockY);
+        Span<byte> actual = AstcDecoder.DecompressImage(block, blockX, blockY, footprint);
 
         CompareRgba8(actual, expected, blockX, blockY, "VoidExtent");
     }
@@ -262,7 +266,7 @@ public class ReferenceDecoderTests
             Assert.Fail(
                 $"[{label}] {mismatches} channel mismatches exceed tolerance ±{Ldr8BitTolerance}. " +
                 $"Worst: pixel ({pixelX},{pixelY}) channel {channelName}, " +
-                $"actual={actual[worstPixel * 4 + worstChannel]} vs expected={expected[worstPixel * 4 + worstChannel]} (diff={worstDiff})");
+                $"actual={actual[(worstPixel * 4) + worstChannel]} vs expected={expected[(worstPixel * 4) + worstChannel]} (diff={worstDiff})");
         }
     }
 }

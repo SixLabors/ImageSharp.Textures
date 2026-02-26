@@ -181,7 +181,7 @@ public abstract partial class Texture
         }
 
         // We want to be able to load images from things like HttpContext.Request.Body
-        using var memoryStream = new MemoryStream();
+        using MemoryStream memoryStream = new MemoryStream();
         stream.CopyTo(memoryStream);
         memoryStream.Position = 0;
 

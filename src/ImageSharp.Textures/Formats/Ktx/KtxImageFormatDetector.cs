@@ -1,30 +1,27 @@
 // Copyright (c) Six Labors.
 // Licensed under the Six Labors Split License.
 
-using System;
+namespace SixLabors.ImageSharp.Textures.Formats.Ktx;
 
-namespace SixLabors.ImageSharp.Textures.Formats.Ktx
+/// <summary>
+/// Detects ktx file headers.
+/// </summary>
+public sealed class KtxImageFormatDetector : ITextureFormatDetector
 {
-    /// <summary>
-    /// Detects ktx file headers.
-    /// </summary>
-    public sealed class KtxImageFormatDetector : ITextureFormatDetector
+    /// <inheritdoc/>
+    public int HeaderSize => 12;
+
+    /// <inheritdoc/>
+    public ITextureFormat? DetectFormat(ReadOnlySpan<byte> header) => this.IsSupportedFileFormat(header) ? KtxFormat.Instance : null;
+
+    private bool IsSupportedFileFormat(ReadOnlySpan<byte> header)
     {
-        /// <inheritdoc/>
-        public int HeaderSize => 12;
-
-        /// <inheritdoc/>
-        public ITextureFormat? DetectFormat(ReadOnlySpan<byte> header) => this.IsSupportedFileFormat(header) ? KtxFormat.Instance : null;
-
-        private bool IsSupportedFileFormat(ReadOnlySpan<byte> header)
+        if (header.Length >= this.HeaderSize)
         {
-            if (header.Length >= this.HeaderSize)
-            {
-                ReadOnlySpan<byte> magicBytes = header.Slice(0, 12);
-                return magicBytes.SequenceEqual(KtxConstants.MagicBytes);
-            }
-
-            return false;
+            ReadOnlySpan<byte> magicBytes = header[..12];
+            return magicBytes.SequenceEqual(KtxConstants.MagicBytes);
         }
+
+        return false;
     }
 }

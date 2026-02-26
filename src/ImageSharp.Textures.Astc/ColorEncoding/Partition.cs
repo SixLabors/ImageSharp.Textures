@@ -41,11 +41,11 @@ internal sealed class Partition
     {
         ArgumentOutOfRangeException.ThrowIfNotEqual(a.Footprint, b.Footprint);
 
-        const int MaxNumSubsets = 4;
+        const int maxNumSubsets = 4;
         int width = a.Footprint.Width;
         int height = a.Footprint.Height;
 
-        var pairCounts = new List<(int A, int B, int Count)>();
+        List<(int A, int B, int Count)> pairCounts = [];
         for (int y = 0; y < 4; ++y)
         {
             for (int x = 0; x < 4; ++x)
@@ -65,15 +65,15 @@ internal sealed class Partition
             }
         }
 
-        var sorted = pairCounts.OrderByDescending(p => p.Count).ToList();
-        var assigned = new bool[MaxNumSubsets, MaxNumSubsets];
+        List<(int A, int B, int Count)> sorted = [.. pairCounts.OrderByDescending(p => p.Count)];
+        bool[,] assigned = new bool[maxNumSubsets, maxNumSubsets];
         int pixelsMatched = 0;
-        foreach (var pairCount in sorted)
+        foreach ((int pairA, int pairB, int count) in sorted)
         {
             bool isAssigned = false;
-            for (int i = 0; i < MaxNumSubsets; ++i)
+            for (int i = 0; i < maxNumSubsets; ++i)
             {
-                if (assigned[pairCount.A, i] || assigned[i, pairCount.B])
+                if (assigned[pairA, i] || assigned[i, pairB])
                 {
                     isAssigned = true;
                     break;
@@ -82,8 +82,8 @@ internal sealed class Partition
 
             if (!isAssigned)
             {
-                assigned[pairCount.A, pairCount.B] = true;
-                pixelsMatched += pairCount.Count;
+                assigned[pairA, pairB] = true;
+                pixelsMatched += count;
             }
         }
 
@@ -93,16 +93,16 @@ internal sealed class Partition
     // Basic GetASTCPartition implementation using selection function from C++
     public static Partition GetASTCPartition(Footprint footprint, int partitionCount, int partitionId)
     {
-        var key = (footprint, partitionCount, partitionId);
-        if (PartitionCache.TryGetValue(key, out var cached))
+        (Footprint Footprint, int PartitionCount, int PartitionId) key = (footprint, partitionCount, partitionId);
+        if (PartitionCache.TryGetValue(key, out Partition? cached))
         {
             return cached;
         }
 
-        var part = new Partition(footprint, partitionCount, partitionId);
+        Partition part = new(footprint, partitionCount, partitionId);
         int w = footprint.Width;
         int h = footprint.Height;
-        var assignment = new int[w * h];
+        int[] assignment = new int[w * h];
         int idx = 0;
         for (int y = 0; y < h; ++y)
         {
@@ -123,7 +123,7 @@ internal sealed class Partition
     public static Partition FindClosestASTCPartition(Partition candidate)
     {
         // Search a few partitions and pick the one with minimal PartitionMetric
-        var best = GetASTCPartition(candidate.Footprint, Math.Max(1, candidate.PartitionCount), 0);
+        Partition best = GetASTCPartition(candidate.Footprint, Math.Max(1, candidate.PartitionCount), 0);
         int bestDist = PartitionMetric(best, candidate);
         return best;
     }

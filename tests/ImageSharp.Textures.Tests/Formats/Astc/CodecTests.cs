@@ -12,15 +12,16 @@ using SixLabors.ImageSharp.Textures.Tests.TestUtilities.ImageComparison;
 
 namespace SixLabors.ImageSharp.Textures.Tests.Formats.Astc;
 
+#nullable enable
 public class CodecTests
 {
     [Fact]
     public void ASTCDecompressToRGBA_WithZeroWidth_ShouldReturnEmpty()
     {
-        var data = new byte[256];
+        byte[] data = new byte[256];
         const int height = 16;
 
-        var result = AstcDecoder.DecompressImage(data, 0, height, FootprintType.Footprint4x4);
+        Span<byte> result = AstcDecoder.DecompressImage(data, 0, height, FootprintType.Footprint4x4);
 
         result.ToArray().Should().BeEmpty();
     }
@@ -28,10 +29,10 @@ public class CodecTests
     [Fact]
     public void ASTCDecompressToRGBA_WithZeroHeight_ShouldReturnEmpty()
     {
-        var data = new byte[256];
+        byte[] data = new byte[256];
         const int width = 16;
 
-        var result = AstcDecoder.DecompressImage(data, width, 0, FootprintType.Footprint4x4);
+        Span<byte> result = AstcDecoder.DecompressImage(data, width, 0, FootprintType.Footprint4x4);
 
         result.ToArray().Should().BeEmpty();
     }
@@ -39,12 +40,12 @@ public class CodecTests
     [Fact]
     public void ASTCDecompressToRGBA_WithDataSizeNotMultipleOfBlockSize_ShouldReturnEmpty()
     {
-        var data = new byte[256];
+        byte[] data = new byte[256];
         const int width = 16;
         const int height = 16;
-        var invalidData = data.AsSpan(0, data.Length - 1).ToArray();
+        byte[] invalidData = data.AsSpan(0, data.Length - 1).ToArray();
 
-        var result = AstcDecoder.DecompressImage(invalidData, width, height, FootprintType.Footprint4x4);
+        Span<byte> result = AstcDecoder.DecompressImage(invalidData, width, height, FootprintType.Footprint4x4);
 
         result.ToArray().Should().BeEmpty();
     }
@@ -52,12 +53,12 @@ public class CodecTests
     [Fact]
     public void ASTCDecompressToRGBA_WithMismatchedBlockCount_ShouldReturnEmpty()
     {
-        var data = new byte[256];
+        byte[] data = new byte[256];
         const int width = 16;
         const int height = 16;
-        var mismatchedData = data.AsSpan(0, data.Length - PhysicalBlock.SizeInBytes).ToArray();
+        byte[] mismatchedData = data.AsSpan(0, data.Length - PhysicalBlock.SizeInBytes).ToArray();
 
-        var result = AstcDecoder.DecompressImage(mismatchedData, width, height, FootprintType.Footprint4x4);
+        Span<byte> result = AstcDecoder.DecompressImage(mismatchedData, width, height, FootprintType.Footprint4x4);
 
         result.ToArray().Should().BeEmpty();
     }
@@ -73,8 +74,8 @@ public class CodecTests
         int width,
         int height)
     {
-        var astcData = TestFile.Create(Path.Combine(TestImages.Astc.InputFolder, imageName + ".astc")).Bytes[16..];
-        var footprint = Footprint.FromFootprintType(footprintType);
+        byte[] astcData = TestFile.Create(Path.Combine(TestImages.Astc.InputFolder, imageName + ".astc")).Bytes[16..];
+        Footprint footprint = Footprint.FromFootprintType(footprintType);
         int blockWidth = footprint.Width;
         int blockHeight = footprint.Height;
         int blocksWide = (width + blockWidth - 1) / blockWidth;
@@ -88,10 +89,10 @@ public class CodecTests
         // Verify all blocks can be unpacked
         for (int i = 0; i < astcData.Length; i += PhysicalBlock.SizeInBytes)
         {
-            var block = astcData.AsSpan(i, PhysicalBlock.SizeInBytes).ToArray();
-            var bits = new UInt128(BitConverter.ToUInt64(block, 8), BitConverter.ToUInt64(block, 0));
-            var info = BlockInfo.Decode(bits);
-            var logicalBlock = LogicalBlock.UnpackLogicalBlock(footprint, bits, in info);
+            byte[] block = astcData.AsSpan(i, PhysicalBlock.SizeInBytes).ToArray();
+            UInt128 bits = new(BitConverter.ToUInt64(block, 8), BitConverter.ToUInt64(block, 0));
+            BlockInfo info = BlockInfo.Decode(bits);
+            LogicalBlock? logicalBlock = LogicalBlock.UnpackLogicalBlock(footprint, bits, in info);
 
             logicalBlock.Should().NotBeNull("all blocks should unpack successfully");
         }

@@ -1,36 +1,35 @@
 // Copyright (c) Six Labors.
 // Licensed under the Six Labors Split License.
 
-namespace SixLabors.ImageSharp.Textures.Formats.Dds.Emums
+namespace SixLabors.ImageSharp.Textures.Formats.Dds.Emums;
+
+/// <summary>
+/// Identifies the type of resource being used.
+/// </summary>
+internal enum D3d10ResourceDimension : uint
 {
     /// <summary>
-    /// Identifies the type of resource being used.
+    /// Resource is of unknown type.
     /// </summary>
-    internal enum D3d10ResourceDimension : uint
-    {
-        /// <summary>
-        /// Resource is of unknown type.
-        /// </summary>
-        Unknown = 0,
+    Unknown = 0,
 
-        /// <summary>
-        /// Resource is a buffer.
-        /// </summary>
-        Buffer = 1,
+    /// <summary>
+    /// Resource is a buffer.
+    /// </summary>
+    Buffer = 1,
 
-        /// <summary>
-        /// Resource is a 1D Texture.
-        /// </summary>
-        Texture1D = 2,
+    /// <summary>
+    /// Resource is a 1D Texture.
+    /// </summary>
+    Texture1D = 2,
 
-        /// <summary>
-        /// Resource is a 2D Texture.
-        /// </summary>
-        Texture2D = 3,
+    /// <summary>
+    /// Resource is a 2D Texture.
+    /// </summary>
+    Texture2D = 3,
 
-        /// <summary>
-        /// Resource is a 3D Texture.
-        /// </summary>
-        Texture3D = 4
-    }
+    /// <summary>
+    /// Resource is a 3D Texture.
+    /// </summary>
+    Texture3D = 4
 }

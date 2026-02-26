@@ -41,15 +41,15 @@ public class ReferenceDecoderHdrTests
     [InlineData("ldr-tile")]
     public void DecompressHdr_WithHdrImage_ShouldMatch(string basename)
     {
-        var filePath = Path.Combine("TestData", "HDR", basename + ".astc");
+        string filePath = Path.Combine("TestData", "HDR", basename + ".astc");
 
-        var bytes = File.ReadAllBytes(filePath);
-        var astcFile = AstcFile.FromMemory(bytes);
-        var (blockX, blockY) = ReferenceDecoder.ToBlockDimensions(astcFile.Footprint.Type);
+        byte[] bytes = File.ReadAllBytes(filePath);
+        AstcFile astcFile = AstcFile.FromMemory(bytes);
+        (int blockX, int blockY) = ReferenceDecoder.ToBlockDimensions(astcFile.Footprint.Type);
 
-        var expected = ReferenceDecoder.DecompressHdr(
+        Half[] expected = ReferenceDecoder.DecompressHdr(
             astcFile.Blocks, astcFile.Width, astcFile.Height, blockX, blockY);
-        var actual = AstcDecoder.DecompressHdrImage(
+        Span<float> actual = AstcDecoder.DecompressHdrImage(
             astcFile.Blocks, astcFile.Width, astcFile.Height, astcFile.Footprint);
 
         CompareF16(actual, expected, astcFile.Width, astcFile.Height, basename);
@@ -62,14 +62,14 @@ public class ReferenceDecoderHdrTests
     [InlineData("atlas_small_8x8")]
     public void DecompressHdr_WithLdrImage_ShouldMatch(string basename)
     {
-        var filePath = Path.Combine("TestData", "Input", basename + ".astc");
-        var bytes = File.ReadAllBytes(filePath);
-        var astcFile = AstcFile.FromMemory(bytes);
-        var (blockX, blockY) = ReferenceDecoder.ToBlockDimensions(astcFile.Footprint.Type);
+        string filePath = Path.Combine("TestData", "Input", basename + ".astc");
+        byte[] bytes = File.ReadAllBytes(filePath);
+        AstcFile astcFile = AstcFile.FromMemory(bytes);
+        (int blockX, int blockY) = ReferenceDecoder.ToBlockDimensions(astcFile.Footprint.Type);
 
-        var expected = ReferenceDecoder.DecompressHdr(
+        Half[] expected = ReferenceDecoder.DecompressHdr(
             astcFile.Blocks, astcFile.Width, astcFile.Height, blockX, blockY);
-        var actual = AstcDecoder.DecompressHdrImage(
+        Span<float> actual = AstcDecoder.DecompressHdrImage(
             astcFile.Blocks, astcFile.Width, astcFile.Height, astcFile.Footprint);
 
         CompareF16(actual, expected, astcFile.Width, astcFile.Height, basename);
@@ -79,25 +79,25 @@ public class ReferenceDecoderHdrTests
     [MemberData(nameof(AllFootprintTypes))]
     public void DecompressHdr_SolidColor_ShouldMatch(FootprintType footprintType)
     {
-        var (blockX, blockY) = ReferenceDecoder.ToBlockDimensions(footprintType);
+        (int blockX, int blockY) = ReferenceDecoder.ToBlockDimensions(footprintType);
         int width = blockX;
         int height = blockY;
 
         // Single block: R=G=B=2.0, A=1.0 (above LDR range)
-        var pixels = new Half[width * height * 4];
+        Half[] pixels = new Half[width * height * 4];
         for (int index = 0; index < width * height; index++)
         {
-            pixels[index * 4 + 0] = (Half)2.0f;
-            pixels[index * 4 + 1] = (Half)2.0f;
-            pixels[index * 4 + 2] = (Half)2.0f;
-            pixels[index * 4 + 3] = (Half)1.0f;
+            pixels[(index * 4) + 0] = (Half)2.0f;
+            pixels[(index * 4) + 1] = (Half)2.0f;
+            pixels[(index * 4) + 2] = (Half)2.0f;
+            pixels[(index * 4) + 3] = (Half)1.0f;
         }
 
-        var compressed = ReferenceDecoder.CompressHdr(pixels, width, height, blockX, blockY);
-        var footprint = Footprint.FromFootprintType(footprintType);
+        byte[] compressed = ReferenceDecoder.CompressHdr(pixels, width, height, blockX, blockY);
+        Footprint footprint = Footprint.FromFootprintType(footprintType);
 
-        var expected = ReferenceDecoder.DecompressHdr(compressed, width, height, blockX, blockY);
-        var actual = AstcDecoder.DecompressHdrImage(compressed, width, height, footprint);
+        Half[] expected = ReferenceDecoder.DecompressHdr(compressed, width, height, blockX, blockY);
+        Span<float> actual = AstcDecoder.DecompressHdrImage(compressed, width, height, footprint);
 
         CompareF16(actual, expected, width, height, $"BrightSolid_{footprintType}");
     }
@@ -106,20 +106,20 @@ public class ReferenceDecoderHdrTests
     [MemberData(nameof(AllFootprintTypes))]
     public void DecompressHdr_Gradient_ShouldMatch(FootprintType footprintType)
     {
-        var (blockX, blockY) = ReferenceDecoder.ToBlockDimensions(footprintType);
+        (int blockX, int blockY) = ReferenceDecoder.ToBlockDimensions(footprintType);
 
         // 2×2 blocks for HDR gradient
         int width = blockX * 2;
         int height = blockY * 2;
 
         // Gradient from 0.0 to 4.0
-        var pixels = new Half[width * height * 4];
+        Half[] pixels = new Half[width * height * 4];
         for (int row = 0; row < height; row++)
         {
             for (int col = 0; col < width; col++)
             {
-                int idx = (row * width + col) * 4;
-                float fraction = (float)(row * width + col) / (width * height - 1);
+                int idx = ((row * width) + col) * 4;
+                float fraction = (float)((row * width) + col) / ((width * height) - 1);
                 float value = fraction * 4.0f;
                 pixels[idx + 0] = (Half)value;
                 pixels[idx + 1] = (Half)value;
@@ -128,11 +128,11 @@ public class ReferenceDecoderHdrTests
             }
         }
 
-        var compressed = ReferenceDecoder.CompressHdr(pixels, width, height, blockX, blockY);
-        var footprint = Footprint.FromFootprintType(footprintType);
+        byte[] compressed = ReferenceDecoder.CompressHdr(pixels, width, height, blockX, blockY);
+        Footprint footprint = Footprint.FromFootprintType(footprintType);
 
-        var expected = ReferenceDecoder.DecompressHdr(compressed, width, height, blockX, blockY);
-        var actual = AstcDecoder.DecompressHdrImage(compressed, width, height, footprint);
+        Half[] expected = ReferenceDecoder.DecompressHdr(compressed, width, height, blockX, blockY);
+        Span<float> actual = AstcDecoder.DecompressHdrImage(compressed, width, height, footprint);
 
         CompareF16(actual, expected, width, height, $"HdrGradient_{footprintType}");
     }
@@ -143,19 +143,19 @@ public class ReferenceDecoderHdrTests
         " encoded with LDR modes and others with HDR modes, the encoder optimizes each block independently.")]
     public void DecompressHdr_MixedLdrHdr_ShouldMatch(FootprintType footprintType)
     {
-        var (blockX, blockY) = ReferenceDecoder.ToBlockDimensions(footprintType);
+        (int blockX, int blockY) = ReferenceDecoder.ToBlockDimensions(footprintType);
 
         // 2×2 blocks
         int width = blockX * 2;
         int height = blockY * 2;
         int halfWidth = width / 2;
 
-        var pixels = new Half[width * height * 4];
+        Half[] pixels = new Half[width * height * 4];
         for (int row = 0; row < height; row++)
         {
             for (int col = 0; col < width; col++)
             {
-                int idx = (row * width + col) * 4;
+                int idx = ((row * width) + col) * 4;
                 if (col < halfWidth)
                 {
                     // LDR left half: values in 0.0-1.0
@@ -168,20 +168,20 @@ public class ReferenceDecoderHdrTests
                 {
                     // HDR right half: values above 1.0
                     float fraction = (float)row / (height - 1);
-                    pixels[idx + 0] = (Half)(1.0f + fraction * 3.0f);
-                    pixels[idx + 1] = (Half)(0.5f + fraction * 2.0f);
-                    pixels[idx + 2] = (Half)(0.2f + fraction * 1.5f);
+                    pixels[idx + 0] = (Half)(1.0f + (fraction * 3.0f));
+                    pixels[idx + 1] = (Half)(0.5f + (fraction * 2.0f));
+                    pixels[idx + 2] = (Half)(0.2f + (fraction * 1.5f));
                 }
 
                 pixels[idx + 3] = (Half)1.0f;
             }
         }
 
-        var compressed = ReferenceDecoder.CompressHdr(pixels, width, height, blockX, blockY);
-        var footprint = Footprint.FromFootprintType(footprintType);
+        byte[] compressed = ReferenceDecoder.CompressHdr(pixels, width, height, blockX, blockY);
+        Footprint footprint = Footprint.FromFootprintType(footprintType);
 
-        var expected = ReferenceDecoder.DecompressHdr(compressed, width, height, blockX, blockY);
-        var actual = AstcDecoder.DecompressHdrImage(compressed, width, height, footprint);
+        Half[] expected = ReferenceDecoder.DecompressHdr(compressed, width, height, blockX, blockY);
+        Span<float> actual = AstcDecoder.DecompressHdrImage(compressed, width, height, footprint);
 
         CompareF16(actual, expected, width, height, $"MixedLdrHdr_{footprintType}");
     }
@@ -209,7 +209,10 @@ public class ReferenceDecoderHdrTests
 
             // Both NaN == match; one NaN == mismatch
             if (float.IsNaN(actualValue) && float.IsNaN(expectedValue))
+            {
                 continue;
+            }
+
             if (float.IsNaN(actualValue) || float.IsNaN(expectedValue))
             {
                 mismatches++;
@@ -241,8 +244,8 @@ public class ReferenceDecoderHdrTests
             Assert.Fail(
                 $"[{label}] {mismatches}/{channelCount} F16 channel mismatches. " +
                 $"Worst: pixel ({pixelX},{pixelY}) channel {channelName}, " +
-                $"actual={actual[worstPixel * 4 + worstChannel]:G5} vs " +
-                $"expected={(float)expected[worstPixel * 4 + worstChannel]:G5} " +
+                $"actual={actual[(worstPixel * 4) + worstChannel]:G5} vs " +
+                $"expected={(float)expected[(worstPixel * 4) + worstChannel]:G5} " +
                 $"(relDiff={worstRelDiff:P2}).");
         }
     }

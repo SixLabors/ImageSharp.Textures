@@ -1,27 +1,26 @@
 // Copyright (c) Six Labors.
 // Licensed under the Six Labors Split License.
 
-namespace SixLabors.ImageSharp.Textures.IO
+namespace SixLabors.ImageSharp.Textures.IO;
+
+using System.IO;
+
+/// <summary>
+/// A simple interface representing the filesystem.
+/// </summary>
+internal interface IFileSystem
 {
-    using System.IO;
+    /// <summary>
+    /// Returns a readable stream as defined by the path.
+    /// </summary>
+    /// <param name="path">Path to the file to open.</param>
+    /// <returns>A stream representing the file to open.</returns>
+    Stream OpenRead(string path);
 
     /// <summary>
-    /// A simple interface representing the filesystem.
+    /// Creates or opens a file and returns it as a writable stream as defined by the path.
     /// </summary>
-    internal interface IFileSystem
-    {
-        /// <summary>
-        /// Returns a readable stream as defined by the path.
-        /// </summary>
-        /// <param name="path">Path to the file to open.</param>
-        /// <returns>A stream representing the file to open.</returns>
-        Stream OpenRead(string path);
-
-        /// <summary>
-        /// Creates or opens a file and returns it as a writable stream as defined by the path.
-        /// </summary>
-        /// <param name="path">Path to the file to open.</param>
-        /// <returns>A stream representing the file to open.</returns>
-        Stream Create(string path);
-    }
+    /// <param name="path">Path to the file to open.</param>
+    /// <returns>A stream representing the file to open.</returns>
+    Stream Create(string path);
 }

@@ -30,9 +30,9 @@ public class AstcImageDecodeBenchmark
         {
             blocks.Slice(i * 16, 16).CopyTo(blockBytes);
             ulong low = BitConverter.ToUInt64(blockBytes);
-            ulong high = BitConverter.ToUInt64(blockBytes.Slice(8));
+            ulong high = BitConverter.ToUInt64(blockBytes[8..]);
             PhysicalBlock block = PhysicalBlock.Create((UInt128)low | ((UInt128)high << 64));
-            IntermediateBlock.IntermediateBlockData? _ = IntermediateBlock.UnpackIntermediateBlock(block);
+            _ = IntermediateBlock.UnpackIntermediateBlock(block);
         }
     }
 }

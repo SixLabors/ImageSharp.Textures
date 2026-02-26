@@ -25,7 +25,7 @@ internal readonly record struct RgbaColor(byte R, byte G, byte B, byte A)
     {
         get
         {
-            var sum = this.R + this.G + this.B;
+            int sum = this.R + this.G + this.B;
             return (byte)(((sum * 256) + 384) / 768);
         }
     }

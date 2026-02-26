@@ -22,7 +22,7 @@ internal static class FusedHdrBlockDecoder
     internal static void DecompressBlockFusedHdr(UInt128 bits, in BlockInfo info, Footprint footprint, Span<float> buffer)
     {
         Span<int> texelWeights = stackalloc int[footprint.PixelCount];
-        var endpointPair = FusedBlockDecoder.DecodeFusedCore(bits, in info, footprint, texelWeights);
+        ColorEndpointPair endpointPair = FusedBlockDecoder.DecodeFusedCore(bits, in info, footprint, texelWeights);
         WriteHdrOutputPixels(buffer, footprint.PixelCount, in endpointPair, texelWeights);
     }
 
@@ -41,7 +41,7 @@ internal static class FusedHdrBlockDecoder
         Span<float> imageBuffer)
     {
         Span<int> texelWeights = stackalloc int[footprint.PixelCount];
-        var endpointPair = FusedBlockDecoder.DecodeFusedCore(bits, in info, footprint, texelWeights);
+        ColorEndpointPair endpointPair = FusedBlockDecoder.DecodeFusedCore(bits, in info, footprint, texelWeights);
         WriteHdrOutputPixelsToImage(imageBuffer, footprint, dstBaseX, dstBaseY, imageWidth, in endpointPair, texelWeights);
     }
 

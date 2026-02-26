@@ -191,7 +191,7 @@ internal struct BlockInfo
 
         // ---- Step 7: Weight bit count ----
         int weightBitCount = BoundedIntegerSequenceCodec.GetBitCountForRange(numWeights, weightRange);
-        if (weightBitCount < 24 || weightBitCount > 96)
+        if (weightBitCount is < 24 or > 96)
         {
             return default;
         }
@@ -214,7 +214,7 @@ internal struct BlockInfo
             if (sharedCemMarker == 0)
             {
                 // Shared CEM: all partitions use the same mode
-                var sharedCem = (ColorEndpointMode)((lowBits >> 25) & 0xF);
+                ColorEndpointMode sharedCem = (ColorEndpointMode)((lowBits >> 25) & 0xF);
                 cem0 = cem1 = cem2 = cem3 = sharedCem;
                 for (int i = 0; i < partitionCount; i++)
                 {
@@ -227,7 +227,7 @@ internal struct BlockInfo
                 numExtraCEMBits = ExtraCemBitsForPartition[partitionCount - 1];
 
                 int extraCemStartPos = 128 - numExtraCEMBits - weightBitCount;
-                var extraCem = BitOperations.GetBits(bits, extraCemStartPos, numExtraCEMBits);
+                UInt128 extraCem = BitOperations.GetBits(bits, extraCemStartPos, numExtraCEMBits);
 
                 ulong cemval = (lowBits >> 23) & 0x3F; // 6 bits starting at bit 23
                 int baseCem = (int)(((cemval & 0x3) - 1) * 4);
@@ -249,7 +249,7 @@ internal struct BlockInfo
                 {
                     int m = (int)(cembits & 0x3);
                     cembits >>= 2;
-                    var mode = (ColorEndpointMode)(baseCem + (4 * c[i]) + m);
+                    ColorEndpointMode mode = (ColorEndpointMode)(baseCem + (4 * c[i]) + m);
                     switch (i)
                     {
                         case 0:

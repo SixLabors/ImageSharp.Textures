@@ -99,7 +99,7 @@ public class TextureFormatManager
 
         if (extension[0] == '.')
         {
-            extension = extension.Substring(1);
+            extension = extension[1..];
         }
 
         return this.imageFormats.FirstOrDefault(x => x.FileExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase));
@@ -141,7 +141,7 @@ public class TextureFormatManager
     /// <summary>
     /// Removes all the registered image format detectors.
     /// </summary>
-    public void ClearImageFormatDetectors() => this.imageFormatDetectors = new ConcurrentBag<ITextureFormatDetector>();
+    public void ClearImageFormatDetectors() => this.imageFormatDetectors = [];
 
     /// <summary>
     /// Adds a new detector for detecting mime types.

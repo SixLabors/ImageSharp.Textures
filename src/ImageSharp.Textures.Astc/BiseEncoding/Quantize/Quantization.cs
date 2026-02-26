@@ -32,7 +32,7 @@ internal static class Quantization
         ArgumentOutOfRangeException.ThrowIfLessThan(value, 0);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(value, byte.MaxValue);
 
-        var map = GetQuantMapForValueRange(rangeMaxValue);
+        QuantizationMap? map = GetQuantMapForValueRange(rangeMaxValue);
         return map != null ? map.Quantize(value) : 0;
     }
 
@@ -43,7 +43,7 @@ internal static class Quantization
         ArgumentOutOfRangeException.ThrowIfLessThan(value, 0);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(value, rangeMaxValue);
 
-        var map = GetQuantMapForValueRange(rangeMaxValue);
+        QuantizationMap? map = GetQuantMapForValueRange(rangeMaxValue);
         return map != null ? map.Unquantize(value) : 0;
     }
 
@@ -59,7 +59,7 @@ internal static class Quantization
             weight -= 1;
         }
 
-        var map = GetQuantMapForWeightRange(rangeMaxValue);
+        QuantizationMap? map = GetQuantMapForWeightRange(rangeMaxValue);
         return map != null ? map.Quantize(weight) : 0;
     }
 
@@ -70,7 +70,7 @@ internal static class Quantization
         ArgumentOutOfRangeException.ThrowIfLessThan(weight, 0);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(weight, rangeMaxValue);
 
-        var map = GetQuantMapForWeightRange(rangeMaxValue);
+        QuantizationMap? map = GetQuantMapForWeightRange(rangeMaxValue);
         int dequantized = map != null ? map.Unquantize(weight) : 0;
         if (dequantized > 32)
         {
@@ -118,7 +118,7 @@ internal static class Quantization
 
     private static SortedDictionary<int, QuantizationMap> InitEndpointMaps()
     {
-        var d = new SortedDictionary<int, QuantizationMap>
+        SortedDictionary<int, QuantizationMap> d = new()
         {
             { 5, new TritQuantizationMap(5, TritQuantizationMap.GetUnquantizedValue) },
             { 7, new BitQuantizationMap(7, 8) },
@@ -143,7 +143,7 @@ internal static class Quantization
 
     private static SortedDictionary<int, QuantizationMap> InitWeightMaps()
     {
-        var d = new SortedDictionary<int, QuantizationMap>
+        SortedDictionary<int, QuantizationMap> d = new()
         {
             { 1, new BitQuantizationMap(1, 6) },
             { 2, new TritQuantizationMap(2, TritQuantizationMap.GetUnquantizedWeight) },
@@ -163,11 +163,11 @@ internal static class Quantization
 
     private static QuantizationMap?[] BuildFlatLookup(SortedDictionary<int, QuantizationMap> maps, int size)
     {
-        var flat = new QuantizationMap?[size];
+        QuantizationMap?[] flat = new QuantizationMap?[size];
         QuantizationMap? current = null;
         for (int i = 0; i < size; i++)
         {
-            if (maps.TryGetValue(i, out var map))
+            if (maps.TryGetValue(i, out QuantizationMap? map))
             {
                 current = map;
             }
@@ -206,12 +206,12 @@ internal static class Quantization
 
     private static int[]?[] InitializeUnquantizeWeightsFlat()
     {
-        var tables = new int[]?[WeightRangeMaxValue + 1];
+        int[]?[] tables = new int[]?[WeightRangeMaxValue + 1];
         foreach (KeyValuePair<int, QuantizationMap> kvp in WeightMaps)
         {
             int range = kvp.Key;
-            var map = kvp.Value;
-            var table = new int[range + 1];
+            QuantizationMap map = kvp.Value;
+            int[] table = new int[range + 1];
             for (int i = 0; i <= range; i++)
             {
                 int dequantized = map.Unquantize(i);
@@ -226,12 +226,12 @@ internal static class Quantization
 
     private static int[]?[] InitializeUnquantizeEndpointsFlat()
     {
-        var tables = new int[]?[256];
+        int[]?[] tables = new int[]?[256];
         foreach (KeyValuePair<int, QuantizationMap> kvp in EndpointMaps)
         {
             int range = kvp.Key;
-            var map = kvp.Value;
-            var table = new int[range + 1];
+            QuantizationMap map = kvp.Value;
+            int[] table = new int[range + 1];
             for (int i = 0; i <= range; i++)
             {
                 table[i] = map.Unquantize(i);

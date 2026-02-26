@@ -45,7 +45,7 @@ internal static class RgbaColorExtensions
 
         for (int i = 0; i < RgbaColor.BytesPerPixel; ++i)
         {
-            var (a, b) = BitOperations.TransferPrecision(offset[i], baseColor[i]);
+            (int a, int b) = BitOperations.TransferPrecision(offset[i], baseColor[i]);
             offset[i] = Math.Clamp(baseColor[i] + a, byte.MinValue, byte.MaxValue);
         }
 

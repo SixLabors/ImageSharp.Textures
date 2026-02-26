@@ -26,9 +26,9 @@ public class AstcDecodingBenchmark
     {
         ReadOnlySpan<byte> blocks = this.astcFile!.Blocks;
         Span<byte> blockBytes = stackalloc byte[16];
-        blocks.Slice(0, 16).CopyTo(blockBytes);
+        blocks[..16].CopyTo(blockBytes);
         ulong low = BitConverter.ToUInt64(blockBytes);
-        ulong high = BitConverter.ToUInt64(blockBytes.Slice(8));
+        ulong high = BitConverter.ToUInt64(blockBytes[8..]);
         PhysicalBlock phyiscalBlock = PhysicalBlock.Create((UInt128)low | ((UInt128)high << 64));
 
         return !phyiscalBlock.IsIllegalEncoding;
@@ -39,9 +39,9 @@ public class AstcDecodingBenchmark
     {
         ReadOnlySpan<byte> blocks = this.astcFile!.Blocks;
         Span<byte> blockBytes = stackalloc byte[16];
-        blocks.Slice(0, 16).CopyTo(blockBytes);
+        blocks[..16].CopyTo(blockBytes);
         ulong low = BitConverter.ToUInt64(blockBytes);
-        ulong high = BitConverter.ToUInt64(blockBytes.Slice(8));
+        ulong high = BitConverter.ToUInt64(blockBytes[8..]);
         PhysicalBlock physicalBlock = PhysicalBlock.Create((UInt128)low | ((UInt128)high << 64));
 
         IntermediateBlock.IntermediateBlockData? blockData = IntermediateBlock.UnpackIntermediateBlock(physicalBlock);
@@ -54,9 +54,9 @@ public class AstcDecodingBenchmark
     {
         ReadOnlySpan<byte> blocks = this.astcFile!.Blocks;
         Span<byte> blockBytes = stackalloc byte[16];
-        blocks.Slice(0, 16).CopyTo(blockBytes);
+        blocks[..16].CopyTo(blockBytes);
         ulong low = BitConverter.ToUInt64(blockBytes);
-        ulong high = BitConverter.ToUInt64(blockBytes.Slice(8));
+        ulong high = BitConverter.ToUInt64(blockBytes[8..]);
         UInt128 bits = (UInt128)low | ((UInt128)high << 64);
         BlockInfo info = BlockInfo.Decode(bits);
         LogicalBlock? logicalBlock = LogicalBlock.UnpackLogicalBlock(Footprint.Get4x4(), bits, in info)

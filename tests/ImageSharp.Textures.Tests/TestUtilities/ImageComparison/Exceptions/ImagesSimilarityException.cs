@@ -1,15 +1,14 @@
 // Copyright (c) Six Labors.
 // Licensed under the Six Labors Split License.
 
-namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.ImageComparison.Exceptions
-{
-    using System;
+namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.ImageComparison.Exceptions;
 
-    public class ImagesSimilarityException : Exception
+using System;
+
+public class ImagesSimilarityException : Exception
+{
+    public ImagesSimilarityException(string message)
+        : base(message)
     {
-        public ImagesSimilarityException(string message)
-            : base(message)
-        {
-        }
     }
 }

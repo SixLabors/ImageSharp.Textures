@@ -15,7 +15,7 @@ internal static class BitOperations
             return UInt128.Zero;
         }
 
-        var shifted = value >> start;
+        UInt128 shifted = value >> start;
         if (length >= 128)
         {
             return shifted;

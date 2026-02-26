@@ -23,7 +23,7 @@ internal static class DecimationTable
     public static DecimationInfo Get(Footprint footprint, int gridX, int gridY)
     {
         int index = ((int)footprint.Type * GridRange * GridRange) + ((gridX - GridMin) * GridRange) + (gridY - GridMin);
-        var decimationInfo = Table[index];
+        DecimationInfo? decimationInfo = Table[index];
         if (decimationInfo is null)
         {
             decimationInfo = Compute(footprint.Width, footprint.Height, gridX, gridY);
@@ -56,17 +56,14 @@ internal static class DecimationTable
         }
     }
 
-    private static int GetScaleFactorD(int blockDimensions)
-    {
-        return (int)((1024f + (blockDimensions >> 1)) / (blockDimensions - 1));
-    }
+    private static int GetScaleFactorD(int blockDimensions) => (int)((1024f + (blockDimensions >> 1)) / (blockDimensions - 1));
 
     private static DecimationInfo Compute(int footprintWidth, int footprintHeight, int gridWidth, int gridHeight)
     {
         int texelCount = footprintWidth * footprintHeight;
 
-        var indices = new int[4 * texelCount];
-        var factors = new int[4 * texelCount];
+        int[] indices = new int[4 * texelCount];
+        int[] factors = new int[4 * texelCount];
 
         int scaleHorizontal = GetScaleFactorD(footprintWidth);
         int scaleVertical = GetScaleFactorD(footprintHeight);

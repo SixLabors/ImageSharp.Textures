@@ -3,33 +3,32 @@
 
 using SixLabors.ImageSharp.Textures.Formats;
 
-namespace SixLabors.ImageSharp.Textures
+namespace SixLabors.ImageSharp.Textures;
+
+/// <summary>
+/// Contains information about the image including dimensions, pixel type information and additional metadata
+/// </summary>
+internal sealed class TextureInfo : ITextureInfo
 {
     /// <summary>
-    /// Contains information about the image including dimensions, pixel type information and additional metadata
+    /// Initializes a new instance of the <see cref="TextureInfo"/> class.
     /// </summary>
-    internal sealed class TextureInfo : ITextureInfo
+    /// <param name="pixelType">The image pixel type information.</param>
+    /// <param name="width">The width of the image in pixels.</param>
+    /// <param name="height">The height of the image in pixels.</param>
+    public TextureInfo(TextureTypeInfo pixelType, int width, int height)
     {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="TextureInfo"/> class.
-        /// </summary>
-        /// <param name="pixelType">The image pixel type information.</param>
-        /// <param name="width">The width of the image in pixels.</param>
-        /// <param name="height">The height of the image in pixels.</param>
-        public TextureInfo(TextureTypeInfo pixelType, int width, int height)
-        {
-            this.PixelType = pixelType;
-            this.Width = width;
-            this.Height = height;
-        }
-
-        /// <inheritdoc />
-        public TextureTypeInfo PixelType { get; }
-
-        /// <inheritdoc />
-        public int Width { get; }
-
-        /// <inheritdoc />
-        public int Height { get; }
+        this.PixelType = pixelType;
+        this.Width = width;
+        this.Height = height;
     }
+
+    /// <inheritdoc />
+    public TextureTypeInfo PixelType { get; }
+
+    /// <inheritdoc />
+    public int Width { get; }
+
+    /// <inheritdoc />
+    public int Height { get; }
 }

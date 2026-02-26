@@ -29,7 +29,7 @@ internal struct BitStream
         this.dataSize = dataSize;
     }
 
-    public uint Bits => this.dataSize;
+    public readonly uint Bits => this.dataSize;
 
     public void PutBits<T>(T x, int size)
         where T : unmanaged
@@ -170,7 +170,7 @@ internal struct BitStream
         if (count < 64)
         {
             this.low = (this.low >> count) | (this.high << (64 - count));
-            this.high = this.high >> count;
+            this.high >>= count;
         }
         else if (count == 64)
         {

@@ -26,23 +26,25 @@ internal static class ReferenceDecoder
     /// </summary>
     public static byte[] DecompressLdr(ReadOnlySpan<byte> blocks, int w, int h, int blockX, int blockY)
     {
-        var error = Astcenc.AstcencConfigInit(
+        AstcencError error = Astcenc.AstcencConfigInit(
             AstcencProfile.AstcencPrfLdr,
-            (uint)blockX, (uint)blockY, 1,
+            (uint)blockX,
+            (uint)blockY,
+            1,
             Astcenc.AstcencPreFastest,
             AstcencFlags.DecompressOnly,
-            out var config);
+            out AstcencConfig config);
         ThrowOnError(error, "ConfigInit(LDR)");
 
-        error = Astcenc.AstcencContextAlloc(ref config, 1, out var context);
+        error = Astcenc.AstcencContextAlloc(ref config, 1, out AstcencContext context);
         ThrowOnError(error, "ContextAlloc(LDR)");
 
         try
         {
             int pixelCount = w * h;
-            var outputBytes = new byte[pixelCount * 4]; // RGBA8
+            byte[] outputBytes = new byte[pixelCount * 4]; // RGBA8
 
-            var image = new AstcencImage
+            AstcencImage image = new()
             {
                 dimX = (uint)w,
                 dimY = (uint)h,
@@ -52,7 +54,7 @@ internal static class ReferenceDecoder
             };
 
             // We need a mutable copy of blocks for the Span<byte> parameter
-            var blocksCopy = blocks.ToArray();
+            byte[] blocksCopy = blocks.ToArray();
             error = Astcenc.AstcencDecompressImage(context, blocksCopy, ref image, IdentitySwizzle, 0);
             ThrowOnError(error, "DecompressImage(LDR)");
 
@@ -69,24 +71,26 @@ internal static class ReferenceDecoder
     /// </summary>
     public static Half[] DecompressHdr(ReadOnlySpan<byte> blocks, int w, int h, int blockX, int blockY)
     {
-        var error = Astcenc.AstcencConfigInit(
+        AstcencError error = Astcenc.AstcencConfigInit(
             AstcencProfile.AstcencPrfHdr,
-            (uint)blockX, (uint)blockY, 1,
+            (uint)blockX,
+            (uint)blockY,
+            1,
             Astcenc.AstcencPreFastest,
             AstcencFlags.DecompressOnly,
-            out var config);
+            out AstcencConfig config);
         ThrowOnError(error, "ConfigInit(HDR)");
 
-        error = Astcenc.AstcencContextAlloc(ref config, 1, out var context);
+        error = Astcenc.AstcencContextAlloc(ref config, 1, out AstcencContext context);
         ThrowOnError(error, "ContextAlloc(HDR)");
 
         try
         {
             int pixelCount = w * h;
-            var outputHalves = new Half[pixelCount * 4]; // RGBA FP16
-            var outputBytes = MemoryMarshal.AsBytes(outputHalves.AsSpan()).ToArray();
+            Half[] outputHalves = new Half[pixelCount * 4]; // RGBA FP16
+            byte[] outputBytes = MemoryMarshal.AsBytes(outputHalves.AsSpan()).ToArray();
 
-            var image = new AstcencImage
+            AstcencImage image = new()
             {
                 dimX = (uint)w,
                 dimY = (uint)h,
@@ -95,7 +99,7 @@ internal static class ReferenceDecoder
                 data = outputBytes,
             };
 
-            var blocksCopy = blocks.ToArray();
+            byte[] blocksCopy = blocks.ToArray();
             error = Astcenc.AstcencDecompressImage(context, blocksCopy, ref image, IdentitySwizzle, 0);
             ThrowOnError(error, "DecompressImage(HDR)");
 
@@ -116,20 +120,22 @@ internal static class ReferenceDecoder
     /// </summary>
     public static byte[] CompressLdr(byte[] pixels, int w, int h, int blockX, int blockY)
     {
-        var error = Astcenc.AstcencConfigInit(
+        AstcencError error = Astcenc.AstcencConfigInit(
             AstcencProfile.AstcencPrfLdr,
-            (uint)blockX, (uint)blockY, 1,
+            (uint)blockX,
+            (uint)blockY,
+            1,
             Astcenc.AstcencPreMedium,
             0,
-            out var config);
+            out AstcencConfig config);
         ThrowOnError(error, "ConfigInit(CompressLDR)");
 
-        error = Astcenc.AstcencContextAlloc(ref config, 1, out var context);
+        error = Astcenc.AstcencContextAlloc(ref config, 1, out AstcencContext context);
         ThrowOnError(error, "ContextAlloc(CompressLDR)");
 
         try
         {
-            var image = new AstcencImage
+            AstcencImage image = new()
             {
                 dimX = (uint)w,
                 dimY = (uint)h,
@@ -140,7 +146,7 @@ internal static class ReferenceDecoder
 
             int blocksWide = (w + blockX - 1) / blockX;
             int blocksHigh = (h + blockY - 1) / blockY;
-            var compressedData = new byte[blocksWide * blocksHigh * 16];
+            byte[] compressedData = new byte[blocksWide * blocksHigh * 16];
 
             error = Astcenc.AstcencCompressImage(context, ref image, IdentitySwizzle, compressedData, 0);
             ThrowOnError(error, "CompressImage(LDR)");
@@ -158,22 +164,24 @@ internal static class ReferenceDecoder
     /// </summary>
     public static byte[] CompressHdr(Half[] pixels, int w, int h, int blockX, int blockY)
     {
-        var error = Astcenc.AstcencConfigInit(
+        AstcencError error = Astcenc.AstcencConfigInit(
             AstcencProfile.AstcencPrfHdr,
-            (uint)blockX, (uint)blockY, 1,
+            (uint)blockX,
+            (uint)blockY,
+            1,
             Astcenc.AstcencPreMedium,
             0,
-            out var config);
+            out AstcencConfig config);
         ThrowOnError(error, "ConfigInit(CompressHDR)");
 
-        error = Astcenc.AstcencContextAlloc(ref config, 1, out var context);
+        error = Astcenc.AstcencContextAlloc(ref config, 1, out AstcencContext context);
         ThrowOnError(error, "ContextAlloc(CompressHDR)");
 
         try
         {
-            var pixelBytes = MemoryMarshal.AsBytes(pixels.AsSpan()).ToArray();
+            byte[] pixelBytes = MemoryMarshal.AsBytes(pixels.AsSpan()).ToArray();
 
-            var image = new AstcencImage
+            AstcencImage image = new()
             {
                 dimX = (uint)w,
                 dimY = (uint)h,
@@ -184,7 +192,7 @@ internal static class ReferenceDecoder
 
             int blocksWide = (w + blockX - 1) / blockX;
             int blocksHigh = (h + blockY - 1) / blockY;
-            var compressedData = new byte[blocksWide * blocksHigh * 16];
+            byte[] compressedData = new byte[blocksWide * blocksHigh * 16];
 
             error = Astcenc.AstcencCompressImage(context, ref image, IdentitySwizzle, compressedData, 0);
             ThrowOnError(error, "CompressImage(HDR)");
@@ -200,7 +208,7 @@ internal static class ReferenceDecoder
     /// <summary>
     /// Map a FootprintType to its (blockX, blockY) dimensions.
     /// </summary>
-    public static (int blockX, int blockY) ToBlockDimensions(FootprintType footprint) => footprint switch
+    public static (int BlockX, int BlockY) ToBlockDimensions(FootprintType footprint) => footprint switch
     {
         FootprintType.Footprint4x4 => (4, 4),
         FootprintType.Footprint5x4 => (5, 4),
@@ -223,7 +231,7 @@ internal static class ReferenceDecoder
     {
         if (error != AstcencError.AstcencSuccess)
         {
-            var message = Astcenc.GetErrorString(error) ?? error.ToString();
+            string message = Astcenc.GetErrorString(error) ?? error.ToString();
             throw new InvalidOperationException($"ARM ASTC encoder {operation} failed: {message}");
         }
     }

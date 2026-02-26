@@ -1,6 +1,7 @@
 // Copyright (c) Six Labors.
 // Licensed under the Six Labors Split License.
 
+using System.Globalization;
 using AwesomeAssertions;
 using SixLabors.ImageSharp.Textures.Astc.ColorEncoding;
 using SixLabors.ImageSharp.Textures.Astc.Core;
@@ -12,7 +13,7 @@ public class PartitionTests
     [Fact]
     public void PartitionMetric_WithSimplePartitions_ShouldCalculateCorrectDistance()
     {
-        var partitionA = new Partition(Footprint.Get6x6(), 2)
+        Partition partitionA = new(Footprint.Get6x6(), 2)
         {
             Assignment =
             [
@@ -25,7 +26,7 @@ public class PartitionTests
             ]
         };
 
-        var partitionB = new Partition(Footprint.Get6x6(), 2)
+        Partition partitionB = new(Footprint.Get6x6(), 2)
         {
             Assignment =
             [
@@ -46,7 +47,7 @@ public class PartitionTests
     [Fact]
     public void PartitionMetric_WithDifferentPartCounts_ShouldCalculateCorrectDistance()
     {
-        var partitionA = new Partition(Footprint.Get4x4(), 2)
+        Partition partitionA = new(Footprint.Get4x4(), 2)
         {
             Assignment =
             [
@@ -57,7 +58,7 @@ public class PartitionTests
             ]
         };
 
-        var partitionB = new Partition(Footprint.Get4x4(), 3)
+        Partition partitionB = new(Footprint.Get4x4(), 3)
         {
             Assignment =
             [
@@ -76,7 +77,7 @@ public class PartitionTests
     [Fact]
     public void PartitionMetric_WithDifferentMapping_ShouldCalculateCorrectDistance()
     {
-        var partitionA = new Partition(Footprint.Get4x4(), 2)
+        Partition partitionA = new(Footprint.Get4x4(), 2)
         {
             Assignment =
             [
@@ -87,7 +88,7 @@ public class PartitionTests
             ]
         };
 
-        var partitionB = new Partition(Footprint.Get4x4(), 3)
+        Partition partitionB = new(Footprint.Get4x4(), 3)
         {
             Assignment =
             [
@@ -116,7 +117,7 @@ public class PartitionTests
             0, 0, 0, 0, 1, 1, 1, 2, 2, 2
         ];
 
-        var partition = Partition.GetASTCPartition(Footprint.Get10x6(), 3, 557);
+        Partition partition = Partition.GetASTCPartition(Footprint.Get10x6(), 3, 557);
 
         partition.Assignment.Should().Equal(expected);
     }
@@ -124,8 +125,8 @@ public class PartitionTests
     [Fact]
     public void GetASTCPartition_WithDifferentIds_ShouldProduceUniqueAssignments()
     {
-        var partition0 = Partition.GetASTCPartition(Footprint.Get6x6(), 2, 0);
-        var partition1 = Partition.GetASTCPartition(Footprint.Get6x6(), 2, 1);
+        Partition partition0 = Partition.GetASTCPartition(Footprint.Get6x6(), 2, 0);
+        Partition partition1 = Partition.GetASTCPartition(Footprint.Get6x6(), 2, 1);
 
         partition0.Assignment.Should().NotEqual(partition1.Assignment);
     }
@@ -133,7 +134,7 @@ public class PartitionTests
     [Fact]
     public void FindClosestASTCPartition_ShouldPreservePartitionCount()
     {
-        var partition = new Partition(Footprint.Get6x6(), 2)
+        Partition partition = new(Footprint.Get6x6(), 2)
         {
             Assignment =
             [
@@ -146,7 +147,7 @@ public class PartitionTests
             ]
         };
 
-        var closestAstcPartition = Partition.FindClosestASTCPartition(partition);
+        Partition closestAstcPartition = Partition.FindClosestASTCPartition(partition);
 
         closestAstcPartition.PartitionCount.Should().Be(partition.PartitionCount);
     }
@@ -154,15 +155,15 @@ public class PartitionTests
     [Fact]
     public void FindClosestASTCPartition_WithModifiedPartition_ShouldReturnValidASTCPartition()
     {
-        var astcPartition = Partition.GetASTCPartition(Footprint.Get12x12(), 3, 0x3CB);
-        var modifiedPartition = new Partition(astcPartition.Footprint, astcPartition.PartitionCount)
+        Partition astcPartition = Partition.GetASTCPartition(Footprint.Get12x12(), 3, 0x3CB);
+        Partition modifiedPartition = new(astcPartition.Footprint, astcPartition.PartitionCount)
         {
             Assignment = [.. astcPartition.Assignment]
         };
         modifiedPartition.Assignment[0]++;
 
         // Find closest ASTC partition
-        var closestPartition = Partition.FindClosestASTCPartition(modifiedPartition);
+        Partition closestPartition = Partition.FindClosestASTCPartition(modifiedPartition);
 
         // The closest partition should be a valid ASTC partition with the same footprint and number of parts
         closestPartition.Footprint.Should().Be(astcPartition.Footprint);
@@ -170,7 +171,7 @@ public class PartitionTests
         closestPartition.PartitionId.Should().HaveValue("returned partition should have a valid ID");
 
         // Verify we can retrieve the same partition again using its ID
-        var verifyPartition = Partition.GetASTCPartition(
+        Partition verifyPartition = Partition.GetASTCPartition(
             closestPartition.Footprint,
             closestPartition.PartitionCount,
             closestPartition.PartitionId!.Value);
@@ -194,33 +195,33 @@ public class PartitionTests
     [InlineData(FootprintType.Footprint12x12)]
     public void FindClosestASTCPartition_WithRandomPartitions_ShouldReturnFewerOrEqualSubsets(FootprintType footprintType)
     {
-        var footprint = Footprint.FromFootprintType(footprintType);
-        var random = new Random(unchecked((int)0xdeadbeef));
+        Footprint footprint = Footprint.FromFootprintType(footprintType);
+        Random random = new(unchecked((int)0xdeadbeef));
 
         const int numTests = 15; // Tests per footprint type
         for (int i = 0; i < numTests; i++)
         {
             // Create random partition
             int numParts = 2 + random.Next(3); // 2, 3, or 4 parts
-            var assignment = new int[footprint.PixelCount];
+            int[] assignment = new int[footprint.PixelCount];
             for (int j = 0; j < footprint.PixelCount; j++)
             {
                 assignment[j] = random.Next(numParts);
             }
 
-            var partition = new Partition(footprint, numParts)
+            Partition partition = new(footprint, numParts)
             {
                 Assignment = assignment
             };
 
-            var astcPartition = Partition.FindClosestASTCPartition(partition);
+            Partition astcPartition = Partition.FindClosestASTCPartition(partition);
 
             // Matched partition should have fewer or equal subsets
             astcPartition.PartitionCount
                 .Should()
                 .BeLessThanOrEqualTo(
                     partition.PartitionCount,
-                    $"Footprint {footprintType}, Test #{i}: Selected partition with ID {astcPartition.PartitionId?.ToString() ?? "null"}");
+                    $"Footprint {footprintType}, Test #{i}: Selected partition with ID {astcPartition.PartitionId?.ToString(CultureInfo.InvariantCulture) ?? "null"}");
         }
     }
 }

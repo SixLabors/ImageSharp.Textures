@@ -10,6 +10,7 @@ using SixLabors.ImageSharp.Textures.Tests.TestUtilities.ImageComparison;
 
 namespace SixLabors.ImageSharp.Textures.Tests.Formats.Astc;
 
+#nullable enable
 public class LogicalAstcBlockTests
 {
     [Theory]
@@ -20,8 +21,8 @@ public class LogicalAstcBlockTests
     [InlineData(FootprintType.Footprint12x12)]
     public void Constructor_WithValidFootprintType_ShoulReturnExpectedFootprint(FootprintType footprintType)
     {
-        var footprint = Footprint.FromFootprintType(footprintType);
-        var logicalBlock = new LogicalBlock(footprint);
+        Footprint footprint = Footprint.FromFootprintType(footprintType);
+        LogicalBlock logicalBlock = new(footprint);
 
         logicalBlock.GetFootprint().Should().Be(footprint);
         logicalBlock.GetFootprint().Type.Should().Be(footprintType);
@@ -30,10 +31,10 @@ public class LogicalAstcBlockTests
     [Fact]
     public void GetFootprint_AfterConstruction_ShouldReturnOriginalFootprint()
     {
-        var footprint = Footprint.Get8x8();
-        var logicalBlock = new LogicalBlock(footprint);
+        Footprint footprint = Footprint.Get8x8();
+        LogicalBlock logicalBlock = new(footprint);
 
-        var result = logicalBlock.GetFootprint();
+        Footprint result = logicalBlock.GetFootprint();
 
         result.Should().Be(footprint);
     }
@@ -44,7 +45,7 @@ public class LogicalAstcBlockTests
     [InlineData(64)]
     public void SetWeightAt_WithValidWeight_ShouldStoreCorrectly(int weight)
     {
-        var logicalBlock = new LogicalBlock(Footprint.Get4x4());
+        LogicalBlock logicalBlock = new(Footprint.Get4x4());
 
         logicalBlock.SetWeightAt(1, 1, weight);
 
@@ -57,9 +58,9 @@ public class LogicalAstcBlockTests
     [InlineData(100)]
     public void SetWeightAt_WithInvalidWeight_ShouldThrowArgumentOutOfRangeException(int weight)
     {
-        var logicalBlock = new LogicalBlock(Footprint.Get4x4());
+        LogicalBlock logicalBlock = new(Footprint.Get4x4());
 
-        var action = () => logicalBlock.SetWeightAt(0, 0, weight);
+        Action action = () => logicalBlock.SetWeightAt(0, 0, weight);
 
         action.Should().Throw<ArgumentOutOfRangeException>();
     }
@@ -67,9 +68,9 @@ public class LogicalAstcBlockTests
     [Fact]
     public void WeightAt_WithDefaultWeights_ShouldReturnZero()
     {
-        var logicalBlock = new LogicalBlock(Footprint.Get4x4());
+        LogicalBlock logicalBlock = new(Footprint.Get4x4());
 
-        var weight = logicalBlock.WeightAt(2, 2);
+        int weight = logicalBlock.WeightAt(2, 2);
 
         weight.Should().Be(0);
     }
@@ -77,9 +78,9 @@ public class LogicalAstcBlockTests
     [Fact]
     public void IsDualPlane_ByDefault_ShouldBeFalse()
     {
-        var logicalBlock = new LogicalBlock(Footprint.Get4x4());
+        LogicalBlock logicalBlock = new(Footprint.Get4x4());
 
-        var result = logicalBlock.IsDualPlane();
+        bool result = logicalBlock.IsDualPlane();
 
         result.Should().BeFalse();
     }
@@ -87,7 +88,7 @@ public class LogicalAstcBlockTests
     [Fact]
     public void SetDualPlaneChannel_WithValidChannel_ShouldEnableDualPlane()
     {
-        var logicalBlock = new LogicalBlock(Footprint.Get4x4());
+        LogicalBlock logicalBlock = new(Footprint.Get4x4());
 
         logicalBlock.SetDualPlaneChannel(0);
 
@@ -97,7 +98,7 @@ public class LogicalAstcBlockTests
     [Fact]
     public void SetDualPlaneChannel_WithNegativeValue_ShouldDisableDualPlane()
     {
-        var logicalBlock = new LogicalBlock(Footprint.Get4x4());
+        LogicalBlock logicalBlock = new(Footprint.Get4x4());
         logicalBlock.SetDualPlaneChannel(0);
 
         logicalBlock.SetDualPlaneChannel(-1);
@@ -108,9 +109,9 @@ public class LogicalAstcBlockTests
     [Fact]
     public void SetDualPlaneWeightAt_WhenNotDualPlane_ShouldThrowInvalidOperationException()
     {
-        var logicalBlock = new LogicalBlock(Footprint.Get4x4());
+        LogicalBlock logicalBlock = new(Footprint.Get4x4());
 
-        var action = () => logicalBlock.SetDualPlaneWeightAt(0, 2, 3, 1);
+        Action action = () => logicalBlock.SetDualPlaneWeightAt(0, 2, 3, 1);
 
         action.Should().Throw<InvalidOperationException>()
             .WithMessage("Not a dual plane block");
@@ -119,7 +120,7 @@ public class LogicalAstcBlockTests
     [Fact]
     public void SetDualPlaneWeightAt_AfterEnablingDualPlane_ShouldPreserveOriginalWeight()
     {
-        var logicalBlock = new LogicalBlock(Footprint.Get4x4());
+        LogicalBlock logicalBlock = new(Footprint.Get4x4());
         logicalBlock.SetWeightAt(2, 3, 2);
         logicalBlock.SetDualPlaneChannel(0);
 
@@ -132,7 +133,7 @@ public class LogicalAstcBlockTests
     [Fact]
     public void DualPlaneWeightAt_ForNonDualPlaneChannel_ShouldReturnOriginalWeight()
     {
-        var logicalBlock = new LogicalBlock(Footprint.Get4x4());
+        LogicalBlock logicalBlock = new(Footprint.Get4x4());
         logicalBlock.SetWeightAt(2, 3, 2);
         logicalBlock.SetDualPlaneChannel(0);
         logicalBlock.SetDualPlaneWeightAt(0, 2, 3, 1);
@@ -146,10 +147,10 @@ public class LogicalAstcBlockTests
     [Fact]
     public void DualPlaneWeightAt_WhenNotDualPlane_ShouldReturnWeightAt()
     {
-        var logicalBlock = new LogicalBlock(Footprint.Get4x4());
+        LogicalBlock logicalBlock = new(Footprint.Get4x4());
         logicalBlock.SetWeightAt(2, 3, 42);
 
-        var result = logicalBlock.DualPlaneWeightAt(0, 2, 3);
+        int result = logicalBlock.DualPlaneWeightAt(0, 2, 3);
 
         result.Should().Be(42);
     }
@@ -157,7 +158,7 @@ public class LogicalAstcBlockTests
     [Fact]
     public void SetDualPlaneWeightAt_ThenDisableDualPlane_ShouldResetToOriginalWeight()
     {
-        var logicalBlock = new LogicalBlock(Footprint.Get4x4());
+        LogicalBlock logicalBlock = new(Footprint.Get4x4());
         logicalBlock.SetWeightAt(2, 3, 2);
         logicalBlock.SetDualPlaneChannel(0);
         logicalBlock.SetDualPlaneWeightAt(0, 2, 3, 1);
@@ -175,9 +176,9 @@ public class LogicalAstcBlockTests
     [Fact]
     public void SetEndpoints_WithValidColors_ShouldStoreCorrectly()
     {
-        var logicalBlock = new LogicalBlock(Footprint.Get4x4());
-        var color1 = new RgbaColor(byte.MaxValue, byte.MinValue, byte.MinValue, byte.MaxValue);
-        var color2 = new RgbaColor(byte.MinValue, byte.MaxValue, byte.MinValue, byte.MaxValue);
+        LogicalBlock logicalBlock = new(Footprint.Get4x4());
+        RgbaColor color1 = new(byte.MaxValue, byte.MinValue, byte.MinValue, byte.MaxValue);
+        RgbaColor color2 = new(byte.MinValue, byte.MaxValue, byte.MinValue, byte.MaxValue);
 
         logicalBlock.SetEndpoints(color1, color2, 0);
 
@@ -185,8 +186,8 @@ public class LogicalAstcBlockTests
         logicalBlock.SetWeightAt(0, 0, 0);
         logicalBlock.SetWeightAt(1, 1, 64);
 
-        var colorAtMinWeight = logicalBlock.ColorAt(0, 0);
-        var colorAtMaxWeight = logicalBlock.ColorAt(1, 1);
+        RgbaColor colorAtMinWeight = logicalBlock.ColorAt(0, 0);
+        RgbaColor colorAtMaxWeight = logicalBlock.ColorAt(1, 1);
 
         colorAtMinWeight.R.Should().Be(color1.R);
         colorAtMaxWeight.R.Should().BeCloseTo(color2.R, 1);
@@ -195,7 +196,7 @@ public class LogicalAstcBlockTests
     [Fact]
     public void ColorAt_WithCheckerboardWeights_ShouldInterpolateCorrectly()
     {
-        var logicalBlock = new LogicalBlock(Footprint.Get8x8());
+        LogicalBlock logicalBlock = new(Footprint.Get8x8());
 
         // Create checkerboard weight pattern
         for (int j = 0; j < 8; ++j)
@@ -203,21 +204,25 @@ public class LogicalAstcBlockTests
             for (int i = 0; i < 8; ++i)
             {
                 if (((i ^ j) & 1) == 1)
+                {
                     logicalBlock.SetWeightAt(i, j, 0);
+                }
                 else
+                {
                     logicalBlock.SetWeightAt(i, j, 64);
+                }
             }
         }
 
-        var endpointA = new RgbaColor(123, 45, 67, 89);
-        var endpointB = new RgbaColor(101, 121, 31, 41);
+        RgbaColor endpointA = new(123, 45, 67, 89);
+        RgbaColor endpointB = new(101, 121, 31, 41);
         logicalBlock.SetEndpoints(endpointA, endpointB, 0);
 
         for (int j = 0; j < 8; ++j)
         {
             for (int i = 0; i < 8; ++i)
             {
-                var color = logicalBlock.ColorAt(i, j);
+                RgbaColor color = logicalBlock.ColorAt(i, j);
                 if (((i ^ j) & 1) == 1)
                 {
                     // Weight 0 = first endpoint
@@ -245,9 +250,9 @@ public class LogicalAstcBlockTests
     [InlineData(0, 4)]
     public void ColorAt_WithOutOfBoundsCoordinates_ShouldThrowArgumentOutOfRangeException(int x, int y)
     {
-        var logicalBlock = new LogicalBlock(Footprint.Get4x4());
+        LogicalBlock logicalBlock = new(Footprint.Get4x4());
 
-        var action = () => logicalBlock.ColorAt(x, y);
+        Action action = () => logicalBlock.ColorAt(x, y);
 
         action.Should().Throw<ArgumentOutOfRangeException>();
     }
@@ -255,11 +260,11 @@ public class LogicalAstcBlockTests
     [Fact]
     public void SetPartition_WithValidPartition_ShouldUpdateCorrectly()
     {
-        var footprint = Footprint.Get8x8();
-        var logicalBlock = new LogicalBlock(footprint);
+        Footprint footprint = Footprint.Get8x8();
+        LogicalBlock logicalBlock = new(footprint);
 
         // Create partition with 2 subsets, all pixels assigned to subset 0
-        var newPartition = new Partition(footprint, 2, 5)
+        Partition newPartition = new(footprint, 2, 5)
         {
             Assignment = new int[footprint.PixelCount]
         };
@@ -267,31 +272,31 @@ public class LogicalAstcBlockTests
         logicalBlock.SetPartition(newPartition);
 
         // Should be able to set endpoints for both valid partitions (0 and 1)
-        var redEndpoint = new RgbaColor(byte.MaxValue, byte.MinValue, byte.MinValue, byte.MaxValue);
-        var blackEndpoint = new RgbaColor(byte.MinValue, byte.MinValue, byte.MinValue, byte.MaxValue);
-        var greenEndpoint = new RgbaColor(byte.MinValue, byte.MaxValue, byte.MinValue, byte.MaxValue);
+        RgbaColor redEndpoint = new(byte.MaxValue, byte.MinValue, byte.MinValue, byte.MaxValue);
+        RgbaColor blackEndpoint = new(byte.MinValue, byte.MinValue, byte.MinValue, byte.MaxValue);
+        RgbaColor greenEndpoint = new(byte.MinValue, byte.MaxValue, byte.MinValue, byte.MaxValue);
 
-        var setEndpoint0 = () => logicalBlock.SetEndpoints(redEndpoint, blackEndpoint, 0);
-        var setEndpoint1 = () => logicalBlock.SetEndpoints(greenEndpoint, blackEndpoint, 1);
+        Action setEndpoint0 = () => logicalBlock.SetEndpoints(redEndpoint, blackEndpoint, 0);
+        Action setEndpoint1 = () => logicalBlock.SetEndpoints(greenEndpoint, blackEndpoint, 1);
 
         setEndpoint0.Should().NotThrow();
         setEndpoint1.Should().NotThrow();
 
         // Should not be able to set endpoints for non-existent partition 2
-        var setEndpoint2 = () => logicalBlock.SetEndpoints(redEndpoint, blackEndpoint, 2);
+        Action setEndpoint2 = () => logicalBlock.SetEndpoints(redEndpoint, blackEndpoint, 2);
         setEndpoint2.Should().Throw<ArgumentOutOfRangeException>();
     }
 
     [Fact]
     public void SetPartition_WithDifferentFootprint_ShouldThrowInvalidOperationException()
     {
-        var logicalBlock = new LogicalBlock(Footprint.Get4x4());
-        var wrongPartition = new Partition(Footprint.Get8x8(), 1, 0)
+        LogicalBlock logicalBlock = new(Footprint.Get4x4());
+        Partition wrongPartition = new(Footprint.Get8x8(), 1, 0)
         {
             Assignment = new int[64]
         };
 
-        var action = () => logicalBlock.SetPartition(wrongPartition);
+        Action action = () => logicalBlock.SetPartition(wrongPartition);
 
         action.Should()
             .Throw<InvalidOperationException>()
@@ -303,11 +308,11 @@ public class LogicalAstcBlockTests
     [InlineData(2)]
     public void SetEndpoints_WithInvalidSubset_ShouldThrowArgumentOutOfRangeException(int subset)
     {
-        var logicalBlock = new LogicalBlock(Footprint.Get4x4());
-        var color1 = new RgbaColor(byte.MaxValue, byte.MinValue, byte.MinValue, byte.MaxValue);
-        var color2 = new RgbaColor(byte.MinValue, byte.MaxValue, byte.MinValue, byte.MaxValue);
+        LogicalBlock logicalBlock = new(Footprint.Get4x4());
+        RgbaColor color1 = new(byte.MaxValue, byte.MinValue, byte.MinValue, byte.MaxValue);
+        RgbaColor color2 = new(byte.MinValue, byte.MaxValue, byte.MinValue, byte.MaxValue);
 
-        var action = () => logicalBlock.SetEndpoints(color1, color2, subset);
+        Action action = () => logicalBlock.SetEndpoints(color1, color2, subset);
 
         action.Should().Throw<ArgumentOutOfRangeException>();
     }
@@ -315,10 +320,10 @@ public class LogicalAstcBlockTests
     [Fact]
     public void UnpackLogicalBlock_WithErrorBlock_ShouldReturnNull()
     {
-        var bits = UInt128.Zero;
-        var info = BlockInfo.Decode(bits);
+        UInt128 bits = UInt128.Zero;
+        BlockInfo info = BlockInfo.Decode(bits);
 
-        var result = LogicalBlock.UnpackLogicalBlock(Footprint.Get8x8(), bits, in info);
+        LogicalBlock? result = LogicalBlock.UnpackLogicalBlock(Footprint.Get8x8(), bits, in info);
 
         result.Should().BeNull();
     }
@@ -326,10 +331,10 @@ public class LogicalAstcBlockTests
     [Fact]
     public void UnpackLogicalBlock_WithVoidExtentBlock_ShouldReturnLogicalBlock()
     {
-        var bits = (UInt128)0xFFFFFFFFFFFFFDFCUL;
-        var info = BlockInfo.Decode(bits);
+        UInt128 bits = (UInt128)0xFFFFFFFFFFFFFDFCUL;
+        BlockInfo info = BlockInfo.Decode(bits);
 
-        var result = LogicalBlock.UnpackLogicalBlock(Footprint.Get8x8(), bits, in info);
+        LogicalBlock? result = LogicalBlock.UnpackLogicalBlock(Footprint.Get8x8(), bits, in info);
 
         result.Should().NotBeNull();
         result!.GetFootprint().Should().Be(Footprint.Get8x8());
@@ -338,10 +343,10 @@ public class LogicalAstcBlockTests
     [Fact]
     public void UnpackLogicalBlock_WithStandardBlock_ShouldReturnLogicalBlock()
     {
-        var bits = (UInt128)0x0000000001FE000173UL;
-        var info = BlockInfo.Decode(bits);
+        UInt128 bits = (UInt128)0x0000000001FE000173UL;
+        BlockInfo info = BlockInfo.Decode(bits);
 
-        var result = LogicalBlock.UnpackLogicalBlock(Footprint.Get6x5(), bits, in info);
+        LogicalBlock? result = LogicalBlock.UnpackLogicalBlock(Footprint.Get6x5(), bits, in info);
 
         result.Should().NotBeNull();
         result!.GetFootprint().Should().Be(Footprint.Get6x5());
@@ -384,6 +389,7 @@ public class LogicalAstcBlockTests
         int width,
         int height)
     {
+        _ = hasAlpha;
         Footprint footprint = Footprint.FromFootprintType(footprintType);
         byte[] astcData = TestFile.Create(Path.Combine(TestImages.Astc.InputFolder, imageName + ".astc")).Bytes[16..];
 
@@ -397,7 +403,7 @@ public class LogicalAstcBlockTests
     private static Image<Rgba32> DecodeAstcBlocksToImage(Footprint footprint, byte[] astcData, int width, int height)
     {
         // ASTC uses x/y ordering, so we flip Y to match ImageSharp's row/column origin.
-        var image = new Image<Rgba32>(width, height);
+        Image<Rgba32> image = new(width, height);
         int blockWidth = footprint.Width;
         int blockHeight = footprint.Height;
         int blocksWide = (width + blockWidth - 1) / blockWidth;
@@ -409,7 +415,7 @@ public class LogicalAstcBlockTests
             int blockY = blockIndex / blocksWide;
 
             byte[] blockSpan = astcData.AsSpan(i, PhysicalBlock.SizeInBytes).ToArray();
-            var bits = new UInt128(
+            UInt128 bits = new(
                 BitConverter.ToUInt64(blockSpan, 8),
                 BitConverter.ToUInt64(blockSpan, 0));
             BlockInfo info = BlockInfo.Decode(bits);

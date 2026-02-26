@@ -20,13 +20,13 @@ internal static class EndpointCodec
     {
         if (mode.IsHdr())
         {
-            var (low, high) = HdrEndpointDecoder.DecodeHdrMode(values, maxValue, mode);
+            (RgbaHdrColor low, RgbaHdrColor high) = HdrEndpointDecoder.DecodeHdrMode(values, maxValue, mode);
             bool alphaIsLdr = mode == ColorEndpointMode.HdrRgbDirectLdrAlpha;
             return ColorEndpointPair.Hdr(low, high, alphaIsLdr);
         }
         else
         {
-            var (low, high) = DecodeColorsForMode(values, maxValue, mode);
+            (RgbaColor low, RgbaColor high) = DecodeColorsForMode(values, maxValue, mode);
             return ColorEndpointPair.Ldr(low, high);
         }
     }
@@ -42,7 +42,7 @@ internal static class EndpointCodec
         }
 
         UnquantizeInline(unquantizedValues, maxValue);
-        var pair = DecodeColorsForModeUnquantized(unquantizedValues, mode);
+        ColorEndpointPair pair = DecodeColorsForModeUnquantized(unquantizedValues, mode);
         return (pair.LdrLow, pair.LdrHigh);
     }
 
@@ -55,7 +55,7 @@ internal static class EndpointCodec
     {
         if (mode.IsHdr())
         {
-            var (low, high) = HdrEndpointDecoder.DecodeHdrModeUnquantized(unquantizedValues, mode);
+            (RgbaHdrColor low, RgbaHdrColor high) = HdrEndpointDecoder.DecodeHdrModeUnquantized(unquantizedValues, mode);
             bool alphaIsLdr = mode == ColorEndpointMode.HdrRgbDirectLdrAlpha;
             return ColorEndpointPair.Hdr(low, high, alphaIsLdr);
         }
@@ -93,8 +93,8 @@ internal static class EndpointCodec
                 break;
             case ColorEndpointMode.LdrLumaAlphaBaseOffset:
             {
-                var (b0, a0) = BitOperations.TransferPrecision(unquantizedValues[1], unquantizedValues[0]);
-                var (b2, a2) = BitOperations.TransferPrecision(unquantizedValues[3], unquantizedValues[2]);
+                (int b0, int a0) = BitOperations.TransferPrecision(unquantizedValues[1], unquantizedValues[0]);
+                (int b2, int a2) = BitOperations.TransferPrecision(unquantizedValues[3], unquantizedValues[2]);
                 endpointLowRgba = new RgbaColor(a0, a0, a0, a2);
                 int highLuma = a0 + b0;
                 endpointHighRgba = new RgbaColor(highLuma, highLuma, highLuma, a2 + b2);
@@ -134,9 +134,9 @@ internal static class EndpointCodec
 
             case ColorEndpointMode.LdrRgbBaseOffset:
             {
-                var (b0, a0) = BitOperations.TransferPrecision(unquantizedValues[1], unquantizedValues[0]);
-                var (b1, a1) = BitOperations.TransferPrecision(unquantizedValues[3], unquantizedValues[2]);
-                var (b2, a2) = BitOperations.TransferPrecision(unquantizedValues[5], unquantizedValues[4]);
+                (int b0, int a0) = BitOperations.TransferPrecision(unquantizedValues[1], unquantizedValues[0]);
+                (int b1, int a1) = BitOperations.TransferPrecision(unquantizedValues[3], unquantizedValues[2]);
+                (int b2, int a2) = BitOperations.TransferPrecision(unquantizedValues[5], unquantizedValues[4]);
                 if (b0 + b1 + b2 < 0)
                 {
                     endpointLowRgba = new RgbaColor(
@@ -193,10 +193,10 @@ internal static class EndpointCodec
 
             case ColorEndpointMode.LdrRgbaBaseOffset:
             {
-                var (b0, a0) = BitOperations.TransferPrecision(unquantizedValues[1], unquantizedValues[0]);
-                var (b1, a1) = BitOperations.TransferPrecision(unquantizedValues[3], unquantizedValues[2]);
-                var (b2, a2) = BitOperations.TransferPrecision(unquantizedValues[5], unquantizedValues[4]);
-                var (b3, a3) = BitOperations.TransferPrecision(unquantizedValues[7], unquantizedValues[6]);
+                (int b0, int a0) = BitOperations.TransferPrecision(unquantizedValues[1], unquantizedValues[0]);
+                (int b1, int a1) = BitOperations.TransferPrecision(unquantizedValues[3], unquantizedValues[2]);
+                (int b2, int a2) = BitOperations.TransferPrecision(unquantizedValues[5], unquantizedValues[4]);
+                (int b3, int a3) = BitOperations.TransferPrecision(unquantizedValues[7], unquantizedValues[6]);
                 if (b0 + b1 + b2 < 0)
                 {
                     endpointLowRgba = new RgbaColor(
@@ -230,7 +230,7 @@ internal static class EndpointCodec
 
     internal static int[] UnquantizeArray(int[] values, int maxValue)
     {
-        var result = new int[values.Length];
+        int[] result = new int[values.Length];
         for (int i = 0; i < values.Length; ++i)
         {
             result[i] = Quantization.UnquantizeCEValueFromRange(values[i], maxValue);

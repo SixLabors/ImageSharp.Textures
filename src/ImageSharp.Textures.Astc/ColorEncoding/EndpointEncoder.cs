@@ -19,13 +19,13 @@ internal static class EndpointEncoder
             case ColorEndpointMode.LdrRgbaDirect:
             {
                 int maxValueCount = Math.Max(ColorEndpointMode.LdrRgbDirect.GetColorValuesCount(), ColorEndpointMode.LdrRgbaDirect.GetColorValuesCount());
-                var v = new int[maxValueCount];
+                int[] v = new int[maxValueCount];
                 for (int i = 0; i < maxValueCount; ++i)
                 {
                     v[i] = i < values.Count ? values[i] : 0;
                 }
 
-                var unquantizedValues = EndpointCodec.UnquantizeArray(v, maxValue);
+                int[] unquantizedValues = EndpointCodec.UnquantizeArray(v, maxValue);
                 int s0 = unquantizedValues[0] + unquantizedValues[2] + unquantizedValues[4];
                 int s1 = unquantizedValues[1] + unquantizedValues[3] + unquantizedValues[5];
                 return s0 > s1;
@@ -35,16 +35,16 @@ internal static class EndpointEncoder
             case ColorEndpointMode.LdrRgbaBaseOffset:
             {
                 int maxValueCount = Math.Max(ColorEndpointMode.LdrRgbBaseOffset.GetColorValuesCount(), ColorEndpointMode.LdrRgbaBaseOffset.GetColorValuesCount());
-                var v = new int[maxValueCount];
+                int[] v = new int[maxValueCount];
                 for (int i = 0; i < maxValueCount; ++i)
                 {
                     v[i] = i < values.Count ? values[i] : 0;
                 }
 
-                var unquantizedValues = EndpointCodec.UnquantizeArray(v, maxValue);
-                var (b0, a0) = BitOperations.TransferPrecision(unquantizedValues[1], unquantizedValues[0]);
-                var (b1, a1) = BitOperations.TransferPrecision(unquantizedValues[3], unquantizedValues[2]);
-                var (b2, a2) = BitOperations.TransferPrecision(unquantizedValues[5], unquantizedValues[4]);
+                int[] unquantizedValues = EndpointCodec.UnquantizeArray(v, maxValue);
+                (int b0, int a0) = BitOperations.TransferPrecision(unquantizedValues[1], unquantizedValues[0]);
+                (int b1, int a1) = BitOperations.TransferPrecision(unquantizedValues[3], unquantizedValues[2]);
+                (int b2, int a2) = BitOperations.TransferPrecision(unquantizedValues[5], unquantizedValues[4]);
                 return (b0 + b1 + b2) < 0;
             }
 
@@ -83,8 +83,8 @@ internal static class EndpointEncoder
             case EndpointEncodingMode.BaseScaleRgb:
             case EndpointEncodingMode.BaseScaleRgba:
             {
-                var baseColor = endpointHighRgba;
-                var scaled = endpointLowRgba;
+                RgbaColor baseColor = endpointHighRgba;
+                RgbaColor scaled = endpointLowRgba;
 
                 int numChannelsGe = 0;
                 for (int i = 0; i < 3; ++i)
@@ -95,13 +95,11 @@ internal static class EndpointEncoder
                 if (numChannelsGe < 2)
                 {
                     needsWeightSwap = true;
-                    var temp = baseColor;
-                    baseColor = scaled;
-                    scaled = temp;
+                    (scaled, baseColor) = (baseColor, scaled);
                 }
 
-                var quantizedBase = QuantizeColorArray(baseColor, maxValue);
-                var unquantizedBase = EndpointCodec.UnquantizeArray(quantizedBase, maxValue);
+                int[] quantizedBase = QuantizeColorArray(baseColor, maxValue);
+                int[] unquantizedBase = EndpointCodec.UnquantizeArray(quantizedBase, maxValue);
 
                 int numSamples = 0;
                 int scaleSum = 0;
@@ -152,7 +150,7 @@ internal static class EndpointEncoder
 
     private static int[] QuantizeColorArray(RgbaColor c, int maxValue)
     {
-        var array = new int[RgbaColor.BytesPerPixel];
+        int[] array = new int[RgbaColor.BytesPerPixel];
         for (int i = 0; i < RgbaColor.BytesPerPixel; ++i)
         {
             array[i] = Quantization.QuantizeCEValueToRange(c[i], maxValue);
@@ -173,9 +171,7 @@ internal static class EndpointEncoder
         if (avg1 > avg2)
         {
             needsWeightSwap = true;
-            var temp = avg1;
-            avg1 = avg2;
-            avg2 = temp;
+            (avg2, avg1) = (avg1, avg2);
         }
 
         int offset = Math.Min(avg2 - avg1, 0x3F);
@@ -187,11 +183,11 @@ internal static class EndpointEncoder
 
         values[0] = quantOffLow;
         values[1] = quantOffHigh;
-        var (decLowOff, decHighOff) = EndpointCodec.DecodeColorsForMode(values.ToArray(), maxValue, ColorEndpointMode.LdrLumaBaseOffset);
+        (RgbaColor decLowOff, RgbaColor decHighOff) = EndpointCodec.DecodeColorsForMode(values.ToArray(), maxValue, ColorEndpointMode.LdrLumaBaseOffset);
 
         values[0] = quantLow;
         values[1] = quantHigh;
-        var (decLowDir, decHighDir) = EndpointCodec.DecodeColorsForMode(values.ToArray(), maxValue, ColorEndpointMode.LdrLumaDirect);
+        (RgbaColor decLowDir, RgbaColor decHighDir) = EndpointCodec.DecodeColorsForMode(values.ToArray(), maxValue, ColorEndpointMode.LdrLumaDirect);
 
         int calculateErrorOff = 0;
         int calculateErrorDir = 0;
@@ -227,11 +223,11 @@ internal static class EndpointEncoder
         astcMode = ColorEndpointMode.LdrRgbDirect;
         int numChannels = withAlpha ? 4 : 3;
 
-        var invertedBlueContractLow = endpointLowRgba.WithInvertedBlueContract();
-        var invertedBlueContractHigh = endpointHighRgba.WithInvertedBlueContract();
+        RgbaColor invertedBlueContractLow = endpointLowRgba.WithInvertedBlueContract();
+        RgbaColor invertedBlueContractHigh = endpointHighRgba.WithInvertedBlueContract();
 
-        var directBase = new int[4];
-        var directOffset = new int[4];
+        int[] directBase = new int[4];
+        int[] directOffset = new int[4];
         for (int i = 0; i < 4; ++i)
         {
             directBase[i] = endpointLowRgba[i];
@@ -239,8 +235,8 @@ internal static class EndpointEncoder
             (directOffset[i], directBase[i]) = BitOperations.TransferPrecisionInverse(directOffset[i], directBase[i]);
         }
 
-        var invertedBlueContractBase = new int[4];
-        var invertedBlueContractOffset = new int[4];
+        int[] invertedBlueContractBase = new int[4];
+        int[] invertedBlueContractOffset = new int[4];
         for (int i = 0; i < 4; ++i)
         {
             invertedBlueContractBase[i] = invertedBlueContractHigh[i];
@@ -248,8 +244,8 @@ internal static class EndpointEncoder
             (invertedBlueContractOffset[i], invertedBlueContractBase[i]) = BitOperations.TransferPrecisionInverse(invertedBlueContractOffset[i], invertedBlueContractBase[i]);
         }
 
-        var directBaseSwapped = new int[4];
-        var directOffsetSwapped = new int[4];
+        int[] directBaseSwapped = new int[4];
+        int[] directOffsetSwapped = new int[4];
         for (int i = 0; i < 4; ++i)
         {
             directBaseSwapped[i] = endpointHighRgba[i];
@@ -257,8 +253,8 @@ internal static class EndpointEncoder
             (directOffsetSwapped[i], directBaseSwapped[i]) = BitOperations.TransferPrecisionInverse(directOffsetSwapped[i], directBaseSwapped[i]);
         }
 
-        var invertedBlueContractBaseSwapped = new int[4];
-        var invertedBlueContractOffsetSwapped = new int[4];
+        int[] invertedBlueContractBaseSwapped = new int[4];
+        int[] invertedBlueContractOffsetSwapped = new int[4];
         for (int i = 0; i < 4; ++i)
         {
             invertedBlueContractBaseSwapped[i] = invertedBlueContractLow[i];
@@ -266,24 +262,24 @@ internal static class EndpointEncoder
             (invertedBlueContractOffsetSwapped[i], invertedBlueContractBaseSwapped[i]) = BitOperations.TransferPrecisionInverse(invertedBlueContractOffsetSwapped[i], invertedBlueContractBaseSwapped[i]);
         }
 
-        var directQuantized = new QuantizedEndpointPair(endpointLowRgba, endpointHighRgba, maxValue);
-        var bcQuantized = new QuantizedEndpointPair(invertedBlueContractLow, invertedBlueContractHigh, maxValue);
+        QuantizedEndpointPair directQuantized = new(endpointLowRgba, endpointHighRgba, maxValue);
+        QuantizedEndpointPair bcQuantized = new(invertedBlueContractLow, invertedBlueContractHigh, maxValue);
 
-        var offsetQuantized = new QuantizedEndpointPair(new RgbaColor(directBase[0], directBase[1], directBase[2], directBase[3]), new RgbaColor(directOffset[0], directOffset[1], directOffset[2], directOffset[3]), maxValue);
-        var bcOffsetQuantized = new QuantizedEndpointPair(new RgbaColor(invertedBlueContractBase[0], invertedBlueContractBase[1], invertedBlueContractBase[2], invertedBlueContractBase[3]), new RgbaColor(invertedBlueContractOffset[0], invertedBlueContractOffset[1], invertedBlueContractOffset[2], invertedBlueContractOffset[3]), maxValue);
+        QuantizedEndpointPair offsetQuantized = new(new RgbaColor(directBase[0], directBase[1], directBase[2], directBase[3]), new RgbaColor(directOffset[0], directOffset[1], directOffset[2], directOffset[3]), maxValue);
+        QuantizedEndpointPair bcOffsetQuantized = new(new RgbaColor(invertedBlueContractBase[0], invertedBlueContractBase[1], invertedBlueContractBase[2], invertedBlueContractBase[3]), new RgbaColor(invertedBlueContractOffset[0], invertedBlueContractOffset[1], invertedBlueContractOffset[2], invertedBlueContractOffset[3]), maxValue);
 
-        var offsetSwappedQuantized = new QuantizedEndpointPair(new RgbaColor(directBaseSwapped[0], directBaseSwapped[1], directBaseSwapped[2], directBaseSwapped[3]), new RgbaColor(directOffsetSwapped[0], directOffsetSwapped[1], directOffsetSwapped[2], directOffsetSwapped[3]), maxValue);
-        var bcOffsetSwappedQuantized = new QuantizedEndpointPair(new RgbaColor(invertedBlueContractBaseSwapped[0], invertedBlueContractBaseSwapped[1], invertedBlueContractBaseSwapped[2], invertedBlueContractBaseSwapped[3]), new RgbaColor(invertedBlueContractOffsetSwapped[0], invertedBlueContractOffsetSwapped[1], invertedBlueContractOffsetSwapped[2], invertedBlueContractOffsetSwapped[3]), maxValue);
+        QuantizedEndpointPair offsetSwappedQuantized = new(new RgbaColor(directBaseSwapped[0], directBaseSwapped[1], directBaseSwapped[2], directBaseSwapped[3]), new RgbaColor(directOffsetSwapped[0], directOffsetSwapped[1], directOffsetSwapped[2], directOffsetSwapped[3]), maxValue);
+        QuantizedEndpointPair bcOffsetSwappedQuantized = new(new RgbaColor(invertedBlueContractBaseSwapped[0], invertedBlueContractBaseSwapped[1], invertedBlueContractBaseSwapped[2], invertedBlueContractBaseSwapped[3]), new RgbaColor(invertedBlueContractOffsetSwapped[0], invertedBlueContractOffsetSwapped[1], invertedBlueContractOffsetSwapped[2], invertedBlueContractOffsetSwapped[3]), maxValue);
 
-        var errors = new List<CEEncodingOption>(6);
+        List<CEEncodingOption> errors = new(6);
 
         // 3.1 regular unquantized error
         {
-            var rgbaLow = directQuantized.UnquantizedLow();
-            var rgbaHigh = directQuantized.UnquantizedHigh();
-            var lowColor = new RgbaColor(rgbaLow[0], rgbaLow[1], rgbaLow[2], rgbaLow[3]);
-            var highColor = new RgbaColor(rgbaHigh[0], rgbaHigh[1], rgbaHigh[2], rgbaHigh[3]);
-            var squaredRgbError = withAlpha
+            int[] rgbaLow = directQuantized.UnquantizedLow();
+            int[] rgbaHigh = directQuantized.UnquantizedHigh();
+            RgbaColor lowColor = new(rgbaLow[0], rgbaLow[1], rgbaLow[2], rgbaLow[3]);
+            RgbaColor highColor = new(rgbaHigh[0], rgbaHigh[1], rgbaHigh[2], rgbaHigh[3]);
+            int squaredRgbError = withAlpha
                 ? RgbaColor.SquaredError(lowColor, endpointLowRgba) + RgbaColor.SquaredError(highColor, endpointHighRgba)
                 : RgbColor.SquaredError(lowColor, endpointLowRgba) + RgbColor.SquaredError(highColor, endpointHighRgba);
             errors.Add(new CEEncodingOption(squaredRgbError, directQuantized, false, false, false));
@@ -291,13 +287,13 @@ internal static class EndpointEncoder
 
         // 3.2 blue-contract
         {
-            var blueContractUnquantizedLow = bcQuantized.UnquantizedLow();
-            var blueContractUnquantizedHigh = bcQuantized.UnquantizedHigh();
-            var blueContractLow = RgbaColorExtensions.WithBlueContract(blueContractUnquantizedLow[0], blueContractUnquantizedLow[1], blueContractUnquantizedLow[2], blueContractUnquantizedLow[3]);
-            var blueContractHigh = RgbaColorExtensions.WithBlueContract(blueContractUnquantizedHigh[0], blueContractUnquantizedHigh[1], blueContractUnquantizedHigh[2], blueContractUnquantizedHigh[3]);
+            int[] blueContractUnquantizedLow = bcQuantized.UnquantizedLow();
+            int[] blueContractUnquantizedHigh = bcQuantized.UnquantizedHigh();
+            RgbaColor blueContractLow = RgbaColorExtensions.WithBlueContract(blueContractUnquantizedLow[0], blueContractUnquantizedLow[1], blueContractUnquantizedLow[2], blueContractUnquantizedLow[3]);
+            RgbaColor blueContractHigh = RgbaColorExtensions.WithBlueContract(blueContractUnquantizedHigh[0], blueContractUnquantizedHigh[1], blueContractUnquantizedHigh[2], blueContractUnquantizedHigh[3]);
 
             // TODO: How to handle alpha for this entire functions??
-            var blueContractSquaredError = withAlpha
+            int blueContractSquaredError = withAlpha
                 ? RgbaColor.SquaredError(blueContractLow, endpointLowRgba) + RgbaColor.SquaredError(blueContractHigh, endpointHighRgba)
                 : RgbColor.SquaredError(blueContractLow, endpointLowRgba) + RgbColor.SquaredError(blueContractHigh, endpointHighRgba);
 
@@ -305,13 +301,13 @@ internal static class EndpointEncoder
         }
 
         // 3.3 base/offset
-        Action<QuantizedEndpointPair, bool> computeBaseOffsetError = (pair, swapped) =>
+        void ComputeBaseOffsetError(QuantizedEndpointPair pair, bool swapped)
         {
-            var baseArr = pair.UnquantizedLow();
-            var offsetArr = pair.UnquantizedHigh();
+            int[] baseArr = pair.UnquantizedLow();
+            int[] offsetArr = pair.UnquantizedHigh();
 
-            var baseColor = new RgbaColor(baseArr[0], baseArr[1], baseArr[2], baseArr[3]);
-            var offsetColor = new RgbaColor(offsetArr[0], offsetArr[1], offsetArr[2], offsetArr[3]).AsOffsetFrom(baseColor);
+            RgbaColor baseColor = new(baseArr[0], baseArr[1], baseArr[2], baseArr[3]);
+            RgbaColor offsetColor = new RgbaColor(offsetArr[0], offsetArr[1], offsetArr[2], offsetArr[3]).AsOffsetFrom(baseColor);
 
             int baseOffsetError = 0;
             if (swapped)
@@ -328,17 +324,17 @@ internal static class EndpointEncoder
             }
 
             errors.Add(new CEEncodingOption(baseOffsetError, pair, swapped, false, true));
-        };
+        }
 
-        computeBaseOffsetError(offsetQuantized, false);
+        ComputeBaseOffsetError(offsetQuantized, false);
 
-        Action<QuantizedEndpointPair, bool> computeBaseOffsetBlueContractError = (pair, swapped) =>
+        void ComputeBaseOffsetBlueContractError(QuantizedEndpointPair pair, bool swapped)
         {
-            var baseArr = pair.UnquantizedLow();
-            var offsetArr = pair.UnquantizedHigh();
+            int[] baseArr = pair.UnquantizedLow();
+            int[] offsetArr = pair.UnquantizedHigh();
 
-            var baseColor = new RgbaColor(baseArr[0], baseArr[1], baseArr[2], baseArr[3]);
-            var offsetColor = new RgbaColor(offsetArr[0], offsetArr[1], offsetArr[2], offsetArr[3]).AsOffsetFrom(baseColor);
+            RgbaColor baseColor = new(baseArr[0], baseArr[1], baseArr[2], baseArr[3]);
+            RgbaColor offsetColor = new RgbaColor(offsetArr[0], offsetArr[1], offsetArr[2], offsetArr[3]).AsOffsetFrom(baseColor);
 
             baseColor = baseColor.WithBlueContract();
             offsetColor = offsetColor.WithBlueContract();
@@ -358,19 +354,18 @@ internal static class EndpointEncoder
             }
 
             errors.Add(new CEEncodingOption(squaredBlueContractError, pair, swapped, true, true));
-        };
+        }
 
-        computeBaseOffsetBlueContractError(bcOffsetQuantized, false);
-        computeBaseOffsetError(offsetSwappedQuantized, true);
-        computeBaseOffsetBlueContractError(bcOffsetSwappedQuantized, true);
+        ComputeBaseOffsetBlueContractError(bcOffsetQuantized, false);
+        ComputeBaseOffsetError(offsetSwappedQuantized, true);
+        ComputeBaseOffsetBlueContractError(bcOffsetSwappedQuantized, true);
 
         errors.Sort((a, b) => a.Error().CompareTo(b.Error()));
 
-        foreach (var measurement in errors)
+        foreach (CEEncodingOption measurement in errors)
         {
             bool needsWeightSwap = false;
-            ColorEndpointMode modeUnused;
-            if (measurement.Pack(withAlpha, out modeUnused, values, ref needsWeightSwap))
+            if (measurement.Pack(withAlpha, out ColorEndpointMode modeUnused, values, ref needsWeightSwap))
             {
                 return needsWeightSwap;
             }
@@ -436,11 +431,11 @@ internal static class EndpointEncoder
         public bool Pack(bool hasAlpha, out ColorEndpointMode endpointMode, List<int> values, ref bool needsWeightSwap)
         {
             endpointMode = ColorEndpointMode.LdrLumaDirect;
-            var unquantizedLowOriginal = this.quantizedEndpoints.UnquantizedLow();
-            var unquantizedHighOriginal = this.quantizedEndpoints.UnquantizedHigh();
+            int[] unquantizedLowOriginal = this.quantizedEndpoints.UnquantizedLow();
+            int[] unquantizedHighOriginal = this.quantizedEndpoints.UnquantizedHigh();
 
-            var unquantizedLow = (int[])unquantizedLowOriginal.Clone();
-            var unquantizedHigh = (int[])unquantizedHighOriginal.Clone();
+            int[] unquantizedLow = (int[])unquantizedLowOriginal.Clone();
+            int[] unquantizedHigh = (int[])unquantizedHighOriginal.Clone();
 
             if (this.useOffsetMode)
             {
@@ -492,11 +487,11 @@ internal static class EndpointEncoder
                 }
             }
 
-            var quantizedLowOriginal = this.quantizedEndpoints.QuantizedLow();
-            var quantizedHighOriginal = this.quantizedEndpoints.QuantizedHigh();
+            int[] quantizedLowOriginal = this.quantizedEndpoints.QuantizedLow();
+            int[] quantizedHighOriginal = this.quantizedEndpoints.QuantizedHigh();
 
-            var quantizedLow = (int[])quantizedLowOriginal.Clone();
-            var quantizedHigh = (int[])quantizedHighOriginal.Clone();
+            int[] quantizedLow = (int[])quantizedLowOriginal.Clone();
+            int[] quantizedHigh = (int[])quantizedHighOriginal.Clone();
 
             if (swapVals)
             {
@@ -505,9 +500,7 @@ internal static class EndpointEncoder
                     throw new InvalidOperationException();
                 }
 
-                var tmp = quantizedLow;
-                quantizedLow = quantizedHigh;
-                quantizedHigh = tmp;
+                (quantizedHigh, quantizedLow) = (quantizedLow, quantizedHigh);
                 needsWeightSwap = !needsWeightSwap;
             }
 

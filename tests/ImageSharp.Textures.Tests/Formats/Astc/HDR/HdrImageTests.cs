@@ -20,10 +20,10 @@ public class HdrImageTests
     [Description("Verify that the ASTC file header is correctly parsed for HDR content, including footprint detection")]
     public void DecodeHdrFile_VerifyFootprintDetection()
     {
-        var astcPath = TestFile.GetInputFileFullPath(Path.Combine(TestImages.Astc.HdrFolder, "HDR-A-1x1.astc"));
+        string astcPath = TestFile.GetInputFileFullPath(Path.Combine(TestImages.Astc.HdrFolder, "HDR-A-1x1.astc"));
 
-        var astcData = File.ReadAllBytes(astcPath);
-        var astcFile = AstcFile.FromMemory(astcData);
+        byte[] astcData = File.ReadAllBytes(astcPath);
+        AstcFile astcFile = AstcFile.FromMemory(astcData);
 
         // The HDR-A-1x1.astc file has a 6x6 footprint based on the header
         astcFile.Footprint.Width.Should().Be(6);
@@ -34,12 +34,12 @@ public class HdrImageTests
     [Fact]
     public void DecodeHdrAstcFile_1x1Pixel_ShouldProduceValidHdrOutput()
     {
-        var astcPath = TestFile.GetInputFileFullPath(Path.Combine(TestImages.Astc.HdrFolder, "HDR-A-1x1.astc"));
+        string astcPath = TestFile.GetInputFileFullPath(Path.Combine(TestImages.Astc.HdrFolder, "HDR-A-1x1.astc"));
 
-        var astcData = File.ReadAllBytes(astcPath);
-        var astcFile = AstcFile.FromMemory(astcData);
+        byte[] astcData = File.ReadAllBytes(astcPath);
+        AstcFile astcFile = AstcFile.FromMemory(astcData);
 
-        var hdrResult = AstcDecoder.DecompressHdrImage(
+        Span<float> hdrResult = AstcDecoder.DecompressHdrImage(
             astcFile.Blocks,
             astcFile.Width,
             astcFile.Height,
@@ -50,7 +50,7 @@ public class HdrImageTests
 
         // HDR values can exceed 1.0
         // Just verify they're in a reasonable range (0.0 to 10.0)
-        foreach (var value in hdrResult)
+        foreach (float value in hdrResult)
         {
             value.Should().BeGreaterThanOrEqualTo(0.0f);
             value.Should().BeLessThan(10.0f);
@@ -60,12 +60,12 @@ public class HdrImageTests
     [Fact]
     public void DecodeHdrAstcFile_Tile_ShouldProduceValidHdrOutput()
     {
-        var astcPath = TestFile.GetInputFileFullPath(Path.Combine(TestImages.Astc.HdrFolder, "hdr-tile.astc"));
+        string astcPath = TestFile.GetInputFileFullPath(Path.Combine(TestImages.Astc.HdrFolder, "hdr-tile.astc"));
 
-        var astcData = File.ReadAllBytes(astcPath);
-        var astcFile = AstcFile.FromMemory(astcData);
+        byte[] astcData = File.ReadAllBytes(astcPath);
+        AstcFile astcFile = AstcFile.FromMemory(astcData);
 
-        var hdrResult = AstcDecoder.DecompressHdrImage(
+        Span<float> hdrResult = AstcDecoder.DecompressHdrImage(
             astcFile.Blocks,
             astcFile.Width,
             astcFile.Height,
@@ -76,10 +76,12 @@ public class HdrImageTests
 
         // Verify at least some HDR values exceed 1.0 (typical for HDR content)
         int valuesGreaterThanOne = 0;
-        foreach (var v in hdrResult)
+        foreach (float v in hdrResult)
         {
             if (v > 1.0f)
+            {
                 valuesGreaterThanOne++;
+            }
         }
 
         valuesGreaterThanOne.Should().Be(64);
@@ -89,24 +91,24 @@ public class HdrImageTests
     [Description("Verify that HDR ASTC files can be decoded with the LDR API, producing clamped values")]
     public void DecodeHdrAstcFile_WithLdrApi_ShouldClampValues()
     {
-        var astcPath = TestFile.GetInputFileFullPath(Path.Combine(TestImages.Astc.HdrFolder, "HDR-A-1x1.astc"));
+        string astcPath = TestFile.GetInputFileFullPath(Path.Combine(TestImages.Astc.HdrFolder, "HDR-A-1x1.astc"));
 
         if (!File.Exists(astcPath))
         {
             return;
         }
 
-        var astcData = File.ReadAllBytes(astcPath);
-        var astcFile = AstcFile.FromMemory(astcData);
+        byte[] astcData = File.ReadAllBytes(astcPath);
+        AstcFile astcFile = AstcFile.FromMemory(astcData);
 
         // Decode using LDR API
-        var ldrResult = AstcDecoder.DecompressImage(astcFile);
+        Span<byte> ldrResult = AstcDecoder.DecompressImage(astcFile);
 
         // Should produce 1 pixel with 4 bytes (RGBA)
         ldrResult.Length.Should().Be(RgbaColor.BytesPerPixel);
 
         // All values should be in LDR range
-        foreach (var value in ldrResult)
+        foreach (byte value in ldrResult)
         {
             value.Should().BeGreaterThanOrEqualTo(byte.MinValue);
             value.Should().BeLessThanOrEqualTo(byte.MaxValue);
@@ -117,15 +119,15 @@ public class HdrImageTests
     [Description("Verify that HDR and LDR APIs produce consistent relative channel values for the same HDR ASTC file")]
     public void HdrAndLdrApis_OnSameHdrFile_ShouldProduceConsistentRelativeValues()
     {
-        var astcPath = TestFile.GetInputFileFullPath(Path.Combine(TestImages.Astc.HdrFolder, "HDR-A-1x1.astc"));
+        string astcPath = TestFile.GetInputFileFullPath(Path.Combine(TestImages.Astc.HdrFolder, "HDR-A-1x1.astc"));
 
-        var astcData = File.ReadAllBytes(astcPath);
-        var astcFile = AstcFile.FromMemory(astcData);
+        byte[] astcData = File.ReadAllBytes(astcPath);
+        AstcFile astcFile = AstcFile.FromMemory(astcData);
 
         // Decode with both APIs
-        var hdrResult = AstcDecoder.DecompressHdrImage(
+        Span<float> hdrResult = AstcDecoder.DecompressHdrImage(
             astcFile.Blocks, astcFile.Width, astcFile.Height, astcFile.Footprint);
-        var ldrResult = AstcDecoder.DecompressImage(astcFile);
+        Span<byte> ldrResult = AstcDecoder.DecompressImage(astcFile);
 
         // Both should produce output for 1 pixel
         hdrResult.Length.Should().Be(4);
@@ -139,9 +141,13 @@ public class HdrImageTests
             for (int j = i + 1; j < 3; j++)
             {
                 if (hdrResult[i] > hdrResult[j])
+                {
                     ldrResult[i].Should().BeGreaterThanOrEqualTo(ldrResult[j]);
+                }
                 else if (hdrResult[i] < hdrResult[j])
+                {
                     ldrResult[i].Should().BeLessThanOrEqualTo(ldrResult[j]);
+                }
             }
         }
     }

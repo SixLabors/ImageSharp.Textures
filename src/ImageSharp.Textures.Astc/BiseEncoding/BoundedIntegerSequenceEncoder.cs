@@ -33,7 +33,7 @@ internal sealed class BoundedIntegerSequenceEncoder : BoundedIntegerSequenceCode
             switch (this.Encoding)
             {
                 case BiseEncodingMode.TritEncoding:
-                    var trits = new List<int>();
+                    List<int> trits = [];
                     for (int i = 0; i < 5; ++i)
                     {
                         if (index < this.values.Count)
@@ -49,10 +49,10 @@ internal sealed class BoundedIntegerSequenceEncoder : BoundedIntegerSequenceCode
                     EncodeISEBlock<int>(trits, this.BitCount, ref bitSink, ref bitsWrittenCount, totalBitCount);
                     break;
                 case BiseEncodingMode.QuintEncoding:
-                    var quints = new List<int>();
+                    List<int> quints = [];
                     for (int i = 0; i < 3; ++i)
                     {
-                        var value = index < this.values.Count
+                        int value = index < this.values.Count
                             ? this.values[index++]
                             : 0;
                         quints.Add(value);
@@ -82,8 +82,8 @@ internal sealed class BoundedIntegerSequenceEncoder : BoundedIntegerSequenceCode
             ? InterleavedQuintBits
             : InterleavedTritBits;
 
-        var nonBitComponents = new int[valueCount];
-        var bitComponents = new int[valueCount];
+        int[] nonBitComponents = new int[valueCount];
+        int[] bitComponents = new int[valueCount];
         for (int i = 0; i < valueCount; ++i)
         {
             bitComponents[i] = values[i] & ((1 << bitsPerValue) - 1);

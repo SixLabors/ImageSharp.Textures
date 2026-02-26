@@ -11,9 +11,9 @@ public class BitOperationsTests
     [Fact]
     public void GetBits_UInt128WithLowBits_ShouldExtractCorrectly()
     {
-        UInt128 value = new UInt128(0x1234567890ABCDEF, 0xFEDCBA0987654321);
+        UInt128 value = new(0x1234567890ABCDEF, 0xFEDCBA0987654321);
 
-        var result = BitOperations.GetBits(value, 0, 8);
+        UInt128 result = BitOperations.GetBits(value, 0, 8);
 
         result.Low().Should().Be(0x21UL);
     }
@@ -21,9 +21,9 @@ public class BitOperationsTests
     [Fact]
     public void GetBits_UInt128WithZeroLength_ShouldReturnZero()
     {
-        UInt128 value = new UInt128(0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF);
+        UInt128 value = new(0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF);
 
-        var result = BitOperations.GetBits(value, 0, 0);
+        UInt128 result = BitOperations.GetBits(value, 0, 0);
 
         result.Should().Be(UInt128.Zero);
     }
@@ -33,7 +33,7 @@ public class BitOperationsTests
     {
         ulong value = 0xFEDCBA0987654321;
 
-        var result = BitOperations.GetBits(value, 0, 8);
+        ulong result = BitOperations.GetBits(value, 0, 8);
 
         result.Should().Be(0x21UL);
     }
@@ -43,7 +43,7 @@ public class BitOperationsTests
     {
         ulong value = 0xFFFFFFFFFFFFFFFF;
 
-        var result = BitOperations.GetBits(value, 0, 0);
+        ulong result = BitOperations.GetBits(value, 0, 0);
 
         result.Should().Be(0UL);
     }
@@ -56,8 +56,8 @@ public class BitOperationsTests
     [InlineData(64, 64)]
     public void TransferPrecision_WithSameInput_ShouldBeDeterministic(int inputA, int inputB)
     {
-        var (a1, b1) = BitOperations.TransferPrecision(inputA, inputB);
-        var (a2, b2) = BitOperations.TransferPrecision(inputA, inputB);
+        (int a1, int b1) = BitOperations.TransferPrecision(inputA, inputB);
+        (int a2, int b2) = BitOperations.TransferPrecision(inputA, inputB);
 
         a1.Should().Be(a2);
         b1.Should().Be(b2);
@@ -70,7 +70,7 @@ public class BitOperationsTests
         {
             for (int b = byte.MinValue; b <= byte.MaxValue; b++)
             {
-                var action = () => BitOperations.TransferPrecision(a, b);
+                Action action = () => BitOperations.TransferPrecision(a, b);
                 action.Should().NotThrow();
             }
         }
@@ -85,8 +85,8 @@ public class BitOperationsTests
     [InlineData(-1, 100)]
     public void TransferPrecisionInverse_WithSameInput_ShouldBeDeterministic(int inputA, int inputB)
     {
-        var (a1, b1) = BitOperations.TransferPrecisionInverse(inputA, inputB);
-        var (a2, b2) = BitOperations.TransferPrecisionInverse(inputA, inputB);
+        (int a1, int b1) = BitOperations.TransferPrecisionInverse(inputA, inputB);
+        (int a2, int b2) = BitOperations.TransferPrecisionInverse(inputA, inputB);
 
         a1.Should().Be(a2);
         b1.Should().Be(b2);
@@ -99,7 +99,7 @@ public class BitOperationsTests
     [InlineData(0, 256)] // b too large
     public void TransferPrecisionInverse_WithInvalidInput_ShouldThrowArgumentOutOfRangeException(int a, int b)
     {
-        var action = () => BitOperations.TransferPrecisionInverse(a, b);
+        Action action = () => BitOperations.TransferPrecisionInverse(a, b);
 
         action.Should().Throw<ArgumentOutOfRangeException>();
     }
@@ -112,10 +112,10 @@ public class BitOperationsTests
     [InlineData(-1, 200)]
     public void TransferPrecision_AfterInverse_ShouldReturnOriginalValues(int originalA, int originalB)
     {
-        var (encodedA, encodedB) = BitOperations.TransferPrecisionInverse(originalA, originalB);
+        (int encodedA, int encodedB) = BitOperations.TransferPrecisionInverse(originalA, originalB);
 
         // Apply regular to decode
-        var (decodedA, decodedB) = BitOperations.TransferPrecision(encodedA, encodedB);
+        (int decodedA, int decodedB) = BitOperations.TransferPrecision(encodedA, encodedB);
 
         decodedA.Should().Be(originalA);
         decodedB.Should().Be(originalB);

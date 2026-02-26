@@ -32,7 +32,7 @@ internal static class FusedBlockDecoder
 
         // 2. Batch unquantize color values, then decode endpoint pair
         Quantization.UnquantizeCEValuesBatch(colors, colorCount, info.ColorValuesRange);
-        var endpointPair = EndpointCodec.DecodeColorsForModePolymorphicUnquantized(colors, info.EndpointMode0);
+        ColorEndpointPair endpointPair = EndpointCodec.DecodeColorsForModePolymorphicUnquantized(colors, info.EndpointMode0);
 
         // 3. BISE decode weights
         int gridSize = info.GridWidth * info.GridHeight;
@@ -49,7 +49,7 @@ internal static class FusedBlockDecoder
         }
         else
         {
-            var decimationInfo = DecimationTable.Get(footprint, info.GridWidth, info.GridHeight);
+            DecimationInfo decimationInfo = DecimationTable.Get(footprint, info.GridWidth, info.GridHeight);
             DecimationTable.InfillWeights(gridWeights, decimationInfo, texelWeights);
         }
 
@@ -64,7 +64,7 @@ internal static class FusedBlockDecoder
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void DecodeBiseValues(UInt128 bits, int startBit, int bitCount, int range, int valuesCount, Span<int> result)
     {
-        var (encMode, bitsPerValue) = BoundedIntegerSequenceCodec.GetPackingModeBitCount(range);
+        (BiseEncodingMode encMode, int bitsPerValue) = BoundedIntegerSequenceCodec.GetPackingModeBitCount(range);
 
         if (encMode == BiseEncodingMode.BitEncoding)
         {
@@ -85,7 +85,7 @@ internal static class FusedBlockDecoder
             else
             {
                 // Spans both halves — use UInt128 shift then extract from low
-                var shifted = (bits >> startBit) & UInt128Extensions.OnesMask(totalBits);
+                UInt128 shifted = (bits >> startBit) & UInt128Extensions.OnesMask(totalBits);
                 ulong lowBits = shifted.Low();
                 ulong highBits = shifted.High();
                 int bitPos = 0;
@@ -114,10 +114,10 @@ internal static class FusedBlockDecoder
         }
 
         // Trit/quint encoding: fall back to full BISE decoder
-        var colorBitMask = UInt128Extensions.OnesMask(bitCount);
-        var colorBits = (bits >> startBit) & colorBitMask;
-        var colorBitStream = new BitStream(colorBits, 128);
-        var decoder = BoundedIntegerSequenceDecoder.GetCached(range);
+        UInt128 colorBitMask = UInt128Extensions.OnesMask(bitCount);
+        UInt128 colorBits = (bits >> startBit) & colorBitMask;
+        BitStream colorBitStream = new(colorBits, 128);
+        BoundedIntegerSequenceDecoder decoder = BoundedIntegerSequenceDecoder.GetCached(range);
         decoder.Decode(valuesCount, ref colorBitStream, result);
     }
 
@@ -128,8 +128,8 @@ internal static class FusedBlockDecoder
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void DecodeBiseWeights(UInt128 bits, int weightBitCount, int weightRange, int count, Span<int> result)
     {
-        var (encMode, bitsPerValue) = BoundedIntegerSequenceCodec.GetPackingModeBitCount(weightRange);
-        var weightBits = UInt128Extensions.ReverseBits(bits) & UInt128Extensions.OnesMask(weightBitCount);
+        (BiseEncodingMode encMode, int bitsPerValue) = BoundedIntegerSequenceCodec.GetPackingModeBitCount(weightRange);
+        UInt128 weightBits = UInt128Extensions.ReverseBits(bits) & UInt128Extensions.OnesMask(weightBitCount);
 
         if (encMode == BiseEncodingMode.BitEncoding)
         {
@@ -176,8 +176,8 @@ internal static class FusedBlockDecoder
         }
 
         // Trit/quint encoding: fall back to full BISE decoder
-        var weightBitStream = new BitStream(weightBits, 128);
-        var decoder = BoundedIntegerSequenceDecoder.GetCached(weightRange);
+        BitStream weightBitStream = new(weightBits, 128);
+        BoundedIntegerSequenceDecoder decoder = BoundedIntegerSequenceDecoder.GetCached(weightRange);
         decoder.Decode(count, ref weightBitStream, result);
     }
 }

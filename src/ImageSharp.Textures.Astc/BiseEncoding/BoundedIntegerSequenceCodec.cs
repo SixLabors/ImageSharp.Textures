@@ -116,9 +116,6 @@ internal partial class BoundedIntegerSequenceCodec
 
     private static readonly (BiseEncodingMode Mode, int BitCount)[] PackingModeCache = InitPackingModeCache();
 
-    private BiseEncodingMode encoding;
-    private int bitCount;
-
     /// <summary>
     /// Initializes a new instance of the <see cref="BoundedIntegerSequenceCodec"/> class.
     /// operate on sequences of integers and produce bit patterns that pack the
@@ -143,14 +140,14 @@ internal partial class BoundedIntegerSequenceCodec
     /// <param name="range">Creates a decoder that decodes values within [0, <paramref name="range"/>] (inclusive).</param>
     protected BoundedIntegerSequenceCodec(int range)
     {
-        var (encodingMode, bitCount) = GetPackingModeBitCount(range);
-        this.encoding = encodingMode;
-        this.bitCount = bitCount;
+        (BiseEncodingMode encodingMode, int bitCount) = GetPackingModeBitCount(range);
+        this.Encoding = encodingMode;
+        this.BitCount = bitCount;
     }
 
-    protected BiseEncodingMode Encoding => this.encoding;
+    protected BiseEncodingMode Encoding { get; }
 
-    protected int BitCount => this.bitCount;
+    protected int BitCount { get; }
 
     /// <summary>
     /// The number of bits needed to encode the given number of values with respect to the
@@ -169,14 +166,14 @@ internal partial class BoundedIntegerSequenceCodec
     /// </summary>
     public static int GetBitCount(BiseEncodingMode encodingMode, int valuesCount, int bitCount)
     {
-        var encodingBitCount = encodingMode switch
+        int encodingBitCount = encodingMode switch
         {
             BiseEncodingMode.TritEncoding => ((valuesCount * 8) + 4) / 5,
             BiseEncodingMode.QuintEncoding => ((valuesCount * 7) + 2) / 3,
             BiseEncodingMode.BitEncoding => 0,
             _ => throw new ArgumentOutOfRangeException(nameof(encodingMode), "Invalid encoding mode"),
         };
-        var baseBitCount = valuesCount * bitCount;
+        int baseBitCount = valuesCount * bitCount;
 
         return encodingBitCount + baseBitCount;
     }
@@ -186,7 +183,7 @@ internal partial class BoundedIntegerSequenceCodec
     /// </summary>
     public static int GetBitCountForRange(int valuesCount, int range)
     {
-        var (mode, bitCount) = GetPackingModeBitCount(range);
+        (BiseEncodingMode mode, int bitCount) = GetPackingModeBitCount(range);
 
         return GetBitCount(mode, valuesCount, bitCount);
     }
@@ -196,7 +193,7 @@ internal partial class BoundedIntegerSequenceCodec
     /// </summary>
     protected int GetEncodedBlockSize()
     {
-        var (blockSize, extraBlockSize) = this.encoding switch
+        (int blockSize, int extraBlockSize) = this.Encoding switch
         {
             BiseEncodingMode.TritEncoding => (5, 8),
             BiseEncodingMode.QuintEncoding => (3, 7),
@@ -204,12 +201,12 @@ internal partial class BoundedIntegerSequenceCodec
             _ => (0, 0),
         };
 
-        return extraBlockSize + (blockSize * this.bitCount);
+        return extraBlockSize + (blockSize * this.BitCount);
     }
 
     private static int[] FlattenEncodings(int[][] jagged, int stride)
     {
-        var flat = new int[jagged.Length * stride];
+        int[] flat = new int[jagged.Length * stride];
         for (int i = 0; i < jagged.Length; i++)
         {
             for (int j = 0; j < stride; j++)
@@ -223,7 +220,7 @@ internal partial class BoundedIntegerSequenceCodec
 
     private static (BiseEncodingMode, int)[] InitPackingModeCache()
     {
-        var cache = new (BiseEncodingMode, int)[1 << Log2MaxRangeForBits];
+        (BiseEncodingMode, int)[] cache = new (BiseEncodingMode, int)[1 << Log2MaxRangeForBits];
 
         // Precompute for all valid ranges [1, 255]
         for (int range = 1; range < cache.Length; range++)
@@ -239,13 +236,13 @@ internal partial class BoundedIntegerSequenceCodec
             }
 
             int maxValue = index < 0
-                ? MaxRanges[MaxRanges.Length - 1] + 1
+                ? MaxRanges[^1] + 1
                 : MaxRanges[index] + 1;
 
             // Check QuintEncoding (5), TritEncoding (3), BitEncoding (1) in descending order
             BiseEncodingMode encodingMode = BiseEncodingMode.Unknown;
             ReadOnlySpan<BiseEncodingMode> modes = [BiseEncodingMode.QuintEncoding, BiseEncodingMode.TritEncoding, BiseEncodingMode.BitEncoding];
-            foreach (var em in modes)
+            foreach (BiseEncodingMode em in modes)
             {
                 if (maxValue % (int)em == 0 && int.IsPow2(maxValue / (int)em))
                 {

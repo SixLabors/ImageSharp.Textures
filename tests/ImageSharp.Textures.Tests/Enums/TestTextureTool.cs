@@ -1,28 +1,27 @@
 // Copyright (c) Six Labors.
 // Licensed under the Six Labors Split License.
 
-namespace SixLabors.ImageSharp.Textures.Tests.Enums
+namespace SixLabors.ImageSharp.Textures.Tests.Enums;
+
+public enum TestTextureTool
 {
-    public enum TestTextureTool
-    {
-        /// <summary>
-        /// TexConv.
-        /// </summary>
-        TexConv,
+    /// <summary>
+    /// TexConv.
+    /// </summary>
+    TexConv,
 
-        /// <summary>
-        /// NvDxt.
-        /// </summary>
-        NvDxt,
+    /// <summary>
+    /// NvDxt.
+    /// </summary>
+    NvDxt,
 
-        /// <summary>
-        /// ToKtx.
-        /// </summary>
-        ToKtx,
+    /// <summary>
+    /// ToKtx.
+    /// </summary>
+    ToKtx,
 
-        /// <summary>
-        /// The PVR tex tool cli.
-        /// </summary>
-        PvrTexToolCli
-    }
+    /// <summary>
+    /// The PVR tex tool cli.
+    /// </summary>
+    PvrTexToolCli
 }

@@ -9,24 +9,19 @@ namespace SixLabors.ImageSharp.Textures.Astc.Core;
 /// </summary>
 internal sealed class DecimationInfo
 {
-    private readonly int texelCount;
-
     // Transposed layout: [contribution * TexelCount + texel]
     // 4 contributions per texel (bilinear interpolation from weight grid).
     // For edge texels where some grid points are out of bounds, factor is 0 and index is 0.
-    private readonly int[] weightIndices;  // size: 4 * TexelCount
-    private readonly int[] weightFactors;  // size: 4 * TexelCount
-
     public DecimationInfo(int texelCount, int[] weightIndices, int[] weightFactors)
     {
-        this.texelCount = texelCount;
-        this.weightIndices = weightIndices;
-        this.weightFactors = weightFactors;
+        this.TexelCount = texelCount;
+        this.WeightIndices = weightIndices;
+        this.WeightFactors = weightFactors;
     }
 
-    public int TexelCount => this.texelCount;
+    public int TexelCount { get; }
 
-    public int[] WeightIndices => this.weightIndices;
+    public int[] WeightIndices { get; }
 
-    public int[] WeightFactors => this.weightFactors;
+    public int[] WeightFactors { get; }
 }

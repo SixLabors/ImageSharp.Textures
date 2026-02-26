@@ -27,7 +27,7 @@ internal sealed class QuintQuantizationMap : QuantizationMap
     internal static int GetUnquantizedValue(int quint, int bits, int range)
     {
         int a = (bits & 1) != 0 ? 0x1FF : 0;
-        var (b, c) = range switch
+        (int b, int c) = range switch
         {
             9 => (0, 113),
             19 => ((bits >> 1) & 0x1) is var x ? ((x << 2) | (x << 3) | (x << 8), 54) : default,
@@ -51,7 +51,7 @@ internal sealed class QuintQuantizationMap : QuantizationMap
         }
 
         int a = (bits & 1) != 0 ? 0x7F : 0;
-        var (b, c) = range switch
+        (int b, int c) = range switch
         {
             9 => (0, 28),
             19 => ((bits >> 1) & 0x1) is var x ? ((x << 1) | (x << 6), 13) : default,

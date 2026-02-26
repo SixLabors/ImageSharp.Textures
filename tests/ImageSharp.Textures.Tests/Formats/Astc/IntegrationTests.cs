@@ -45,11 +45,11 @@ public class IntegrationTests
     [InlineData("rgb_12x12")]
     public void DecompressToImage_WithTestdataFile_ShouldDecodeSuccessfully(string basename)
     {
-        var filePath = TestFile.GetInputFileFullPath(Path.Combine(TestImages.Astc.InputFolder, basename + ".astc"));
-        var bytes = File.ReadAllBytes(filePath);
-        var astc = AstcFile.FromMemory(bytes);
+        string filePath = TestFile.GetInputFileFullPath(Path.Combine(TestImages.Astc.InputFolder, basename + ".astc"));
+        byte[] bytes = File.ReadAllBytes(filePath);
+        AstcFile astc = AstcFile.FromMemory(bytes);
 
-        var result = AstcDecoder.DecompressImage(astc);
+        Span<byte> result = AstcDecoder.DecompressImage(astc);
 
         result.Length.Should().BeGreaterThan(0, because: $"decoding should succeed for {basename}");
     }

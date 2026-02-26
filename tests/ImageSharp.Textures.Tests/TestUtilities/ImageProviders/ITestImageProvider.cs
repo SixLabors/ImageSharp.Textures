@@ -1,16 +1,15 @@
 // Copyright (c) Six Labors.
 // Licensed under the Six Labors Split License.
 
-namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.ImageProviders
+namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.ImageProviders;
+
+public interface ITestImageProvider
 {
-    public interface ITestImageProvider
-    {
-        PixelTypes PixelType { get; }
+    PixelTypes PixelType { get; }
 
-        ImagingTestCaseUtility Utility { get; }
+    ImagingTestCaseUtility Utility { get; }
 
-        string SourceFileOrDescription { get; }
+    string SourceFileOrDescription { get; }
 
-        ImageSharp.Configuration Configuration { get; set; }
-    }
+    ImageSharp.Configuration Configuration { get; set; }
 }

@@ -30,7 +30,7 @@ public static class AstcDecoder
     /// <exception cref="InvalidOperationException">If decompression fails for any block</exception>
     public static Span<byte> DecompressImage(ReadOnlySpan<byte> astcData, int width, int height, Footprint footprint)
     {
-        var imageBuffer = new byte[width * height * BytesPerPixelUnorm8];
+        byte[] imageBuffer = new byte[width * height * BytesPerPixelUnorm8];
 
         return DecompressImage(astcData, width, height, footprint, imageBuffer)
             ? imageBuffer
@@ -54,13 +54,13 @@ public static class AstcDecoder
             return false;
         }
 
-        var decodedBlock = Array.Empty<byte>();
+        byte[] decodedBlock = [];
 
         try
         {
             // Create a buffer once for fallback blocks; fast path writes directly to image
             decodedBlock = ArrayPool.Rent(footprint.Width * footprint.Height * BytesPerPixelUnorm8);
-            var decodedPixels = decodedBlock.AsSpan();
+            Span<byte> decodedPixels = decodedBlock.AsSpan();
             int blockIndex = 0;
             int footprintWidth = footprint.Width;
             int footprintHeight = footprint.Height;
@@ -75,16 +75,16 @@ public static class AstcDecoder
                         continue;
                     }
 
-                    ulong low = BinaryPrimitives.ReadUInt64LittleEndian(astcData.Slice(blockDataOffset));
-                    ulong high = BinaryPrimitives.ReadUInt64LittleEndian(astcData.Slice(blockDataOffset + 8));
-                    var blockBits = new UInt128(high, low);
+                    ulong low = BinaryPrimitives.ReadUInt64LittleEndian(astcData[blockDataOffset..]);
+                    ulong high = BinaryPrimitives.ReadUInt64LittleEndian(astcData[(blockDataOffset + 8)..]);
+                    UInt128 blockBits = new(high, low);
 
                     int dstBaseX = blockX * footprintWidth;
                     int dstBaseY = blockY * footprintHeight;
                     int copyWidth = Math.Min(footprintWidth, width - dstBaseX);
                     int copyHeight = Math.Min(footprintHeight, height - dstBaseY);
 
-                    var info = BlockInfo.Decode(blockBits);
+                    BlockInfo info = BlockInfo.Decode(blockBits);
                     if (!info.IsValid)
                     {
                         continue;
@@ -114,7 +114,7 @@ public static class AstcDecoder
                     }
                     else
                     {
-                        var logicalBlock = LogicalBlock.UnpackLogicalBlock(footprint, blockBits, in info);
+                        LogicalBlock? logicalBlock = LogicalBlock.UnpackLogicalBlock(footprint, blockBits, in info);
                         if (logicalBlock is null)
                         {
                             continue;
@@ -150,11 +150,11 @@ public static class AstcDecoder
     /// <returns>The decoded block of pixels as RGBA values</returns>
     public static Span<byte> DecompressBlock(ReadOnlySpan<byte> blockData, Footprint footprint)
     {
-        var decodedPixels = Array.Empty<byte>();
+        byte[] decodedPixels = [];
         try
         {
             decodedPixels = ArrayPool.Rent(footprint.Width * footprint.Height * BytesPerPixelUnorm8);
-            var decodedPixelBuffer = decodedPixels.AsSpan();
+            Span<byte> decodedPixelBuffer = decodedPixels.AsSpan();
 
             DecompressBlock(blockData, footprint, decodedPixelBuffer);
         }
@@ -176,10 +176,10 @@ public static class AstcDecoder
     {
         // Read the 16 bytes that make up the ASTC block as a 128-bit value
         ulong low = BinaryPrimitives.ReadUInt64LittleEndian(blockData);
-        ulong high = BinaryPrimitives.ReadUInt64LittleEndian(blockData.Slice(8));
-        var blockBits = new UInt128(high, low);
+        ulong high = BinaryPrimitives.ReadUInt64LittleEndian(blockData[8..]);
+        UInt128 blockBits = new(high, low);
 
-        var info = BlockInfo.Decode(blockBits);
+        BlockInfo info = BlockInfo.Decode(blockBits);
         if (!info.IsValid)
         {
             return;
@@ -194,7 +194,7 @@ public static class AstcDecoder
         }
 
         // Fallback for void extent, multi-partition, dual plane, HDR
-        var logicalBlock = LogicalBlock.UnpackLogicalBlock(footprint, blockBits, in info);
+        LogicalBlock? logicalBlock = LogicalBlock.UnpackLogicalBlock(footprint, blockBits, in info);
         if (logicalBlock is null)
         {
             return;
@@ -216,7 +216,7 @@ public static class AstcDecoder
     public static Span<float> DecompressHdrImage(ReadOnlySpan<byte> astcData, int width, int height, Footprint footprint)
     {
         const int channelsPerPixel = 4;
-        var imageBuffer = new float[width * height * channelsPerPixel];
+        float[] imageBuffer = new float[width * height * channelsPerPixel];
         if (!DecompressHdrImage(astcData, width, height, footprint, imageBuffer))
         {
             return [];
@@ -243,13 +243,13 @@ public static class AstcDecoder
         }
 
         const int channelsPerPixel = 4;
-        var decodedBlock = Array.Empty<float>();
+        float[] decodedBlock = [];
 
         try
         {
             // Create a buffer once for fallback blocks; fast path writes directly to image
             decodedBlock = ArrayPool<float>.Shared.Rent(footprint.Width * footprint.Height * channelsPerPixel);
-            var decodedPixels = decodedBlock.AsSpan();
+            Span<float> decodedPixels = decodedBlock.AsSpan();
             int blockIndex = 0;
             int footprintWidth = footprint.Width;
             int footprintHeight = footprint.Height;
@@ -264,16 +264,16 @@ public static class AstcDecoder
                         continue;
                     }
 
-                    ulong low = BinaryPrimitives.ReadUInt64LittleEndian(astcData.Slice(blockDataOffset));
-                    ulong high = BinaryPrimitives.ReadUInt64LittleEndian(astcData.Slice(blockDataOffset + 8));
-                    var blockBits = new UInt128(high, low);
+                    ulong low = BinaryPrimitives.ReadUInt64LittleEndian(astcData[blockDataOffset..]);
+                    ulong high = BinaryPrimitives.ReadUInt64LittleEndian(astcData[(blockDataOffset + 8)..]);
+                    UInt128 blockBits = new(high, low);
 
                     int dstBaseX = blockX * footprintWidth;
                     int dstBaseY = blockY * footprintHeight;
                     int copyWidth = Math.Min(footprintWidth, width - dstBaseX);
                     int copyHeight = Math.Min(footprintHeight, height - dstBaseY);
 
-                    var info = BlockInfo.Decode(blockBits);
+                    BlockInfo info = BlockInfo.Decode(blockBits);
                     if (!info.IsValid)
                     {
                         continue;
@@ -302,7 +302,7 @@ public static class AstcDecoder
                     else
                     {
                         // Fallback: LogicalBlock path for void extent, multi-partition, dual plane
-                        var logicalBlock = LogicalBlock.UnpackLogicalBlock(footprint, blockBits, in info);
+                        LogicalBlock? logicalBlock = LogicalBlock.UnpackLogicalBlock(footprint, blockBits, in info);
                         if (logicalBlock is null)
                         {
                             continue;
@@ -312,7 +312,7 @@ public static class AstcDecoder
                         {
                             for (int column = 0; column < footprintWidth; ++column)
                             {
-                                var pixelOffset = (footprintWidth * row * channelsPerPixel) + (column * channelsPerPixel);
+                                int pixelOffset = (footprintWidth * row * channelsPerPixel) + (column * channelsPerPixel);
                                 logicalBlock.WriteHdrPixel(column, row, decodedPixels.Slice(pixelOffset, channelsPerPixel));
                             }
                         }
@@ -349,7 +349,7 @@ public static class AstcDecoder
     /// </returns>
     public static Span<float> DecompressHdrImage(ReadOnlySpan<byte> astcData, int width, int height, FootprintType footprint)
     {
-        var footPrint = Footprint.FromFootprintType(footprint);
+        Footprint footPrint = Footprint.FromFootprintType(footprint);
         return DecompressHdrImage(astcData, width, height, footPrint);
     }
 
@@ -363,10 +363,10 @@ public static class AstcDecoder
     {
         // Read the 16 bytes that make up the ASTC block as a 128-bit value
         ulong low = BinaryPrimitives.ReadUInt64LittleEndian(blockData);
-        ulong high = BinaryPrimitives.ReadUInt64LittleEndian(blockData.Slice(8));
-        var blockBits = new UInt128(high, low);
+        ulong high = BinaryPrimitives.ReadUInt64LittleEndian(blockData[8..]);
+        UInt128 blockBits = new(high, low);
 
-        var info = BlockInfo.Decode(blockBits);
+        BlockInfo info = BlockInfo.Decode(blockBits);
         if (!info.IsValid)
         {
             return;
@@ -380,7 +380,7 @@ public static class AstcDecoder
         }
 
         // Fallback for void extent, multi-partition, dual plane
-        var logicalBlock = LogicalBlock.UnpackLogicalBlock(footprint, blockBits, in info);
+        LogicalBlock? logicalBlock = LogicalBlock.UnpackLogicalBlock(footprint, blockBits, in info);
         if (logicalBlock is null)
         {
             return;
@@ -391,7 +391,7 @@ public static class AstcDecoder
         {
             for (int column = 0; column < footprint.Width; ++column)
             {
-                var pixelOffset = (footprint.Width * row * channelsPerPixel) + (column * channelsPerPixel);
+                int pixelOffset = (footprint.Width * row * channelsPerPixel) + (column * channelsPerPixel);
                 logicalBlock.WriteHdrPixel(column, row, buffer.Slice(pixelOffset, channelsPerPixel));
             }
         }
@@ -406,7 +406,7 @@ public static class AstcDecoder
 
     internal static Span<byte> DecompressImage(ReadOnlySpan<byte> astcData, int width, int height, FootprintType footprint)
     {
-        var footPrint = Footprint.FromFootprintType(footprint);
+        Footprint footPrint = Footprint.FromFootprintType(footprint);
 
         return DecompressImage(astcData, width, height, footPrint);
     }
