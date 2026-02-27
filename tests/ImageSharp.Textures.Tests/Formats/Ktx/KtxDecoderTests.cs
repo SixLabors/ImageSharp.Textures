@@ -12,6 +12,7 @@ using Xunit;
 
 namespace SixLabors.ImageSharp.Textures.Tests.Formats.Ktx
 {
+    [GroupOutput("Ktx")]
     [Trait("Format", "Ktx")]
     public class KtxDecoderTests
     {
@@ -19,7 +20,7 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.Ktx
 
         [Theory]
         [WithFile(TestTextureFormat.Ktx, TestTextureType.Flat, TestTextureTool.PvrTexToolCli, TestImages.Ktx.Rgba)]
-        public void KtxDecoder_CanDecode_Rgba8888(TestTextureProvider provider)
+        public void CanDecode_Rgba8888(TestTextureProvider provider)
         {
             using Texture texture = provider.GetTexture(KtxDecoder);
             provider.SaveTextures(texture);
