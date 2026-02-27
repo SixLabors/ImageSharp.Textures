@@ -69,6 +69,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx2
             int width = (int)this.ktxHeader.PixelWidth;
             int height = (int)this.ktxHeader.PixelHeight;
 
+            // Level indices start immediately after the header
             var levelIndices = new LevelIndex[this.ktxHeader.LevelCount];
             for (int i = 0; i < levelIndices.Length; i++)
             {
@@ -84,15 +85,39 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx2
 
             var ktxProcessor = new Ktx2Processor(this.ktxHeader);
 
+            Texture texture;
             if (this.ktxHeader.FaceCount == 6)
             {
-                CubemapTexture cubeMapTexture = ktxProcessor.DecodeCubeMap(stream, width, height, levelIndices);
-                return cubeMapTexture;
+                texture = ktxProcessor.DecodeCubeMap(stream, width, height, levelIndices);
+            }
+            else
+            {
+                var flatTexture = new FlatTexture();
+                MipMap[] mipMaps = ktxProcessor.DecodeMipMaps(stream, width, height, levelIndices);
+                flatTexture.MipMaps.AddRange(mipMaps);
+                texture = flatTexture;
             }
 
-            var texture = new FlatTexture();
-            MipMap[] mipMaps = ktxProcessor.DecodeMipMaps(stream, width, height, levelIndices);
-            texture.MipMaps.AddRange(mipMaps);
+            // Seek to the end of the file to ensure the entire stream is consumed.
+            // KTX2 files use byte offsets for mipmap data, so the stream position may not
+            // be at the end after reading. We need to find the furthest point read.
+            if (levelIndices.Length > 0)
+            {
+                long maxEndPosition = 0;
+                for (int i = 0; i < levelIndices.Length; i++)
+                {
+                    long endPosition = (long)(levelIndices[i].ByteOffset + levelIndices[i].UncompressedByteLength);
+                    if (endPosition > maxEndPosition)
+                    {
+                        maxEndPosition = endPosition;
+                    }
+                }
+
+                if (stream.Position < maxEndPosition && stream.CanSeek)
+                {
+                    stream.Position = maxEndPosition;
+                }
+            }
 
             return texture;
         }

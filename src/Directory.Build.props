@@ -11,7 +11,7 @@
   -->
 
   <!-- Import the shared src .props file -->
-  <Import Project="$(MSBuildThisFileDirectory)..\shared-infrastructure\msbuild\props\SixLabors.Src.props" />
+  <Import Project="$(MSBuildThisFileDirectory)../shared-infrastructure/msbuild/props/SixLabors.Src.props" />
 
   <!-- Import the solution .props file. -->
   <Import Project="$(MSBuildThisFileDirectory)..\Directory.Build.props" />

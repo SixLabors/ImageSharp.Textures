@@ -9,7 +9,7 @@ SixLabors.ImageSharp.Textures
 
 [![Build Status](https://img.shields.io/github/actions/workflow/status/SixLabors/ImageSharp.Textures/build-and-test.yml?branch=main)](https://github.com/SixLabors/ImageSharp.Textures/actions)
 [![Code coverage](https://codecov.io/gh/SixLabors/ImageSharp.Textures/branch/main/graph/badge.svg)](https://codecov.io/gh/SixLabors/ImageSharp)
-[![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![License: Six Labors Split](https://img.shields.io/badge/license-Six%20Labors%20Split-%23e30183)](https://github.com/SixLabors/ImageSharp/blob/main/LICENSE)
 [![Twitter](https://img.shields.io/twitter/url/http/shields.io.svg?style=flat&logo=twitter)](https://twitter.com/intent/tweet?hashtags=imagesharp,dotnet,oss&text=ImageSharp.+A+new+cross-platform+2D+graphics+API+in+C%23&url=https%3a%2f%2fgithub.com%2fSixLabors%2fImageSharp&via=sixlabors)
 
 </div>
@@ -33,6 +33,7 @@ with the following compressions:
 - BC5
 - BC6H
 - BC7
+- ASTC
 
 Encoding textures is **not** yet supported. PR are of course very welcome.
 
