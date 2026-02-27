@@ -147,9 +147,6 @@ public class KtxHdrDecoderFlatTests
         firstMipMapImage.CompareToReferenceOutput(provider);
     }
 
-    // TODO: This test is failing because the decoded image has 0 alpha, but the png is saved with 1 alpha.
-    // Not sure if this is an issue with the decoder, or the way the reference image was saved.
-    // The RGBA32F image has 1 alpha
     [Theory]
     [WithFile(TestTextureFormat.Ktx, TestTextureType.Flat, TestTextureTool.ToKtx, TestImages.Ktx.Hdr.Rgba64)]
     public void CanDecode_RGBA64F(TestTextureProvider provider)
