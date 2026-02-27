@@ -59,23 +59,23 @@ public static class TestImages
 
     public static class Ktx
     {
-        public const string Rgba = "rgba8888.ktx";
+        public const string Rgba = "Flat/rgba8888.ktx";
 
         public static class Astc
         {
-            public const string Rgb32_8x8 = "astc-rgba32-8x8.ktx";
+            public const string Rgb32_8x8 = "Flat/Astc/astc-rgba32-8x8.ktx";
         }
 
         public static class Hdr
         {
-            public const string R16 = "HDR/hdr-r16.ktx";
-            public const string R32 = "HDR/hdr-r32.ktx";
-            public const string Rg32 = "HDR/hdr-rg32.ktx";
-            public const string Rg64 = "HDR/hdr-rg64.ktx";
-            public const string Rgb48 = "HDR/hdr-rgb48.ktx";
-            public const string Rgb96 = "HDR/hdr-rgb96.ktx";
-            public const string Rgba64 = "HDR/hdr-rgba64.ktx";
-            public const string Rgba128 = "HDR/hdr-rgba128.ktx";
+            public const string R16 = "Flat/HDR/hdr-r16.ktx";
+            public const string R32 = "Flat/HDR/hdr-r32.ktx";
+            public const string Rg32 = "Flat/HDR/hdr-rg32.ktx";
+            public const string Rg64 = "Flat/HDR/hdr-rg64.ktx";
+            public const string Rgb48 = "Flat/HDR/hdr-rgb48.ktx";
+            public const string Rgb96 = "Flat/HDR/hdr-rgb96.ktx";
+            public const string Rgba64 = "Flat/HDR/hdr-rgba64.ktx";
+            public const string Rgba128 = "Flat/HDR/hdr-rgba128.ktx";
         }
     }
 
