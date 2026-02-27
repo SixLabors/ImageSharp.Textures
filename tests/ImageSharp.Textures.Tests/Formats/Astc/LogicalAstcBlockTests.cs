@@ -4,12 +4,20 @@
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Textures.Compression.Astc.ColorEncoding;
 using SixLabors.ImageSharp.Textures.Compression.Astc.Core;
+using SixLabors.ImageSharp.Textures.Compression.Astc.IO;
 using SixLabors.ImageSharp.Textures.Compression.Astc.TexelBlock;
+using SixLabors.ImageSharp.Textures.Tests.Enums;
+using SixLabors.ImageSharp.Textures.Tests.TestUtilities;
+using SixLabors.ImageSharp.Textures.Tests.TestUtilities.Attributes;
 using SixLabors.ImageSharp.Textures.Tests.TestUtilities.ImageComparison;
+using SixLabors.ImageSharp.Textures.Tests.TestUtilities.TextureProviders;
 
 namespace SixLabors.ImageSharp.Textures.Tests.Formats.Astc;
 
 #nullable enable
+
+[GroupOutput("Astc")]
+[Trait("Format", "Astc")]
 public class LogicalAstcBlockTests
 {
     [Theory]
@@ -351,50 +359,33 @@ public class LogicalAstcBlockTests
     }
 
     [Theory]
-
-    // Synthetic test images
-    [InlineData(TestImages.Astc.Footprint_4x4, TestImages.Astc.Expected.Footprint_4x4, FootprintType.Footprint4x4, 32, 32)]
-    [InlineData(TestImages.Astc.Footprint_5x4, TestImages.Astc.Expected.Footprint_5x4, FootprintType.Footprint5x4, 32, 32)]
-    [InlineData(TestImages.Astc.Footprint_5x5, TestImages.Astc.Expected.Footprint_5x5, FootprintType.Footprint5x5, 32, 32)]
-    [InlineData(TestImages.Astc.Footprint_6x5, TestImages.Astc.Expected.Footprint_6x5, FootprintType.Footprint6x5, 32, 32)]
-    [InlineData(TestImages.Astc.Footprint_6x6, TestImages.Astc.Expected.Footprint_6x6, FootprintType.Footprint6x6, 32, 32)]
-    [InlineData(TestImages.Astc.Footprint_8x5, TestImages.Astc.Expected.Footprint_8x5, FootprintType.Footprint8x5, 32, 32)]
-    [InlineData(TestImages.Astc.Footprint_8x6, TestImages.Astc.Expected.Footprint_8x6, FootprintType.Footprint8x6, 32, 32)]
-    [InlineData(TestImages.Astc.Footprint_8x8, TestImages.Astc.Expected.Footprint_8x8, FootprintType.Footprint8x8, 32, 32)]
-    [InlineData(TestImages.Astc.Footprint_10x5, TestImages.Astc.Expected.Footprint_10x5, FootprintType.Footprint10x5, 32, 32)]
-    [InlineData(TestImages.Astc.Footprint_10x6, TestImages.Astc.Expected.Footprint_10x6, FootprintType.Footprint10x6, 32, 32)]
-    [InlineData(TestImages.Astc.Footprint_10x8, TestImages.Astc.Expected.Footprint_10x8, FootprintType.Footprint10x8, 32, 32)]
-    [InlineData(TestImages.Astc.Footprint_10x10, TestImages.Astc.Expected.Footprint_10x10, FootprintType.Footprint10x10, 32, 32)]
-    [InlineData(TestImages.Astc.Footprint_12x10, TestImages.Astc.Expected.Footprint_12x10, FootprintType.Footprint12x10, 32, 32)]
-    [InlineData(TestImages.Astc.Footprint_12x12, TestImages.Astc.Expected.Footprint_12x12, FootprintType.Footprint12x12, 32, 32)]
-
-    // RGB without alpha images
-    [InlineData(TestImages.Astc.Rgb_4x4, TestImages.Astc.Expected.Rgb_4x4, FootprintType.Footprint4x4, 224, 288)]
-    [InlineData(TestImages.Astc.Rgb_5x4, TestImages.Astc.Expected.Rgb_5x4, FootprintType.Footprint5x4, 224, 288)]
-    [InlineData(TestImages.Astc.Rgb_6x6, TestImages.Astc.Expected.Rgb_6x6, FootprintType.Footprint6x6, 224, 288)]
-    [InlineData(TestImages.Astc.Rgb_8x8, TestImages.Astc.Expected.Rgb_8x8, FootprintType.Footprint8x8, 224, 288)]
-    [InlineData(TestImages.Astc.Rgb_12x12, TestImages.Astc.Expected.Rgb_12x12, FootprintType.Footprint12x12, 224, 288)]
-
-    // RGB with alpha images
-    [InlineData(TestImages.Astc.Atlas_Small_4x4, TestImages.Astc.Expected.Atlas_Small_4x4, FootprintType.Footprint4x4, 256, 256)]
-    [InlineData(TestImages.Astc.Atlas_Small_5x5, TestImages.Astc.Expected.Atlas_Small_5x5, FootprintType.Footprint5x5, 256, 256)]
-    [InlineData(TestImages.Astc.Atlas_Small_6x6, TestImages.Astc.Expected.Atlas_Small_6x6, FootprintType.Footprint6x6, 256, 256)]
-    [InlineData(TestImages.Astc.Atlas_Small_8x8, TestImages.Astc.Expected.Atlas_Small_8x8, FootprintType.Footprint8x8, 256, 256)]
-    public void UnpackLogicalBlock_FromImage_ShouldDecodeCorrectly(
-        string inputFile,
-        string expectedFile,
-        FootprintType footprintType,
-        int width,
-        int height)
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Footprint_4x4)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Footprint_5x4)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Footprint_5x5)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Footprint_6x5)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Footprint_6x6)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Footprint_8x5)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Footprint_8x6)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Footprint_8x8)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Footprint_10x5)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Footprint_10x6)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Footprint_10x8)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Footprint_10x10)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Footprint_12x10)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Footprint_12x12)]
+    public void UnpackLogicalBlock_FromImage_ShouldDecodeCorrectly(TestTextureProvider provider)
     {
-        Footprint footprint = Footprint.FromFootprintType(footprintType);
-        byte[] astcData = TestFile.Create(inputFile).Bytes[16..];
+        byte[] astcBytes = File.ReadAllBytes(provider.InputFile);
+        AstcFile file = AstcFile.FromMemory(astcBytes);
 
-        using Image<Rgba32> decodedImage = DecodeAstcBlocksToImage(footprint, astcData, width, height);
+        string blockSize = $"{file.Footprint.Width}x{file.Footprint.Height}";
 
-        string expectedPath = TestFile.GetInputFileFullPath(expectedFile);
-        using Image<Rgba32> expectedImage = Image.Load<Rgba32>(expectedPath);
-        ImageComparer.TolerantPercentage(1.0f).VerifySimilarity(expectedImage, decodedImage);
+        using Image<Rgba32> decodedImage = DecodeAstcBlocksToImage(file.Footprint, file.Blocks.ToArray(), file.Width, file.Height);
+
+        decodedImage.CompareToReferenceOutput(
+            ImageComparer.TolerantPercentage(0.03f),
+            provider,
+            testOutputDetails: blockSize);
     }
 
     private static Image<Rgba32> DecodeAstcBlocksToImage(Footprint footprint, byte[] astcData, int width, int height)

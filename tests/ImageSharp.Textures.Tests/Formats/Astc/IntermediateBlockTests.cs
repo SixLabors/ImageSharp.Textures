@@ -453,7 +453,7 @@ public class IntermediateBlockTests
 
     private static byte[] LoadASTCFile(string inputFile)
     {
-        string filename = TestFile.GetInputFileFullPath(inputFile);
+        string filename = TestFile.GetInputFileFullPath(Path.Combine("Astc", inputFile));
         Assert.True(File.Exists(filename), $"Testdata missing: {filename}");
         byte[] data = File.ReadAllBytes(filename);
         Assert.True(data.Length >= 16, "ASTC file too small");

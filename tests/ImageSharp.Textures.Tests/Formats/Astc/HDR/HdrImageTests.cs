@@ -5,6 +5,9 @@ using System.ComponentModel;
 using SixLabors.ImageSharp.Textures.Compression.Astc;
 using SixLabors.ImageSharp.Textures.Compression.Astc.Core;
 using SixLabors.ImageSharp.Textures.Compression.Astc.IO;
+using SixLabors.ImageSharp.Textures.Tests.Enums;
+using SixLabors.ImageSharp.Textures.Tests.TestUtilities.Attributes;
+using SixLabors.ImageSharp.Textures.Tests.TestUtilities.TextureProviders;
 
 namespace SixLabors.ImageSharp.Textures.Tests.Formats.Astc.HDR;
 
@@ -13,15 +16,15 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.Astc.HDR;
 /// These tests validate that our HDR implementation produces valid output for
 /// actual HDR-compressed ASTC data.
 /// </summary>
+[Trait("Format", "Astc")]
 public class HdrImageTests
 {
-    [Fact]
+    [Theory]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Hdr.Hdr_A_1x1)]
     [Description("Verify that the ASTC file header is correctly parsed for HDR content, including footprint detection")]
-    public void DecodeHdrFile_VerifyFootprintDetection()
+    public void DecodeHdrFile_VerifyFootprintDetection(TestTextureProvider provider)
     {
-        string astcPath = TestFile.GetInputFileFullPath(TestImages.Astc.Hdr.Hdr_A_1x1);
-
-        byte[] astcData = File.ReadAllBytes(astcPath);
+        byte[] astcData = File.ReadAllBytes(provider.InputFile);
         AstcFile astcFile = AstcFile.FromMemory(astcData);
 
         // The HDR-A-1x1.astc file has a 6x6 footprint based on the header
@@ -30,12 +33,11 @@ public class HdrImageTests
         Assert.Equal(FootprintType.Footprint6x6, astcFile.Footprint.Type);
     }
 
-    [Fact]
-    public void DecodeHdrAstcFile_1x1Pixel_ShouldProduceValidHdrOutput()
+    [Theory]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Hdr.Hdr_A_1x1)]
+    public void DecodeHdrAstcFile_1x1Pixel_ShouldProduceExpectedHdrValues(TestTextureProvider provider)
     {
-        string astcPath = TestFile.GetInputFileFullPath(TestImages.Astc.Hdr.Hdr_A_1x1);
-
-        byte[] astcData = File.ReadAllBytes(astcPath);
+        byte[] astcData = File.ReadAllBytes(provider.InputFile);
         AstcFile astcFile = AstcFile.FromMemory(astcData);
 
         Span<float> hdrResult = AstcDecoder.DecompressHdrImage(
@@ -44,24 +46,20 @@ public class HdrImageTests
             astcFile.Height,
             astcFile.Footprint);
 
-        // Should produce 1 pixel with 4 values (RGBA)
         Assert.Equal(4, hdrResult.Length);
 
-        // HDR values can exceed 1.0
-        // Just verify they're in a reasonable range (0.0 to 10.0)
-        foreach (float value in hdrResult)
-        {
-            Assert.True(value >= 0.0f);
-            Assert.True(value < 10.0f);
-        }
+        // HDR values exceed 1.0 for this file.
+        Assert.Equal(1.625f, hdrResult[0], 0.001f);
+        Assert.Equal(1.84375f, hdrResult[1], 0.001f);
+        Assert.Equal(2.125f, hdrResult[2], 0.001f);
+        Assert.Equal(1.0f, hdrResult[3], 0.001f);
     }
 
-    [Fact]
-    public void DecodeHdrAstcFile_Tile_ShouldProduceValidHdrOutput()
+    [Theory]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Hdr.Hdr_Tile)]
+    public void DecodeHdrAstcFile_Tile_ShouldProduceValidHdrOutput(TestTextureProvider provider)
     {
-        string astcPath = TestFile.GetInputFileFullPath(TestImages.Astc.Hdr.Hdr_Tile);
-
-        byte[] astcData = File.ReadAllBytes(astcPath);
+        byte[] astcData = File.ReadAllBytes(provider.InputFile);
         AstcFile astcFile = AstcFile.FromMemory(astcData);
 
         Span<float> hdrResult = AstcDecoder.DecompressHdrImage(
@@ -86,68 +84,49 @@ public class HdrImageTests
         Assert.Equal(64, valuesGreaterThanOne);
     }
 
-    [Fact]
+    [Theory]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Hdr.Hdr_A_1x1)]
     [Description("Verify that HDR ASTC files can be decoded with the LDR API, producing clamped values")]
-    public void DecodeHdrAstcFile_WithLdrApi_ShouldClampValues()
+    public void DecodeHdrAstcFile_WithLdrApi_ShouldProduceExpectedClampedValues(TestTextureProvider provider)
     {
-        string astcPath = TestFile.GetInputFileFullPath(TestImages.Astc.Hdr.Hdr_A_1x1);
-
-        if (!File.Exists(astcPath))
-        {
-            return;
-        }
-
-        byte[] astcData = File.ReadAllBytes(astcPath);
+        byte[] astcData = File.ReadAllBytes(provider.InputFile);
         AstcFile astcFile = AstcFile.FromMemory(astcData);
 
-        // Decode using LDR API
         Span<byte> ldrResult = AstcDecoder.DecompressImage(astcFile);
 
-        // Should produce 1 pixel with 4 bytes (RGBA)
         Assert.Equal(4, ldrResult.Length);
 
-        // All values should be in LDR range
-        foreach (byte value in ldrResult)
-        {
-            Assert.True(value >= byte.MinValue);
-            Assert.True(value <= byte.MaxValue);
-        }
+        Assert.Equal(62, ldrResult[0]);
+        Assert.Equal(63, ldrResult[1]);
+        Assert.Equal(64, ldrResult[2]);
+        Assert.Equal(60, ldrResult[3]);
     }
 
-    [Fact]
-    [Description("Verify that HDR and LDR APIs produce consistent relative channel values for the same HDR ASTC file")]
-    public void HdrAndLdrApis_OnSameHdrFile_ShouldProduceConsistentRelativeValues()
+    [Theory]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Hdr.Hdr_A_1x1)]
+    [Description("Verify that HDR and LDR APIs produce consistent channel values for the same HDR ASTC file")]
+    public void HdrAndLdrApis_OnSameHdrFile_ShouldProduceConsistentValues(TestTextureProvider provider)
     {
-        string astcPath = TestFile.GetInputFileFullPath(TestImages.Astc.Hdr.Hdr_A_1x1);
-
-        byte[] astcData = File.ReadAllBytes(astcPath);
+        byte[] astcData = File.ReadAllBytes(provider.InputFile);
         AstcFile astcFile = AstcFile.FromMemory(astcData);
 
-        // Decode with both APIs
         Span<float> hdrResult = AstcDecoder.DecompressHdrImage(
             astcFile.Blocks, astcFile.Width, astcFile.Height, astcFile.Footprint);
         Span<byte> ldrResult = AstcDecoder.DecompressImage(astcFile);
 
-        // Both should produce output for 1 pixel
-        Assert.Equal(4, hdrResult.Length);
-        Assert.Equal(4, ldrResult.Length);
+        // HDR values exceed 1.0; R < G < B ordering is preserved in both APIs.
+        Assert.Equal(1.625f, hdrResult[0], 0.001f);
+        Assert.Equal(1.84375f, hdrResult[1], 0.001f);
+        Assert.Equal(2.125f, hdrResult[2], 0.001f);
 
-        // The relative ordering of RGB channels should be consistent between APIs.
-        // If HDR channel i > channel j, then LDR channel i should be >= channel j
-        // (accounting for clamping at 255).
-        for (int i = 0; i < 3; i++)
-        {
-            for (int j = i + 1; j < 3; j++)
-            {
-                if (hdrResult[i] > hdrResult[j])
-                {
-                    Assert.True(ldrResult[i] >= ldrResult[j]);
-                }
-                else if (hdrResult[i] < hdrResult[j])
-                {
-                    Assert.True(ldrResult[i] <= ldrResult[j]);
-                }
-            }
-        }
+        Assert.Equal(62, ldrResult[0]);
+        Assert.Equal(63, ldrResult[1]);
+        Assert.Equal(64, ldrResult[2]);
+
+        // Channel ordering R < G < B is preserved across both APIs.
+        Assert.True(hdrResult[0] < hdrResult[1]);
+        Assert.True(hdrResult[1] < hdrResult[2]);
+        Assert.True(ldrResult[0] < ldrResult[1]);
+        Assert.True(ldrResult[1] < ldrResult[2]);
     }
 }

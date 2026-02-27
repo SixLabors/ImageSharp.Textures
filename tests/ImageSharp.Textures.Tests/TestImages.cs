@@ -10,79 +10,50 @@ public static class TestImages
 {
     public static class Astc
     {
-        public const string Atlas_Small_4x4 = "Astc/atlas_small_4x4.astc";
-        public const string Atlas_Small_5x5 = "Astc/atlas_small_5x5.astc";
-        public const string Atlas_Small_6x6 = "Astc/atlas_small_6x6.astc";
-        public const string Atlas_Small_8x8 = "Astc/atlas_small_8x8.astc";
+        public const string Rgb_4x4 = "rgb_4x4.astc";
+        public const string Rgb_5x4 = "rgb_5x4.astc";
+        public const string Rgb_6x6 = "rgb_6x6.astc";
+        public const string Rgb_8x8 = "rgb_8x8.astc";
+        public const string Rgb_12x12 = "rgb_12x12.astc";
 
-        public const string Checkerboard = "Astc/checkerboard.astc";
+        public const string Rgba_4x4 = "rgba_4x4.astc";
+        public const string Rgba_5x5 = "rgba_5x5.astc";
+        public const string Rgba_6x6 = "rgba_6x6.astc";
+        public const string Rgba_8x8 = "rgba_8x8.astc";
 
-        public const string Checkered_4 = "Astc/checkered_4.astc";
-        public const string Checkered_5 = "Astc/checkered_5.astc";
-        public const string Checkered_6 = "Astc/checkered_6.astc";
-        public const string Checkered_7 = "Astc/checkered_7.astc";
-        public const string Checkered_8 = "Astc/checkered_8.astc";
-        public const string Checkered_9 = "Astc/checkered_9.astc";
-        public const string Checkered_10 = "Astc/checkered_10.astc";
-        public const string Checkered_11 = "Astc/checkered_11.astc";
-        public const string Checkered_12 = "Astc/checkered_12.astc";
+        public const string Checkerboard = "checkerboard.astc";
 
-        public const string Footprint_4x4 = "Astc/footprint_4x4.astc";
-        public const string Footprint_5x4 = "Astc/footprint_5x4.astc";
-        public const string Footprint_5x5 = "Astc/footprint_5x5.astc";
-        public const string Footprint_6x5 = "Astc/footprint_6x5.astc";
-        public const string Footprint_6x6 = "Astc/footprint_6x6.astc";
-        public const string Footprint_8x5 = "Astc/footprint_8x5.astc";
-        public const string Footprint_8x6 = "Astc/footprint_8x6.astc";
-        public const string Footprint_8x8 = "Astc/footprint_8x8.astc";
-        public const string Footprint_10x5 = "Astc/footprint_10x5.astc";
-        public const string Footprint_10x6 = "Astc/footprint_10x6.astc";
-        public const string Footprint_10x8 = "Astc/footprint_10x8.astc";
-        public const string Footprint_10x10 = "Astc/footprint_10x10.astc";
-        public const string Footprint_12x10 = "Astc/footprint_12x10.astc";
-        public const string Footprint_12x12 = "Astc/footprint_12x12.astc";
+        public const string Checkered_4 = "checkered_4.astc";
+        public const string Checkered_5 = "checkered_5.astc";
+        public const string Checkered_6 = "checkered_6.astc";
+        public const string Checkered_7 = "checkered_7.astc";
+        public const string Checkered_8 = "checkered_8.astc";
+        public const string Checkered_9 = "checkered_9.astc";
+        public const string Checkered_10 = "checkered_10.astc";
+        public const string Checkered_11 = "checkered_11.astc";
+        public const string Checkered_12 = "checkered_12.astc";
 
-        public const string Rgb_4x4 = "Astc/rgb_4x4.astc";
-        public const string Rgb_5x4 = "Astc/rgb_5x4.astc";
-        public const string Rgb_6x6 = "Astc/rgb_6x6.astc";
-        public const string Rgb_8x8 = "Astc/rgb_8x8.astc";
-        public const string Rgb_12x12 = "Astc/rgb_12x12.astc";
-
-        public static class Expected
-        {
-            public const string Atlas_Small_4x4 = "Astc/Expected/atlas_small_4x4.bmp";
-            public const string Atlas_Small_5x5 = "Astc/Expected/atlas_small_5x5.bmp";
-            public const string Atlas_Small_6x6 = "Astc/Expected/atlas_small_6x6.bmp";
-            public const string Atlas_Small_8x8 = "Astc/Expected/atlas_small_8x8.bmp";
-
-            public const string Footprint_4x4 = "Astc/Expected/footprint_4x4.bmp";
-            public const string Footprint_5x4 = "Astc/Expected/footprint_5x4.bmp";
-            public const string Footprint_5x5 = "Astc/Expected/footprint_5x5.bmp";
-            public const string Footprint_6x5 = "Astc/Expected/footprint_6x5.bmp";
-            public const string Footprint_6x6 = "Astc/Expected/footprint_6x6.bmp";
-            public const string Footprint_8x5 = "Astc/Expected/footprint_8x5.bmp";
-            public const string Footprint_8x6 = "Astc/Expected/footprint_8x6.bmp";
-            public const string Footprint_8x8 = "Astc/Expected/footprint_8x8.bmp";
-            public const string Footprint_10x5 = "Astc/Expected/footprint_10x5.bmp";
-            public const string Footprint_10x6 = "Astc/Expected/footprint_10x6.bmp";
-            public const string Footprint_10x8 = "Astc/Expected/footprint_10x8.bmp";
-            public const string Footprint_10x10 = "Astc/Expected/footprint_10x10.bmp";
-            public const string Footprint_12x10 = "Astc/Expected/footprint_12x10.bmp";
-            public const string Footprint_12x12 = "Astc/Expected/footprint_12x12.bmp";
-
-            public const string Rgb_4x4 = "Astc/Expected/rgb_4x4.bmp";
-            public const string Rgb_5x4 = "Astc/Expected/rgb_5x4.bmp";
-            public const string Rgb_6x6 = "Astc/Expected/rgb_6x6.bmp";
-            public const string Rgb_8x8 = "Astc/Expected/rgb_8x8.bmp";
-            public const string Rgb_12x12 = "Astc/Expected/rgb_12x12.bmp";
-        }
+        public const string Footprint_4x4 = "footprint_4x4.astc";
+        public const string Footprint_5x4 = "footprint_5x4.astc";
+        public const string Footprint_5x5 = "footprint_5x5.astc";
+        public const string Footprint_6x5 = "footprint_6x5.astc";
+        public const string Footprint_6x6 = "footprint_6x6.astc";
+        public const string Footprint_8x5 = "footprint_8x5.astc";
+        public const string Footprint_8x6 = "footprint_8x6.astc";
+        public const string Footprint_8x8 = "footprint_8x8.astc";
+        public const string Footprint_10x5 = "footprint_10x5.astc";
+        public const string Footprint_10x6 = "footprint_10x6.astc";
+        public const string Footprint_10x8 = "footprint_10x8.astc";
+        public const string Footprint_10x10 = "footprint_10x10.astc";
+        public const string Footprint_12x10 = "footprint_12x10.astc";
+        public const string Footprint_12x12 = "footprint_12x12.astc";
 
         public static class Hdr
         {
-            public const string Hdr_A_1x1 = "Astc/HDR/HDR-A-1x1.astc";
-            public const string Ldr_A_1x1 = "Astc/HDR/LDR-A-1x1.astc";
-            public const string Hdr_Tile = "Astc/HDR/hdr-tile.astc";
-            public const string Ldr_Tile = "Astc/HDR/ldr-tile.astc";
+            public const string Hdr_A_1x1 = "HDR/HDR-A-1x1.astc";
+            public const string Ldr_A_1x1 = "HDR/LDR-A-1x1.astc";
+            public const string Hdr_Tile = "HDR/hdr-tile.astc";
+            public const string Ldr_Tile = "HDR/ldr-tile.astc";
         }
     }
 
