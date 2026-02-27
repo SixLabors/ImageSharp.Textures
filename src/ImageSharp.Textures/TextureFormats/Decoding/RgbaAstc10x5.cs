@@ -6,7 +6,7 @@ namespace SixLabors.ImageSharp.Textures.TextureFormats.Decoding;
 /// <summary>
 /// Texture compressed with RgbaAstc10x5.
 /// </summary>
-internal readonly struct RgbaAstc10X5 : IBlock<RgbaAstc10X5>
+internal readonly struct RgbaAstc10x5 : IBlock<RgbaAstc10x5>
 {
     public static Size BlockSize => new(10, 5);
 

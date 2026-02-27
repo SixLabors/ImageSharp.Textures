@@ -45,6 +45,22 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx
 
         Rgba16 = 0x805B,
 
+        R16F = 0x822D,
+
+        Rg16F = 0x822F,
+
+        R32F = 0x822E,
+
+        Rg32F = 0x8230,
+
+        Rgb16F = 0x881B,
+
+        Rgba16F = 0x881A,
+
+        Rgb32F = 0x8815,
+
+        Rgba32F = 0x8814,
+
         R8 = 0x8229,
 
         R8UnsignedInt = 0x8232,
@@ -131,6 +147,11 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx
 
         CompressedSrgb8Alpha8Etc2Eac = 0x9279,
 
+        /// <summary>
+        /// ASTC 4x4 block compression. Supports both LDR and HDR content.
+        /// HDR is determined by block encoding, not a separate format constant.
+        /// Note: Current decoder may not fully support HDR endpoint modes (2, 3, 7, 11, 14, 15).
+        /// </summary>
         CompressedRgbaAstc4x4Khr = 0x93B0,
 
         CompressedRgbaAstc5x4Khr = 0x93B1,
@@ -158,5 +179,37 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx
         CompressedRgbaAstc12x10Khr = 0x93BC,
 
         CompressedRgbaAstc12x12Khr = 0x93BD,
+
+        /// <summary>
+        /// ASTC 4x4 block compression with sRGB color space.
+        /// HDR blocks in sRGB formats will decode incorrectly.
+        /// </summary>
+        CompressedSrgb8Alpha8Astc4x4Khr = 0x93D0,
+
+        CompressedSrgb8Alpha8Astc5x4Khr = 0x93D1,
+
+        CompressedSrgb8Alpha8Astc5x5Khr = 0x93D2,
+
+        CompressedSrgb8Alpha8Astc6x5Khr = 0x93D3,
+
+        CompressedSrgb8Alpha8Astc6x6Khr = 0x93D4,
+
+        CompressedSrgb8Alpha8Astc8x5Khr = 0x93D5,
+
+        CompressedSrgb8Alpha8Astc8x6Khr = 0x93D6,
+
+        CompressedSrgb8Alpha8Astc8x8Khr = 0x93D7,
+
+        CompressedSrgb8Alpha8Astc10x5Khr = 0x93D8,
+
+        CompressedSrgb8Alpha8Astc10x6Khr = 0x93D9,
+
+        CompressedSrgb8Alpha8Astc10x8Khr = 0x93DA,
+
+        CompressedSrgb8Alpha8Astc10x10Khr = 0x93DB,
+
+        CompressedSrgb8Alpha8Astc12x10Khr = 0x93DC,
+
+        CompressedSrgb8Alpha8Astc12x12Khr = 0x93DD,
     }
 }

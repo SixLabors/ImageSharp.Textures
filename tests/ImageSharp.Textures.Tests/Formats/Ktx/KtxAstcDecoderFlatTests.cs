@@ -14,7 +14,7 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.Ktx;
 [GroupOutput("Ktx")]
 [Trait("Format", "Ktx")]
 [Trait("Format", "Astc")]
-public class KtxAstcDecoderTests
+public class KtxAstcDecoderFlatTests
 {
     private static readonly KtxDecoder KtxDecoder = new();
 
@@ -36,6 +36,6 @@ public class KtxAstcDecoderTests
 
         Image<Rgba32> firstMipMapImage = firstMipMap as Image<Rgba32>;
 
-        firstMipMapImage.CompareToReferenceOutput(provider, appendPixelTypeToFileName: false);
+        firstMipMapImage.CompareToReferenceOutput(provider);
     }
 }

@@ -15,6 +15,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\ImageSharp.Textures\ImageSharp.Textures.csproj" />
+    <ProjectReference Include="..\ImageSharp.Textures.Tests\ImageSharp.Textures.Tests.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -22,6 +23,12 @@
   </ItemGroup>
 
   <Import Project="..\Images\Images.projitems" Label="Shared" />
+
+  <!-- Exclude shared compile items that are already provided by the test project reference. -->
+  <ItemGroup>
+    <Compile Remove="..\Images\TestEnvironment.cs" />
+    <Compile Remove="..\Images\TestTextures.cs" />
+  </ItemGroup>
 
   <!-- Copy AstcEncoderCSharp native runtimes to the output directory. -->
   <Target Name="CopyAstcEncNativeRuntimes" AfterTargets="Build">

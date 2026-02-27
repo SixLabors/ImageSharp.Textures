@@ -7,6 +7,13 @@ namespace SixLabors.ImageSharp.Textures.TextureFormats.Decoding;
 
 /// <summary>
 /// ASTC (Adaptive scalable texture compression) decoder for all valid block footprints.
+/// <para>
+/// <b>HDR Support Status:</b> ASTC supports both LDR and HDR content using the same format constants.
+/// HDR is determined by the block's endpoint encoding mode (modes 2, 3, 7, 11, 14, 15).
+/// The current decoder may not correctly handle HDR endpoint modes and may produce incorrect
+/// colors for HDR blocks. For guaranteed HDR support, use uncompressed formats like R16F, RGBA16F, or RGBA32F.
+/// See docs/ASTC-HDR-Support.md for details.
+/// </para>
 /// </summary>
 internal static class AstcDecoder
 {
@@ -21,6 +28,9 @@ internal static class AstcDecoder
     /// <param name="decodedPixels">The output span for decoded RGBA pixels.</param>
     /// <exception cref="ArgumentException">Thrown if blockData is not 16 bytes or decodedPixels is the wrong size.</exception>
     /// <exception cref="ArgumentOutOfRangeException">Thrown if the block dimensions are invalid.</exception>
+    /// <remarks>
+    /// If the block uses HDR endpoint modes (2, 3, 7, 11, 14, 15), the decoded colors may be incorrect.
+    /// </remarks>
     public static void DecodeBlock(ReadOnlySpan<byte> blockData, int blockWidth, int blockHeight, Span<byte> decodedPixels)
     {
         if (blockData.Length != AstcBlockSize)

@@ -6,6 +6,10 @@ using SixLabors.ImageSharp.Textures.Astc.Reference.Tests.Utils;
 using SixLabors.ImageSharp.Textures.Compression.Astc;
 using SixLabors.ImageSharp.Textures.Compression.Astc.Core;
 using SixLabors.ImageSharp.Textures.Compression.Astc.IO;
+using SixLabors.ImageSharp.Textures.Tests;
+using SixLabors.ImageSharp.Textures.Tests.Enums;
+using SixLabors.ImageSharp.Textures.Tests.TestUtilities.Attributes;
+using SixLabors.ImageSharp.Textures.Tests.TestUtilities.TextureProviders;
 
 namespace SixLabors.ImageSharp.Textures.Astc.Reference.Tests;
 
@@ -13,6 +17,8 @@ namespace SixLabors.ImageSharp.Textures.Astc.Reference.Tests;
 /// HDR comparison tests between SixLabors.ImageSharp.Textures.Astc and the ARM reference ASTC decoder.
 /// These validate that SixLabors.ImageSharp.Textures.Astc produces HDR output matching the official ARM implementation.
 /// </summary>
+[Trait("Format", "Astc")]
+[Trait("Format", "Hdr")]
 public class ReferenceDecoderHdrTests
 {
     public static TheoryData<FootprintType> AllFootprintTypes =>
@@ -35,17 +41,16 @@ public class ReferenceDecoderHdrTests
         };
 
     [Theory]
-    [InlineData("HDR-A-1x1")]
-    [InlineData("hdr-tile")]
-    [InlineData("LDR-A-1x1")]
-    [InlineData("ldr-tile")]
-    public void DecompressHdr_WithHdrImage_ShouldMatch(string basename)
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Hdr.Hdr_A_1x1)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Hdr.Hdr_Tile)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Hdr.Ldr_A_1x1)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Hdr.Ldr_Tile)]
+    public void DecompressHdr_WithHdrImage_ShouldMatch(TestTextureProvider provider)
     {
-        string filePath = Path.Combine(TestEnvironment.InputImagesDirectoryFullPath, "Astc", "HDR", basename + ".astc");
-
-        byte[] bytes = File.ReadAllBytes(filePath);
+        byte[] bytes = File.ReadAllBytes(provider.InputFile);
         AstcFile astcFile = AstcFile.FromMemory(bytes);
         (int blockX, int blockY) = ReferenceDecoder.ToBlockDimensions(astcFile.Footprint.Type);
+        string basename = Path.GetFileNameWithoutExtension(provider.InputFile);
 
         Half[] expected = ReferenceDecoder.DecompressHdr(
             astcFile.Blocks, astcFile.Width, astcFile.Height, blockX, blockY);
@@ -56,16 +61,16 @@ public class ReferenceDecoderHdrTests
     }
 
     [Theory]
-    [InlineData("atlas_small_4x4")]
-    [InlineData("atlas_small_5x5")]
-    [InlineData("atlas_small_6x6")]
-    [InlineData("atlas_small_8x8")]
-    public void DecompressHdr_WithLdrImage_ShouldMatch(string basename)
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Rgba_4x4)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Rgba_5x5)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Rgba_6x6)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Rgba_8x8)]
+    public void DecompressHdr_WithLdrImage_ShouldMatch(TestTextureProvider provider)
     {
-        string filePath = Path.Combine(TestEnvironment.InputImagesDirectoryFullPath, "Astc", basename + ".astc");
-        byte[] bytes = File.ReadAllBytes(filePath);
+        byte[] bytes = File.ReadAllBytes(provider.InputFile);
         AstcFile astcFile = AstcFile.FromMemory(bytes);
         (int blockX, int blockY) = ReferenceDecoder.ToBlockDimensions(astcFile.Footprint.Type);
+        string basename = Path.GetFileNameWithoutExtension(provider.InputFile);
 
         Half[] expected = ReferenceDecoder.DecompressHdr(
             astcFile.Blocks, astcFile.Width, astcFile.Height, blockX, blockY);

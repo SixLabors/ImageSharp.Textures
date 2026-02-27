@@ -5,6 +5,10 @@ using SixLabors.ImageSharp.Textures.Astc.Reference.Tests.Utils;
 using SixLabors.ImageSharp.Textures.Compression.Astc;
 using SixLabors.ImageSharp.Textures.Compression.Astc.Core;
 using SixLabors.ImageSharp.Textures.Compression.Astc.IO;
+using SixLabors.ImageSharp.Textures.Tests;
+using SixLabors.ImageSharp.Textures.Tests.Enums;
+using SixLabors.ImageSharp.Textures.Tests.TestUtilities.Attributes;
+using SixLabors.ImageSharp.Textures.Tests.TestUtilities.TextureProviders;
 
 namespace SixLabors.ImageSharp.Textures.Astc.Reference.Tests;
 
@@ -12,6 +16,7 @@ namespace SixLabors.ImageSharp.Textures.Astc.Reference.Tests;
 /// LDR comparison tests between SixLabors.ImageSharp.Textures.Astc and the ARM reference ASTC decoder.
 /// These validate that SixLabors.ImageSharp.Textures.Astc produces output matching the official ARM implementation.
 /// </summary>
+[Trait("Format", "Astc")]
 public class ReferenceDecoderTests
 {
     // Per-channel tolerance for RGBA8 comparisons.
@@ -38,45 +43,45 @@ public class ReferenceDecoderTests
         };
 
     [Theory]
-    [InlineData("atlas_small_4x4")]
-    [InlineData("atlas_small_5x5")]
-    [InlineData("atlas_small_6x6")]
-    [InlineData("atlas_small_8x8")]
-    [InlineData("checkerboard")]
-    [InlineData("checkered_4")]
-    [InlineData("checkered_5")]
-    [InlineData("checkered_6")]
-    [InlineData("checkered_7")]
-    [InlineData("checkered_8")]
-    [InlineData("checkered_9")]
-    [InlineData("checkered_10")]
-    [InlineData("checkered_11")]
-    [InlineData("checkered_12")]
-    [InlineData("footprint_4x4")]
-    [InlineData("footprint_5x4")]
-    [InlineData("footprint_5x5")]
-    [InlineData("footprint_6x5")]
-    [InlineData("footprint_6x6")]
-    [InlineData("footprint_8x5")]
-    [InlineData("footprint_8x6")]
-    [InlineData("footprint_8x8")]
-    [InlineData("footprint_10x5")]
-    [InlineData("footprint_10x6")]
-    [InlineData("footprint_10x8")]
-    [InlineData("footprint_10x10")]
-    [InlineData("footprint_12x10")]
-    [InlineData("footprint_12x12")]
-    [InlineData("rgb_4x4")]
-    [InlineData("rgb_5x4")]
-    [InlineData("rgb_6x6")]
-    [InlineData("rgb_8x8")]
-    [InlineData("rgb_12x12")]
-    public void DecompressLdr_WithImage_ShouldMatch(string basename)
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Checkerboard)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Checkered_4)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Checkered_5)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Checkered_6)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Checkered_7)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Checkered_8)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Checkered_9)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Checkered_10)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Checkered_11)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Checkered_12)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Footprint_4x4)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Footprint_5x4)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Footprint_5x5)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Footprint_6x5)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Footprint_6x6)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Footprint_8x5)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Footprint_8x6)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Footprint_8x8)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Footprint_10x5)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Footprint_10x6)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Footprint_10x8)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Footprint_10x10)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Footprint_12x10)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Footprint_12x12)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Rgb_4x4)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Rgb_5x4)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Rgb_6x6)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Rgb_8x8)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Rgb_12x12)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Rgba_4x4)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Rgba_5x5)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Rgba_6x6)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Rgba_8x8)]
+    public void DecompressLdr_WithImage_ShouldMatch(TestTextureProvider provider)
     {
-        string filePath = Path.Combine(TestEnvironment.InputImagesDirectoryFullPath, "Astc", basename + ".astc");
-        byte[] bytes = File.ReadAllBytes(filePath);
+        byte[] bytes = File.ReadAllBytes(provider.InputFile);
         AstcFile astcFile = AstcFile.FromMemory(bytes);
         (int blockX, int blockY) = ReferenceDecoder.ToBlockDimensions(astcFile.Footprint.Type);
+        string basename = Path.GetFileNameWithoutExtension(provider.InputFile);
 
         byte[] expected = ReferenceDecoder.DecompressLdr(
             astcFile.Blocks, astcFile.Width, astcFile.Height, blockX, blockY);

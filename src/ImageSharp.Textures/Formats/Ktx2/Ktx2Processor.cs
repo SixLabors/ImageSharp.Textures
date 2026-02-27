@@ -60,6 +60,8 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx2
                     return AllocateMipMaps<L16>(memoryStream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_R16_SFLOAT:
                     return AllocateMipMaps<R16Float>(memoryStream, width, height, levelIndices);
+                case VkFormat.VK_FORMAT_R32_SFLOAT:
+                    return AllocateMipMaps<Fp32>(memoryStream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_R8G8_UNORM:
                 case VkFormat.VK_FORMAT_R8G8_SNORM:
                 case VkFormat.VK_FORMAT_R8G8_UINT:
@@ -98,6 +100,10 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx2
                     return AllocateMipMaps<Rgba128>(memoryStream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_R32G32B32A32_SFLOAT:
                     return AllocateMipMaps<Rgba128Float>(memoryStream, width, height, levelIndices);
+                case VkFormat.VK_FORMAT_B10G11R11_UFLOAT_PACK32:
+                    return AllocateMipMaps<Rgb111110PackedFloat>(memoryStream, width, height, levelIndices);
+                case VkFormat.VK_FORMAT_E5B9G9R9_UFLOAT_PACK32:
+                    return AllocateMipMaps<Rgbe9995PackedFloat>(memoryStream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_B8G8R8_UNORM:
                 case VkFormat.VK_FORMAT_B8G8R8_SNORM:
                 case VkFormat.VK_FORMAT_B8G8R8_UINT:
@@ -183,7 +189,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx2
                     return AllocateMipMaps<RgbaAstc8X8>(memoryStream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_ASTC_10x5_UNORM_BLOCK:
                 case VkFormat.VK_FORMAT_ASTC_10x5_SRGB_BLOCK:
-                    return AllocateMipMaps<RgbaAstc10X5>(memoryStream, width, height, levelIndices);
+                    return AllocateMipMaps<RgbaAstc10x5>(memoryStream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_ASTC_10x6_UNORM_BLOCK:
                 case VkFormat.VK_FORMAT_ASTC_10x6_SRGB_BLOCK:
                     return AllocateMipMaps<RgbaAstc10X6>(memoryStream, width, height, levelIndices);
@@ -271,6 +277,10 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx2
                     return AllocateCubeMap<Rgba128>(stream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_R32G32B32A32_SFLOAT:
                     return AllocateCubeMap<Rgba128Float>(stream, width, height, levelIndices);
+                case VkFormat.VK_FORMAT_B10G11R11_UFLOAT_PACK32:
+                    return AllocateCubeMap<Rgb111110PackedFloat>(stream, width, height, levelIndices);
+                case VkFormat.VK_FORMAT_E5B9G9R9_UFLOAT_PACK32:
+                    return AllocateCubeMap<Rgbe9995PackedFloat>(stream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_B8G8R8_UNORM:
                 case VkFormat.VK_FORMAT_B8G8R8_SNORM:
                 case VkFormat.VK_FORMAT_B8G8R8_UINT:
@@ -354,7 +364,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx2
                     return AllocateCubeMap<RgbaAstc8X8>(stream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_ASTC_10x5_UNORM_BLOCK:
                 case VkFormat.VK_FORMAT_ASTC_10x5_SRGB_BLOCK:
-                    return AllocateCubeMap<RgbaAstc10X5>(stream, width, height, levelIndices);
+                    return AllocateCubeMap<RgbaAstc10x5>(stream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_ASTC_10x6_UNORM_BLOCK:
                 case VkFormat.VK_FORMAT_ASTC_10x6_SRGB_BLOCK:
                     return AllocateCubeMap<RgbaAstc10X6>(stream, width, height, levelIndices);
