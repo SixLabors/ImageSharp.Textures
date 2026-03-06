@@ -1,6 +1,8 @@
 // Copyright (c) Six Labors.
 // Licensed under the Six Labors Split License.
 
+using System.Buffers.Binary;
+
 namespace SixLabors.ImageSharp.Textures.Compression.Astc.IO;
 
 /// <summary>
@@ -27,7 +29,7 @@ internal readonly record struct AstcFileHeader(byte BlockWidth, byte BlockHeight
         // - magic (4),
         // - blockdim (3),
         // - xsize,y,z (each 3 little-endian bytes)
-        uint magic = BitConverter.ToUInt32(data);
+        uint magic = BinaryPrimitives.ReadUInt32LittleEndian(data);
         ArgumentOutOfRangeException.ThrowIfNotEqual(magic, Magic);
 
         return new AstcFileHeader(
