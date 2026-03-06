@@ -113,7 +113,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx2
                     }
                 }
 
-                if (stream.Position < maxEndPosition && stream.CanSeek)
+                if (stream.CanSeek && stream.Position < maxEndPosition)
                 {
                     stream.Position = maxEndPosition;
                 }

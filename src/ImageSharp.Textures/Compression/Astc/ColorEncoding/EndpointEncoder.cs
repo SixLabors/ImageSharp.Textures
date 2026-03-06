@@ -140,7 +140,7 @@ internal static class EndpointEncoder
                 break;
             }
 
-            case EndpointEncodingMode.DirectRbg:
+            case EndpointEncodingMode.DirectRgb:
             case EndpointEncodingMode.DirectRgba:
                 return EncodeColorsRGBA(endpointLowRgba, endpointHighRgba, maxValue, encodingMode == EndpointEncodingMode.DirectRgba, out astcMode, values);
             default:

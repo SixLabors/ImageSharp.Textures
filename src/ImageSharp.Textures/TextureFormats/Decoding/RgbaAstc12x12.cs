@@ -11,7 +11,7 @@ internal readonly struct RgbaAstc12X12 : IBlock<RgbaAstc12X12>
     public static Size BlockSize => new(12, 12);
 
     /// <inheritdoc/>
-    public int BitsPerPixel => 128 / (BlockSize.Width * BlockSize.Height);
+    public int BitsPerPixel => 1; // Actually 0.888... but we round up for simplicity
 
     /// <inheritdoc/>
     public byte PixelDepthBytes => 4;

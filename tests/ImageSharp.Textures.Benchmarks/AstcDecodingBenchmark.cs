@@ -29,9 +29,9 @@ public class AstcDecodingBenchmark
         blocks[..16].CopyTo(blockBytes);
         ulong low = BitConverter.ToUInt64(blockBytes);
         ulong high = BitConverter.ToUInt64(blockBytes[8..]);
-        PhysicalBlock phyiscalBlock = PhysicalBlock.Create((UInt128)low | ((UInt128)high << 64));
+        PhysicalBlock physicalBlock = PhysicalBlock.Create((UInt128)low | ((UInt128)high << 64));
 
-        return !phyiscalBlock.IsIllegalEncoding;
+        return !physicalBlock.IsIllegalEncoding;
     }
 
     [Benchmark]

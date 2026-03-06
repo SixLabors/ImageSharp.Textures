@@ -64,6 +64,6 @@ internal record AstcFile
         (10, 10) => Footprint.FromFootprintType(FootprintType.Footprint10x10),
         (12, 10) => Footprint.FromFootprintType(FootprintType.Footprint12x10),
         (12, 12) => Footprint.FromFootprintType(FootprintType.Footprint12x12),
-        _ => throw new ArgumentOutOfRangeException($"Unsupported block dimensions: {this.header.BlockWidth}x{this.header.BlockHeight}"),
+        _ => throw new NotSupportedException($"Unsupported block dimensions: {this.header.BlockWidth}x{this.header.BlockHeight}"),
     };
 }

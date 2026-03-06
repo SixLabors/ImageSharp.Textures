@@ -9,6 +9,6 @@ internal enum EndpointEncodingMode
     DirectLumaAlpha,
     BaseScaleRgb,
     BaseScaleRgba,
-    DirectRbg,
+    DirectRgb,
     DirectRgba
 }

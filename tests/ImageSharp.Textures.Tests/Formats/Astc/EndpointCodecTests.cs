@@ -16,7 +16,7 @@ public class EndpointCodecTests
     [InlineData(EndpointEncodingMode.DirectLumaAlpha)]
     [InlineData(EndpointEncodingMode.BaseScaleRgb)]
     [InlineData(EndpointEncodingMode.BaseScaleRgba)]
-    [InlineData(EndpointEncodingMode.DirectRbg)]
+    [InlineData(EndpointEncodingMode.DirectRgb)]
     [InlineData(EndpointEncodingMode.DirectRgba)]
     internal void EncodeColorsForMode_WithVariousRanges_ShouldProduceValidQuantizedValues(EndpointEncodingMode mode)
     {
@@ -41,7 +41,7 @@ public class EndpointCodecTests
     [InlineData(EndpointEncodingMode.DirectLumaAlpha)]
     [InlineData(EndpointEncodingMode.BaseScaleRgb)]
     [InlineData(EndpointEncodingMode.BaseScaleRgba)]
-    [InlineData(EndpointEncodingMode.DirectRbg)]
+    [InlineData(EndpointEncodingMode.DirectRgb)]
     [InlineData(EndpointEncodingMode.DirectRgba)]
     internal void EncodeDecodeColors_WithBlackAndWhite_ShouldPreserveColors(EndpointEncodingMode mode)
     {
@@ -105,7 +105,7 @@ public class EndpointCodecTests
         foreach ((Rgba32 low, Rgba32 high) in pairs)
         {
             List<int> values = [];
-            EndpointEncoder.EncodeColorsForMode(low, high, endpointRange, EndpointEncodingMode.DirectRbg, out ColorEndpointMode astcMode, values);
+            EndpointEncoder.EncodeColorsForMode(low, high, endpointRange, EndpointEncodingMode.DirectRgb, out ColorEndpointMode astcMode, values);
 
             Assert.True(EndpointEncoder.UsesBlueContract(endpointRange, astcMode, values));
         }
@@ -184,7 +184,7 @@ public class EndpointCodecTests
     [Fact]
     public void EncodeDecodeColors_WithRgbDirectAndRandomColors_ShouldPreserveColors()
     {
-        EndpointEncodingMode mode = EndpointEncodingMode.DirectRbg;
+        EndpointEncodingMode mode = EndpointEncodingMode.DirectRgb;
         Random random = new(unchecked((int)0xdeadbeef));
 
         for (int i = 0; i < 100; ++i)
@@ -201,7 +201,7 @@ public class EndpointCodecTests
     [Fact]
     public void EncodeDecodeColors_WithRgbDirectAndSpecificColors_ShouldMatchExpected()
     {
-        EndpointEncodingMode mode = EndpointEncodingMode.DirectRbg;
+        EndpointEncodingMode mode = EndpointEncodingMode.DirectRgb;
 
         (Rgba32 low, Rgba32 high) = EncodeAndDecodeColors(
             new Rgba32(64, 127, 192, 255),

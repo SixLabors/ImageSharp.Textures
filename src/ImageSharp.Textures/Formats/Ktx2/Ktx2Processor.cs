@@ -189,7 +189,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx2
                     return AllocateMipMaps<RgbaAstc8X8>(memoryStream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_ASTC_10x5_UNORM_BLOCK:
                 case VkFormat.VK_FORMAT_ASTC_10x5_SRGB_BLOCK:
-                    return AllocateMipMaps<RgbaAstc10x5>(memoryStream, width, height, levelIndices);
+                    return AllocateMipMaps<RgbaAstc10X5>(memoryStream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_ASTC_10x6_UNORM_BLOCK:
                 case VkFormat.VK_FORMAT_ASTC_10x6_SRGB_BLOCK:
                     return AllocateMipMaps<RgbaAstc10X6>(memoryStream, width, height, levelIndices);
@@ -364,7 +364,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx2
                     return AllocateCubeMap<RgbaAstc8X8>(stream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_ASTC_10x5_UNORM_BLOCK:
                 case VkFormat.VK_FORMAT_ASTC_10x5_SRGB_BLOCK:
-                    return AllocateCubeMap<RgbaAstc10x5>(stream, width, height, levelIndices);
+                    return AllocateCubeMap<RgbaAstc10X5>(stream, width, height, levelIndices);
                 case VkFormat.VK_FORMAT_ASTC_10x6_UNORM_BLOCK:
                 case VkFormat.VK_FORMAT_ASTC_10x6_SRGB_BLOCK:
                     return AllocateCubeMap<RgbaAstc10X6>(stream, width, height, levelIndices);

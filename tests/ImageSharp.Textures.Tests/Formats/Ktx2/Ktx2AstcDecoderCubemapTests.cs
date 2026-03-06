@@ -27,6 +27,8 @@ public class Ktx2AstcDecoderCubemapTests
         provider.SaveTextures(texture);
         CubemapTexture cubemapTexture = texture as CubemapTexture;
 
+        Assert.NotNull(cubemapTexture);
+
         using Image posXImage = cubemapTexture.PositiveX.MipMaps[0].GetImage();
         (posXImage as Image<Rgba32>).CompareToReferenceOutput(
             ImageComparer.Exact,

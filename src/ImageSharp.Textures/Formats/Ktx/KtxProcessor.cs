@@ -128,7 +128,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx
                                 return this.AllocateMipMaps<RgbaAstc8X8>(stream, width, height, count);
                             case GlInternalPixelFormat.CompressedRgbaAstc10x5Khr:
                             case GlInternalPixelFormat.CompressedSrgb8Alpha8Astc10x5Khr:
-                                return this.AllocateMipMaps<RgbaAstc10x5>(stream, width, height, count);
+                                return this.AllocateMipMaps<RgbaAstc10X5>(stream, width, height, count);
                             case GlInternalPixelFormat.CompressedRgbaAstc10x6Khr:
                             case GlInternalPixelFormat.CompressedSrgb8Alpha8Astc10x6Khr:
                                 return this.AllocateMipMaps<RgbaAstc10X6>(stream, width, height, count);
@@ -267,7 +267,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx
                             return this.AllocateCubeMap<RgbaAstc8X8>(stream, width, height);
                         case GlInternalPixelFormat.CompressedRgbaAstc10x5Khr:
                         case GlInternalPixelFormat.CompressedSrgb8Alpha8Astc10x5Khr:
-                            return this.AllocateCubeMap<RgbaAstc10x5>(stream, width, height);
+                            return this.AllocateCubeMap<RgbaAstc10X5>(stream, width, height);
                         case GlInternalPixelFormat.CompressedRgbaAstc10x6Khr:
                         case GlInternalPixelFormat.CompressedSrgb8Alpha8Astc10x6Khr:
                             return this.AllocateCubeMap<RgbaAstc10X6>(stream, width, height);
