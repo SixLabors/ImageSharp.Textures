@@ -70,14 +70,13 @@ public class HdrDecoderTests
     }
 
     [Fact]
-    public void DecompressToFloat16_WithZeroDimensions_ShouldReturnEmpty()
+    public void DecompressToFloat16_WithZeroDimensions_ShouldThrowArgumentOutOfRangeException()
     {
         byte[] astcData = new byte[16];
         Footprint footprint = Footprint.FromFootprintType(FootprintType.Footprint4x4);
 
-        Span<float> result = AstcDecoder.DecompressHdrImage(astcData, 0, 0, footprint);
-
-        Assert.Equal(0, result.Length);
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            AstcDecoder.DecompressHdrImage(astcData, 0, 0, footprint).ToArray());
     }
 
     [Fact]

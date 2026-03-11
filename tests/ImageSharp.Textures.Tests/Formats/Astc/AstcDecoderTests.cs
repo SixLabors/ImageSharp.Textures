@@ -7,7 +7,6 @@ using SixLabors.ImageSharp.Textures.Compression.Astc;
 using SixLabors.ImageSharp.Textures.Compression.Astc.Core;
 using SixLabors.ImageSharp.Textures.Compression.Astc.IO;
 using SixLabors.ImageSharp.Textures.Compression.Astc.TexelBlock;
-using SixLabors.ImageSharp.Textures.Formats.Ktx;
 using SixLabors.ImageSharp.Textures.Tests.Enums;
 using SixLabors.ImageSharp.Textures.Tests.TestUtilities;
 using SixLabors.ImageSharp.Textures.Tests.TestUtilities.Attributes;
@@ -22,28 +21,6 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.Astc;
 [Trait("Format", "Astc")]
 public class AstcDecoderTests
 {
-    [Fact]
-    public void DecompressImage_WithZeroWidth_ShouldReturnEmpty()
-    {
-        byte[] data = new byte[256];
-        const int height = 16;
-
-        Span<byte> result = AstcDecoder.DecompressImage(data, 0, height, FootprintType.Footprint4x4);
-
-        Assert.Empty(result.ToArray());
-    }
-
-    [Fact]
-    public void DecompressImage_WithZeroHeight_ShouldReturnEmpty()
-    {
-        byte[] data = new byte[256];
-        const int width = 16;
-
-        Span<byte> result = AstcDecoder.DecompressImage(data, width, 0, FootprintType.Footprint4x4);
-
-        Assert.Empty(result.ToArray());
-    }
-
     [Fact]
     public void DecompressImage_WithDataSizeNotMultipleOfBlockSize_ShouldReturnEmpty()
     {
@@ -193,5 +170,93 @@ public class AstcDecoderTests
             ImageComparer.TolerantPercentage(0.03f),
             provider,
             testOutputDetails: blockSize);
+    }
+
+    [Theory]
+    [InlineData(-1, 4)]
+    [InlineData(4, -1)]
+    [InlineData(0, 4)]
+    [InlineData(4, 0)]
+    [InlineData(int.MaxValue, int.MaxValue)]
+    public void DecompressImage_WithInvalidDimensions_ShouldThrowArgumentOutOfRangeException(int width, int height)
+    {
+        byte[] data = new byte[16];
+
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            AstcDecoder.DecompressImage(data, width, height, FootprintType.Footprint4x4).ToArray());
+    }
+
+    [Fact]
+    public void DecompressImageToBuffer_WithNegativeWidth_ShouldThrowArgumentOutOfRangeException()
+    {
+        byte[] data = new byte[16];
+        byte[] buffer = new byte[64];
+        Footprint footprint = Footprint.FromFootprintType(FootprintType.Footprint4x4);
+
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            AstcDecoder.DecompressImage(data, -1, 4, footprint, buffer));
+    }
+
+    [Fact]
+    public void DecompressImageToBuffer_WithTooSmallBuffer_ShouldThrowArgumentOutOfRangeException()
+    {
+        // 4x4 image with 4x4 blocks = 1 block = 16 bytes input, needs 4*4*4=64 bytes output
+        byte[] data = new byte[16];
+        byte[] buffer = new byte[32]; // too small
+        Footprint footprint = Footprint.FromFootprintType(FootprintType.Footprint4x4);
+
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            AstcDecoder.DecompressImage(data, 4, 4, footprint, buffer));
+    }
+
+    [Theory]
+    [InlineData(8, 64)]
+    [InlineData(16, 10)]
+    public void DecompressBlock_WithInvalidBufferSizes_ShouldThrowArgumentOutOfRangeException(int dataSize, int bufferSize)
+    {
+        byte[] data = new byte[dataSize];
+        byte[] buffer = new byte[bufferSize];
+        Footprint footprint = Footprint.FromFootprintType(FootprintType.Footprint4x4);
+
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            AstcDecoder.DecompressBlock(data, footprint, buffer));
+    }
+
+    [Theory]
+    [InlineData(8, 64)]
+    [InlineData(16, 10)]
+    public void DecompressHdrBlock_WithInvalidBufferSizes_ShouldThrowArgumentOutOfRangeException(int dataSize, int bufferSize)
+    {
+        byte[] data = new byte[dataSize];
+        float[] buffer = new float[bufferSize];
+        Footprint footprint = Footprint.FromFootprintType(FootprintType.Footprint4x4);
+
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            AstcDecoder.DecompressHdrBlock(data, footprint, buffer));
+    }
+
+    [Theory]
+    [InlineData(-1, 4)]
+    [InlineData(4, -1)]
+    [InlineData(0, 4)]
+    [InlineData(4, 0)]
+    [InlineData(int.MaxValue, int.MaxValue)]
+    public void DecompressHdrImage_WithInvalidDimensions_ShouldThrowArgumentOutOfRangeException(int width, int height)
+    {
+        byte[] data = new byte[16];
+
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            AstcDecoder.DecompressHdrImage(data, width, height, FootprintType.Footprint4x4).ToArray());
+    }
+
+    [Fact]
+    public void DecompressHdrImageToBuffer_WithTooSmallBuffer_ShouldThrowArgumentOutOfRangeException()
+    {
+        byte[] data = new byte[16];
+        float[] buffer = new float[32]; // too small for 4x4 image (needs 64)
+        Footprint footprint = Footprint.FromFootprintType(FootprintType.Footprint4x4);
+
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            AstcDecoder.DecompressHdrImage(data, 4, 4, footprint, buffer));
     }
 }

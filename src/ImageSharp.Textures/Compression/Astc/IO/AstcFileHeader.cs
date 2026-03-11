@@ -32,12 +32,20 @@ internal readonly record struct AstcFileHeader(byte BlockWidth, byte BlockHeight
         uint magic = BinaryPrimitives.ReadUInt32LittleEndian(data);
         ArgumentOutOfRangeException.ThrowIfNotEqual(magic, Magic);
 
+        int imageWidth = data[7] | (data[8] << 8) | (data[9] << 16);
+        int imageHeight = data[10] | (data[11] << 8) | (data[12] << 16);
+        int imageDepth = data[13] | (data[14] << 8) | (data[15] << 16);
+
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(imageWidth, 0);
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(imageHeight, 0);
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(imageDepth, 0);
+
         return new AstcFileHeader(
             BlockWidth: data[4],
             BlockHeight: data[5],
             BlockDepth: data[6],
-            ImageWidth: data[7] | (data[8] << 8) | (data[9] << 16),
-            ImageHeight: data[10] | (data[11] << 8) | (data[12] << 16),
-            ImageDepth: data[13] | (data[14] << 8) | (data[15] << 16));
+            ImageWidth: imageWidth,
+            ImageHeight: imageHeight,
+            ImageDepth: imageDepth);
     }
 }

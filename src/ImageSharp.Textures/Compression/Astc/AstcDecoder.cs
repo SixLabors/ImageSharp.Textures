@@ -30,7 +30,14 @@ public static class AstcDecoder
     /// <exception cref="InvalidOperationException">If decompression fails for any block</exception>
     public static Span<byte> DecompressImage(ReadOnlySpan<byte> astcData, int width, int height, Footprint footprint)
     {
-        byte[] imageBuffer = new byte[width * height * BytesPerPixelUnorm8];
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(width);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(height);
+
+        long totalPixels = (long)width * height;
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(totalPixels, (long)int.MaxValue / BytesPerPixelUnorm8);
+
+        long totalBytes = totalPixels * BytesPerPixelUnorm8;
+        byte[] imageBuffer = new byte[totalBytes];
 
         return DecompressImage(astcData, width, height, footprint, imageBuffer)
             ? imageBuffer
@@ -49,6 +56,15 @@ public static class AstcDecoder
     /// <exception cref="InvalidOperationException">If decompression fails for any block</exception>
     public static bool DecompressImage(ReadOnlySpan<byte> astcData, int width, int height, Footprint footprint, Span<byte> imageBuffer)
     {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(width);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(height);
+
+        long totalPixels = (long)width * height;
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(totalPixels, (long)int.MaxValue / BytesPerPixelUnorm8);
+
+        long totalBytes = totalPixels * BytesPerPixelUnorm8;
+        ArgumentOutOfRangeException.ThrowIfLessThan((long)imageBuffer.Length, totalBytes);
+
         if (!TryGetBlockLayout(astcData, width, height, footprint, out int blocksWide, out int blocksHigh))
         {
             return false;
@@ -174,6 +190,9 @@ public static class AstcDecoder
     /// <param name="buffer">The buffer to write the decoded pixels into</param>
     public static void DecompressBlock(ReadOnlySpan<byte> blockData, Footprint footprint, Span<byte> buffer)
     {
+        ArgumentOutOfRangeException.ThrowIfLessThan(blockData.Length, PhysicalBlock.SizeInBytes);
+        ArgumentOutOfRangeException.ThrowIfLessThan(buffer.Length, footprint.PixelCount * BytesPerPixelUnorm8);
+
         // Read the 16 bytes that make up the ASTC block as a 128-bit value
         ulong low = BinaryPrimitives.ReadUInt64LittleEndian(blockData);
         ulong high = BinaryPrimitives.ReadUInt64LittleEndian(blockData[8..]);
@@ -215,8 +234,14 @@ public static class AstcDecoder
     /// </returns>
     public static Span<float> DecompressHdrImage(ReadOnlySpan<byte> astcData, int width, int height, Footprint footprint)
     {
-        const int channelsPerPixel = 4;
-        float[] imageBuffer = new float[width * height * channelsPerPixel];
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(width);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(height);
+
+        long totalPixels = (long)width * height;
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(totalPixels, (long)int.MaxValue / 4);
+
+        long totalFloats = totalPixels * 4;
+        float[] imageBuffer = new float[totalFloats];
         if (!DecompressHdrImage(astcData, width, height, footprint, imageBuffer))
         {
             return [];
@@ -237,6 +262,15 @@ public static class AstcDecoder
     /// <exception cref="InvalidOperationException">If decompression fails for any block</exception>
     public static bool DecompressHdrImage(ReadOnlySpan<byte> astcData, int width, int height, Footprint footprint, Span<float> imageBuffer)
     {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(width);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(height);
+
+        long totalPixels = (long)width * height;
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(totalPixels, (long)int.MaxValue / 4);
+
+        long totalFloats = totalPixels * 4;
+        ArgumentOutOfRangeException.ThrowIfLessThan((long)imageBuffer.Length, totalFloats);
+
         if (!TryGetBlockLayout(astcData, width, height, footprint, out int blocksWide, out int blocksHigh))
         {
             return false;
@@ -361,6 +395,9 @@ public static class AstcDecoder
     /// <param name="buffer">The buffer to write decoded values into (must be at least footprint.Width * footprint.Height * 4 elements)</param>
     public static void DecompressHdrBlock(ReadOnlySpan<byte> blockData, Footprint footprint, Span<float> buffer)
     {
+        ArgumentOutOfRangeException.ThrowIfLessThan(blockData.Length, PhysicalBlock.SizeInBytes);
+        ArgumentOutOfRangeException.ThrowIfLessThan(buffer.Length, footprint.PixelCount * 4);
+
         // Read the 16 bytes that make up the ASTC block as a 128-bit value
         ulong low = BinaryPrimitives.ReadUInt64LittleEndian(blockData);
         ulong high = BinaryPrimitives.ReadUInt64LittleEndian(blockData[8..]);
@@ -424,19 +461,16 @@ public static class AstcDecoder
         blocksWide = 0;
         blocksHigh = 0;
 
-        if (blockWidth == 0 || blockHeight == 0 || width == 0 || height == 0)
+        if (blockWidth <= 0 || blockHeight <= 0 || width <= 0 || height <= 0)
         {
             return false;
         }
 
         blocksWide = (width + blockWidth - 1) / blockWidth;
-        if (blocksWide == 0)
-        {
-            return false;
-        }
-
         blocksHigh = (height + blockHeight - 1) / blockHeight;
-        int expectedBlockCount = blocksWide * blocksHigh;
+
+        // Guard against integer overflow in block count calculation
+        long expectedBlockCount = (long)blocksWide * blocksHigh;
         if (astcData.Length % PhysicalBlock.SizeInBytes != 0 || astcData.Length / PhysicalBlock.SizeInBytes != expectedBlockCount)
         {
             return false;

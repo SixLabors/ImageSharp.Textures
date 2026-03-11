@@ -2,6 +2,7 @@
 // Licensed under the Six Labors Split License.
 
 using SixLabors.ImageSharp.Textures.Compression.Astc.Core;
+using SixLabors.ImageSharp.Textures.Compression.Astc.TexelBlock;
 
 namespace SixLabors.ImageSharp.Textures.Compression.Astc.IO;
 
@@ -36,10 +37,15 @@ internal record AstcFile
 
     public static AstcFile FromMemory(byte[] data)
     {
+        ArgumentNullException.ThrowIfNull(data);
+        ArgumentOutOfRangeException.ThrowIfLessThan(data.Length, AstcFileHeader.SizeInBytes);
+
         AstcFileHeader header = AstcFileHeader.FromMemory(data.AsSpan(0, AstcFileHeader.SizeInBytes));
 
-        // Remaining bytes are blocks; C++ reference keeps them as string; here we keep as byte[]
-        byte[] blocks = new byte[data.Length - AstcFileHeader.SizeInBytes];
+        int blockDataLength = data.Length - AstcFileHeader.SizeInBytes;
+        ArgumentOutOfRangeException.ThrowIfNotEqual(blockDataLength % PhysicalBlock.SizeInBytes, 0);
+
+        byte[] blocks = new byte[blockDataLength];
         Array.Copy(data, AstcFileHeader.SizeInBytes, blocks, 0, blocks.Length);
 
         return new AstcFile(header, blocks);

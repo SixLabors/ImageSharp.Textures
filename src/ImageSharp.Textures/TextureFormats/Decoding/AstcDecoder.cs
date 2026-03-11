@@ -18,6 +18,7 @@ namespace SixLabors.ImageSharp.Textures.TextureFormats.Decoding;
 internal static class AstcDecoder
 {
     internal const int AstcBlockSize = 16;
+    internal const int RgbaPixelDepthBytes = 4;
 
     /// <summary>
     /// Decodes an ASTC block into RGBA pixels.
@@ -33,16 +34,8 @@ internal static class AstcDecoder
     /// </remarks>
     public static void DecodeBlock(ReadOnlySpan<byte> blockData, int blockWidth, int blockHeight, Span<byte> decodedPixels)
     {
-        if (blockData.Length != AstcBlockSize)
-        {
-            throw new ArgumentException($"ASTC block data must be exactly {AstcBlockSize} bytes. Received {blockData.Length} bytes.", nameof(blockData));
-        }
-
-        int expectedDecodedSize = blockWidth * blockHeight * 4;
-        if (decodedPixels.Length < expectedDecodedSize)
-        {
-            throw new ArgumentException($"Output buffer must be at least {expectedDecodedSize} bytes for {blockWidth}x{blockHeight} block. Received {decodedPixels.Length} bytes.", nameof(decodedPixels));
-        }
+        ArgumentOutOfRangeException.ThrowIfNotEqual(blockData.Length, AstcBlockSize);
+        ArgumentOutOfRangeException.ThrowIfLessThan(decodedPixels.Length, blockWidth * blockHeight * RgbaPixelDepthBytes);
 
         Footprint footprint = Footprint.FromFootprintType(FootprintFromDimensions(blockWidth, blockHeight));
 
@@ -74,26 +67,25 @@ internal static class AstcDecoder
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(width, 0);
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(height, 0);
 
-        if (compressedBytesPerBlock != AstcBlockSize)
-        {
-            throw new ArgumentOutOfRangeException(nameof(compressedBytesPerBlock), compressedBytesPerBlock, $"ASTC blocks must be {AstcBlockSize} bytes.");
-        }
+        ArgumentOutOfRangeException.ThrowIfNotEqual(compressedBytesPerBlock, AstcBlockSize);
 
         // Validate block dimensions (will throw if invalid)
         _ = FootprintFromDimensions(blockWidth, blockHeight);
 
         int blocksWide = (width + blockWidth - 1) / blockWidth;
         int blocksHigh = (height + blockHeight - 1) / blockHeight;
-        int totalBlocks = blocksWide * blocksHigh;
-        int expectedDataLength = totalBlocks * compressedBytesPerBlock;
+        long totalBlocks = (long)blocksWide * blocksHigh;
+        long expectedDataLength = totalBlocks * compressedBytesPerBlock;
 
-        if (blockData.Length < expectedDataLength)
-        {
-            throw new ArgumentException($"Block data is too small. Expected at least {expectedDataLength} bytes for {width}x{height} texture with {blockWidth}x{blockHeight} blocks, but received {blockData.Length} bytes.", nameof(blockData));
-        }
+        ArgumentOutOfRangeException.ThrowIfLessThan(blockData.Length, expectedDataLength);
 
-        byte[] decompressedData = new byte[width * height * 4];
-        byte[] decodedBlock = new byte[blockWidth * blockHeight * 4];
+        // Check pixel count first to avoid potential overflow in byte count calculation
+        long totalPixels = (long)width * height;
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(totalPixels, (long)int.MaxValue / RgbaPixelDepthBytes);
+
+        long totalBytes = totalPixels * RgbaPixelDepthBytes;
+        byte[] decompressedData = new byte[totalBytes];
+        byte[] decodedBlock = new byte[blockWidth * blockHeight * RgbaPixelDepthBytes];
 
         int blockIndex = 0;
 
@@ -114,10 +106,10 @@ internal static class AstcDecoder
                     {
                         for (int px = 0; px < blockWidth && ((bx * blockWidth) + px) < width; px++)
                         {
-                            int srcIndex = ((py * blockWidth) + px) * 4;
+                            int srcIndex = ((py * blockWidth) + px) * RgbaPixelDepthBytes;
                             int dstX = (bx * blockWidth) + px;
                             int dstY = (by * blockHeight) + py;
-                            int dstIndex = ((dstY * width) + dstX) * 4;
+                            int dstIndex = ((dstY * width) + dstX) * RgbaPixelDepthBytes;
 
                             decompressedData[dstIndex] = decodedBlock[srcIndex];
                             decompressedData[dstIndex + 1] = decodedBlock[srcIndex + 1];
