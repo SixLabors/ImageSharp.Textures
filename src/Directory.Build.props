@@ -11,7 +11,7 @@
   -->
 
   <!-- Import the shared src .props file -->
-  <Import Project="$(MSBuildThisFileDirectory)..\shared-infrastructure\msbuild\props\SixLabors.Src.props" />
+  <Import Project="$(MSBuildThisFileDirectory)../shared-infrastructure/msbuild/props/SixLabors.Src.props" />
 
   <!-- Import the solution .props file. -->
   <Import Project="$(MSBuildThisFileDirectory)..\Directory.Build.props" />
@@ -22,9 +22,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <InternalsVisibleTo Include="SixLabors.ImageSharp.Textures.Benchmarks" Key="$(SixLaborsPublicKey)" />
+    <InternalsVisibleTo Include="ImageSharp.Textures.Benchmarks" Key="$(SixLaborsPublicKey)" />
     <InternalsVisibleTo Include="SixLabors.ImageSharp.Textures.InteractiveTest" Key="$(SixLaborsPublicKey)" />
     <InternalsVisibleTo Include="SixLabors.ImageSharp.Textures.Tests" Key="$(SixLaborsPublicKey)" />
+    <InternalsVisibleTo Include="SixLabors.ImageSharp.Textures.Astc.Reference.Tests" Key="$(SixLaborsPublicKey)" />
   </ItemGroup>
 
 </Project>

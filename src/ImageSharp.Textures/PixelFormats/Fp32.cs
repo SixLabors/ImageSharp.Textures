@@ -66,7 +66,7 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void FromVector4(Vector4 vector) => this.PackedValue = (ushort)Pack(new Vector<float>(vector.X));
+        public void FromVector4(Vector4 vector) => this.PackedValue = Pack(new Vector<float>(vector.X));
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -125,7 +125,7 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         public void FromRgba64(Rgba64 source) => this.FromScaledVector4(source.ToScaledVector4());
 
         /// <inheritdoc/>
-        public void ToRgba32(ref Rgba32 dest) => throw new NotImplementedException();
+        public void ToRgba32(ref Rgba32 dest) => dest.FromScaledVector4(this.ToScaledVector4());
 
         /// <summary>
         /// Expands the packed representation into a <see cref="Vector"/>.

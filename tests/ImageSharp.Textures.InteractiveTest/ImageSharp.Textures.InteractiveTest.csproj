@@ -10,6 +10,8 @@
     <RootNamespace>SixLabors.ImageSharp.Textures.InteractiveTest</RootNamespace>
     <!--Used to hide test project from dotnet test-->
     <IsTestProject>false</IsTestProject>
+    <!-- Don't warn about test dependencies not being strong named -->
+    <NoWarn>$(NoWarn);CS8002</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

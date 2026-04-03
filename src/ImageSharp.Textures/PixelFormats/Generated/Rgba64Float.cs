@@ -171,11 +171,10 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         private static ulong Pack(ref Vector4 vector)
         {
             vector = Vector4.Clamp(vector, Vector4.Zero, Vector4.One);
-            return (ulong)(
-                (uint)FloatHelper.PackFloatToFloat16(vector.X)
-                | ((uint)FloatHelper.PackFloatToFloat16(vector.Y) << 16)
-                | ((uint)FloatHelper.PackFloatToFloat16(vector.Z) << 32)
-                | ((uint)FloatHelper.PackFloatToFloat16(vector.W) << 48));
+            return (ulong)FloatHelper.PackFloatToFloat16(vector.X)
+                | ((ulong)FloatHelper.PackFloatToFloat16(vector.Y) << 16)
+                | ((ulong)FloatHelper.PackFloatToFloat16(vector.Z) << 32)
+                | ((ulong)FloatHelper.PackFloatToFloat16(vector.W) << 48);
         }
     }
 }

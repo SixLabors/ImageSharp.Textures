@@ -11,7 +11,7 @@
   -->
 
   <!-- Import the shared tests .props file -->
-  <Import Project="$(MSBuildThisFileDirectory)..\shared-infrastructure\msbuild\props\SixLabors.Tests.props" />
+  <Import Project="$(MSBuildThisFileDirectory)../shared-infrastructure/msbuild/props/SixLabors.Tests.props" />
 
   <!-- Import the solution .props file. -->
   <Import Project="$(MSBuildThisFileDirectory)..\Directory.Build.props" />

@@ -19,5 +19,10 @@ namespace SixLabors.ImageSharp.Textures.Tests.Enums
         /// Khronos Texture, version 2.
         /// </summary>
         Ktx2,
+
+        /// <summary>
+        /// Adaptive Scalable Texture Compression.
+        /// </summary>
+        Astc,
     }
 }
