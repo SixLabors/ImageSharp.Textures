@@ -11,7 +11,7 @@ using SixLabors.ImageSharp.Textures.TextureFormats;
 namespace SixLabors.ImageSharp.Textures.Tests.Formats.Ktx2;
 
 [Trait("Format", "Ktx2")]
-public class Ktx2DecoderTests
+public class Ktx2DecoderFlatTests
 {
     private static readonly Ktx2Decoder Ktx2Decoder = new();
 
