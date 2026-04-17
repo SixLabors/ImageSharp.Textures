@@ -12,5 +12,10 @@ namespace SixLabors.ImageSharp.Textures.Tests
         {
             public const string Rgba = "rgba8888.ktx";
         }
+
+        public static class Ktx2
+        {
+            public const string Rgba32SrgbMips = "rgba32-srgb-mips.ktx2";
+        }
     }
 }

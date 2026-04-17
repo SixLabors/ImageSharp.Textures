@@ -3,6 +3,9 @@
 
 using System.ComponentModel;
 using SixLabors.ImageSharp.Textures.Formats.Ktx2;
+using SixLabors.ImageSharp.Textures.Tests.Enums;
+using SixLabors.ImageSharp.Textures.Tests.TestUtilities.Attributes;
+using SixLabors.ImageSharp.Textures.Tests.TestUtilities.TextureProviders;
 using SixLabors.ImageSharp.Textures.TextureFormats;
 
 namespace SixLabors.ImageSharp.Textures.Tests.Formats.Ktx2;
@@ -12,18 +15,13 @@ public class Ktx2DecoderTests
 {
     private static readonly Ktx2Decoder Ktx2Decoder = new();
 
-    [Fact]
+    [Theory]
     [Description("Ensure that a single mipmap level does not result in an empty mipmap collection")]
-    public void Ktx2Decoder_LevelCountZero_DecodesBaseLevelMipMap()
+    [WithFile(TestTextureFormat.Ktx2, TestTextureType.Flat, TestTextureTool.ToKtx, TestImages.Ktx2.Rgba32SrgbMips)]
+    public void Ktx2Decoder_LevelCountZero_DecodesBaseLevelMipMap(TestTextureProvider provider)
     {
-        string path = Path.Combine(
-            TestEnvironment.InputImagesDirectoryFullPath,
-            "Ktx2",
-            "Flat",
-            "rgba32-srgb-mips.ktx2");
-
-        using FileStream fileStream = File.OpenRead(path);
-        using Texture texture = Ktx2Decoder.DecodeTexture(Configuration.Default, fileStream);
+        using Texture texture = provider.GetTexture(Ktx2Decoder);
+        provider.SaveTextures(texture);
 
         FlatTexture flatTexture = texture as FlatTexture;
         Assert.NotNull(flatTexture);
