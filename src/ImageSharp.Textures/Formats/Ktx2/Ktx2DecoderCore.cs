@@ -69,7 +69,8 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx2
             int width = (int)this.ktxHeader.PixelWidth;
             int height = (int)this.ktxHeader.PixelHeight;
 
-            var levelIndices = new LevelIndex[this.ktxHeader.LevelCount];
+            // Zero levels means only the base level is present, so we must read at least 1.
+            LevelIndex[] levelIndices = new LevelIndex[Math.Max(1, this.ktxHeader.LevelCount)];
             for (int i = 0; i < levelIndices.Length; i++)
             {
                 stream.Read(this.buffer, 0, 24);
