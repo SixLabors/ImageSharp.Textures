@@ -109,6 +109,26 @@ public class Ktx2HdrDecoderFlatTests
     }
 
     [Theory]
+    [WithFile(TestTextureFormat.Ktx2, TestTextureType.Flat, TestTextureTool.ToKtx, TestImages.Ktx2.Astc.Hdr.Rgba64Sfloat)]
+    public void CanDecode_RGBA64_Sfloat(TestTextureProvider provider)
+    {
+        using Texture texture = provider.GetTexture(Ktx2Decoder);
+        provider.SaveTextures(texture);
+        FlatTexture flatTexture = texture as FlatTexture;
+
+        Assert.NotNull(flatTexture?.MipMaps);
+        Assert.True(flatTexture.MipMaps.Count > 0);
+
+        Image firstMipMap = flatTexture.MipMaps[0].GetImage();
+
+        Image<Rgba64Float> firstMipMapImage = firstMipMap as Image<Rgba64Float>;
+
+        // Half-float precision loss accumulates through the 8-bit PNG reference round-trip,
+        // so we need to use a more tolerant comparison here.
+        firstMipMapImage.CompareToReferenceOutput(ImageComparer.TolerantPercentage(0.07f), provider);
+    }
+
+    [Theory]
     [WithFile(TestTextureFormat.Ktx2, TestTextureType.Flat, TestTextureTool.ToKtx, TestImages.Ktx2.Astc.Hdr.Rg64)]
     public void CanDecode_RG48_Sfloat(TestTextureProvider provider)
     {

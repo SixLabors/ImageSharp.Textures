@@ -154,6 +154,7 @@ public static class TestImages
                 public const string R32 = "Flat/Astc/HDR/hdr-r32-sfloat.ktx2";
                 public const string Rg64 = "Flat/Astc/HDR/hdr-rg64-sfloat.ktx2";
                 public const string Rgb96 = "Flat/Astc/HDR/hdr-rgb96-sfloat.ktx2";
+                public const string Rgba64Sfloat = "Flat/Astc/HDR/hdr-rgba64-sfloat.ktx2";
                 public const string Rgba128 = "Flat/Astc/HDR/hdr-rgba128-sfloat.ktx2";
                 public const string Rgb9e5 = "Flat/Astc/HDR/hdr-rgb9e5-ufloat.ktx2";
                 public const string B10g11r11 = "Flat/Astc/HDR/hdr-b10g11r11-ufloat.ktx2";
