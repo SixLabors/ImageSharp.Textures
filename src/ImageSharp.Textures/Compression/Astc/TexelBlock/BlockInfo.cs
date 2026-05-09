@@ -61,6 +61,26 @@ internal struct BlockInfo
     };
 
     /// <summary>
+    /// Returns true if any of this block's active partitions uses an HDR endpoint mode.
+    /// Does not detect HDR void-extent blocks (those carry their own HDR flag and have
+    /// <see cref="PartitionCount"/> == 0); callers that need to reject both cases should
+    /// also check <see cref="IsVoidExtent"/> against the HDR flag in the raw bits.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly bool HasHdrEndpoints()
+    {
+        for (int i = 0; i < this.PartitionCount; i++)
+        {
+            if (this.GetEndpointMode(i).IsHdr())
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
     /// Decode all block info from raw 128-bit ASTC block data in a single pass.
     /// Returns a BlockInfo with IsValid=false if the block is illegal or reserved.
     /// Returns a BlockInfo with IsVoidExtent=true for void extent blocks.

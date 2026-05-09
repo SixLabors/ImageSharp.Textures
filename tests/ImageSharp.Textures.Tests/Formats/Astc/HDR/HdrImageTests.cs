@@ -2,6 +2,7 @@
 // Licensed under the Six Labors Split License.
 
 using System.ComponentModel;
+using SixLabors.ImageSharp.Textures.Common.Exceptions;
 using SixLabors.ImageSharp.Textures.Compression.Astc;
 using SixLabors.ImageSharp.Textures.Compression.Astc.Core;
 using SixLabors.ImageSharp.Textures.Compression.Astc.IO;
@@ -86,47 +87,34 @@ public class HdrImageTests
 
     [Theory]
     [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Hdr.Hdr_A_1x1)]
-    [Description("Verify that HDR ASTC files can be decoded with the LDR API, producing clamped values")]
-    public void DecodeHdrAstcFile_WithLdrApi_ShouldProduceExpectedClampedValues(TestTextureProvider provider)
+    [Description("The LDR decoder must reject HDR-encoded blocks per ASTC spec §C.2.19 (matches astcenc's ASTCENC_ERR_BAD_DECODE_MODE).")]
+    public void DecodeHdrAstcFile_WithLdrApi_ShouldThrow(TestTextureProvider provider)
     {
         byte[] astcData = File.ReadAllBytes(provider.InputFile);
         AstcFile astcFile = AstcFile.FromMemory(astcData);
 
-        Span<byte> ldrResult = AstcDecoder.DecompressImage(astcFile);
-
-        Assert.Equal(4, ldrResult.Length);
-
-        Assert.Equal(62, ldrResult[0]);
-        Assert.Equal(63, ldrResult[1]);
-        Assert.Equal(64, ldrResult[2]);
-        Assert.Equal(60, ldrResult[3]);
+        Assert.Throws<TextureFormatException>(() => AstcDecoder.DecompressImage(astcFile));
     }
 
     [Theory]
     [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Hdr.Hdr_A_1x1)]
-    [Description("Verify that HDR and LDR APIs produce consistent channel values for the same HDR ASTC file")]
-    public void HdrAndLdrApis_OnSameHdrFile_ShouldProduceConsistentValues(TestTextureProvider provider)
+    [Description("The HDR API decodes HDR content correctly; the LDR API rejects it.")]
+    public void HdrApi_DecodesHdrContent_LdrApi_Rejects(TestTextureProvider provider)
     {
         byte[] astcData = File.ReadAllBytes(provider.InputFile);
         AstcFile astcFile = AstcFile.FromMemory(astcData);
 
         Span<float> hdrResult = AstcDecoder.DecompressHdrImage(
             astcFile.Blocks, astcFile.Width, astcFile.Height, astcFile.Footprint);
-        Span<byte> ldrResult = AstcDecoder.DecompressImage(astcFile);
 
-        // HDR values exceed 1.0; R < G < B ordering is preserved in both APIs.
+        // HDR values exceed 1.0; R < G < B ordering is preserved.
         Assert.Equal(1.625f, hdrResult[0], 0.001f);
         Assert.Equal(1.84375f, hdrResult[1], 0.001f);
         Assert.Equal(2.125f, hdrResult[2], 0.001f);
-
-        Assert.Equal(62, ldrResult[0]);
-        Assert.Equal(63, ldrResult[1]);
-        Assert.Equal(64, ldrResult[2]);
-
-        // Channel ordering R < G < B is preserved across both APIs.
         Assert.True(hdrResult[0] < hdrResult[1]);
         Assert.True(hdrResult[1] < hdrResult[2]);
-        Assert.True(ldrResult[0] < ldrResult[1]);
-        Assert.True(ldrResult[1] < ldrResult[2]);
+
+        // LDR API refuses the same HDR content.
+        Assert.Throws<TextureFormatException>(() => AstcDecoder.DecompressImage(astcFile));
     }
 }

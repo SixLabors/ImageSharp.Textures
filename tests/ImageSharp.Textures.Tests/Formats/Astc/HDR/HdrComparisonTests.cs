@@ -2,6 +2,7 @@
 // Licensed under the Six Labors Split License.
 
 using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Textures.Common.Exceptions;
 using SixLabors.ImageSharp.Textures.Compression.Astc;
 using SixLabors.ImageSharp.Textures.Compression.Astc.Core;
 using SixLabors.ImageSharp.Textures.Compression.Astc.IO;
@@ -57,19 +58,14 @@ public class HdrComparisonTests
 
     [Theory]
     [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Hdr.Hdr_A_1x1)]
-    public void HdrFile_DecodedWithLdrApi_ShouldProduceExpectedClampedValues(TestTextureProvider provider)
+    public void HdrFile_DecodedWithLdrApi_ShouldThrow(TestTextureProvider provider)
     {
+        // Per ASTC spec §C.2.19 the LDR (decode_unorm8) profile cannot decode HDR-mode
+        // blocks; matches ARM astcenc's ASTCENC_ERR_BAD_DECODE_MODE.
         byte[] astcData = File.ReadAllBytes(provider.InputFile);
         AstcFile astcFile = AstcFile.FromMemory(astcData);
 
-        Span<byte> ldrResult = AstcDecoder.DecompressImage(astcFile);
-
-        Assert.Equal(4, ldrResult.Length);
-
-        Assert.Equal(62, ldrResult[0]);
-        Assert.Equal(63, ldrResult[1]);
-        Assert.Equal(64, ldrResult[2]);
-        Assert.Equal(60, ldrResult[3]);
+        Assert.Throws<TextureFormatException>(() => AstcDecoder.DecompressImage(astcFile));
     }
 
     [Theory]

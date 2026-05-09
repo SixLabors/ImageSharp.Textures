@@ -3,6 +3,7 @@
 
 using System.Buffers;
 using System.Buffers.Binary;
+using SixLabors.ImageSharp.Textures.Common.Exceptions;
 using SixLabors.ImageSharp.Textures.Compression.Astc.BlockDecoder;
 using SixLabors.ImageSharp.Textures.Compression.Astc.ColorEncoding;
 using SixLabors.ImageSharp.Textures.Compression.Astc.Core;
@@ -115,6 +116,17 @@ public static class AstcDecoder
                         continue;
                     }
 
+                    // Per ASTC spec §C.2.19, the LDR (decode_unorm8) profile cannot decode blocks
+                    // that carry HDR content. ARM's astcenc returns ASTCENC_ERR_BAD_DECODE_MODE in
+                    // this case; we do the same via an exception. Callers who want HDR values
+                    // should use DecompressHdrImage instead.
+                    if (IsHdrBlock(blockBits, in info))
+                    {
+                        throw new TextureFormatException(
+                            "ASTC block uses HDR endpoint data but was passed to the LDR decoder. " +
+                            "Use AstcDecoder.DecompressHdrImage to decode HDR content.");
+                    }
+
                     // Fast path: fuse decode directly into image buffer for interior full blocks
                     if (!info.IsVoidExtent && info.PartitionCount == 1 && !info.IsDualPlane
                         && !info.EndpointMode0.IsHdr()
@@ -187,6 +199,15 @@ public static class AstcDecoder
         if (!info.IsValid)
         {
             return;
+        }
+
+        // Per ASTC spec §C.2.19, the LDR (decode_unorm8) profile cannot decode blocks
+        // that carry HDR content. See DecompressImage for the same guard.
+        if (IsHdrBlock(blockBits, in info))
+        {
+            throw new TextureFormatException(
+                "ASTC block uses HDR endpoint data but was passed to the LDR decoder. " +
+                "Use AstcDecoder.DecompressHdrBlock to decode HDR content.");
         }
 
         // Fully fused fast path for single-partition, non-dual-plane, LDR blocks
@@ -464,5 +485,22 @@ public static class AstcDecoder
         }
 
         return true;
+    }
+
+    /// <summary>
+    /// Returns true if the given ASTC block encodes HDR content (HDR endpoint modes in
+    /// any partition, or an HDR void-extent flag). The LDR decoder paths use this as a
+    /// precondition check — HDR content must be routed through the HDR decoder instead.
+    /// </summary>
+    private static bool IsHdrBlock(UInt128 blockBits, in BlockInfo info)
+    {
+        // Void-extent: bit 9 of the block-mode prefix distinguishes LDR (1) from HDR (0).
+        // Matches ARM's astcenc_symbolic_physical.cpp — `if (block_mode & 0x200) SYM_BTYPE_CONST_F16`.
+        if (info.IsVoidExtent)
+        {
+            return (blockBits.Low() & (1UL << 9)) != 0;
+        }
+
+        return info.HasHdrEndpoints();
     }
 }

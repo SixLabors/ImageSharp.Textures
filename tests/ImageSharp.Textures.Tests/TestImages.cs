@@ -162,6 +162,10 @@ public static class TestImages
             public const string Astc6x6_Sfloat = "Flat/Astc/HDR-Compressed/astc_hdr_6x6_sfloat.ktx2";
             public const string Astc10x5_Sfloat = "Flat/Astc/HDR-Compressed/astc_hdr_10x5_sfloat.ktx2";
 
+            // ASTC blocks encoded with HDR endpoint modes but wrapped in a UNORM container.
+            // Spec allows this; the decoder should clamp HDR output to UNORM8 range.
+            public const string Astc4x4_HdrInUnorm = "Flat/Astc/HdrInUnorm/astc_4x4_hdr_in_unorm.ktx2";
+
             public static class Cubemap
             {
                 // LDR sRGB ASTC cubemap
