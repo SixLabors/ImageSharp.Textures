@@ -142,32 +142,41 @@ public static class TestImages
             public const string Rgb32_Unorm_4x4_Zstd1 = "Flat/Astc/Supercompressed/valid_ASTC_4x4_UNORM_BLOCK_2D_ZSTD_1.ktx2";
             public const string Rgb32_Unorm_4x4_Zstd9 = "Flat/Astc/Supercompressed/valid_ASTC_4x4_UNORM_BLOCK_2D_ZSTD_9.ktx2";
 
-            // Cubemap textures
-            public const string Rgb32_Srgb_6x6_Cube = "Cubemap/Astc/astc_ldr_cubemap_6x6.ktx2";
+            // Flat HDR uncompressed textures
+            public const string R16_Unorm = "Flat/Astc/HDR/hdr-r16-unorm.ktx2";
+            public const string Rg32_Unorm = "Flat/Astc/HDR/hdr-rg32-unorm.ktx2";
+            public const string Rgb48_Unorm = "Flat/Astc/HDR/hdr-rgb48-unorm.ktx2";
+            public const string Rgba64_Unorm = "Flat/Astc/HDR/hdr-rgba64-unorm.ktx2";
+            public const string R32_Sfloat = "Flat/Astc/HDR/hdr-r32-sfloat.ktx2";
+            public const string Rg32_Sfloat = "Flat/Astc/HDR/hdr-rg32-sfloat.ktx2";
+            public const string Rg64_Sfloat = "Flat/Astc/HDR/hdr-rg64-sfloat.ktx2";
+            public const string Rgb48_Sfloat = "Flat/Astc/HDR/hdr-rgb48-sfloat.ktx2";
+            public const string Rgb96_Sfloat = "Flat/Astc/HDR/hdr-rgb96-sfloat.ktx2";
+            public const string Rgba64_Sfloat = "Flat/Astc/HDR/hdr-rgba64-sfloat.ktx2";
+            public const string Rgba128_Sfloat = "Flat/Astc/HDR/hdr-rgba128-sfloat.ktx2";
+            public const string Rgb9e5_Ufloat = "Flat/Astc/HDR/hdr-rgb9e5-ufloat.ktx2";
+            public const string B10g11r11_Ufloat = "Flat/Astc/HDR/hdr-b10g11r11-ufloat.ktx2";
 
-            public static class HdrCube
-            {
-                public const string R32Sfloat = "Cubemap/HDR/r32-sfloat-cube.ktx2";
-                public const string Rg32Sfloat = "Cubemap/HDR/rg32-sfloat-cube.ktx2";
-                public const string Rgb48Sfloat = "Cubemap/HDR/rgb48-sfloat-cube.ktx2";
-                public const string Rgba64Sfloat = "Cubemap/HDR/rgba64-sfloat-cube.ktx2";
-            }
+            // Flat ASTC HDR (compressed SFLOAT) textures
+            public const string Astc4x4_Sfloat = "Flat/Astc/HDR-Compressed/astc_hdr_4x4_sfloat.ktx2";
+            public const string Astc6x6_Sfloat = "Flat/Astc/HDR-Compressed/astc_hdr_6x6_sfloat.ktx2";
+            public const string Astc10x5_Sfloat = "Flat/Astc/HDR-Compressed/astc_hdr_10x5_sfloat.ktx2";
 
-            public static class Hdr
+            public static class Cubemap
             {
-                public const string R16 = "Flat/Astc/HDR/hdr-r16-unorm.ktx2";
-                public const string Rg32 = "Flat/Astc/HDR/hdr-rg32-unorm.ktx2";
-                public const string Rgb48 = "Flat/Astc/HDR/hdr-rgb48-unorm.ktx2";
-                public const string Rgba64 = "Flat/Astc/HDR/hdr-rgba64-unorm.ktx2";
-                public const string R32 = "Flat/Astc/HDR/hdr-r32-sfloat.ktx2";
-                public const string Rg32Sfloat = "Flat/Astc/HDR/hdr-rg32-sfloat.ktx2";
-                public const string Rg64 = "Flat/Astc/HDR/hdr-rg64-sfloat.ktx2";
-                public const string Rgb48Sfloat = "Flat/Astc/HDR/hdr-rgb48-sfloat.ktx2";
-                public const string Rgb96 = "Flat/Astc/HDR/hdr-rgb96-sfloat.ktx2";
-                public const string Rgba64Sfloat = "Flat/Astc/HDR/hdr-rgba64-sfloat.ktx2";
-                public const string Rgba128 = "Flat/Astc/HDR/hdr-rgba128-sfloat.ktx2";
-                public const string Rgb9e5 = "Flat/Astc/HDR/hdr-rgb9e5-ufloat.ktx2";
-                public const string B10g11r11 = "Flat/Astc/HDR/hdr-b10g11r11-ufloat.ktx2";
+                // LDR sRGB ASTC cubemap
+                public const string Rgb32_Srgb_6x6 = "Cubemap/Astc/astc_ldr_cubemap_6x6.ktx2";
+
+                // HDR uncompressed cubemaps
+                public const string R32_Sfloat = "Cubemap/HDR/r32-sfloat-cube.ktx2";
+                public const string Rg32_Sfloat = "Cubemap/HDR/rg32-sfloat-cube.ktx2";
+                public const string Rgb48_Sfloat = "Cubemap/HDR/rgb48-sfloat-cube.ktx2";
+                public const string Rgba64_Sfloat = "Cubemap/HDR/rgba64-sfloat-cube.ktx2";
+
+                // ASTC HDR (compressed SFLOAT) cubemaps
+                public const string Astc4x4_Sfloat = "Cubemap/HDR-Compressed/astc_hdr_4x4_sfloat_cube.ktx2";
+                public const string Astc6x6_Sfloat = "Cubemap/HDR-Compressed/astc_hdr_6x6_sfloat_cube.ktx2";
+                public const string Astc10x5_Sfloat = "Cubemap/HDR-Compressed/astc_hdr_10x5_sfloat_cube.ktx2";
             }
         }
     }

@@ -20,7 +20,7 @@ public class Ktx2AstcDecoderCubemapTests
     private static readonly Ktx2Decoder KtxDecoder = new();
 
     [Theory]
-    [WithFile(TestTextureFormat.Ktx2, TestTextureType.Cubemap, TestTextureTool.ToKtx, TestImages.Ktx2.Astc.Rgb32_Srgb_6x6_Cube)]
+    [WithFile(TestTextureFormat.Ktx2, TestTextureType.Cubemap, TestTextureTool.ToKtx, TestImages.Ktx2.Astc.Cubemap.Rgb32_Srgb_6x6)]
     public void CanDecode_All_Faces(TestTextureProvider provider)
     {
         using Texture texture = provider.GetTexture(KtxDecoder);

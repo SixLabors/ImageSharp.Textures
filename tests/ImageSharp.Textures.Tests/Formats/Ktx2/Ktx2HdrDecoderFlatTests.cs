@@ -24,7 +24,7 @@ public class Ktx2HdrDecoderFlatTests
     private static readonly Ktx2Decoder Ktx2Decoder = new();
 
     [Theory]
-    [WithFile(TestTextureFormat.Ktx2, TestTextureType.Flat, TestTextureTool.ToKtx, TestImages.Ktx2.Astc.Hdr.R16)]
+    [WithFile(TestTextureFormat.Ktx2, TestTextureType.Flat, TestTextureTool.ToKtx, TestImages.Ktx2.Astc.R16_Unorm)]
     public void CanDecode_R16_Unorm(TestTextureProvider provider)
     {
         using Texture texture = provider.GetTexture(Ktx2Decoder);
@@ -41,7 +41,7 @@ public class Ktx2HdrDecoderFlatTests
     }
 
     [Theory]
-    [WithFile(TestTextureFormat.Ktx2, TestTextureType.Flat, TestTextureTool.ToKtx, TestImages.Ktx2.Astc.Hdr.Rg32)]
+    [WithFile(TestTextureFormat.Ktx2, TestTextureType.Flat, TestTextureTool.ToKtx, TestImages.Ktx2.Astc.Rg32_Unorm)]
     public void CanDecode_RG32_Unorm(TestTextureProvider provider)
     {
         using Texture texture = provider.GetTexture(Ktx2Decoder);
@@ -58,7 +58,7 @@ public class Ktx2HdrDecoderFlatTests
     }
 
     [Theory]
-    [WithFile(TestTextureFormat.Ktx2, TestTextureType.Flat, TestTextureTool.ToKtx, TestImages.Ktx2.Astc.Hdr.Rgb48)]
+    [WithFile(TestTextureFormat.Ktx2, TestTextureType.Flat, TestTextureTool.ToKtx, TestImages.Ktx2.Astc.Rgb48_Unorm)]
     public void CanDecode_RGB48_Unorm(TestTextureProvider provider)
     {
         using Texture texture = provider.GetTexture(Ktx2Decoder);
@@ -75,7 +75,7 @@ public class Ktx2HdrDecoderFlatTests
     }
 
     [Theory]
-    [WithFile(TestTextureFormat.Ktx2, TestTextureType.Flat, TestTextureTool.ToKtx, TestImages.Ktx2.Astc.Hdr.Rgba64)]
+    [WithFile(TestTextureFormat.Ktx2, TestTextureType.Flat, TestTextureTool.ToKtx, TestImages.Ktx2.Astc.Rgba64_Unorm)]
     public void CanDecode_RGBA64_Unorm(TestTextureProvider provider)
     {
         using Texture texture = provider.GetTexture(Ktx2Decoder);
@@ -92,7 +92,7 @@ public class Ktx2HdrDecoderFlatTests
     }
 
     [Theory]
-    [WithFile(TestTextureFormat.Ktx2, TestTextureType.Flat, TestTextureTool.ToKtx, TestImages.Ktx2.Astc.Hdr.R32)]
+    [WithFile(TestTextureFormat.Ktx2, TestTextureType.Flat, TestTextureTool.ToKtx, TestImages.Ktx2.Astc.R32_Sfloat)]
     public void CanDecode_R32_Sfloat(TestTextureProvider provider)
     {
         using Texture texture = provider.GetTexture(Ktx2Decoder);
@@ -111,7 +111,7 @@ public class Ktx2HdrDecoderFlatTests
     }
 
     [Theory]
-    [WithFile(TestTextureFormat.Ktx2, TestTextureType.Flat, TestTextureTool.ToKtx, TestImages.Ktx2.Astc.Hdr.Rg32Sfloat)]
+    [WithFile(TestTextureFormat.Ktx2, TestTextureType.Flat, TestTextureTool.ToKtx, TestImages.Ktx2.Astc.Rg32_Sfloat)]
     public void CanDecode_RG32_Sfloat(TestTextureProvider provider)
     {
         using Texture texture = provider.GetTexture(Ktx2Decoder);
@@ -130,7 +130,7 @@ public class Ktx2HdrDecoderFlatTests
     }
 
     [Theory]
-    [WithFile(TestTextureFormat.Ktx2, TestTextureType.Flat, TestTextureTool.ToKtx, TestImages.Ktx2.Astc.Hdr.Rgb48Sfloat)]
+    [WithFile(TestTextureFormat.Ktx2, TestTextureType.Flat, TestTextureTool.ToKtx, TestImages.Ktx2.Astc.Rgb48_Sfloat)]
     public void CanDecode_RGB48_Sfloat(TestTextureProvider provider)
     {
         using Texture texture = provider.GetTexture(Ktx2Decoder);
@@ -149,7 +149,7 @@ public class Ktx2HdrDecoderFlatTests
     }
 
     [Theory]
-    [WithFile(TestTextureFormat.Ktx2, TestTextureType.Flat, TestTextureTool.ToKtx, TestImages.Ktx2.Astc.Hdr.Rgba64Sfloat)]
+    [WithFile(TestTextureFormat.Ktx2, TestTextureType.Flat, TestTextureTool.ToKtx, TestImages.Ktx2.Astc.Rgba64_Sfloat)]
     public void CanDecode_RGBA64_Sfloat(TestTextureProvider provider)
     {
         using Texture texture = provider.GetTexture(Ktx2Decoder);
@@ -169,7 +169,7 @@ public class Ktx2HdrDecoderFlatTests
     }
 
     [Theory]
-    [WithFile(TestTextureFormat.Ktx2, TestTextureType.Flat, TestTextureTool.ToKtx, TestImages.Ktx2.Astc.Hdr.Rg64)]
+    [WithFile(TestTextureFormat.Ktx2, TestTextureType.Flat, TestTextureTool.ToKtx, TestImages.Ktx2.Astc.Rg64_Sfloat)]
     public void CanDecode_RG48_Sfloat(TestTextureProvider provider)
     {
         using Texture texture = provider.GetTexture(Ktx2Decoder);
@@ -186,7 +186,7 @@ public class Ktx2HdrDecoderFlatTests
     }
 
     [Theory]
-    [WithFile(TestTextureFormat.Ktx2, TestTextureType.Flat, TestTextureTool.ToKtx, TestImages.Ktx2.Astc.Hdr.Rgb96)]
+    [WithFile(TestTextureFormat.Ktx2, TestTextureType.Flat, TestTextureTool.ToKtx, TestImages.Ktx2.Astc.Rgb96_Sfloat)]
     public void CanDecode_RGB96_Sfloat(TestTextureProvider provider)
     {
         using Texture texture = provider.GetTexture(Ktx2Decoder);
@@ -203,7 +203,7 @@ public class Ktx2HdrDecoderFlatTests
     }
 
     [Theory]
-    [WithFile(TestTextureFormat.Ktx2, TestTextureType.Flat, TestTextureTool.ToKtx, TestImages.Ktx2.Astc.Hdr.Rgba128)]
+    [WithFile(TestTextureFormat.Ktx2, TestTextureType.Flat, TestTextureTool.ToKtx, TestImages.Ktx2.Astc.Rgba128_Sfloat)]
     public void CanDecode_RGBA128_Sfloat(TestTextureProvider provider)
     {
         using Texture texture = provider.GetTexture(Ktx2Decoder);
@@ -220,7 +220,7 @@ public class Ktx2HdrDecoderFlatTests
     }
 
     [Theory]
-    [WithFile(TestTextureFormat.Ktx2, TestTextureType.Flat, TestTextureTool.ToKtx, TestImages.Ktx2.Astc.Hdr.Rgb9e5)]
+    [WithFile(TestTextureFormat.Ktx2, TestTextureType.Flat, TestTextureTool.ToKtx, TestImages.Ktx2.Astc.Rgb9e5_Ufloat)]
     public void CanDecode_Rgb9e5_Ufloat_Packed(TestTextureProvider provider)
     {
         using Texture texture = provider.GetTexture(Ktx2Decoder);
@@ -237,7 +237,7 @@ public class Ktx2HdrDecoderFlatTests
     }
 
     [Theory]
-    [WithFile(TestTextureFormat.Ktx2, TestTextureType.Flat, TestTextureTool.ToKtx, TestImages.Ktx2.Astc.Hdr.B10g11r11)]
+    [WithFile(TestTextureFormat.Ktx2, TestTextureType.Flat, TestTextureTool.ToKtx, TestImages.Ktx2.Astc.B10g11r11_Ufloat)]
     public void CanDecode_B10g11r11_Ufloat_Packed(TestTextureProvider provider)
     {
         using Texture texture = provider.GetTexture(Ktx2Decoder);

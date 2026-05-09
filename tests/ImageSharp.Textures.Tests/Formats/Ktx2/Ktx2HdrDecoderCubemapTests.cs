@@ -23,22 +23,22 @@ public class Ktx2HdrDecoderCubemapTests
     private static readonly ImageComparer HalfFloatComparer = ImageComparer.TolerantPercentage(0.1f);
 
     [Theory]
-    [WithFile(TestTextureFormat.Ktx2, TestTextureType.Cubemap, TestTextureTool.ToKtx, TestImages.Ktx2.Astc.HdrCube.R32Sfloat)]
+    [WithFile(TestTextureFormat.Ktx2, TestTextureType.Cubemap, TestTextureTool.ToKtx, TestImages.Ktx2.Astc.Cubemap.R32_Sfloat)]
     public void CanDecode_R32_Sfloat_Cubemap(TestTextureProvider provider)
         => DecodeAndCompare<Fp32>(provider, HalfFloatComparer);
 
     [Theory]
-    [WithFile(TestTextureFormat.Ktx2, TestTextureType.Cubemap, TestTextureTool.ToKtx, TestImages.Ktx2.Astc.HdrCube.Rg32Sfloat)]
+    [WithFile(TestTextureFormat.Ktx2, TestTextureType.Cubemap, TestTextureTool.ToKtx, TestImages.Ktx2.Astc.Cubemap.Rg32_Sfloat)]
     public void CanDecode_RG32_Sfloat_Cubemap(TestTextureProvider provider)
         => DecodeAndCompare<Rg32Float>(provider, HalfFloatComparer);
 
     [Theory]
-    [WithFile(TestTextureFormat.Ktx2, TestTextureType.Cubemap, TestTextureTool.ToKtx, TestImages.Ktx2.Astc.HdrCube.Rgb48Sfloat)]
+    [WithFile(TestTextureFormat.Ktx2, TestTextureType.Cubemap, TestTextureTool.ToKtx, TestImages.Ktx2.Astc.Cubemap.Rgb48_Sfloat)]
     public void CanDecode_RGB48_Sfloat_Cubemap(TestTextureProvider provider)
         => DecodeAndCompare<Rgb48Float>(provider, HalfFloatComparer);
 
     [Theory]
-    [WithFile(TestTextureFormat.Ktx2, TestTextureType.Cubemap, TestTextureTool.ToKtx, TestImages.Ktx2.Astc.HdrCube.Rgba64Sfloat)]
+    [WithFile(TestTextureFormat.Ktx2, TestTextureType.Cubemap, TestTextureTool.ToKtx, TestImages.Ktx2.Astc.Cubemap.Rgba64_Sfloat)]
     public void CanDecode_RGBA64_Sfloat_Cubemap(TestTextureProvider provider)
         => DecodeAndCompare<Rgba64Float>(provider, HalfFloatComparer);
 

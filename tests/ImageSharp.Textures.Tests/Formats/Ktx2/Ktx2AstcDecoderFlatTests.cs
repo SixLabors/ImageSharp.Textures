@@ -1,7 +1,6 @@
 // Copyright (c) Six Labors.
 // Licensed under the Six Labors Split License.
 
-using System.Text.RegularExpressions;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Textures.Formats.Ktx2;
 using SixLabors.ImageSharp.Textures.Tests.Enums;
@@ -16,7 +15,7 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.Ktx2;
 [GroupOutput("Ktx2")]
 [Trait("Format", "Ktx2")]
 [Trait("Format", "Astc")]
-public partial class Ktx2AstcDecoderFlatTests
+public class Ktx2AstcDecoderFlatTests
 {
     private static readonly Ktx2Decoder KtxDecoder = new();
 
@@ -37,7 +36,7 @@ public partial class Ktx2AstcDecoderFlatTests
     [WithFile(TestTextureFormat.Ktx2, TestTextureType.Flat, TestTextureTool.ToKtx, TestImages.Ktx2.Astc.Rgba32_12x12)]
     public void CanDecode_Rgba32_Blocksizes(TestTextureProvider provider)
     {
-        string blockSize = GetBlockSizeFromFileName(provider.InputFile);
+        string blockSize = BlockSizeExtractor.FromFileName(provider.InputFile);
         using Texture texture = provider.GetTexture(KtxDecoder);
         provider.SaveTextures(texture);
         FlatTexture flatTexture = texture as FlatTexture;
@@ -72,7 +71,7 @@ public partial class Ktx2AstcDecoderFlatTests
     [WithFile(TestTextureFormat.Ktx2, TestTextureType.Flat, TestTextureTool.ToKtx, TestImages.Ktx2.Astc.Rgb32_Unorm_12x12)]
     public void CanDecode_Rgba32_Unorm(TestTextureProvider provider)
     {
-        string blockSize = GetBlockSizeFromFileName(provider.InputFile);
+        string blockSize = BlockSizeExtractor.FromFileName(provider.InputFile);
         using Texture texture = provider.GetTexture(KtxDecoder);
         provider.SaveTextures(texture);
         FlatTexture flatTexture = texture as FlatTexture;
@@ -105,7 +104,7 @@ public partial class Ktx2AstcDecoderFlatTests
     [WithFile(TestTextureFormat.Ktx2, TestTextureType.Flat, TestTextureTool.ToKtx, TestImages.Ktx2.Astc.Rgb32_sRgb_12x12)]
     public void CanDecode_Rgba32_Srgb(TestTextureProvider provider)
     {
-        string blockSize = GetBlockSizeFromFileName(provider.InputFile);
+        string blockSize = BlockSizeExtractor.FromFileName(provider.InputFile);
         using Texture texture = provider.GetTexture(KtxDecoder);
         provider.SaveTextures(texture);
         FlatTexture flatTexture = texture as FlatTexture;
@@ -180,14 +179,4 @@ public partial class Ktx2AstcDecoderFlatTests
 
         (firstMipMap as Image<Rgba32>).CompareToReferenceOutput(ImageComparer.TolerantPercentage(0.05f), provider, testOutputDetails: $"{compressionDetails}");
     }
-
-    private static string GetBlockSizeFromFileName(string fileName)
-    {
-        Match match = GetBlockSizeFromFileName().Match(fileName);
-
-        return match.Success ? match.Value : string.Empty;
-    }
-
-    [GeneratedRegex(@"(\d+x\d+)")]
-    private static partial Regex GetBlockSizeFromFileName();
 }

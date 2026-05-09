@@ -1,6 +1,7 @@
 // Copyright (c) Six Labors.
 // Licensed under the Six Labors Split License.
 
+using System.Runtime.InteropServices;
 using SixLabors.ImageSharp.Textures.Compression.Astc.Core;
 
 namespace SixLabors.ImageSharp.Textures.TextureFormats.Decoding;
@@ -12,12 +13,49 @@ namespace SixLabors.ImageSharp.Textures.TextureFormats.Decoding;
 /// This path produces 8-bit RGBA output only. ASTC blocks that use HDR endpoint modes
 /// (2, 3, 7, 11, 14, 15) are clamped and will not render correctly. For HDR content,
 /// call <see cref="Compression.Astc.AstcDecoder.DecompressHdrImage(ReadOnlySpan{byte}, int, int, Footprint)"/>
-/// directly to receive float RGBA output.
+/// directly to receive float RGBA output, or use the HDR block types that route through this helper.
 /// </remarks>
 internal static class AstcDecoder
 {
     internal const int AstcBlockSize = 16;
     internal const int RgbaPixelDepthBytes = 4;
+    internal const int RgbaHdrPixelDepthBytes = 16;
+
+    /// <summary>
+    /// Decompresses ASTC-compressed image data to float-RGBA pixels, returned as a raw byte buffer
+    /// of length <c>width * height * 16</c> suitable for <see cref="Image.LoadPixelData{TPixel}(byte[], int, int)"/>
+    /// with <c>Rgba128Float</c>.
+    /// </summary>
+    public static byte[] DecompressHdrImage(
+        byte[] blockData,
+        int width,
+        int height,
+        int blockWidth,
+        int blockHeight,
+        byte compressedBytesPerBlock)
+    {
+        ArgumentNullException.ThrowIfNull(blockData);
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(width, 0);
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(height, 0);
+        ArgumentOutOfRangeException.ThrowIfNotEqual(compressedBytesPerBlock, AstcBlockSize);
+
+        Footprint footprint = Footprint.FromFootprintType(FootprintFromDimensions(blockWidth, blockHeight));
+
+        // Guard: total pixel count fits in int after multiplying by 16 bytes/pixel.
+        long totalPixels = (long)width * height;
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(totalPixels, (long)int.MaxValue / RgbaHdrPixelDepthBytes);
+
+        float[] floatBuffer = new float[totalPixels * 4];
+        if (!Compression.Astc.AstcDecoder.DecompressHdrImage(blockData, width, height, footprint, floatBuffer))
+        {
+            // Structural validation failed; return zero-filled output so the caller gets a usable image.
+            return new byte[totalPixels * RgbaHdrPixelDepthBytes];
+        }
+
+        byte[] bytes = new byte[totalPixels * RgbaHdrPixelDepthBytes];
+        MemoryMarshal.AsBytes<float>(floatBuffer).CopyTo(bytes);
+        return bytes;
+    }
 
     /// <summary>
     /// Decodes an ASTC block into RGBA pixels.

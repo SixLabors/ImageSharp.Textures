@@ -194,35 +194,45 @@ public static class TestImageExtensions
 
     /// <summary>
     /// Compares all six faces of the cubemap's first mipmap against their individual reference images.
-    /// Reference files must be named "{testName}_posX.png" etc., matching the saved debug output.
+    /// Reference files must be named "{testName}_{facePrefix}posX{faceSuffix}.png" etc.,
+    /// matching the saved debug output.
     /// </summary>
     /// <typeparam name="TPixel">The pixel format.</typeparam>
     /// <param name="cubemap">The decoded cubemap.</param>
     /// <param name="comparer">The comparer to use for every face.</param>
     /// <param name="provider">The test texture provider.</param>
+    /// <param name="faceSuffix">
+    /// Optional suffix appended after the face name in the reference filename. Useful for
+    /// parameterized cubemap tests that share a single test name across multiple inputs
+    /// (e.g. a block-size suffix).
+    /// </param>
     public static void CompareFacesToReferenceOutput<TPixel>(
         this CubemapTexture cubemap,
         ImageComparer comparer,
-        ITestTextureProvider provider)
+        ITestTextureProvider provider,
+        string faceSuffix = null)
         where TPixel : unmanaged, IPixel<TPixel>
     {
-        CompareFace<TPixel>(cubemap.PositiveX, "posX", comparer, provider);
-        CompareFace<TPixel>(cubemap.NegativeX, "negX", comparer, provider);
-        CompareFace<TPixel>(cubemap.PositiveY, "posY", comparer, provider);
-        CompareFace<TPixel>(cubemap.NegativeY, "negY", comparer, provider);
-        CompareFace<TPixel>(cubemap.PositiveZ, "posZ", comparer, provider);
-        CompareFace<TPixel>(cubemap.NegativeZ, "negZ", comparer, provider);
+        CompareFace<TPixel>(cubemap.PositiveX, BuildDetails("posX", faceSuffix), comparer, provider);
+        CompareFace<TPixel>(cubemap.NegativeX, BuildDetails("negX", faceSuffix), comparer, provider);
+        CompareFace<TPixel>(cubemap.PositiveY, BuildDetails("posY", faceSuffix), comparer, provider);
+        CompareFace<TPixel>(cubemap.NegativeY, BuildDetails("negY", faceSuffix), comparer, provider);
+        CompareFace<TPixel>(cubemap.PositiveZ, BuildDetails("posZ", faceSuffix), comparer, provider);
+        CompareFace<TPixel>(cubemap.NegativeZ, BuildDetails("negZ", faceSuffix), comparer, provider);
     }
+
+    private static string BuildDetails(string faceName, string suffix)
+        => string.IsNullOrEmpty(suffix) ? faceName : $"{faceName}_{suffix}";
 
     private static void CompareFace<TPixel>(
         FlatTexture face,
-        string faceName,
+        string details,
         ImageComparer comparer,
         ITestTextureProvider provider)
         where TPixel : unmanaged, IPixel<TPixel>
     {
         using Image faceImage = face.MipMaps[0].GetImage();
-        (faceImage as Image<TPixel>).CompareToReferenceOutput(comparer, provider, testOutputDetails: faceName);
+        (faceImage as Image<TPixel>).CompareToReferenceOutput(comparer, provider, testOutputDetails: details);
     }
 
     public static Image<TPixel> GetReferenceOutputImage<TPixel>(
