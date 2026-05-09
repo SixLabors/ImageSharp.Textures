@@ -14,6 +14,12 @@ namespace SixLabors.ImageSharp.Textures.Compression.Astc;
 /// <summary>
 /// Provides methods to decode ASTC-compressed texture data into uncompressed pixel formats.
 /// </summary>
+/// <remarks>
+/// The decoder returns raw decoded values and does not apply any gamma or color-space
+/// transform. Callers loading ASTC data from an sRGB-tagged container (e.g. a KTX file
+/// with an *_SRGB_BLOCK format) are responsible for applying sRGB-to-linear conversion
+/// downstream if they need linear values.
+/// </remarks>
 public static class AstcDecoder
 {
     private static readonly ArrayPool<byte> ArrayPool = ArrayPool<byte>.Shared;
