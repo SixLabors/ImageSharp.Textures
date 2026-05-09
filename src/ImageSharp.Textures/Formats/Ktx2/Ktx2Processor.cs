@@ -433,9 +433,20 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx2
             var blockFormat = default(TBlock);
             for (int i = 0; i < numberOfMipMaps; i++)
             {
+                ulong uncompressedDataLength = levelIndices[i].UncompressedByteLength;
+                if (uncompressedDataLength % 6 != 0)
+                {
+                    throw new TextureFormatException("KTX2 cubemap level byte length is not divisible by 6 faces");
+                }
+
+                ulong perFace = uncompressedDataLength / 6;
+                if (perFace > int.MaxValue)
+                {
+                    throw new TextureFormatException("KTX2 cubemap face exceeds the maximum supported size");
+                }
+
+                uint dataForEachFace = (uint)perFace;
                 stream.Position = (long)levelIndices[i].ByteOffset;
-                var uncompressedDataLength = levelIndices[i].UncompressedByteLength;
-                var dataForEachFace = (uint)uncompressedDataLength / 6;
 
                 cubeMapTexture.PositiveX.MipMaps.Add(ReadFaceTexture(stream, width, height, blockFormat, dataForEachFace));
                 cubeMapTexture.NegativeX.MipMaps.Add(ReadFaceTexture(stream, width, height, blockFormat, dataForEachFace));
