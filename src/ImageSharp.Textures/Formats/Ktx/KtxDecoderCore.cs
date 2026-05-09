@@ -52,6 +52,11 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx
         /// <returns>The decoded image.</returns>
         public Texture DecodeTexture(Stream stream)
         {
+            if (!stream.CanSeek)
+            {
+                throw new NotSupportedException("KTX decoding requires a seekable stream.");
+            }
+
             this.ReadFileHeader(stream);
 
             if (this.ktxHeader.Width == 0)
@@ -85,6 +90,11 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx
         /// <param name="currentStream">The <see cref="Stream"/> containing texture data.</param>
         public ITextureInfo Identify(Stream currentStream)
         {
+            if (!currentStream.CanSeek)
+            {
+                throw new NotSupportedException("KTX decoding requires a seekable stream.");
+            }
+
             this.ReadFileHeader(currentStream);
 
             var textureInfo = new TextureInfo(new TextureTypeInfo((int)this.ktxHeader.PixelDepth), (int)this.ktxHeader.Width, (int)this.ktxHeader.Height);
