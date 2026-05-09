@@ -33,8 +33,20 @@ internal static class EndpointCodec
         }
     }
 
+    /// <summary>
+    /// LDR-only convenience overload that returns the decoded endpoints as a tuple. Throws
+    /// if <paramref name="mode"/> is an HDR endpoint mode — use <see cref="DecodeColorsForModePolymorphic"/>
+    /// for code paths that can encounter HDR content.
+    /// </summary>
     public static (Rgba32 EndpointLowRgba, Rgba32 EndpointHighRgba) DecodeColorsForMode(ReadOnlySpan<int> values, int maxValue, ColorEndpointMode mode)
     {
+        if (mode.IsHdr())
+        {
+            throw new ArgumentException(
+                $"DecodeColorsForMode handles LDR modes only. Mode {mode} is HDR; use DecodeColorsForModePolymorphic.",
+                nameof(mode));
+        }
+
         int count = mode.GetColorValuesCount();
         Span<int> unquantizedValues = stackalloc int[count];
         int copyLen = Math.Min(count, values.Length);
@@ -222,9 +234,10 @@ internal static class EndpointCodec
             }
 
             default:
-                endpointLowRgba = default;
-                endpointHighRgba = default;
-                break;
+                throw new ArgumentOutOfRangeException(
+                    nameof(mode),
+                    mode,
+                    "DecodeColorsForModeUnquantized received a mode that is neither LDR nor a known HDR mode.");
         }
 
         return ColorEndpointPair.Ldr(endpointLowRgba, endpointHighRgba);

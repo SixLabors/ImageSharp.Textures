@@ -345,21 +345,32 @@ public class EndpointCodecTests
             int colorRange = IntermediateBlock.EndpointRangeForBlock(ib);
             Assert.True(colorRange > 0, "color range should be valid");
 
-            // Check all endpoint pairs decode successfully to grayscale colors
+            // Check all endpoint pairs decode to grayscale. The checkerboard content is LDR
+            // but the encoder happens to emit HDR luma endpoint modes for it, so the test
+            // must go through the polymorphic decoder and assert on both LDR and HDR pairs.
             for (int ep = 0; ep < ib.EndpointCount; ep++)
             {
                 IntermediateBlock.IntermediateEndpointData endpoints = ib.Endpoints[ep];
                 ReadOnlySpan<int> colorSpan = ((ReadOnlySpan<int>)endpoints.Colors)[..endpoints.ColorCount];
-                (Rgba32 low, Rgba32 high) = EndpointCodec.DecodeColorsForMode(
+                ColorEndpointPair pair = EndpointCodec.DecodeColorsForModePolymorphic(
                     colorSpan,
                     colorRange,
                     endpoints.Mode);
 
-                // Assert - Checkerboard should produce grayscale colors (R == G == B)
-                Assert.True(low.R == low.G, $"block {i} low endpoint should be grayscale");
-                Assert.True(low.G == low.B, $"block {i} low endpoint should be grayscale");
-                Assert.True(high.R == high.G, $"block {i} high endpoint should be grayscale");
-                Assert.True(high.G == high.B, $"block {i} high endpoint should be grayscale");
+                if (pair.IsHdr)
+                {
+                    Assert.True(pair.HdrLow.R == pair.HdrLow.G, $"block {i} low endpoint should be grayscale");
+                    Assert.True(pair.HdrLow.G == pair.HdrLow.B, $"block {i} low endpoint should be grayscale");
+                    Assert.True(pair.HdrHigh.R == pair.HdrHigh.G, $"block {i} high endpoint should be grayscale");
+                    Assert.True(pair.HdrHigh.G == pair.HdrHigh.B, $"block {i} high endpoint should be grayscale");
+                }
+                else
+                {
+                    Assert.True(pair.LdrLow.R == pair.LdrLow.G, $"block {i} low endpoint should be grayscale");
+                    Assert.True(pair.LdrLow.G == pair.LdrLow.B, $"block {i} low endpoint should be grayscale");
+                    Assert.True(pair.LdrHigh.R == pair.LdrHigh.G, $"block {i} high endpoint should be grayscale");
+                    Assert.True(pair.LdrHigh.G == pair.LdrHigh.B, $"block {i} high endpoint should be grayscale");
+                }
             }
 
             blocksDecoded++;
@@ -380,5 +391,21 @@ public class EndpointCodecTests
         (Rgba32 decLow, Rgba32 decHigh) = EndpointCodec.DecodeColorsForMode(values.ToArray(), quantRange, astcMode);
 
         return needsSwap ? (decHigh, decLow) : (decLow, decHigh);
+    }
+
+    // Regression: DecodeColorsForMode used to silently return (default, default) for HDR modes
+    // because the internal switch had a default: branch that zeroed the endpoints.
+    [Theory]
+    [InlineData(ColorEndpointMode.HdrLumaLargeRange)]
+    [InlineData(ColorEndpointMode.HdrLumaSmallRange)]
+    [InlineData(ColorEndpointMode.HdrRgbBaseScale)]
+    [InlineData(ColorEndpointMode.HdrRgbDirect)]
+    [InlineData(ColorEndpointMode.HdrRgbDirectLdrAlpha)]
+    [InlineData(ColorEndpointMode.HdrRgbDirectHdrAlpha)]
+    internal void DecodeColorsForMode_WithHdrMode_ShouldThrow(ColorEndpointMode mode)
+    {
+        int[] values = new int[8];
+
+        Assert.Throws<ArgumentException>(() => EndpointCodec.DecodeColorsForMode(values, 255, mode));
     }
 }
