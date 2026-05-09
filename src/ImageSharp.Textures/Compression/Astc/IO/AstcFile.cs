@@ -45,6 +45,17 @@ internal record AstcFile
         int blockDataLength = data.Length - AstcFileHeader.SizeInBytes;
         ArgumentOutOfRangeException.ThrowIfNotEqual(blockDataLength % PhysicalBlock.SizeInBytes, 0);
 
+        int blocksWide = (header.ImageWidth + header.BlockWidth - 1) / header.BlockWidth;
+        int blocksHigh = (header.ImageHeight + header.BlockHeight - 1) / header.BlockHeight;
+        long expectedBlockCount = (long)blocksWide * blocksHigh;
+        long actualBlockCount = blockDataLength / PhysicalBlock.SizeInBytes;
+        if (actualBlockCount != expectedBlockCount)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(data),
+                $"ASTC payload contains {actualBlockCount} blocks but the header describes {expectedBlockCount}");
+        }
+
         byte[] blocks = new byte[blockDataLength];
         Array.Copy(data, AstcFileHeader.SizeInBytes, blocks, 0, blocks.Length);
 
