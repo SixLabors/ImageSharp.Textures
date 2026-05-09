@@ -25,44 +25,10 @@ public class Ktx2AstcDecoderCubemapTests
     {
         using Texture texture = provider.GetTexture(KtxDecoder);
         provider.SaveTextures(texture);
-        CubemapTexture cubemapTexture = texture as CubemapTexture;
 
+        CubemapTexture cubemapTexture = texture as CubemapTexture;
         Assert.NotNull(cubemapTexture);
 
-        using Image posXImage = cubemapTexture.PositiveX.MipMaps[0].GetImage();
-        (posXImage as Image<Rgba32>).CompareToReferenceOutput(
-            ImageComparer.Exact,
-            provider,
-            testOutputDetails: "posX");
-
-        using Image negXImage = cubemapTexture.NegativeX.MipMaps[0].GetImage();
-        (negXImage as Image<Rgba32>).CompareToReferenceOutput(
-            ImageComparer.Exact,
-            provider,
-            testOutputDetails: "negX");
-
-        using Image posYImage = cubemapTexture.PositiveY.MipMaps[0].GetImage();
-        (posYImage as Image<Rgba32>).CompareToReferenceOutput(
-            ImageComparer.Exact,
-            provider,
-            testOutputDetails: "posY");
-
-        using Image negYImage = cubemapTexture.NegativeY.MipMaps[0].GetImage();
-        (negYImage as Image<Rgba32>).CompareToReferenceOutput(
-            ImageComparer.TolerantPercentage(3.0f),
-            provider,
-            testOutputDetails: "negY");
-
-        using Image posZImage = cubemapTexture.PositiveZ.MipMaps[0].GetImage();
-        (posZImage as Image<Rgba32>).CompareToReferenceOutput(
-            ImageComparer.Exact,
-            provider,
-            testOutputDetails: "posZ");
-
-        using Image negZImage = cubemapTexture.NegativeZ.MipMaps[0].GetImage();
-        (negZImage as Image<Rgba32>).CompareToReferenceOutput(
-            ImageComparer.Exact,
-            provider,
-            testOutputDetails: "negZ");
+        cubemapTexture.CompareFacesToReferenceOutput<Rgba32>(ImageComparer.Exact, provider);
     }
 }
