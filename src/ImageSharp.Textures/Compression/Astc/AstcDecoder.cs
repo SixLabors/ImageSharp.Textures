@@ -26,8 +26,10 @@ public static class AstcDecoder
     /// <param name="width">Image width in pixels</param>
     /// <param name="height">Image height in pixels</param>
     /// <param name="footprint">The ASTC block footprint (e.g., 4x4, 5x5)</param>
-    /// <returns>Array of bytes in RGBA8 format (width * height * 4 bytes total)</returns>
-    /// <exception cref="InvalidOperationException">If decompression fails for any block</exception>
+    /// <returns>
+    /// Array of bytes in RGBA8 format (width * height * 4 bytes total), or an empty span if the
+    /// input is structurally invalid. Individual malformed blocks are skipped and leave zeros in the output.
+    /// </returns>
     public static Span<byte> DecompressImage(ReadOnlySpan<byte> astcData, int width, int height, Footprint footprint)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(width);
@@ -36,7 +38,7 @@ public static class AstcDecoder
         long totalPixels = (long)width * height;
         ArgumentOutOfRangeException.ThrowIfGreaterThan(totalPixels, (long)int.MaxValue / BytesPerPixelUnorm8);
 
-        long totalBytes = totalPixels * BytesPerPixelUnorm8;
+        int totalBytes = (int)(totalPixels * BytesPerPixelUnorm8);
         byte[] imageBuffer = new byte[totalBytes];
 
         return DecompressImage(astcData, width, height, footprint, imageBuffer)
@@ -52,8 +54,10 @@ public static class AstcDecoder
     /// <param name="height">Image height in pixels</param>
     /// <param name="footprint">The ASTC block footprint (e.g., 4x4, 5x5)</param>
     /// <param name="imageBuffer">Output buffer. Must be at least width * height * 4 bytes.</param>
-    /// <returns>True if decompression succeeded, false if input was invalid.</returns>
-    /// <exception cref="InvalidOperationException">If decompression fails for any block</exception>
+    /// <returns>
+    /// True if the input was structurally valid and decoding ran, false if it was rejected
+    /// up front. Individual malformed blocks are skipped and leave zeros in the output.
+    /// </returns>
     public static bool DecompressImage(ReadOnlySpan<byte> astcData, int width, int height, Footprint footprint, Span<byte> imageBuffer)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(width);
@@ -159,30 +163,6 @@ public static class AstcDecoder
     }
 
     /// <summary>
-    /// Decompress a single ASTC block to RGBA8 pixel data
-    /// </summary>
-    /// <param name="blockData">The data to decode</param>
-    /// <param name="footprint">The type of ASTC block footprint e.g. 4x4, 5x5, etc.</param>
-    /// <returns>The decoded block of pixels as RGBA values</returns>
-    public static Span<byte> DecompressBlock(ReadOnlySpan<byte> blockData, Footprint footprint)
-    {
-        byte[] decodedPixels = [];
-        try
-        {
-            decodedPixels = ArrayPool.Rent(footprint.Width * footprint.Height * BytesPerPixelUnorm8);
-            Span<byte> decodedPixelBuffer = decodedPixels.AsSpan();
-
-            DecompressBlock(blockData, footprint, decodedPixelBuffer);
-        }
-        finally
-        {
-            ArrayPool.Return(decodedPixels);
-        }
-
-        return decodedPixels;
-    }
-
-    /// <summary>
     /// Decompresses a single ASTC block to RGBA8 pixel data
     /// </summary>
     /// <param name="blockData">The data to decode</param>
@@ -240,7 +220,7 @@ public static class AstcDecoder
         long totalPixels = (long)width * height;
         ArgumentOutOfRangeException.ThrowIfGreaterThan(totalPixels, (long)int.MaxValue / 4);
 
-        long totalFloats = totalPixels * 4;
+        int totalFloats = (int)(totalPixels * 4);
         float[] imageBuffer = new float[totalFloats];
         if (!DecompressHdrImage(astcData, width, height, footprint, imageBuffer))
         {
@@ -258,8 +238,10 @@ public static class AstcDecoder
     /// <param name="height">Image height in pixels</param>
     /// <param name="footprint">The ASTC block footprint (e.g., 4x4, 5x5)</param>
     /// <param name="imageBuffer">Output buffer. Must be at least width * height * 4 floats.</param>
-    /// <returns>True if decompression succeeded, false if input was invalid.</returns>
-    /// <exception cref="InvalidOperationException">If decompression fails for any block</exception>
+    /// <returns>
+    /// True if the input was structurally valid and decoding ran, false if it was rejected
+    /// up front. Individual malformed blocks are skipped and leave zeros in the output.
+    /// </returns>
     public static bool DecompressHdrImage(ReadOnlySpan<byte> astcData, int width, int height, Footprint footprint, Span<float> imageBuffer)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(width);
