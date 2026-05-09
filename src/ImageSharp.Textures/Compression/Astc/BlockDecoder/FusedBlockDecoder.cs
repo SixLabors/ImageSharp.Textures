@@ -57,127 +57,78 @@ internal static class FusedBlockDecoder
     }
 
     /// <summary>
-    /// Decodes BISE-encoded values from the specified bit region of the block.
-    /// For bit-only encoding with small total bit count, extracts directly from ulong
-    /// without creating a BitStream (avoids per-value ShiftBuffer overhead).
+    /// Decodes BISE-encoded color values from the specified bit region of the block.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void DecodeBiseValues(UInt128 bits, int startBit, int bitCount, int range, int valuesCount, Span<int> result)
     {
-        (BiseEncodingMode encMode, int bitsPerValue) = BoundedIntegerSequenceCodec.GetPackingModeBitCount(range);
-
-        if (encMode == BiseEncodingMode.BitEncoding)
-        {
-            // Fast path: extract N-bit values directly via shifts
-            int totalBits = valuesCount * bitsPerValue;
-            ulong mask = (1UL << bitsPerValue) - 1;
-
-            if (startBit + totalBits <= 64)
-            {
-                // All color data fits in the low 64 bits
-                ulong data = bits.Low() >> startBit;
-                for (int i = 0; i < valuesCount; i++)
-                {
-                    result[i] = (int)(data & mask);
-                    data >>= bitsPerValue;
-                }
-            }
-            else
-            {
-                // Spans both halves — use UInt128 shift then extract from low
-                UInt128 shifted = (bits >> startBit) & UInt128Extensions.OnesMask(totalBits);
-                ulong lowBits = shifted.Low();
-                ulong highBits = shifted.High();
-                int bitPos = 0;
-                for (int i = 0; i < valuesCount; i++)
-                {
-                    if (bitPos < 64)
-                    {
-                        ulong val = (lowBits >> bitPos) & mask;
-                        if (bitPos + bitsPerValue > 64)
-                        {
-                            val |= (highBits << (64 - bitPos)) & mask;
-                        }
-
-                        result[i] = (int)val;
-                    }
-                    else
-                    {
-                        result[i] = (int)((highBits >> (bitPos - 64)) & mask);
-                    }
-
-                    bitPos += bitsPerValue;
-                }
-            }
-
-            return;
-        }
-
-        // Trit/quint encoding: fall back to full BISE decoder
-        UInt128 colorBitMask = UInt128Extensions.OnesMask(bitCount);
-        UInt128 colorBits = (bits >> startBit) & colorBitMask;
-        BitStream colorBitStream = new(colorBits, 128);
-        BoundedIntegerSequenceDecoder decoder = BoundedIntegerSequenceDecoder.GetCached(range);
-        decoder.Decode(valuesCount, ref colorBitStream, result);
+        UInt128 source = (bits >> startBit) & UInt128Extensions.OnesMask(bitCount);
+        DecodeBiseSequence(source, range, valuesCount, result);
     }
 
     /// <summary>
     /// Decodes BISE-encoded weight values from the reversed high-end of the block.
-    /// For bit-only encoding, extracts directly from the reversed bits without BitStream.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void DecodeBiseWeights(UInt128 bits, int weightBitCount, int weightRange, int count, Span<int> result)
     {
-        (BiseEncodingMode encMode, int bitsPerValue) = BoundedIntegerSequenceCodec.GetPackingModeBitCount(weightRange);
-        UInt128 weightBits = UInt128Extensions.ReverseBits(bits) & UInt128Extensions.OnesMask(weightBitCount);
+        UInt128 source = UInt128Extensions.ReverseBits(bits) & UInt128Extensions.OnesMask(weightBitCount);
+        DecodeBiseSequence(source, weightRange, count, result);
+    }
 
-        if (encMode == BiseEncodingMode.BitEncoding)
+    /// <summary>
+    /// Decodes a BISE sequence from bits pre-normalised to start at bit 0.
+    /// For bit-only encoding, extracts values directly via shifts (no BitStream).
+    /// Trit/quint encodings fall back to the full BISE decoder.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void DecodeBiseSequence(UInt128 source, int range, int count, Span<int> result)
+    {
+        (BiseEncodingMode encMode, int bitsPerValue) = BoundedIntegerSequenceCodec.GetPackingModeBitCount(range);
+
+        if (encMode != BiseEncodingMode.BitEncoding)
         {
-            // Fast path: extract N-bit values directly via shifts
-            int totalBits = count * bitsPerValue;
-            ulong mask = (1UL << bitsPerValue) - 1;
+            BitStream stream = new(source, 128);
+            BoundedIntegerSequenceDecoder decoder = BoundedIntegerSequenceDecoder.GetCached(range);
+            decoder.Decode(count, ref stream, result);
+            return;
+        }
 
-            if (totalBits <= 64)
+        ulong mask = (1UL << bitsPerValue) - 1;
+        ulong lowBits = source.Low();
+        int totalBits = count * bitsPerValue;
+
+        if (totalBits <= 64)
+        {
+            for (int i = 0; i < count; i++)
             {
-                ulong data = weightBits.Low();
-                for (int i = 0; i < count; i++)
-                {
-                    result[i] = (int)(data & mask);
-                    data >>= bitsPerValue;
-                }
-            }
-            else
-            {
-                ulong lowBits = weightBits.Low();
-                ulong highBits = weightBits.High();
-                int bitPos = 0;
-                for (int i = 0; i < count; i++)
-                {
-                    if (bitPos < 64)
-                    {
-                        ulong val = (lowBits >> bitPos) & mask;
-                        if (bitPos + bitsPerValue > 64)
-                        {
-                            val |= (highBits << (64 - bitPos)) & mask;
-                        }
-
-                        result[i] = (int)val;
-                    }
-                    else
-                    {
-                        result[i] = (int)((highBits >> (bitPos - 64)) & mask);
-                    }
-
-                    bitPos += bitsPerValue;
-                }
+                result[i] = (int)(lowBits & mask);
+                lowBits >>= bitsPerValue;
             }
 
             return;
         }
 
-        // Trit/quint encoding: fall back to full BISE decoder
-        BitStream weightBitStream = new(weightBits, 128);
-        BoundedIntegerSequenceDecoder decoder = BoundedIntegerSequenceDecoder.GetCached(weightRange);
-        decoder.Decode(count, ref weightBitStream, result);
+        ulong highBits = source.High();
+        int bitPos = 0;
+        for (int i = 0; i < count; i++)
+        {
+            if (bitPos < 64)
+            {
+                ulong val = (lowBits >> bitPos) & mask;
+                if (bitPos + bitsPerValue > 64)
+                {
+                    val |= (highBits << (64 - bitPos)) & mask;
+                }
+
+                result[i] = (int)val;
+            }
+            else
+            {
+                result[i] = (int)((highBits >> (bitPos - 64)) & mask);
+            }
+
+            bitPos += bitsPerValue;
+        }
     }
 }
