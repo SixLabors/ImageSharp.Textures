@@ -34,12 +34,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx
             this.KtxHeader = ktxHeader;
 
             bool isFileLittleEndian = ktxHeader.Endianness == KtxEndianness.LittleEndian;
-            bool isSystemLittleEndian = BitConverter.IsLittleEndian;
-
-            // Use appropriate handler based on whether endianness matches
-            this.endianHandler = isFileLittleEndian == isSystemLittleEndian
-                ? new NativeEndianHandler(isFileLittleEndian)
-                : new SwappingEndianHandler(isFileLittleEndian);
+            this.endianHandler = new EndianHandler(isFileLittleEndian);
         }
 
         /// <summary>

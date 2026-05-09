@@ -9,32 +9,34 @@ using SixLabors.ImageSharp.Textures.Common.Exceptions;
 namespace SixLabors.ImageSharp.Textures.Formats.Ktx
 {
     /// <summary>
-    /// Handles endianness when file endianness differs from system endianness (requires byte swapping).
+    /// Handles endianness conversions for KTX texture data. Reads header fields using the file's
+    /// declared endianness and optionally swaps pixel bytes when the file and host disagree.
     /// </summary>
-    internal sealed class SwappingEndianHandler : IEndianHandler
+    internal sealed class EndianHandler : IEndianHandler
     {
-        private readonly bool isLittleEndian;
+        private readonly bool isFileLittleEndian;
+        private readonly bool swapPixelData;
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="SwappingEndianHandler"/> class.
-        /// </summary>
-        /// <param name="isLittleEndian">Whether the file is little-endian.</param>
-        public SwappingEndianHandler(bool isLittleEndian)
+        public EndianHandler(bool isFileLittleEndian)
         {
-            this.isLittleEndian = isLittleEndian;
+            this.isFileLittleEndian = isFileLittleEndian;
+            this.swapPixelData = isFileLittleEndian != BitConverter.IsLittleEndian;
         }
 
         /// <inheritdoc/>
         public uint ReadUInt32(ReadOnlySpan<byte> buffer)
-        {
-            return this.isLittleEndian
+            => this.isFileLittleEndian
                 ? BinaryPrimitives.ReadUInt32LittleEndian(buffer)
                 : BinaryPrimitives.ReadUInt32BigEndian(buffer);
-        }
 
         /// <inheritdoc/>
         public void ConvertPixelData(Span<byte> data, uint typeSize)
         {
+            if (!this.swapPixelData)
+            {
+                return;
+            }
+
             if (typeSize == 2)
             {
                 if (data.Length % 2 != 0)
