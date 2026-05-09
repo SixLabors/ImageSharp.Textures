@@ -33,7 +33,7 @@
   <!-- Copy AstcEncoderCSharp native runtimes to the output directory. -->
   <Target Name="CopyAstcEncNativeRuntimes" AfterTargets="Build">
     <ItemGroup>
-      <_AstcEncNativeFiles Include="$(NuGetPackageRoot)astcencodercsharp\5.3.0\runtimes\**\*.*" />
+      <_AstcEncNativeFiles Include="$(NuGetPackageRoot)\astcencodercsharp\5.3.0\runtimes\**\*.*" />
     </ItemGroup>
     <Copy SourceFiles="@(_AstcEncNativeFiles)" DestinationFiles="@(_AstcEncNativeFiles -> '$(TargetDir)runtimes\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
   </Target>
