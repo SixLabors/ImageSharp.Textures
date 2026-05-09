@@ -3,6 +3,8 @@
 
 using System;
 using System.Buffers.Binary;
+using System.Runtime.InteropServices;
+using SixLabors.ImageSharp.Textures.Common.Exceptions;
 
 namespace SixLabors.ImageSharp.Textures.Formats.Ktx
 {
@@ -35,42 +37,21 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx
         {
             if (typeSize == 2)
             {
-                SwapEndian16(data);
+                if (data.Length % 2 != 0)
+                {
+                    throw new TextureFormatException("Pixel data length is not a multiple of 2 for a 16-bit typed format");
+                }
+
+                BinaryPrimitives.ReverseEndianness(MemoryMarshal.Cast<byte, ushort>(data), MemoryMarshal.Cast<byte, ushort>(data));
             }
             else if (typeSize == 4)
             {
-                SwapEndian32(data);
-            }
-        }
+                if (data.Length % 4 != 0)
+                {
+                    throw new TextureFormatException("Pixel data length is not a multiple of 4 for a 32-bit typed format");
+                }
 
-        /// <summary>
-        /// Swaps endianness for 16-bit values in-place.
-        /// </summary>
-        /// <param name="data">The data to swap.</param>
-        private static void SwapEndian16(Span<byte> data)
-        {
-            for (int i = 0; i < data.Length; i += 2)
-            {
-                byte temp = data[i];
-                data[i] = data[i + 1];
-                data[i + 1] = temp;
-            }
-        }
-
-        /// <summary>
-        /// Swaps endianness for 32-bit values in-place.
-        /// </summary>
-        /// <param name="data">The data to swap.</param>
-        private static void SwapEndian32(Span<byte> data)
-        {
-            for (int i = 0; i < data.Length; i += 4)
-            {
-                byte temp0 = data[i];
-                byte temp1 = data[i + 1];
-                data[i] = data[i + 3];
-                data[i + 1] = data[i + 2];
-                data[i + 2] = temp1;
-                data[i + 3] = temp0;
+                BinaryPrimitives.ReverseEndianness(MemoryMarshal.Cast<byte, uint>(data), MemoryMarshal.Cast<byte, uint>(data));
             }
         }
     }
