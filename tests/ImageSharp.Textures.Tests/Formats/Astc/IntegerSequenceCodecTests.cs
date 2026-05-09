@@ -2,6 +2,8 @@
 // Licensed under the Six Labors Split License.
 
 using System.ComponentModel;
+using System.Threading;
+using System.Threading.Tasks;
 using SixLabors.ImageSharp.Textures.Compression.Astc.BiseEncoding;
 using SixLabors.ImageSharp.Textures.Compression.Astc.IO;
 
@@ -328,6 +330,58 @@ public class IntegerSequenceCodecTests
 
             Assert.Equal(generated.Count, decoded.Length);
             Assert.Equal(generated, decoded);
+        }
+    }
+
+    [Theory]
+    [InlineData(5)]
+    [InlineData(31)]
+    [InlineData(255)]
+    public void GetCached_ReturnsSameInstanceForSameRange(int range)
+    {
+        BoundedIntegerSequenceDecoder first = BoundedIntegerSequenceDecoder.GetCached(range);
+        BoundedIntegerSequenceDecoder second = BoundedIntegerSequenceDecoder.GetCached(range);
+
+        Assert.Same(first, second);
+    }
+
+    [Fact]
+    public void GetCached_ReturnsDifferentInstancesForDifferentRanges()
+    {
+        BoundedIntegerSequenceDecoder r5 = BoundedIntegerSequenceDecoder.GetCached(5);
+        BoundedIntegerSequenceDecoder r31 = BoundedIntegerSequenceDecoder.GetCached(31);
+
+        Assert.NotSame(r5, r31);
+    }
+
+    [Fact]
+    public async Task GetCached_UnderConcurrentAccess_AllThreadsSeeSameInstance()
+    {
+        // Pick a less-common range so the slot is likely uncached on a fresh test run. The
+        // assertion still holds if warm, just won't exercise the CAS race.
+        const int range = 79;
+        const int threadCount = 32;
+
+        using Barrier barrier = new(threadCount);
+        BoundedIntegerSequenceDecoder[] results = new BoundedIntegerSequenceDecoder[threadCount];
+        Task[] tasks = new Task[threadCount];
+        for (int i = 0; i < threadCount; i++)
+        {
+            int idx = i;
+            tasks[i] = Task.Run(() =>
+            {
+                barrier.SignalAndWait();
+                results[idx] = BoundedIntegerSequenceDecoder.GetCached(range);
+            });
+        }
+
+        await Task.WhenAll(tasks);
+
+        BoundedIntegerSequenceDecoder winner = results[0];
+        Assert.NotNull(winner);
+        for (int i = 1; i < threadCount; i++)
+        {
+            Assert.Same(winner, results[i]);
         }
     }
 }

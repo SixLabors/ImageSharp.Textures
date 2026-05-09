@@ -1,6 +1,7 @@
 // Copyright (c) Six Labors.
 // Licensed under the Six Labors Split License.
 
+using System.Threading;
 using SixLabors.ImageSharp.Textures.Compression.Astc.IO;
 
 namespace SixLabors.ImageSharp.Textures.Compression.Astc.BiseEncoding;
@@ -16,11 +17,14 @@ internal sealed class BoundedIntegerSequenceDecoder : BoundedIntegerSequenceCode
 
     public static BoundedIntegerSequenceDecoder GetCached(int range)
     {
-        BoundedIntegerSequenceDecoder? decoder = Cache[range];
+        // Volatile.Read pairs with the implicit release on CompareExchange below to ensure
+        // other threads observe a fully-constructed decoder. Decoders are immutable, so losing
+        // the CAS race is harmless — the caller discards its own instance and uses the winner.
+        BoundedIntegerSequenceDecoder? decoder = Volatile.Read(ref Cache[range]);
         if (decoder is null)
         {
-            decoder = new BoundedIntegerSequenceDecoder(range);
-            Cache[range] = decoder;
+            BoundedIntegerSequenceDecoder created = new(range);
+            decoder = Interlocked.CompareExchange(ref Cache[range], created, null) ?? created;
         }
 
         return decoder;

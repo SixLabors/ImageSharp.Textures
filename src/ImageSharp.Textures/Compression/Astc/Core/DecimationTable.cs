@@ -2,6 +2,7 @@
 // Licensed under the Six Labors Split License.
 
 using System.Runtime.CompilerServices;
+using System.Threading;
 
 namespace SixLabors.ImageSharp.Textures.Compression.Astc.Core;
 
@@ -23,11 +24,15 @@ internal static class DecimationTable
     public static DecimationInfo Get(Footprint footprint, int gridX, int gridY)
     {
         int index = ((int)footprint.Type * GridRange * GridRange) + ((gridX - GridMin) * GridRange) + (gridY - GridMin);
-        DecimationInfo? decimationInfo = Table[index];
+
+        // Volatile.Read pairs with the implicit release on CompareExchange to publish the
+        // fully-constructed DecimationInfo. Entries are immutable, so losing the CAS race
+        // is harmless — the caller discards its own instance and uses the winner.
+        DecimationInfo? decimationInfo = Volatile.Read(ref Table[index]);
         if (decimationInfo is null)
         {
-            decimationInfo = Compute(footprint.Width, footprint.Height, gridX, gridY);
-            Table[index] = decimationInfo;
+            DecimationInfo computed = Compute(footprint.Width, footprint.Height, gridX, gridY);
+            decimationInfo = Interlocked.CompareExchange(ref Table[index], computed, null) ?? computed;
         }
 
         return decimationInfo;

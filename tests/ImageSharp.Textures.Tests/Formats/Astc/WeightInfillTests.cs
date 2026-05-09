@@ -44,4 +44,45 @@ public class WeightInfillTests
         Assert.Equal(expected.Length, result.Length);
         Assert.Equal(expected, result);
     }
+
+    [Fact]
+    public void DecimationTable_Get_ReturnsSameInstanceForSameInputs()
+    {
+        Footprint footprint = Footprint.FromFootprintType(FootprintType.Footprint6x6);
+        DecimationInfo first = DecimationTable.Get(footprint, 4, 4);
+        DecimationInfo second = DecimationTable.Get(footprint, 4, 4);
+
+        Assert.Same(first, second);
+    }
+
+    [Fact]
+    public async Task DecimationTable_Get_UnderConcurrentAccess_AllThreadsSeeSameInstance()
+    {
+        Footprint footprint = Footprint.FromFootprintType(FootprintType.Footprint10x8);
+        const int gridX = 7;
+        const int gridY = 5;
+        const int threadCount = 32;
+
+        using Barrier barrier = new(threadCount);
+        DecimationInfo[] results = new DecimationInfo[threadCount];
+        Task[] tasks = new Task[threadCount];
+        for (int i = 0; i < threadCount; i++)
+        {
+            int idx = i;
+            tasks[i] = Task.Run(() =>
+            {
+                barrier.SignalAndWait();
+                results[idx] = DecimationTable.Get(footprint, gridX, gridY);
+            });
+        }
+
+        await Task.WhenAll(tasks);
+
+        DecimationInfo winner = results[0];
+        Assert.NotNull(winner);
+        for (int i = 1; i < threadCount; i++)
+        {
+            Assert.Same(winner, results[i]);
+        }
+    }
 }
