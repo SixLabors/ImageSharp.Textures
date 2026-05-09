@@ -44,21 +44,28 @@ internal struct BlockInfo
     public int ColorValuesRange;
     public int ColorValuesCount;
 
-    // Endpoint modes (up to 4 partitions)
-    public ColorEndpointMode EndpointMode0;
-    public ColorEndpointMode EndpointMode1;
-    public ColorEndpointMode EndpointMode2;
-    public ColorEndpointMode EndpointMode3;
+    // Endpoint modes (up to 4 partitions). Indexed via GetEndpointMode / SetEndpointMode.
+    public EndpointModeBuffer EndpointModes;
+
+    public ColorEndpointMode EndpointMode0
+    {
+        readonly get => this.EndpointModes[0];
+        set => this.EndpointModes[0] = value;
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly ColorEndpointMode GetEndpointMode(int partition) => partition switch
+    public readonly ColorEndpointMode GetEndpointMode(int partition)
+        => (uint)partition < 4
+            ? this.EndpointModes[partition]
+            : this.EndpointModes[0];
+
+    [System.Runtime.CompilerServices.InlineArray(4)]
+    public struct EndpointModeBuffer
     {
-        0 => this.EndpointMode0,
-        1 => this.EndpointMode1,
-        2 => this.EndpointMode2,
-        3 => this.EndpointMode3,
-        _ => this.EndpointMode0
-    };
+#pragma warning disable CS0169, IDE0051, S1144 // Accessed by runtime via [InlineArray]
+        private ColorEndpointMode element0;
+#pragma warning restore CS0169, IDE0051, S1144
+    }
 
     /// <summary>
     /// Returns true if any of this block's active partitions uses an HDR endpoint mode.
@@ -217,14 +224,14 @@ internal struct BlockInfo
         }
 
         // ---- Step 8: Endpoint modes + extra CEM bits ----
-        ColorEndpointMode cem0 = default, cem1 = default, cem2 = default, cem3 = default;
+        Span<ColorEndpointMode> cems = stackalloc ColorEndpointMode[4];
         int colorValuesCount = 0;
         int numExtraCEMBits = 0;
 
         if (partitionCount == 1)
         {
-            cem0 = (ColorEndpointMode)((lowBits >> 13) & 0xF);
-            colorValuesCount = (((int)cem0 / 4) + 1) * 2;
+            cems[0] = (ColorEndpointMode)((lowBits >> 13) & 0xF);
+            colorValuesCount = (((int)cems[0] / 4) + 1) * 2;
         }
         else
         {
@@ -235,9 +242,9 @@ internal struct BlockInfo
             {
                 // Shared CEM: all partitions use the same mode
                 ColorEndpointMode sharedCem = (ColorEndpointMode)((lowBits >> 25) & 0xF);
-                cem0 = cem1 = cem2 = cem3 = sharedCem;
                 for (int i = 0; i < partitionCount; i++)
                 {
+                    cems[i] = sharedCem;
                     colorValuesCount += sharedCem.GetColorValuesCount();
                 }
             }
@@ -253,8 +260,7 @@ internal struct BlockInfo
                 int baseCem = (int)(((cemval & 0x3) - 1) * 4);
                 cemval >>= 2;
 
-                ulong combined = cemval | (extraCem.Low() << 4);
-                ulong cembits = combined;
+                ulong cembits = cemval | (extraCem.Low() << 4);
 
                 // Extract c bits (1 bit per partition)
                 Span<int> c = stackalloc int[4];
@@ -270,22 +276,7 @@ internal struct BlockInfo
                     int m = (int)(cembits & 0x3);
                     cembits >>= 2;
                     ColorEndpointMode mode = (ColorEndpointMode)(baseCem + (4 * c[i]) + m);
-                    switch (i)
-                    {
-                        case 0:
-                            cem0 = mode;
-                            break;
-                        case 1:
-                            cem1 = mode;
-                            break;
-                        case 2:
-                            cem2 = mode;
-                            break;
-                        case 3:
-                            cem3 = mode;
-                            break;
-                    }
-
+                    cems[i] = mode;
                     colorValuesCount += mode.GetColorValuesCount();
                 }
             }
@@ -338,7 +329,7 @@ internal struct BlockInfo
 
         // ---- Step 11: Validate endpoint modes are not HDR for batchable checks ----
         // (HDR blocks are still valid, just flagged for downstream use)
-        return new BlockInfo
+        BlockInfo result = new()
         {
             IsValid = true,
             IsVoidExtent = false,
@@ -353,11 +344,12 @@ internal struct BlockInfo
             ColorBitCount = colorBitCount,
             ColorValuesRange = colorValuesRange,
             ColorValuesCount = colorValuesCount,
-            EndpointMode0 = cem0,
-            EndpointMode1 = cem1,
-            EndpointMode2 = cem2,
-            EndpointMode3 = cem3,
         };
+        result.EndpointModes[0] = cems[0];
+        result.EndpointModes[1] = cems[1];
+        result.EndpointModes[2] = cems[2];
+        result.EndpointModes[3] = cems[3];
+        return result;
     }
 
     /// <summary>

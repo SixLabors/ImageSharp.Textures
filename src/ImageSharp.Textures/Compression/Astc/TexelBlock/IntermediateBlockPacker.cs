@@ -355,13 +355,13 @@ internal static class IntermediateBlockPacker
             {
                 int endpointModeClass = ((int)data.Endpoints[i].Mode) >> 2;
                 int classSelectorBit = endpointModeClass - minClass;
-                cemEncoder.PutBits(classSelectorBit, 1);
+                cemEncoder.PutBits((ulong)classSelectorBit, 1);
             }
 
             for (int i = 0; i < data.EndpointCount; i++)
             {
                 int epMode = ((int)data.Endpoints[i].Mode) & 3;
-                cemEncoder.PutBits(epMode, 2);
+                cemEncoder.PutBits((ulong)epMode, 2);
             }
 
             int cemBits = 2 + (partitionCount * 3);

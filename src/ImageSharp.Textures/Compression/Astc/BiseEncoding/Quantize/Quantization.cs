@@ -13,8 +13,8 @@ internal static class Quantization
 
     // Flat lookup tables indexed by range value for O(1) access.
     // Each slot maps to the QuantizationMap for the greatest supported range <= that index.
-    private static readonly QuantizationMap?[] EndpointMapByRange = InitEndpointMapFlat();
-    private static readonly QuantizationMap?[] WeightMapByRange = InitWeightMapFlat();
+    private static readonly QuantizationMap?[] EndpointMapByRange = BuildFlatLookup(EndpointMaps, 256);
+    private static readonly QuantizationMap?[] WeightMapByRange = BuildFlatLookup(WeightMaps, 32);
 
     // Pre-computed flat tables for weight unquantization: entry[quantizedValue] = final unquantized weight.
     // Includes the dq > 32 -> dq + 1 adjustment. Indexed by weight range.
@@ -177,12 +177,6 @@ internal static class Quantization
 
         return flat;
     }
-
-    private static QuantizationMap?[] InitEndpointMapFlat()
-        => BuildFlatLookup(InitEndpointMaps(), 256);
-
-    private static QuantizationMap?[] InitWeightMapFlat()
-        => BuildFlatLookup(InitWeightMaps(), 32);
 
     private static QuantizationMap? GetQuantMapForValueRange(int r)
     {

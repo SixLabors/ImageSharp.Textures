@@ -3,6 +3,7 @@
 
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Textures.Compression.Astc.BiseEncoding.Quantize;
+using SixLabors.ImageSharp.Textures.Compression.Astc.Core;
 
 namespace SixLabors.ImageSharp.Textures.Compression.Astc.ColorEncoding;
 
@@ -64,8 +65,8 @@ internal static class HdrEndpointDecoder
             y1 = (v0 << 4) - 8;
         }
 
-        Rgba64 low = new((ushort)(y0 << 4), (ushort)(y0 << 4), (ushort)(y0 << 4), 0x7800);
-        Rgba64 high = new((ushort)(y1 << 4), (ushort)(y1 << 4), (ushort)(y1 << 4), 0x7800);
+        Rgba64 low = new((ushort)(y0 << 4), (ushort)(y0 << 4), (ushort)(y0 << 4), Fp16.One);
+        Rgba64 high = new((ushort)(y1 << 4), (ushort)(y1 << 4), (ushort)(y1 << 4), Fp16.One);
         return (low, high);
     }
 
@@ -89,8 +90,8 @@ internal static class HdrEndpointDecoder
             y1 = 0xFFF;
         }
 
-        Rgba64 low = new((ushort)(y0 << 4), (ushort)(y0 << 4), (ushort)(y0 << 4), 0x7800);
-        Rgba64 high = new((ushort)(y1 << 4), (ushort)(y1 << 4), (ushort)(y1 << 4), 0x7800);
+        Rgba64 low = new((ushort)(y0 << 4), (ushort)(y0 << 4), (ushort)(y0 << 4), Fp16.One);
+        Rgba64 high = new((ushort)(y1 << 4), (ushort)(y1 << 4), (ushort)(y1 << 4), Fp16.One);
         return (low, high);
     }
 
@@ -244,8 +245,8 @@ internal static class HdrEndpointDecoder
         green0 = Math.Max(green0, 0);
         blue0 = Math.Max(blue0, 0);
 
-        Rgba64 low = new((ushort)(red0 << 4), (ushort)(green0 << 4), (ushort)(blue0 << 4), 0x7800);
-        Rgba64 high = new((ushort)(red << 4), (ushort)(green << 4), (ushort)(blue << 4), 0x7800);
+        Rgba64 low = new((ushort)(red0 << 4), (ushort)(green0 << 4), (ushort)(blue0 << 4), Fp16.One);
+        Rgba64 high = new((ushort)(red << 4), (ushort)(green << 4), (ushort)(blue << 4), Fp16.One);
         return (low, high);
     }
 
@@ -261,12 +262,12 @@ internal static class HdrEndpointDecoder
                 (ushort)(v0 << 8),
                 (ushort)(v2 << 8),
                 (ushort)((v4 & 0x7F) << 9),
-                0x7800);
+                Fp16.One);
             Rgba64 high = new(
                 (ushort)(v1 << 8),
                 (ushort)(v3 << 8),
                 (ushort)((v5 & 0x7F) << 9),
-                0x7800);
+                Fp16.One);
             return (low, high);
         }
 
@@ -401,8 +402,8 @@ internal static class HdrEndpointDecoder
             _ => (red0, green0, blue0, red1, green1, blue1)
         };
 
-        Rgba64 lowResult = new((ushort)(red0 << 4), (ushort)(green0 << 4), (ushort)(blue0 << 4), 0x7800);
-        Rgba64 highResult = new((ushort)(red1 << 4), (ushort)(green1 << 4), (ushort)(blue1 << 4), 0x7800);
+        Rgba64 lowResult = new((ushort)(red0 << 4), (ushort)(green0 << 4), (ushort)(blue0 << 4), Fp16.One);
+        Rgba64 highResult = new((ushort)(red1 << 4), (ushort)(green1 << 4), (ushort)(blue1 << 4), Fp16.One);
         return (lowResult, highResult);
     }
 

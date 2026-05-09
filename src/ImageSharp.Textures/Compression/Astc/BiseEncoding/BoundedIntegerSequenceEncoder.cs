@@ -28,38 +28,25 @@ internal sealed class BoundedIntegerSequenceEncoder : BoundedIntegerSequenceCode
 
         int index = 0;
         int bitsWrittenCount = 0;
+        Span<int> block = stackalloc int[5];
         while (index < this.values.Count)
         {
             switch (this.Encoding)
             {
                 case BiseEncodingMode.TritEncoding:
-                    List<int> trits = [];
-                    for (int i = 0; i < 5; ++i)
-                    {
-                        if (index < this.values.Count)
-                        {
-                            trits.Add(this.values[index++]);
-                        }
-                        else
-                        {
-                            trits.Add(0);
-                        }
-                    }
-
-                    EncodeISEBlock<int>(trits, this.BitCount, ref bitSink, ref bitsWrittenCount, totalBitCount);
-                    break;
                 case BiseEncodingMode.QuintEncoding:
-                    List<int> quints = [];
-                    for (int i = 0; i < 3; ++i)
+                {
+                    int blockLength = this.Encoding == BiseEncodingMode.TritEncoding ? 5 : 3;
+                    Span<int> slice = block[..blockLength];
+                    for (int i = 0; i < blockLength; ++i)
                     {
-                        int value = index < this.values.Count
-                            ? this.values[index++]
-                            : 0;
-                        quints.Add(value);
+                        slice[i] = index < this.values.Count ? this.values[index++] : 0;
                     }
 
-                    EncodeISEBlock<int>(quints, this.BitCount, ref bitSink, ref bitsWrittenCount, totalBitCount);
+                    EncodeISEBlock(slice, this.BitCount, ref bitSink, ref bitsWrittenCount, totalBitCount);
                     break;
+                }
+
                 case BiseEncodingMode.BitEncoding:
                     bitSink.PutBits((uint)this.values[index++], this.GetEncodedBlockSize());
                     break;
@@ -72,18 +59,16 @@ internal sealed class BoundedIntegerSequenceEncoder : BoundedIntegerSequenceCode
     /// </summary>
     public void Reset() => this.values.Clear();
 
-    private static void EncodeISEBlock<T>(List<int> values, int bitsPerValue, ref BitStream bitSink, ref int bitsWritten, int totalBitCount)
-        where T : unmanaged
+    private static void EncodeISEBlock(ReadOnlySpan<int> values, int bitsPerValue, ref BitStream bitSink, ref int bitsWritten, int totalBitCount)
     {
-        int valueCount = values.Count;
+        int valueCount = values.Length;
         int valueRange = (valueCount == 3) ? 5 : 3;
-        int bitsPerBlock = (valueRange == 5) ? 7 : 8;
         int[] interleavedBits = (valueRange == 5)
             ? InterleavedQuintBits
             : InterleavedTritBits;
 
-        int[] nonBitComponents = new int[valueCount];
-        int[] bitComponents = new int[valueCount];
+        Span<int> nonBitComponents = stackalloc int[valueCount];
+        Span<int> bitComponents = stackalloc int[valueCount];
         for (int i = 0; i < valueCount; ++i)
         {
             bitComponents[i] = values[i] & ((1 << bitsPerValue) - 1);
@@ -110,27 +95,19 @@ internal sealed class BoundedIntegerSequenceEncoder : BoundedIntegerSequenceCode
             }
         }
 
+        int[] encodings = valueRange == 5 ? FlatQuintEncodings : FlatTritEncodings;
+        int stride = valueRange == 5 ? 3 : 5;
         int nonBitEncoding = -1;
         for (int j = (1 << encodedBitCount) - 1; j >= 0; --j)
         {
             bool matches = true;
+            int rowBase = j * stride;
             for (int i = 0; i < valueCount; ++i)
             {
-                if (valueRange == 5)
+                if (encodings[rowBase + i] != nonBitComponents[i])
                 {
-                    if (QuintEncodings[j][i] != nonBitComponents[i])
-                    {
-                        matches = false;
-                        break;
-                    }
-                }
-                else
-                {
-                    if (TritEncodings[j][i] != nonBitComponents[i])
-                    {
-                        matches = false;
-                        break;
-                    }
+                    matches = false;
+                    break;
                 }
             }
 

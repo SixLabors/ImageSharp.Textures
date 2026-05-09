@@ -14,16 +14,19 @@ internal static class Rgba64Extensions
     /// <summary>
     /// Gets the channel value at the specified index: 0=R, 1=G, 2=B, 3=A.
     /// </summary>
+    /// <remarks>
+    /// Reads the sequential [R, G, B, A] ushort layout of <see cref="Rgba64"/> directly.
+    /// </remarks>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ushort GetChannel(this Rgba64 color, int i)
-        => i switch
+    public static ushort GetChannel(this in Rgba64 color, int i)
+    {
+        if ((uint)i >= 4)
         {
-            0 => color.R,
-            1 => color.G,
-            2 => color.B,
-            3 => color.A,
-            _ => throw new ArgumentOutOfRangeException(nameof(i), $"Index must be between 0 and 3. Actual value: {i}.")
-        };
+            throw new ArgumentOutOfRangeException(nameof(i), $"Index must be between 0 and 3. Actual value: {i}.");
+        }
+
+        return Unsafe.Add(ref Unsafe.As<Rgba64, ushort>(ref Unsafe.AsRef(in color)), i);
+    }
 
     /// <summary>
     /// Returns true if all four channels are within the specified tolerance of the other color.

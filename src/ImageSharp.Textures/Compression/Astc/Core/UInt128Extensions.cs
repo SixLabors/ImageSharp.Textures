@@ -20,37 +20,12 @@ internal static class UInt128Extensions
     /// <summary>
     /// A mask with the lowest n bits set to 1
     /// </summary>
-    public static UInt128 OnesMask(int n)
+    public static UInt128 OnesMask(int n) => n switch
     {
-        if (n <= 0)
-        {
-            return UInt128.Zero;
-        }
-
-        if (n >= 128)
-        {
-            return new UInt128(~0UL, ~0UL);
-        }
-
-        if (n <= 64)
-        {
-            ulong low = (n == 64)
-                ? ~0UL
-                : ((1UL << n) - 1UL);
-
-            return new UInt128(0UL, low);
-        }
-        else
-        {
-            int highBits = n - 64;
-            ulong low = ~0UL;
-            ulong high = (highBits == 64)
-                ? ~0UL
-                : ((1UL << highBits) - 1UL);
-
-            return new UInt128(high, low);
-        }
-    }
+        <= 0 => UInt128.Zero,
+        >= 128 => UInt128.MaxValue,
+        _ => UInt128.MaxValue >> (128 - n)
+    };
 
     /// <summary>
     /// Reverse bits across the full 128-bit value

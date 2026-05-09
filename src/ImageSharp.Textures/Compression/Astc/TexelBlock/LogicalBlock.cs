@@ -514,7 +514,7 @@ internal sealed class LogicalBlock
         }
 
         int result = (exponentComponent << 10) | (mantissaTransformed >> 3);
-        return (ushort)Math.Min(result, 0x7BFF); // Clamp to max finite FP16
+        return (ushort)Math.Min(result, Fp16.MaxFinite);
     }
 
     private static int DecodeEndpoints(in IntermediateBlock.IntermediateBlockData block, ColorEndpointPair[] endpointPair)

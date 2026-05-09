@@ -8,56 +8,22 @@ internal static class BitOperations
     /// <summary>
     /// Return the specified range as a <see cref="UInt128"/> (low bits in lower 64 bits)
     /// </summary>
-    public static UInt128 GetBits(UInt128 value, int start, int length)
+    public static UInt128 GetBits(UInt128 value, int start, int length) => length switch
     {
-        if (length <= 0)
-        {
-            return UInt128.Zero;
-        }
-
-        UInt128 shifted = value >> start;
-        if (length >= 128)
-        {
-            return shifted;
-        }
-
-        if (length >= 64)
-        {
-            ulong lowMask = ~0UL;
-            int highBits = length - 64;
-            ulong highMask = (highBits == 64)
-                ? ~0UL
-                : ((1UL << highBits) - 1UL);
-
-            return new UInt128(shifted.High() & highMask, shifted.Low() & lowMask);
-        }
-        else
-        {
-            ulong mask = (length == 64)
-                ? ~0UL
-                : ((1UL << length) - 1UL);
-
-            return new UInt128(0, shifted.Low() & mask);
-        }
-    }
+        <= 0 => UInt128.Zero,
+        >= 128 => value >> start,
+        _ => (value >> start) & (UInt128.MaxValue >> (128 - length))
+    };
 
     /// <summary>
     /// Return the specified range as a ulong
     /// </summary>
-    public static ulong GetBits(ulong value, int start, int length)
+    public static ulong GetBits(ulong value, int start, int length) => length switch
     {
-        if (length <= 0)
-        {
-            return 0UL;
-        }
-
-        int totalBits = sizeof(ulong) * 8;
-        ulong mask = length == totalBits
-            ? ~0UL
-            : ~0UL >> (totalBits - length);
-
-        return (value >> start) & mask;
-    }
+        <= 0 => 0UL,
+        >= 64 => value >> start,
+        _ => (value >> start) & (ulong.MaxValue >> (64 - length))
+    };
 
     /// <summary>
     /// Transfers a few bits of precision from one value to another.

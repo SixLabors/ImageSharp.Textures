@@ -1,7 +1,6 @@
 // Copyright (c) Six Labors.
 // Licensed under the Six Labors Split License.
 
-using System.Globalization;
 using SixLabors.ImageSharp.Textures.Compression.Astc.Core;
 
 namespace SixLabors.ImageSharp.Textures.Compression.Astc.IO;
@@ -31,18 +30,8 @@ internal struct BitStream
 
     public readonly uint Bits => this.dataSize;
 
-    public void PutBits<T>(T x, int size)
-        where T : unmanaged
+    public void PutBits(ulong value, int size)
     {
-        ulong value = x switch
-        {
-            uint ui => ui,
-            ulong ul => ul,
-            ushort us => us,
-            byte b => b,
-            _ => Convert.ToUInt64(x, CultureInfo.InvariantCulture)
-        };
-
         if (this.dataSize + (uint)size > 128)
         {
             throw new InvalidOperationException("Not enough space in BitStream");

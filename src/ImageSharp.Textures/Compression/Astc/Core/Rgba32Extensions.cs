@@ -35,16 +35,19 @@ internal static class Rgba32Extensions
     /// <summary>
     /// Gets the channel value at the specified index: 0=R, 1=G, 2=B, 3=A.
     /// </summary>
+    /// <remarks>
+    /// Reads the sequential [R, G, B, A] byte layout of <see cref="Rgba32"/> directly.
+    /// </remarks>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int GetChannel(this Rgba32 color, int i)
-        => i switch
+    public static int GetChannel(this in Rgba32 color, int i)
+    {
+        if ((uint)i >= 4)
         {
-            0 => color.R,
-            1 => color.G,
-            2 => color.B,
-            3 => color.A,
-            _ => throw new ArgumentOutOfRangeException(nameof(i), $"Index must be between 0 and 3. Actual value: {i}.")
-        };
+            throw new ArgumentOutOfRangeException(nameof(i), $"Index must be between 0 and 3. Actual value: {i}.");
+        }
+
+        return Unsafe.Add(ref Unsafe.As<Rgba32, byte>(ref Unsafe.AsRef(in color)), i);
+    }
 
     /// <summary>
     /// Computes the sum of squared per-channel differences across all four RGBA channels.
