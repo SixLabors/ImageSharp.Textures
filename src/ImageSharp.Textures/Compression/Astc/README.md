@@ -1,44 +1,123 @@
-Decoder for ASTC (Adaptive Scalable Texture Compression) textures, supporting both LDR and HDR content.
+# ASTC decoder
+
+A managed C# decoder for [ASTC](https://registry.khronos.org/DataFormat/specs/1.3/dataformat.1.3.html#ASTC) (Adaptive Scalable Texture Compression) textures. Supports LDR and HDR content, all 14 two-dimensional block footprints from 4×4 to 12×12, and decodes to `Rgba32` (LDR) or `Rgba128Float` (HDR).
 
 Originally developed as the standalone [AstcSharp](https://github.com/Erik-White/AstcSharp) library.
 
-## Background
+## Format overview
 
-ASTC is a lossy block-based texture compression format developed by ARM and standardized by Khronos. It was designed as a single format to replace the patchwork of earlier GPU compression schemes (ETC, S3TC/DXT, PVRTC) that were each tied to specific hardware vendors or pixel formats.
+ASTC was designed by ARM and standardised by Khronos as a single replacement for the patchwork of earlier GPU compression schemes (S3TC/DXT, ETC, PVRTC). A few properties that shape the decoder's structure:
 
-### Key characteristics
+- **Fixed block size.** Every compressed block is 128 bits (16 bytes) regardless of the footprint. Larger footprints mean fewer bits per texel (bitrates range from 8 bpp at 4×4 down to 0.89 bpp at 12×12).
+- **Variable footprint.** The 14 footprints share identical decoding logic — the footprint only affects weight grid sizing and texel-to-block mapping.
+- **LDR / HDR content lives in the same container.** The container format (`VK_FORMAT_ASTC_*_UNORM_BLOCK`, `_SRGB_BLOCK`, `_SFLOAT_BLOCK`) declares the decode profile. HDR blocks use different endpoint encoding modes (2, 3, 7, 11, 14, 15) and emit UNORM16 rather than UNORM8 endpoints.
+- **Up to four partitions.** A single block can contain up to four partitions, each with its own pair of colour endpoints. Partition assignment per texel is computed from a 10-bit seed via the spec's hash function (§C.2.21).
+- **Dual plane.** Blocks can carry a second weight plane for one channel, useful when a channel varies independently (alpha, normal-map components). Spec §C.2.20.
+- **Bounded Integer Sequence Encoding (BISE).** Weights and colour endpoint values are packed with a mixed-radix encoding that combines plain bits with trits (base 3) or quints (base 5), to fit more values in the 128-bit budget than plain binary encoding would allow. Spec §C.2.22.
 
-- **Fixed block size** — Every compressed block is 128 bits (16 bytes), regardless of the footprint. This gives a constant memory bandwidth cost per block fetch on the GPU.
-- **Variable footprint** — The block footprint ranges from 4x4 to 12x12 texels, giving bit rates from 8 bpp down to 0.89 bpp. Smaller footprints preserve more detail; larger footprints achieve higher compression.
-- **LDR and HDR support** — The same format handles both standard 8-bit and high dynamic range content. HDR blocks use a different endpoint encoding that stores values as UNORM16 instead of UNORM8.
-- **Partitions** — A single block can contain up to four partitions, each with its own pair of color endpoints. The decoder selects between partition layouts using a seed-based hash function.
-- **Dual plane** — Blocks can optionally use a second set of interpolation weights for one color channel, improving quality for textures where one channel varies independently (e.g. alpha or normal maps).
-- **Bounded Integer Sequence Encoding (BISE)** — Weights and color endpoint values are packed using a mixed radix encoding that combines bits with trits (base-3) or quints (base-5) to fill the 128-bit budget more efficiently than pure binary encoding.
+## Code organisation
 
-### Block decoding overview
+The code is organised by decoder concern rather than by spec chapter. `AstcDecoder` is the public entry point. Below it, `TexelBlock` owns single-block parsing and the general-purpose decode path; `BlockDecoder` holds the fused fast-path decoders that bypass the generic pipeline. `ColorEncoding` and `BiseEncoding` isolate the two tricky encodings the spec defines for endpoint and weight values respectively. `Core` holds the small utilities shared across all of them — footprints, `UInt128` helpers, SIMD primitives, the decimation tables. `IO` covers `.astc` file parsing and the 128-bit `BitStream` used throughout the decoder.
 
-Decoding a single ASTC block involves:
+This grouping makes it easier to change one decoder feature at a time: BISE changes stay inside `BiseEncoding`, endpoint-mode additions stay inside `ColorEncoding`, and the fused paths can be tuned without touching the general pipeline.
 
-1. Reading the block mode to determine the weight grid dimensions, quantization level, and whether the block is void-extent or standard
-2. Unpacking the BISE-encoded interpolation weights and upsampling them to the texel grid
-3. Decoding the color endpoints for each partition using the endpoint encoding mode (luminance, RGB, RGBA, or HDR variants)
-4. For each texel, looking up its partition assignment, then interpolating between the two endpoints using the weight value
+## Decoding pipelines
 
-## Features
+### Why three pipelines?
 
-- Decode ASTC textures to RGBA32 (LDR) or RGBA float (HDR)
-- All 2D block footprints from 4x4 to 12x12
+A straightforward ASTC decoder can get away with a single pipeline: read the 128-bit block, parse the mode, decompose into an intermediate representation (endpoint pairs + weight grid + partition map), then iterate texels and interpolate. That's what the spec describes and what `LogicalBlock` implements. It's correct, readable, and handles every ASTC feature.
 
-## Decoding paths
+It's also slow at scale. A 2048×2048 4×4 texture contains 262,144 blocks. Each block through the generic pipeline allocates a `LogicalBlock` (a reference type holding endpoint pairs, a weight array, and a partition map), plus intermediate arrays for the BISE-decoded values — all with GC pressure proportional to image size, and with memory traffic reading each intermediate back out on the pixel-write pass. So the decoder has fast paths for the cases that cover the overwhelming majority of real-world blocks.
 
-The decoder employs three block decoding strategies:
+The split is gated on three flags from `BlockInfo.Decode`:
 
-1. **Direct decode** — Standard approach for normal blocks using batch unquantization without intermediate allocations
-2. **Fused decode** — Accelerated path for single-partition, single-plane LDR blocks with combined decoding and interpolation
-3. **Void extent** — Handles constant-color blocks
+```csharp
+!info.IsVoidExtent && info.PartitionCount == 1 && !info.IsDualPlane
+```
+
+Real-world ASTC content is overwhelmingly single-partition, single-plane, non-void-extent. The fast paths handle that; everything else falls through to the generic path.
+
+### 1. Fused LDR fast path — `BlockDecoder/FusedLdrBlockDecoder.cs`
+
+Used when all three gate conditions hold and the endpoint mode is LDR (modes 0, 1, 4, 5, 6, 8, 9, 10, 12, 13).
+
+Instead of building a `LogicalBlock`, the fused path does this in one sweep per block:
+
+1. **BISE-decode the colour endpoint values and weight values.** The shared helper `FusedBlockDecoder.DecodeBiseValues` / `DecodeBiseWeights` handles three BISE encoding modes (pure bits / trits / quints — spec §C.2.22) by extracting directly from the 128-bit block as a `UInt128`, bypassing the general `BitStream`. Pure-bit ranges that fit in 64 bits skip a `BitStream` entirely.
+2. **Batch-unquantise both sequences.** Precomputed per-range maps (`BiseEncoding/Quantize/TritQuantizationMap.cs`, `QuintQuantizationMap.cs`, `BitQuantizationMap.cs`) convert the raw BISE values to endpoint/weight values in a single pass. These tables are built once at type-load time.
+3. **Infill weights from the grid to the texel array** using the precomputed `DecimationTable.Get(footprint, gridW, gridH)` entry. For full-grid blocks (weight grid matches footprint), this is an identity pass.
+4. **Write pixels directly into the destination image buffer.** No intermediate per-block scratch allocation. A `Vector128` SIMD path (`Core/SimdHelpers.cs`) interpolates and writes four pixels at a time when hardware acceleration is available; the scalar fallback produces byte-identical output.
+
+Two sub-entry-points exist: `DecompressBlockFusedLdrToImage` writes straight to image-buffer coordinates for full-footprint interior blocks; `DecompressBlockFusedLdr` writes to a small scratch span for edge blocks that need cropping before the copy-out. Both share `FusedBlockDecoder.DecodeFusedCore`.
+
+### 2. Fused HDR fast path — `BlockDecoder/FusedHdrBlockDecoder.cs`
+
+Same structural shape as the LDR fast path: same gate, same `DecodeFusedCore`, same no-allocation discipline. Differences:
+
+- Endpoint decoding goes through `ColorEncoding/HdrEndpointDecoder.cs` (spec §C.2.14) instead of the LDR decoder. HDR endpoint modes (2, 3, 7, 11, 14, 15) emit UNORM16 endpoints rather than UNORM8.
+- Interpolation produces `float` RGBA rather than `byte` RGBA.
+- Output target is `Rgba128Float` (4 × float32 per pixel) so the destination buffer stride differs.
+
+HDR mode 14 (`HdrRgbDirectLdrAlpha`) is a hybrid — RGB is HDR but alpha is LDR. `FusedHdrBlockDecoder` handles that by branching on `endpointPair.AlphaIsLdr` and doing an LDR-style alpha interpolation with an 8-bit-to-float conversion, alongside the HDR RGB interpolation.
+
+### 3. General (logical-block) path — `TexelBlock/LogicalBlock.cs`
+
+Everything else goes here. That includes:
+
+- **Multi-partition blocks** (2, 3, or 4 partitions). The partition index for each texel is computed from a 10-bit seed plus the block position via the spec's hash function (`ColorEncoding/Partition.cs`, spec §C.2.21). Each partition has its own endpoint pair, so interpolation picks the endpoints based on the assigned partition per texel.
+- **Dual-plane blocks.** A second weight grid drives one channel independently (spec §C.2.20). The dual-plane channel index and the second weight grid both live in `LogicalBlock.DualPlaneData`. Interpolation uses the dual-plane weight for the designated channel and the regular weight for the other three.
+- **Void-extent blocks.** The entire block is a single constant colour (LDR UNORM16 or HDR FP16, distinguished by bit 9 — see design decisions below). Handled by a short-circuit path in `LogicalBlock.UnpackLogicalBlock` that skips BISE decode entirely.
+- **Mixed LDR/HDR blocks.** Any block where individual partitions use different LDR/HDR endpoint modes (legal per spec).
+
+This path still decodes BISE, unquantises, computes partition assignments, and upsamples weights — the same work the fast paths fuse. The difference is that every intermediate result materialises as instance state on `LogicalBlock`, and pixel-write is a separate iteration that reads back from that state. The generic `WriteAllPixelsLdr` / `WriteAllPixelsGeneral` paths branch per pixel on endpoint kind, partition, and dual-plane channel. More branches, more memory traffic, more allocations; but it handles every ASTC feature the spec defines without hundreds of lines of specialised code per feature combination.
+
+### Dispatching
+
+`AstcDecoder.DecompressImage` and `DecompressBlock` read each 128-bit block, parse its mode via `BlockInfo.Decode`, check the fast-path gate, and route. `BlockInfo.Decode` (`TexelBlock/BlockInfo.cs`) is itself a single-pass parser over spec Tables 17–24: block mode classification, weight grid dimensions, partition count, CEM (colour endpoint mode) extraction, dual-plane flag, colour value count, reserved-configuration rejection — all in one pass with no allocations. It returns a `BlockInfo` struct the caller inspects for dispatch.
+
+`BlockInfo.IsValid == false` means the block is reserved or illegal per spec; both the fast and general paths skip it (the block contributes zeros to the output, matching ARM's behaviour). `BlockInfo.HasHdrEndpoints()` is the precondition check that raises `TextureFormatException` at the LDR entry points when an HDR-mode block appears in an LDR context (see design decisions below).
+
+## Design decisions
+
+### HDR blocks through the LDR API throw
+
+Per spec §C.2.19, the `decode_unorm8` profile (LDR containers) must emit magenta `0xFFFF00FF` for every texel of an HDR-mode block. ARM `astcenc` instead returns `ASTCENC_ERR_BAD_DECODE_MODE` before decoding begins. We match ARM's behaviour: `AstcDecoder.DecompressImage` and `DecompressBlock` throw `TextureFormatException` on the first HDR block they see. The pre-decode profile check maps cleanly onto a precondition in the block loop (the relevant fields are already read by `BlockInfo.Decode`) so there's no extra cost on the happy path. Callers who want HDR values use `DecompressHdrImage` / `DecompressHdrBlock`.
+
+### sRGB is not applied at decode time
+
+Any `VK_FORMAT_ASTC_*_SRGB_BLOCK` container decodes to the raw UNORM8 values without an sRGB→linear transform. This matches the library-wide convention for `BC7` and friends — callers who need linear RGB apply the transform downstream. The sRGB *colour-space* tag is purely informational and passes through unchanged.
+
+### Void-extent HDR flag convention
+
+Bit 9 of the block-mode low bits distinguishes LDR (`= 1`, stored as UNORM16) from HDR (`= 0`, stored as FP16) for void-extent blocks. This matches ARM's reference decoder (`astcenc_symbolic_physical.cpp`: `if (block_mode & 0x200) SYM_BTYPE_CONST_F16`). A plausible inverse reading exists elsewhere online; we've verified this one against ARM.
+
+### Thread-safe lazy caches
+
+`BoundedIntegerSequenceDecoder.Cache` (257 entries) and `DecimationTable.Table` (14 footprints × 11 × 11 grid cells) are lazy-initialised on first access and shared across threads. Publication uses `Volatile.Read` + `Interlocked.CompareExchange`. The cached objects are immutable, so a losing CAS race just drops the duplicate and returns the winner. No lock is held during `Compute`, so concurrent decoders don't serialise on first-use.
+
+### ArrayPool discipline
+
+The LDR and HDR image-level decoders rent a per-block scratch buffer from `ArrayPool<T>.Shared`. The rent happens *before* the `try` so a failing `Rent` doesn't hand a sentinel to `Return` in the `finally`.
+
+### `BitStream` shift boundaries
+
+The 128-bit bit buffer (`IO/BitStream.cs`) special-cases `count == 0` and `count >= 128` in `ShiftBuffer`. C# masks shift amounts to the operand width, so `ulong << 64` is `<< 0` (identity) rather than zero. Without the explicit guards, a zero-bit read would OR the high half into the low half, corrupting every subsequent read.
+
+### Single-pass block mode decode
+
+`BlockInfo.Decode` parses the entire block mode, weight grid dimensions, partition count, CEM (colour endpoint mode) layout, dual-plane flag, and colour value count in one pass over the 128-bit block, rejecting reserved configurations inline. The alternative — a `PhysicalBlock` → `IntermediateBlock` → `LogicalBlock` chain, which the original AstcSharp port used — is still present in `TexelBlock/IntermediateBlock.cs` as the reference path and is used by the tests; the fused pipelines skip it to avoid allocations.
+
+## Decimation
+
+A weight grid can be smaller than the texel grid (e.g. a 4×4 weight grid driving an 8×8 footprint). Each texel's weight is then a bilinear blend of up to four neighbouring grid weights. The precomputed index + factor tables live in `Core/DecimationTable.cs`, keyed by `(footprint, gridWidth, gridHeight)`. One table is shared across every block that uses that combination.
+
+## Known limitations
+
+- **2D only.** 3D ASTC footprints (`VK_FORMAT_ASTC_3x3x3_*_BLOCK` and relatives) are rejected at `AstcFileHeader.FromMemory`. The decoder's arithmetic and tables are 2D-only; adding 3D support would be a substantial rework of the decimation and partition paths.
+- **Supercompressed KTX2 containers (ZSTD, ZLIB, BasisLZ).** Rejected at the KTX2 decoder level with `NotSupportedException` before reaching this decoder.
 
 ## Useful links
 
 - [ASTC specification (Khronos Data Format Specification)](https://registry.khronos.org/DataFormat/specs/1.3/dataformat.1.3.html#ASTC)
-- [ARM ASTC Encoder](https://github.com/ARM-software/astc-encoder)
-- [Google astc-codec](https://github.com/google/astc-codec)
+- [ARM ASTC Encoder](https://github.com/ARM-software/astc-encoder) — the reference implementation; `astcenc_symbolic_physical.cpp` and `astcenc_decompress_symbolic.cpp` are the canonical read for decoder behaviour.
+- [Google astc-codec](https://github.com/google/astc-codec) — a second reference; useful cross-check for bit-layout corner cases.
