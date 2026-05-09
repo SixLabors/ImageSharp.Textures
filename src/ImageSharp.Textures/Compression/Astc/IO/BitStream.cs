@@ -71,34 +71,13 @@ internal struct BitStream
     }
 
     /// <summary>
-    /// Attempt to retrieve the specified number of bits from the buffer.
+    /// Attempt to retrieve the specified number of bits from the buffer as a <see cref="UInt128"/>.
     /// The buffer is shifted accordingly if successful.
     /// </summary>
-    public bool TryGetBits<T>(int count, out T bits)
-        where T : unmanaged
+    public bool TryGetBits(int count, out UInt128 bits)
     {
-        T? result = null;
-
-        if (typeof(T) == typeof(UInt128))
-        {
-            result = (T?)(object?)this.GetBitsUInt128(count);
-        }
-        else if (count <= this.dataSize)
-        {
-            ulong value = count switch
-            {
-                0 => 0,
-                <= 64 => this.low & MaskFor(count),
-                _ => this.low
-            };
-
-            this.ShiftBuffer(count);
-            object boxed = Convert.ChangeType(value, typeof(T), CultureInfo.InvariantCulture);
-            result = (T)boxed;
-        }
-
+        UInt128? result = this.GetBitsUInt128(count);
         bits = result ?? default;
-
         return result is not null;
     }
 

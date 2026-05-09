@@ -181,7 +181,7 @@ public class IntegerSequenceCodecTests
 
         // Verify encoded data
         Assert.Equal(19u, bitSink.Bits);
-        Assert.True(bitSink.TryGetBits<ulong>(19, out ulong encoded));
+        Assert.True(bitSink.TryGetBits(19, out ulong encoded));
         Assert.Equal(0x4A7D3UL, encoded);
 
         // Decode
@@ -220,7 +220,7 @@ public class IntegerSequenceCodecTests
 
         // Re-encoded should match original
         Assert.Equal(35u, bitSink.Bits);
-        Assert.True(bitSink.TryGetBits<ulong>(35, out ulong reencoded));
+        Assert.True(bitSink.TryGetBits(35, out ulong reencoded));
         Assert.Equal(encoding, reencoded);
     }
 
@@ -242,7 +242,7 @@ public class IntegerSequenceCodecTests
 
         // Verify encoded data
         Assert.Equal(18u, bitSink.Bits);
-        Assert.True(bitSink.TryGetBits<ulong>(18, out ulong encoded));
+        Assert.True(bitSink.TryGetBits(18, out ulong encoded));
         Assert.Equal(0x37357UL, encoded);
 
         // Decode
@@ -281,7 +281,7 @@ public class IntegerSequenceCodecTests
 
         // Assert re-encoded matches original
         Assert.Equal(58u, bitSink.Bits);
-        Assert.True(bitSink.TryGetBits<ulong>(58, out ulong reencoded));
+        Assert.True(bitSink.TryGetBits(58, out ulong reencoded));
         Assert.Equal(encoding, reencoded);
     }
 
@@ -319,7 +319,7 @@ public class IntegerSequenceCodecTests
 
             encoder.Encode(ref bitSink);
 
-            Assert.True(bitSink.TryGetBits<ulong>((int)bitSink.Bits, out ulong encoded));
+            Assert.True(bitSink.TryGetBits((int)bitSink.Bits, out ulong encoded));
 
             // Decode
             BitStream bitSrc = new(encoded, 64);

@@ -28,7 +28,7 @@ public class BitStreamTests
     {
         BitStream stream = new(0UL, 1);
 
-        bool success = stream.TryGetBits<uint>(1, out uint bits);
+        bool success = stream.TryGetBits(1, out uint bits);
 
         Assert.True(success);
         Assert.Equal(0U, bits);
@@ -38,9 +38,9 @@ public class BitStreamTests
     public void TryGetBits_StreamEnd_ShouldReturnFalse()
     {
         BitStream stream = new(0UL, 1);
-        stream.TryGetBits<uint>(1, out _);
+        stream.TryGetBits(1, out uint _);
 
-        bool success = stream.TryGetBits<uint>(1, out uint _);
+        bool success = stream.TryGetBits(1, out uint _);
 
         Assert.False(success);
     }
@@ -50,18 +50,18 @@ public class BitStreamTests
     {
         BitStream stream = new(0b1010101010101010UL, 32);
 
-        Assert.True(stream.TryGetBits<uint>(1, out uint bits1));
+        Assert.True(stream.TryGetBits(1, out uint bits1));
         Assert.Equal(0U, bits1);
 
-        Assert.True(stream.TryGetBits<uint>(3, out uint bits2));
+        Assert.True(stream.TryGetBits(3, out uint bits2));
         Assert.Equal(0b101U, bits2);
 
-        Assert.True(stream.TryGetBits<uint>(8, out uint bits3));
+        Assert.True(stream.TryGetBits(8, out uint bits3));
         Assert.Equal(0b10101010U, bits3);
 
         Assert.Equal(20u, stream.Bits);
 
-        Assert.True(stream.TryGetBits<uint>(20, out uint bits4));
+        Assert.True(stream.TryGetBits(20, out uint bits4));
         Assert.Equal(0b1010U, bits4);
         Assert.Equal(0u, stream.Bits);
     }
@@ -75,7 +75,7 @@ public class BitStreamTests
         // Check initial state
         Assert.Equal(64u, stream.Bits);
 
-        bool success = stream.TryGetBits<ulong>(64, out ulong bits);
+        bool success = stream.TryGetBits(64, out ulong bits);
 
         Assert.True(success);
         Assert.Equal(allBits, bits);
@@ -92,7 +92,7 @@ public class BitStreamTests
         // Check initial state
         Assert.Equal(64u, stream.Bits);
 
-        bool success = stream.TryGetBits<ulong>(40, out ulong bits);
+        bool success = stream.TryGetBits(40, out ulong bits);
 
         Assert.True(success);
         Assert.Equal(expected40Bits, bits);
@@ -106,13 +106,13 @@ public class BitStreamTests
         const ulong expected40Bits = 0x000000FFFFFFFFFFUL;
         BitStream stream = new(allBits, 32);
 
-        Assert.True(stream.TryGetBits<ulong>(0, out ulong bits1));
+        Assert.True(stream.TryGetBits(0, out ulong bits1));
         Assert.Equal(0UL, bits1);
 
-        Assert.True(stream.TryGetBits<ulong>(32, out ulong bits2));
+        Assert.True(stream.TryGetBits(32, out ulong bits2));
         Assert.Equal(expected40Bits & 0xFFFFFFFFUL, bits2);
 
-        Assert.True(stream.TryGetBits<ulong>(0, out ulong bits3));
+        Assert.True(stream.TryGetBits(0, out ulong bits3));
         Assert.Equal(0UL, bits3);
         Assert.Equal(0u, stream.Bits);
     }
@@ -126,7 +126,7 @@ public class BitStreamTests
         stream.PutBits(0b11U, 2);
 
         Assert.Equal(3u, stream.Bits);
-        Assert.True(stream.TryGetBits<uint>(3, out uint bits));
+        Assert.True(stream.TryGetBits(3, out uint bits));
         Assert.Equal(0b110U, bits);
     }
 
@@ -139,7 +139,7 @@ public class BitStreamTests
         stream.PutBits(allBits, 64);
 
         Assert.Equal(64u, stream.Bits);
-        Assert.True(stream.TryGetBits<ulong>(64, out ulong bits));
+        Assert.True(stream.TryGetBits(64, out ulong bits));
         Assert.Equal(allBits, bits);
         Assert.Equal(0u, stream.Bits);
     }
@@ -153,7 +153,7 @@ public class BitStreamTests
 
         stream.PutBits(allBits, 40);
 
-        Assert.True(stream.TryGetBits<ulong>(40, out ulong bits));
+        Assert.True(stream.TryGetBits(40, out ulong bits));
         Assert.Equal(expected40Bits, bits);
         Assert.Equal(0u, stream.Bits);
     }
@@ -169,7 +169,7 @@ public class BitStreamTests
         stream.PutBits((uint)(allBits & 0xFFFFFFFFUL), 32);
         stream.PutBits(0U, 0);
 
-        Assert.True(stream.TryGetBits<ulong>(32, out ulong bits));
+        Assert.True(stream.TryGetBits(32, out ulong bits));
         Assert.Equal(expected40Bits & 0xFFFFFFFFUL, bits);
         Assert.Equal(0u, stream.Bits);
     }
@@ -184,9 +184,9 @@ public class BitStreamTests
         stream.PutBits(value1, 3);
         stream.PutBits(value2, 8);
 
-        Assert.True(stream.TryGetBits<uint>(3, out uint retrieved1));
+        Assert.True(stream.TryGetBits(3, out uint retrieved1));
         Assert.Equal(value1, retrieved1);
-        Assert.True(stream.TryGetBits<uint>(8, out uint retrieved2));
+        Assert.True(stream.TryGetBits(8, out uint retrieved2));
         Assert.Equal(value2, retrieved2);
     }
 }
