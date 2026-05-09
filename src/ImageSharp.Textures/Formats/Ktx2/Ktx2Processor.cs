@@ -484,12 +484,19 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx2
 
             byte[] allMipMapBytes = new byte[totalBytes];
             int idx = 0;
-            for (int i = 0; i < levelIndices.Length; i++)
+            try
             {
-                int levelLength = (int)levelIndices[i].UncompressedByteLength;
-                stream.Position = (long)levelIndices[i].ByteOffset;
-                stream.ReadExactly(allMipMapBytes, idx, levelLength);
-                idx += levelLength;
+                for (int i = 0; i < levelIndices.Length; i++)
+                {
+                    int levelLength = (int)levelIndices[i].UncompressedByteLength;
+                    stream.Position = (long)levelIndices[i].ByteOffset;
+                    stream.ReadExactly(allMipMapBytes, idx, levelLength);
+                    idx += levelLength;
+                }
+            }
+            catch (EndOfStreamException ex)
+            {
+                throw new TextureFormatException("could not read enough texture data from the stream", ex);
             }
 
             return allMipMapBytes;
