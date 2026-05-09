@@ -14,17 +14,22 @@ namespace SixLabors.ImageSharp.Textures.Compression.Astc.BlockDecoder;
 /// </summary>
 internal static class FusedHdrBlockDecoder
 {
+    private const int ChannelsPerPixel = 4;
+
     /// <summary>
-    /// Fused HDR decode to contiguous float buffer.
+    /// Fused HDR decode to a contiguous float buffer.
     /// Handles single-partition, non-dual-plane blocks with both LDR and HDR endpoints.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     internal static void DecompressBlockFusedHdr(UInt128 bits, in BlockInfo info, Footprint footprint, Span<float> buffer)
-    {
-        Span<int> texelWeights = stackalloc int[footprint.PixelCount];
-        ColorEndpointPair endpointPair = FusedBlockDecoder.DecodeFusedCore(bits, in info, footprint, texelWeights);
-        WriteHdrOutputPixels(buffer, footprint.PixelCount, in endpointPair, texelWeights);
-    }
+        => DecompressBlock(
+            bits,
+            in info,
+            footprint,
+            buffer,
+            dstBaseX: 0,
+            dstBaseY: 0,
+            dstRowStride: footprint.Width * ChannelsPerPixel);
 
     /// <summary>
     /// Fused HDR decode writing directly to image buffer at strided positions.
@@ -39,132 +44,78 @@ internal static class FusedHdrBlockDecoder
         int dstBaseY,
         int imageWidth,
         Span<float> imageBuffer)
+        => DecompressBlock(
+            bits,
+            in info,
+            footprint,
+            imageBuffer,
+            dstBaseX,
+            dstBaseY,
+            dstRowStride: imageWidth * ChannelsPerPixel);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void DecompressBlock(
+        UInt128 bits,
+        in BlockInfo info,
+        Footprint footprint,
+        Span<float> buffer,
+        int dstBaseX,
+        int dstBaseY,
+        int dstRowStride)
     {
         Span<int> texelWeights = stackalloc int[footprint.PixelCount];
         ColorEndpointPair endpointPair = FusedBlockDecoder.DecodeFusedCore(bits, in info, footprint, texelWeights);
-        WriteHdrOutputPixelsToImage(imageBuffer, footprint, dstBaseX, dstBaseY, imageWidth, in endpointPair, texelWeights);
-    }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void WriteHdrOutputPixels(
-        Span<float> buffer, int pixelCount, in ColorEndpointPair endpointPair, Span<int> texelWeights)
-    {
         if (endpointPair.IsHdr)
         {
-            WriteHdrPixels(buffer, pixelCount, in endpointPair, texelWeights);
+            WriteHdrPixels(buffer, footprint, dstBaseX, dstBaseY, dstRowStride, in endpointPair, texelWeights);
         }
         else
         {
-            WriteLdrAsHdrPixels(buffer, pixelCount, in endpointPair, texelWeights);
+            WriteLdrAsHdrPixels(buffer, footprint, dstBaseX, dstBaseY, dstRowStride, in endpointPair, texelWeights);
         }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void WriteHdrOutputPixelsToImage(
-        Span<float> imageBuffer,
+    private static void WriteLdrAsHdrPixels(
+        Span<float> buffer,
         Footprint footprint,
         int dstBaseX,
         int dstBaseY,
-        int imageWidth,
-        in ColorEndpointPair endpointPair,
-        Span<int> texelWeights)
-    {
-        if (endpointPair.IsHdr)
-        {
-            WriteHdrPixelsToImage(imageBuffer, footprint, dstBaseX, dstBaseY, imageWidth, in endpointPair, texelWeights);
-        }
-        else
-        {
-            WriteLdrAsHdrPixelsToImage(imageBuffer, footprint, dstBaseX, dstBaseY, imageWidth, in endpointPair, texelWeights);
-        }
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void WriteLdrAsHdrPixels(Span<float> buffer, int pixelCount, in ColorEndpointPair endpointPair, Span<int> texelWeights)
-    {
-        int lowR = endpointPair.LdrLow.R, lowG = endpointPair.LdrLow.G, lowB = endpointPair.LdrLow.B, lowA = endpointPair.LdrLow.A;
-        int highR = endpointPair.LdrHigh.R, highG = endpointPair.LdrHigh.G, highB = endpointPair.LdrHigh.B, highA = endpointPair.LdrHigh.A;
-
-        for (int i = 0; i < pixelCount; i++)
-        {
-            int weight = texelWeights[i];
-            int offset = i * 4;
-            buffer[offset + 0] = InterpolateLdrAsFloat(lowR, highR, weight);
-            buffer[offset + 1] = InterpolateLdrAsFloat(lowG, highG, weight);
-            buffer[offset + 2] = InterpolateLdrAsFloat(lowB, highB, weight);
-            buffer[offset + 3] = InterpolateLdrAsFloat(lowA, highA, weight);
-        }
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void WriteLdrAsHdrPixelsToImage(
-        Span<float> imageBuffer,
-        Footprint footprint,
-        int dstBaseX,
-        int dstBaseY,
-        int imageWidth,
+        int dstRowStride,
         in ColorEndpointPair endpointPair,
         Span<int> texelWeights)
     {
         int lowR = endpointPair.LdrLow.R, lowG = endpointPair.LdrLow.G, lowB = endpointPair.LdrLow.B, lowA = endpointPair.LdrLow.A;
         int highR = endpointPair.LdrHigh.R, highG = endpointPair.LdrHigh.G, highB = endpointPair.LdrHigh.B, highA = endpointPair.LdrHigh.A;
 
-        const int channelsPerPixel = 4;
         int footprintWidth = footprint.Width;
         int footprintHeight = footprint.Height;
-        int rowStride = imageWidth * channelsPerPixel;
 
         for (int pixelY = 0; pixelY < footprintHeight; pixelY++)
         {
-            int dstRowOffset = ((dstBaseY + pixelY) * rowStride) + (dstBaseX * channelsPerPixel);
+            int dstRowOffset = ((dstBaseY + pixelY) * dstRowStride) + (dstBaseX * ChannelsPerPixel);
             int srcRowBase = pixelY * footprintWidth;
 
             for (int pixelX = 0; pixelX < footprintWidth; pixelX++)
             {
                 int weight = texelWeights[srcRowBase + pixelX];
-                int dstOffset = dstRowOffset + (pixelX * channelsPerPixel);
-                imageBuffer[dstOffset + 0] = InterpolateLdrAsFloat(lowR, highR, weight);
-                imageBuffer[dstOffset + 1] = InterpolateLdrAsFloat(lowG, highG, weight);
-                imageBuffer[dstOffset + 2] = InterpolateLdrAsFloat(lowB, highB, weight);
-                imageBuffer[dstOffset + 3] = InterpolateLdrAsFloat(lowA, highA, weight);
+                int dstOffset = dstRowOffset + (pixelX * ChannelsPerPixel);
+                buffer[dstOffset + 0] = InterpolateLdrAsFloat(lowR, highR, weight);
+                buffer[dstOffset + 1] = InterpolateLdrAsFloat(lowG, highG, weight);
+                buffer[dstOffset + 2] = InterpolateLdrAsFloat(lowB, highB, weight);
+                buffer[dstOffset + 3] = InterpolateLdrAsFloat(lowA, highA, weight);
             }
         }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void WriteHdrPixels(Span<float> buffer, int pixelCount, in ColorEndpointPair endpointPair, Span<int> texelWeights)
-    {
-        bool alphaIsLdr = endpointPair.AlphaIsLdr;
-        int lowR = endpointPair.HdrLow.R, lowG = endpointPair.HdrLow.G, lowB = endpointPair.HdrLow.B, lowA = endpointPair.HdrLow.A;
-        int highR = endpointPair.HdrHigh.R, highG = endpointPair.HdrHigh.G, highB = endpointPair.HdrHigh.B, highA = endpointPair.HdrHigh.A;
-
-        for (int i = 0; i < pixelCount; i++)
-        {
-            int weight = texelWeights[i];
-            int offset = i * 4;
-            buffer[offset + 0] = InterpolateHdrAsFloat(lowR, highR, weight);
-            buffer[offset + 1] = InterpolateHdrAsFloat(lowG, highG, weight);
-            buffer[offset + 2] = InterpolateHdrAsFloat(lowB, highB, weight);
-
-            if (alphaIsLdr)
-            {
-                int interpolated = ((lowA * (64 - weight)) + (highA * weight) + 32) / 64;
-                buffer[offset + 3] = (ushort)Math.Clamp(interpolated, 0, 0xFFFF) / 65535.0f;
-            }
-            else
-            {
-                buffer[offset + 3] = InterpolateHdrAsFloat(lowA, highA, weight);
-            }
-        }
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void WriteHdrPixelsToImage(
-        Span<float> imageBuffer,
+    private static void WriteHdrPixels(
+        Span<float> buffer,
         Footprint footprint,
         int dstBaseX,
         int dstBaseY,
-        int imageWidth,
+        int dstRowStride,
         in ColorEndpointPair endpointPair,
         Span<int> texelWeights)
     {
@@ -172,32 +123,30 @@ internal static class FusedHdrBlockDecoder
         int lowR = endpointPair.HdrLow.R, lowG = endpointPair.HdrLow.G, lowB = endpointPair.HdrLow.B, lowA = endpointPair.HdrLow.A;
         int highR = endpointPair.HdrHigh.R, highG = endpointPair.HdrHigh.G, highB = endpointPair.HdrHigh.B, highA = endpointPair.HdrHigh.A;
 
-        const int channelsPerPixel = 4;
         int footprintWidth = footprint.Width;
         int footprintHeight = footprint.Height;
-        int rowStride = imageWidth * channelsPerPixel;
 
         for (int pixelY = 0; pixelY < footprintHeight; pixelY++)
         {
-            int dstRowOffset = ((dstBaseY + pixelY) * rowStride) + (dstBaseX * channelsPerPixel);
+            int dstRowOffset = ((dstBaseY + pixelY) * dstRowStride) + (dstBaseX * ChannelsPerPixel);
             int srcRowBase = pixelY * footprintWidth;
 
             for (int pixelX = 0; pixelX < footprintWidth; pixelX++)
             {
                 int weight = texelWeights[srcRowBase + pixelX];
-                int dstOffset = dstRowOffset + (pixelX * channelsPerPixel);
-                imageBuffer[dstOffset + 0] = InterpolateHdrAsFloat(lowR, highR, weight);
-                imageBuffer[dstOffset + 1] = InterpolateHdrAsFloat(lowG, highG, weight);
-                imageBuffer[dstOffset + 2] = InterpolateHdrAsFloat(lowB, highB, weight);
+                int dstOffset = dstRowOffset + (pixelX * ChannelsPerPixel);
+                buffer[dstOffset + 0] = InterpolateHdrAsFloat(lowR, highR, weight);
+                buffer[dstOffset + 1] = InterpolateHdrAsFloat(lowG, highG, weight);
+                buffer[dstOffset + 2] = InterpolateHdrAsFloat(lowB, highB, weight);
 
                 if (alphaIsLdr)
                 {
                     int interpolated = ((lowA * (64 - weight)) + (highA * weight) + 32) / 64;
-                    imageBuffer[dstOffset + 3] = (ushort)Math.Clamp(interpolated, 0, 0xFFFF) / 65535.0f;
+                    buffer[dstOffset + 3] = (ushort)Math.Clamp(interpolated, 0, 0xFFFF) / 65535.0f;
                 }
                 else
                 {
-                    imageBuffer[dstOffset + 3] = InterpolateHdrAsFloat(lowA, highA, weight);
+                    buffer[dstOffset + 3] = InterpolateHdrAsFloat(lowA, highA, weight);
                 }
             }
         }
