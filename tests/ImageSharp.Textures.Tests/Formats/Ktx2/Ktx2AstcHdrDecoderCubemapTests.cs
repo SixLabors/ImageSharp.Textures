@@ -24,7 +24,7 @@ public class Ktx2AstcHdrDecoderCubemapTests
     private static readonly Ktx2Decoder Ktx2Decoder = new();
 
     // HDR ASTC compression loss stacks on top of the half-float -> 8-bit PNG round-trip.
-    private static readonly ImageComparer Comparer = ImageComparer.TolerantPercentage(0.2f);
+    private static readonly ImageComparer Comparer = ImageComparer.TolerantPercentage(0.15f);
 
     [Theory]
     [WithFile(TestTextureFormat.Ktx2, TestTextureType.Cubemap, TestTextureTool.ToKtx, TestImages.Ktx2.Astc.Cubemap.Astc4x4_Sfloat)]
