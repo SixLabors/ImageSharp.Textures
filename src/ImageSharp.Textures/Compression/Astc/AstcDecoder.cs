@@ -80,12 +80,11 @@ public static class AstcDecoder
             return false;
         }
 
-        byte[] decodedBlock = [];
+        // Rent outside the try/finally so a failing Rent doesn't hand the default sentinel to Return.
+        byte[] decodedBlock = ArrayPool.Rent(footprint.Width * footprint.Height * BytesPerPixelUnorm8);
 
         try
         {
-            // Create a buffer once for fallback blocks; fast path writes directly to image
-            decodedBlock = ArrayPool.Rent(footprint.Width * footprint.Height * BytesPerPixelUnorm8);
             Span<byte> decodedPixels = decodedBlock.AsSpan();
             int blockIndex = 0;
             int footprintWidth = footprint.Width;
@@ -265,12 +264,12 @@ public static class AstcDecoder
         }
 
         const int channelsPerPixel = 4;
-        float[] decodedBlock = [];
+
+        // Rent outside the try/finally so a failing Rent doesn't hand the default sentinel to Return.
+        float[] decodedBlock = ArrayPool<float>.Shared.Rent(footprint.Width * footprint.Height * channelsPerPixel);
 
         try
         {
-            // Create a buffer once for fallback blocks; fast path writes directly to image
-            decodedBlock = ArrayPool<float>.Shared.Rent(footprint.Width * footprint.Height * channelsPerPixel);
             Span<float> decodedPixels = decodedBlock.AsSpan();
             int blockIndex = 0;
             int footprintWidth = footprint.Width;
