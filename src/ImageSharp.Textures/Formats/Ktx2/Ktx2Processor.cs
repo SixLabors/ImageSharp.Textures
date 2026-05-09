@@ -466,13 +466,19 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx2
                 totalBytes += levelIndices[i].UncompressedByteLength;
             }
 
+            if (totalBytes > int.MaxValue)
+            {
+                throw new TextureFormatException("KTX2 mipmap data exceeds the maximum supported size");
+            }
+
             byte[] allMipMapBytes = new byte[totalBytes];
-            var idx = 0;
+            int idx = 0;
             for (int i = 0; i < levelIndices.Length; i++)
             {
+                int levelLength = (int)levelIndices[i].UncompressedByteLength;
                 stream.Position = (long)levelIndices[i].ByteOffset;
-                stream.Read(allMipMapBytes, idx, (int)levelIndices[i].UncompressedByteLength);
-                idx += (int)levelIndices[i].UncompressedByteLength;
+                stream.ReadExactly(allMipMapBytes, idx, levelLength);
+                idx += levelLength;
             }
 
             return allMipMapBytes;
@@ -488,10 +494,13 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx2
 
         private static void ReadTextureData(Stream stream, byte[] mipMapData)
         {
-            int bytesRead = stream.Read(mipMapData, 0, mipMapData.Length);
-            if (bytesRead != mipMapData.Length)
+            try
             {
-                throw new TextureFormatException("could not read enough texture data from the stream");
+                stream.ReadExactly(mipMapData);
+            }
+            catch (EndOfStreamException ex)
+            {
+                throw new TextureFormatException("could not read enough texture data from the stream", ex);
             }
         }
     }

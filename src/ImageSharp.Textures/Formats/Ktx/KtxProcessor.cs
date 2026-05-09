@@ -420,19 +420,25 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx
 
         private static void ReadTextureData(Stream stream, byte[] mipMapData)
         {
-            int bytesRead = stream.Read(mipMapData, 0, mipMapData.Length);
-            if (bytesRead != mipMapData.Length)
+            try
             {
-                throw new TextureFormatException("could not read enough texture data from the stream");
+                stream.ReadExactly(mipMapData);
+            }
+            catch (EndOfStreamException ex)
+            {
+                throw new TextureFormatException("could not read enough texture data from the stream", ex);
             }
         }
 
         private uint ReadTextureDataSize(Stream stream)
         {
-            int bytesRead = stream.Read(this.buffer, 0, 4);
-            if (bytesRead != 4)
+            try
             {
-                throw new TextureFormatException("could not read texture data length from the stream");
+                stream.ReadExactly(this.buffer, 0, 4);
+            }
+            catch (EndOfStreamException ex)
+            {
+                throw new TextureFormatException("could not read texture data length from the stream", ex);
             }
 
             return this.endianHandler.ReadUInt32(this.buffer);
