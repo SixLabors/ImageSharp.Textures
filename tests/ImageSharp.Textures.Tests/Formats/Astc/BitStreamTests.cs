@@ -117,6 +117,45 @@ public class BitStreamTests
         Assert.Equal(0u, stream.Bits);
     }
 
+    // Regression: a zero-bit read used to leak the high half of the buffer into the low half
+    // (`this.high << 64` masks to `<< 0`, so `low |= high`), corrupting all subsequent reads.
+    [Fact]
+    public void TryGetBits_WithZeroBits_ShouldNotCorruptLowFromHigh()
+    {
+        // Low half is all zeros, high half has a distinctive pattern.
+        BitStream stream = new(new UInt128(0xAAAAAAAAAAAAAAAAUL, 0UL), dataSize: 128);
+
+        Assert.True(stream.TryGetBits(0, out ulong zero));
+        Assert.Equal(0UL, zero);
+
+        // The next 64 bits should still be the original low half (0), not polluted by high.
+        Assert.True(stream.TryGetBits(64, out ulong low));
+        Assert.Equal(0UL, low);
+
+        // And the remaining 64 bits should be the original high half untouched.
+        Assert.True(stream.TryGetBits(64, out ulong high));
+        Assert.Equal(0xAAAAAAAAAAAAAAAAUL, high);
+        Assert.Equal(0u, stream.Bits);
+    }
+
+    // Regression: reading exactly 128 bits used to leave `low = high` instead of zeroing both halves
+    // (`this.high >> 64` masks to `>> 0`). Only observable after writing new bits back.
+    [Fact]
+    public void TryGetBits_WithFullBuffer_ShouldZeroBothHalvesAfterRead()
+    {
+        BitStream stream = new(new UInt128(0xDEADBEEFDEADBEEFUL, 0xCAFEBABECAFEBABEUL), dataSize: 128);
+
+        Assert.True(stream.TryGetBits(128, out UInt128 all));
+        Assert.Equal(new UInt128(0xDEADBEEFDEADBEEFUL, 0xCAFEBABECAFEBABEUL), all);
+        Assert.Equal(0u, stream.Bits);
+
+        // Push 8 bits; read them back. Stale data in `low` would OR into the new value.
+        stream.PutBits(0x3CU, 8);
+        Assert.Equal(8u, stream.Bits);
+        Assert.True(stream.TryGetBits(8, out uint roundTrip));
+        Assert.Equal(0x3CU, roundTrip);
+    }
+
     [Fact]
     public void PutBits_WithSmallValues_ShouldAccumulateCorrectly()
     {
