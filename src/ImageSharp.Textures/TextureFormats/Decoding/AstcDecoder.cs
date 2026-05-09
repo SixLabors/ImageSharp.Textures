@@ -7,14 +7,13 @@ namespace SixLabors.ImageSharp.Textures.TextureFormats.Decoding;
 
 /// <summary>
 /// ASTC (Adaptive scalable texture compression) decoder for all valid block footprints.
-/// <para>
-/// <b>HDR Support Status:</b> ASTC supports both LDR and HDR content using the same format constants.
-/// HDR is determined by the block's endpoint encoding mode (modes 2, 3, 7, 11, 14, 15).
-/// The current decoder may not correctly handle HDR endpoint modes and may produce incorrect
-/// colors for HDR blocks. For guaranteed HDR support, use uncompressed formats like R16F, RGBA16F, or RGBA32F.
-/// See docs/ASTC-HDR-Support.md for details.
-/// </para>
 /// </summary>
+/// <remarks>
+/// This path produces 8-bit RGBA output only. ASTC blocks that use HDR endpoint modes
+/// (2, 3, 7, 11, 14, 15) are clamped and will not render correctly. For HDR content,
+/// call <see cref="Compression.Astc.AstcDecoder.DecompressHdrImage(ReadOnlySpan{byte}, int, int, Footprint)"/>
+/// directly to receive float RGBA output.
+/// </remarks>
 internal static class AstcDecoder
 {
     internal const int AstcBlockSize = 16;

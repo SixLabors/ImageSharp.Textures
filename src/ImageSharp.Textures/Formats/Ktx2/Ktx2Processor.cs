@@ -209,6 +209,23 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx2
                 case VkFormat.VK_FORMAT_ASTC_12x12_UNORM_BLOCK:
                 case VkFormat.VK_FORMAT_ASTC_12x12_SRGB_BLOCK:
                     return AllocateMipMaps<RgbaAstc12X12>(memoryStream, width, height, levelIndices);
+                case VkFormat.VK_FORMAT_ASTC_4x4_SFLOAT_BLOCK:
+                case VkFormat.VK_FORMAT_ASTC_5x4_SFLOAT_BLOCK:
+                case VkFormat.VK_FORMAT_ASTC_5x5_SFLOAT_BLOCK:
+                case VkFormat.VK_FORMAT_ASTC_6x5_SFLOAT_BLOCK:
+                case VkFormat.VK_FORMAT_ASTC_6x6_SFLOAT_BLOCK:
+                case VkFormat.VK_FORMAT_ASTC_8x5_SFLOAT_BLOCK:
+                case VkFormat.VK_FORMAT_ASTC_8x6_SFLOAT_BLOCK:
+                case VkFormat.VK_FORMAT_ASTC_8x8_SFLOAT_BLOCK:
+                case VkFormat.VK_FORMAT_ASTC_10x5_SFLOAT_BLOCK:
+                case VkFormat.VK_FORMAT_ASTC_10x6_SFLOAT_BLOCK:
+                case VkFormat.VK_FORMAT_ASTC_10x8_SFLOAT_BLOCK:
+                case VkFormat.VK_FORMAT_ASTC_10x10_SFLOAT_BLOCK:
+                case VkFormat.VK_FORMAT_ASTC_12x10_SFLOAT_BLOCK:
+                case VkFormat.VK_FORMAT_ASTC_12x12_SFLOAT_BLOCK:
+                    throw new NotSupportedException(
+                        $"ASTC HDR (SFLOAT) container formats are not yet supported by the KTX2 dispatcher: {this.KtxHeader.VkFormat}. " +
+                        "Use AstcDecoder.DecompressHdrImage directly if you already have the raw block data.");
             }
 
             throw new NotSupportedException("The pixel format is not supported");
@@ -392,6 +409,23 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx2
                 case VkFormat.VK_FORMAT_ASTC_12x12_UNORM_BLOCK:
                 case VkFormat.VK_FORMAT_ASTC_12x12_SRGB_BLOCK:
                     return AllocateCubeMap<RgbaAstc12X12>(stream, width, height, levelIndices);
+                case VkFormat.VK_FORMAT_ASTC_4x4_SFLOAT_BLOCK:
+                case VkFormat.VK_FORMAT_ASTC_5x4_SFLOAT_BLOCK:
+                case VkFormat.VK_FORMAT_ASTC_5x5_SFLOAT_BLOCK:
+                case VkFormat.VK_FORMAT_ASTC_6x5_SFLOAT_BLOCK:
+                case VkFormat.VK_FORMAT_ASTC_6x6_SFLOAT_BLOCK:
+                case VkFormat.VK_FORMAT_ASTC_8x5_SFLOAT_BLOCK:
+                case VkFormat.VK_FORMAT_ASTC_8x6_SFLOAT_BLOCK:
+                case VkFormat.VK_FORMAT_ASTC_8x8_SFLOAT_BLOCK:
+                case VkFormat.VK_FORMAT_ASTC_10x5_SFLOAT_BLOCK:
+                case VkFormat.VK_FORMAT_ASTC_10x6_SFLOAT_BLOCK:
+                case VkFormat.VK_FORMAT_ASTC_10x8_SFLOAT_BLOCK:
+                case VkFormat.VK_FORMAT_ASTC_10x10_SFLOAT_BLOCK:
+                case VkFormat.VK_FORMAT_ASTC_12x10_SFLOAT_BLOCK:
+                case VkFormat.VK_FORMAT_ASTC_12x12_SFLOAT_BLOCK:
+                    throw new NotSupportedException(
+                        $"ASTC HDR (SFLOAT) container formats are not yet supported by the KTX2 dispatcher: {this.KtxHeader.VkFormat}. " +
+                        "Use AstcDecoder.DecompressHdrImage directly if you already have the raw block data.");
             }
 
             throw new NotSupportedException("The pixel format is not supported");
