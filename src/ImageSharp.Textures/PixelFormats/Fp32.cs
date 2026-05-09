@@ -70,7 +70,7 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Vector4 ToVector4() => new(this.PackedValue);
+        public Vector4 ToVector4() => new(this.PackedValue, 0f, 0f, 1f);
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

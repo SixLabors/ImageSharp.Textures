@@ -105,7 +105,47 @@ public class Ktx2HdrDecoderFlatTests
         Image firstMipMap = flatTexture.MipMaps[0].GetImage();
 
         Image<Fp32> firstMipMapImage = firstMipMap as Image<Fp32>;
-        firstMipMapImage.CompareToReferenceOutput(provider);
+
+        // Float precision loss accumulates through the 8-bit PNG reference round-trip.
+        firstMipMapImage.CompareToReferenceOutput(ImageComparer.TolerantPercentage(0.07f), provider);
+    }
+
+    [Theory]
+    [WithFile(TestTextureFormat.Ktx2, TestTextureType.Flat, TestTextureTool.ToKtx, TestImages.Ktx2.Astc.Hdr.Rg32Sfloat)]
+    public void CanDecode_RG32_Sfloat(TestTextureProvider provider)
+    {
+        using Texture texture = provider.GetTexture(Ktx2Decoder);
+        provider.SaveTextures(texture);
+        FlatTexture flatTexture = texture as FlatTexture;
+
+        Assert.NotNull(flatTexture?.MipMaps);
+        Assert.True(flatTexture.MipMaps.Count > 0);
+
+        Image firstMipMap = flatTexture.MipMaps[0].GetImage();
+
+        Image<Rg32Float> firstMipMapImage = firstMipMap as Image<Rg32Float>;
+
+        // Half-float precision loss accumulates through the 8-bit PNG reference round-trip.
+        firstMipMapImage.CompareToReferenceOutput(ImageComparer.TolerantPercentage(0.07f), provider);
+    }
+
+    [Theory]
+    [WithFile(TestTextureFormat.Ktx2, TestTextureType.Flat, TestTextureTool.ToKtx, TestImages.Ktx2.Astc.Hdr.Rgb48Sfloat)]
+    public void CanDecode_RGB48_Sfloat(TestTextureProvider provider)
+    {
+        using Texture texture = provider.GetTexture(Ktx2Decoder);
+        provider.SaveTextures(texture);
+        FlatTexture flatTexture = texture as FlatTexture;
+
+        Assert.NotNull(flatTexture?.MipMaps);
+        Assert.True(flatTexture.MipMaps.Count > 0);
+
+        Image firstMipMap = flatTexture.MipMaps[0].GetImage();
+
+        Image<Rgb48Float> firstMipMapImage = firstMipMap as Image<Rgb48Float>;
+
+        // Half-float precision loss accumulates through the 8-bit PNG reference round-trip.
+        firstMipMapImage.CompareToReferenceOutput(ImageComparer.TolerantPercentage(0.07f), provider);
     }
 
     [Theory]

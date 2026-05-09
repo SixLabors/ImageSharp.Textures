@@ -145,6 +145,14 @@ public static class TestImages
             // Cubemap textures
             public const string Rgb32_Srgb_6x6_Cube = "Cubemap/Astc/astc_ldr_cubemap_6x6.ktx2";
 
+            public static class HdrCube
+            {
+                public const string R32Sfloat = "Cubemap/HDR/r32-sfloat-cube.ktx2";
+                public const string Rg32Sfloat = "Cubemap/HDR/rg32-sfloat-cube.ktx2";
+                public const string Rgb48Sfloat = "Cubemap/HDR/rgb48-sfloat-cube.ktx2";
+                public const string Rgba64Sfloat = "Cubemap/HDR/rgba64-sfloat-cube.ktx2";
+            }
+
             public static class Hdr
             {
                 public const string R16 = "Flat/Astc/HDR/hdr-r16-unorm.ktx2";
@@ -152,7 +160,9 @@ public static class TestImages
                 public const string Rgb48 = "Flat/Astc/HDR/hdr-rgb48-unorm.ktx2";
                 public const string Rgba64 = "Flat/Astc/HDR/hdr-rgba64-unorm.ktx2";
                 public const string R32 = "Flat/Astc/HDR/hdr-r32-sfloat.ktx2";
+                public const string Rg32Sfloat = "Flat/Astc/HDR/hdr-rg32-sfloat.ktx2";
                 public const string Rg64 = "Flat/Astc/HDR/hdr-rg64-sfloat.ktx2";
+                public const string Rgb48Sfloat = "Flat/Astc/HDR/hdr-rgb48-sfloat.ktx2";
                 public const string Rgb96 = "Flat/Astc/HDR/hdr-rgb96-sfloat.ktx2";
                 public const string Rgba64Sfloat = "Flat/Astc/HDR/hdr-rgba64-sfloat.ktx2";
                 public const string Rgba128 = "Flat/Astc/HDR/hdr-rgba128-sfloat.ktx2";
