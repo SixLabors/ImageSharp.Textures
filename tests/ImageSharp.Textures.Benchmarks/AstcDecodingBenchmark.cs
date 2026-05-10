@@ -16,7 +16,7 @@ public class AstcDecodingBenchmark
     [GlobalSetup]
     public void Setup()
     {
-        string path = Path.Combine(TestEnvironment.InputImagesDirectoryFullPath, "Astc", "atlas_small_4x4.astc");
+        string path = Path.Combine(TestEnvironment.InputImagesDirectoryFullPath, "Astc", "rgba_4x4.astc");
         byte[] astcData = File.ReadAllBytes(path);
         this.astcFile = AstcFile.FromMemory(astcData);
     }
