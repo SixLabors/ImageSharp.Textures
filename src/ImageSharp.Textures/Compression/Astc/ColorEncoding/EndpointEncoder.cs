@@ -55,99 +55,144 @@ internal static class EndpointEncoder
         }
     }
 
-    // TODO: Extract an interface and implement instances for each encoding mode
+    /// <summary>
+    /// Encodes the given (<paramref name="endpointLowRgba"/>, <paramref name="endpointHighRgba"/>)
+    /// endpoint pair using the requested <paramref name="encodingMode"/>, writing the quantized
+    /// color values into <paramref name="values"/> and selecting the concrete ASTC color endpoint
+    /// mode (<paramref name="astcMode"/>) in <see cref="ColorEndpointMode"/>.
+    /// </summary>
+    /// <returns>
+    /// true when the weight plane needs to be swapped for the selected encoding.
+    /// </returns>
     public static bool EncodeColorsForMode(Rgba32 endpointLowRgba, Rgba32 endpointHighRgba, int maxValue, EndpointEncodingMode encodingMode, out ColorEndpointMode astcMode, List<int> values)
     {
-        bool needsWeightSwap = false;
         astcMode = ColorEndpointMode.LdrLumaDirect;
-        int valueCount = encodingMode.GetValuesCount();
-        for (int i = values.Count; i < valueCount; ++i)
-        {
-            values.Add(0);
-        }
+        EnsureValueSlots(values, encodingMode.GetValuesCount());
 
         switch (encodingMode)
         {
             case EndpointEncodingMode.DirectLuma:
                 return EncodeColorsLuma(endpointLowRgba, endpointHighRgba, maxValue, out astcMode, values);
             case EndpointEncodingMode.DirectLumaAlpha:
-            {
-                int avg1 = endpointLowRgba.GetAverage();
-                int avg2 = endpointHighRgba.GetAverage();
-                values[0] = Quantization.QuantizeCEValueToRange(avg1, maxValue);
-                values[1] = Quantization.QuantizeCEValueToRange(avg2, maxValue);
-                values[2] = Quantization.QuantizeCEValueToRange(endpointLowRgba.GetChannel(3), maxValue);
-                values[3] = Quantization.QuantizeCEValueToRange(endpointHighRgba.GetChannel(3), maxValue);
                 astcMode = ColorEndpointMode.LdrLumaAlphaDirect;
-                break;
-            }
-
+                EncodeLumaAlphaDirect(endpointLowRgba, endpointHighRgba, maxValue, values);
+                return false;
             case EndpointEncodingMode.BaseScaleRgb:
             case EndpointEncodingMode.BaseScaleRgba:
-            {
-                Rgba32 baseColor = endpointHighRgba;
-                Rgba32 scaled = endpointLowRgba;
-
-                int numChannelsGe = 0;
-                for (int i = 0; i < 3; ++i)
-                {
-                    numChannelsGe += endpointHighRgba.GetChannel(i) >= endpointLowRgba.GetChannel(i) ? 1 : 0;
-                }
-
-                if (numChannelsGe < 2)
-                {
-                    needsWeightSwap = true;
-                    (scaled, baseColor) = (baseColor, scaled);
-                }
-
-                int[] quantizedBase = QuantizeColorArray(baseColor, maxValue);
-                int[] unquantizedBase = EndpointCodec.UnquantizeArray(quantizedBase, maxValue);
-
-                int numSamples = 0;
-                int scaleSum = 0;
-                for (int i = 0; i < 3; ++i)
-                {
-                    int x = unquantizedBase[i];
-                    if (x != 0)
-                    {
-                        ++numSamples;
-                        scaleSum += (scaled.GetChannel(i) * 256) / x;
-                    }
-                }
-
-                values[0] = quantizedBase[0];
-                values[1] = quantizedBase[1];
-                values[2] = quantizedBase[2];
-                if (numSamples > 0)
-                {
-                    int avgScale = Math.Clamp(scaleSum / numSamples, 0, 255);
-                    values[3] = Quantization.QuantizeCEValueToRange(avgScale, maxValue);
-                }
-                else
-                {
-                    values[3] = maxValue;
-                }
-
-                astcMode = ColorEndpointMode.LdrRgbBaseScale;
-
-                if (encodingMode == EndpointEncodingMode.BaseScaleRgba)
-                {
-                    values[4] = Quantization.QuantizeCEValueToRange(scaled.GetChannel(3), maxValue);
-                    values[5] = Quantization.QuantizeCEValueToRange(baseColor.GetChannel(3), maxValue);
-                    astcMode = ColorEndpointMode.LdrRgbBaseScaleTwoA;
-                }
-
-                break;
-            }
-
+                return EncodeRgbBaseScale(endpointLowRgba, endpointHighRgba, maxValue, withAlpha: encodingMode == EndpointEncodingMode.BaseScaleRgba, out astcMode, values);
             case EndpointEncodingMode.DirectRgb:
             case EndpointEncodingMode.DirectRgba:
                 return EncodeColorsRGBA(endpointLowRgba, endpointHighRgba, maxValue, encodingMode == EndpointEncodingMode.DirectRgba, out astcMode, values);
             default:
                 throw new InvalidOperationException("Unimplemented color encoding.");
         }
+    }
+
+    /// <summary>Pads <paramref name="values"/> with zeros so the caller can index up to <paramref name="slots"/>.</summary>
+    private static void EnsureValueSlots(List<int> values, int slots)
+    {
+        for (int i = values.Count; i < slots; ++i)
+        {
+            values.Add(0);
+        }
+    }
+
+    /// <summary>
+    /// Encodes a luminance+alpha direct-mode endpoint pair (ASTC spec §C.2.14 mode 4):
+    /// v0/v1 = low/high luma, v2/v3 = low/high alpha.
+    /// </summary>
+    private static void EncodeLumaAlphaDirect(Rgba32 low, Rgba32 high, int maxValue, List<int> values)
+    {
+        values[0] = Quantization.QuantizeCEValueToRange(low.GetAverage(), maxValue);
+        values[1] = Quantization.QuantizeCEValueToRange(high.GetAverage(), maxValue);
+        values[2] = Quantization.QuantizeCEValueToRange(low.GetChannel(3), maxValue);
+        values[3] = Quantization.QuantizeCEValueToRange(high.GetChannel(3), maxValue);
+    }
+
+    /// <summary>
+    /// Encodes an RGB base+scale (ASTC spec §C.2.14 mode 6) or the RGBA variant with two
+    /// separate alpha values (mode 10). The high endpoint provides the base; the low endpoint
+    /// becomes a scale factor inferred per-channel, then averaged. If two or more channels
+    /// run in the wrong direction (high &lt; low), the endpoints are swapped and the caller is
+    /// told to swap weights.
+    /// </summary>
+    private static bool EncodeRgbBaseScale(Rgba32 low, Rgba32 high, int maxValue, bool withAlpha, out ColorEndpointMode astcMode, List<int> values)
+    {
+        astcMode = ColorEndpointMode.LdrRgbBaseScale;
+
+        Rgba32 baseColor = high;
+        Rgba32 scaled = low;
+        bool needsWeightSwap = false;
+        if (ShouldSwapForBaseScale(low, high))
+        {
+            needsWeightSwap = true;
+            (scaled, baseColor) = (baseColor, scaled);
+        }
+
+        int[] quantizedBase = QuantizeColorArray(baseColor, maxValue);
+        int[] unquantizedBase = EndpointCodec.UnquantizeArray(quantizedBase, maxValue);
+
+        values[0] = quantizedBase[0];
+        values[1] = quantizedBase[1];
+        values[2] = quantizedBase[2];
+        values[3] = QuantizeAverageScale(scaled, unquantizedBase, maxValue);
+
+        if (withAlpha)
+        {
+            values[4] = Quantization.QuantizeCEValueToRange(scaled.GetChannel(3), maxValue);
+            values[5] = Quantization.QuantizeCEValueToRange(baseColor.GetChannel(3), maxValue);
+            astcMode = ColorEndpointMode.LdrRgbBaseScaleTwoA;
+        }
 
         return needsWeightSwap;
+    }
+
+    /// <summary>
+    /// True when two or more of the R/G/B channels decrease from low to high, so the caller
+    /// should treat the low endpoint as the base and invert the weight plane.
+    /// </summary>
+    private static bool ShouldSwapForBaseScale(Rgba32 low, Rgba32 high)
+    {
+        int channelsHighGe = 0;
+        for (int i = 0; i < 3; ++i)
+        {
+            if (high.GetChannel(i) >= low.GetChannel(i))
+            {
+                channelsHighGe++;
+            }
+        }
+
+        return channelsHighGe < 2;
+    }
+
+    /// <summary>
+    /// Computes a per-channel scale factor (<c>scaled[c] * 256 / base[c]</c>), averages across
+    /// channels with non-zero base, clamps to [0, 255] and quantizes.
+    /// </summary>
+    /// <returns>
+    /// <paramref name="maxValue"/> (the maximum quantization slot) when no base channel was non-zero.
+    /// </returns>
+    private static int QuantizeAverageScale(Rgba32 scaled, int[] unquantizedBase, int maxValue)
+    {
+        int numSamples = 0;
+        int scaleSum = 0;
+        for (int i = 0; i < 3; ++i)
+        {
+            int baseChannel = unquantizedBase[i];
+            if (baseChannel != 0)
+            {
+                ++numSamples;
+                scaleSum += (scaled.GetChannel(i) * 256) / baseChannel;
+            }
+        }
+
+        if (numSamples == 0)
+        {
+            return maxValue;
+        }
+
+        int avgScale = Math.Clamp(scaleSum / numSamples, 0, 255);
+        return Quantization.QuantizeCEValueToRange(avgScale, maxValue);
     }
 
     private static int[] QuantizeColorArray(Rgba32 c, int maxValue)
@@ -161,63 +206,98 @@ internal static class EndpointEncoder
         return array;
     }
 
+    /// <summary>
+    /// Encodes a luminance-only endpoint pair (ASTC spec §C.2.14 modes 0 and 1). Both the
+    /// direct (mode 0) and base+offset (mode 1) encodings are tried; the one with lower
+    /// reconstruction error is written into <paramref name="values"/>. When the high endpoint
+    /// is dimmer than the low endpoint, the endpoints are swapped and the weight plane is
+    /// inverted so the caller can use a single decode direction.
+    /// </summary>
     private static bool EncodeColorsLuma(Rgba32 endpointLow, Rgba32 endpointHigh, int maxValue, out ColorEndpointMode astcMode, List<int> values)
     {
         astcMode = ColorEndpointMode.LdrLumaDirect;
         ArgumentOutOfRangeException.ThrowIfLessThan(values.Count, 2);
 
-        int avg1 = endpointLow.GetAverage();
-        int avg2 = endpointHigh.GetAverage();
+        (int avgLow, int avgHigh, bool needsWeightSwap) = SortedLumaAverages(endpointLow, endpointHigh);
 
-        bool needsWeightSwap = false;
-        if (avg1 > avg2)
+        (int directLow, int directHigh) = QuantizeDirectLuma(avgLow, avgHigh, maxValue);
+        (int offsetLow, int offsetHigh) = QuantizeBaseOffsetLuma(avgLow, avgHigh, maxValue);
+
+        // Evaluate both candidates by decoding and measuring error against the original
+        // endpoints in whatever order matches the post-swap encoding.
+        Rgba32 originalLow = needsWeightSwap ? endpointHigh : endpointLow;
+        Rgba32 originalHigh = needsWeightSwap ? endpointLow : endpointHigh;
+
+        int directError = DecodeAndMeasureError(values, directLow, directHigh, maxValue, ColorEndpointMode.LdrLumaDirect, originalLow, originalHigh);
+        int offsetError = DecodeAndMeasureError(values, offsetLow, offsetHigh, maxValue, ColorEndpointMode.LdrLumaBaseOffset, originalLow, originalHigh);
+
+        if (directError <= offsetError)
         {
-            needsWeightSwap = true;
-            (avg2, avg1) = (avg1, avg2);
-        }
-
-        int offset = Math.Min(avg2 - avg1, 0x3F);
-        int quantOffLow = Quantization.QuantizeCEValueToRange((avg1 & 0x3F) << 2, maxValue);
-        int quantOffHigh = Quantization.QuantizeCEValueToRange((avg1 & 0xC0) | offset, maxValue);
-
-        int quantLow = Quantization.QuantizeCEValueToRange(avg1, maxValue);
-        int quantHigh = Quantization.QuantizeCEValueToRange(avg2, maxValue);
-
-        values[0] = quantOffLow;
-        values[1] = quantOffHigh;
-        (Rgba32 decLowOff, Rgba32 decHighOff) = EndpointCodec.DecodeColorsForMode(values.ToArray(), maxValue, ColorEndpointMode.LdrLumaBaseOffset);
-
-        values[0] = quantLow;
-        values[1] = quantHigh;
-        (Rgba32 decLowDir, Rgba32 decHighDir) = EndpointCodec.DecodeColorsForMode(values.ToArray(), maxValue, ColorEndpointMode.LdrLumaDirect);
-
-        int calculateErrorOff = 0;
-        int calculateErrorDir = 0;
-        if (needsWeightSwap)
-        {
-            calculateErrorDir = SquaredError(decLowDir, endpointHigh) + SquaredError(decHighDir, endpointLow);
-            calculateErrorOff = SquaredError(decLowOff, endpointHigh) + SquaredError(decHighOff, endpointLow);
-        }
-        else
-        {
-            calculateErrorDir = SquaredError(decLowDir, endpointLow) + SquaredError(decHighDir, endpointHigh);
-            calculateErrorOff = SquaredError(decLowOff, endpointLow) + SquaredError(decHighOff, endpointHigh);
-        }
-
-        if (calculateErrorDir <= calculateErrorOff)
-        {
-            values[0] = quantLow;
-            values[1] = quantHigh;
+            values[0] = directLow;
+            values[1] = directHigh;
             astcMode = ColorEndpointMode.LdrLumaDirect;
         }
         else
         {
-            values[0] = quantOffLow;
-            values[1] = quantOffHigh;
+            values[0] = offsetLow;
+            values[1] = offsetHigh;
             astcMode = ColorEndpointMode.LdrLumaBaseOffset;
         }
 
         return needsWeightSwap;
+    }
+
+    /// <summary>
+    /// Returns the average luma of the two endpoints sorted low → high, together with a flag
+    /// indicating that the original ordering was reversed and the weight plane needs a swap.
+    /// </summary>
+    private static (int AvgLow, int AvgHigh, bool NeedsWeightSwap) SortedLumaAverages(Rgba32 endpointLow, Rgba32 endpointHigh)
+    {
+        int avgLow = endpointLow.GetAverage();
+        int avgHigh = endpointHigh.GetAverage();
+        if (avgLow <= avgHigh)
+        {
+            return (avgLow, avgHigh, false);
+        }
+
+        return (avgHigh, avgLow, true);
+    }
+
+    /// <summary>Quantizes two luma averages for LdrLumaDirect (§C.2.14 mode 0).</summary>
+    private static (int Low, int High) QuantizeDirectLuma(int avgLow, int avgHigh, int maxValue)
+        => (Quantization.QuantizeCEValueToRange(avgLow, maxValue),
+            Quantization.QuantizeCEValueToRange(avgHigh, maxValue));
+
+    /// <summary>
+    /// Quantizes two luma averages into the base+offset form for LdrLumaBaseOffset
+    /// (§C.2.14 mode 1). v0 carries the base low luma shifted left by 2; v1's high two bits
+    /// carry the base top bits and the low six bits carry the offset.
+    /// </summary>
+    private static (int Low, int High) QuantizeBaseOffsetLuma(int avgLow, int avgHigh, int maxValue)
+    {
+        int offset = Math.Min(avgHigh - avgLow, 0x3F);
+        return (Quantization.QuantizeCEValueToRange((avgLow & 0x3F) << 2, maxValue),
+                Quantization.QuantizeCEValueToRange((avgLow & 0xC0) | offset, maxValue));
+    }
+
+    /// <summary>
+    /// Writes two candidate values to <paramref name="values"/>, decodes them under
+    /// <paramref name="mode"/>, and returns the sum-of-squared-channel error against the
+    /// reference endpoints.
+    /// </summary>
+    private static int DecodeAndMeasureError(
+        List<int> values,
+        int v0,
+        int v1,
+        int maxValue,
+        ColorEndpointMode mode,
+        Rgba32 referenceLow,
+        Rgba32 referenceHigh)
+    {
+        values[0] = v0;
+        values[1] = v1;
+        (Rgba32 decodedLow, Rgba32 decodedHigh) = EndpointCodec.DecodeColorsForMode(values.ToArray(), maxValue, mode);
+        return SquaredError(decodedLow, referenceLow) + SquaredError(decodedHigh, referenceHigh);
     }
 
     private static bool EncodeColorsRGBA(Rgba32 endpointLowRgba, Rgba32 endpointHighRgba, int maxValue, bool withAlpha, out ColorEndpointMode astcMode, List<int> values)

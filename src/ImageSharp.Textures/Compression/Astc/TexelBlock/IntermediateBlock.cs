@@ -34,7 +34,8 @@ internal static class IntermediateBlock
     }
 
     /// <summary>
-    /// Fast overload that uses pre-computed BlockInfo instead of calling PhysicalBlock getters.
+    /// Fast overload that uses pre-computed <paramref name="info"/> instead of calling
+    /// PhysicalBlock getters. Returns null for void-extent and structurally invalid blocks.
     /// </summary>
     public static IntermediateBlockData? UnpackIntermediateBlock(UInt128 bits, in BlockInfo info)
     {
@@ -43,37 +44,53 @@ internal static class IntermediateBlock
             return null;
         }
 
-        IntermediateBlockData data = default;
+        Span<int> colors = stackalloc int[info.ColorValuesCount];
+        DecodeColorValues(bits, in info, colors);
 
-        // Use cached values from BlockInfo instead of PhysicalBlock getters
+        IntermediateBlockData data = default;
+        data.WeightGridX = info.GridWidth;
+        data.WeightGridY = info.GridHeight;
+        data.WeightRange = info.WeightRange;
+        data.EndpointRange = info.ColorValuesRange;
+        data.EndpointCount = info.PartitionCount;
+        data.PartitionId = info.PartitionCount > 1
+            ? (int)BitOperations.GetBits(bits.Low(), 13, 10)
+            : null;
+        data.DualPlaneChannel = info.IsDualPlane ? info.DualPlaneChannel : null;
+
+        PopulateEndpoints(ref data, in info, colors);
+        DecodeWeights(bits, in info, ref data);
+
+        return data;
+    }
+
+    /// <summary>
+    /// BISE-decodes the color values stored in bits [ColorStartBit .. ColorStartBit+ColorBitCount)
+    /// into <paramref name="colors"/> (ASTC spec §C.2.16).
+    /// </summary>
+    private static void DecodeColorValues(UInt128 bits, in BlockInfo info, Span<int> colors)
+    {
         UInt128 colorBitMask = UInt128Extensions.OnesMask(info.ColorBitCount);
         UInt128 colorBits = (bits >> info.ColorStartBit) & colorBitMask;
         BitStream colorBitStream = new(colorBits, 128);
 
         BoundedIntegerSequenceDecoder colorDecoder = BoundedIntegerSequenceDecoder.GetCached(info.ColorValuesRange);
-        Span<int> colors = stackalloc int[info.ColorValuesCount];
         colorDecoder.Decode(info.ColorValuesCount, ref colorBitStream, colors);
+    }
 
-        data.WeightGridX = info.GridWidth;
-        data.WeightGridY = info.GridHeight;
-        data.WeightRange = info.WeightRange;
-
-        data.PartitionId = info.PartitionCount > 1
-            ? (int)BitOperations.GetBits(bits.Low(), 13, 10)
-            : null;
-
-        data.DualPlaneChannel = info.IsDualPlane
-            ? info.DualPlaneChannel
-            : null;
-
+    /// <summary>
+    /// Splits the flat <paramref name="colors"/> span across per-partition
+    /// <see cref="IntermediateEndpointData"/> records keyed by their endpoint mode
+    /// (ASTC spec §C.2.14 for color value counts per mode).
+    /// </summary>
+    private static void PopulateEndpoints(ref IntermediateBlockData data, in BlockInfo info, ReadOnlySpan<int> colors)
+    {
         int colorIndex = 0;
-        data.EndpointCount = info.PartitionCount;
         for (int i = 0; i < info.PartitionCount; ++i)
         {
             ColorEndpointMode mode = info.GetEndpointMode(i);
             int colorCount = mode.GetColorValuesCount();
-            IntermediateEndpointData ep = new()
-            { Mode = mode, ColorCount = colorCount };
+            IntermediateEndpointData ep = new() { Mode = mode, ColorCount = colorCount };
             for (int j = 0; j < colorCount; ++j)
             {
                 ep.Colors[j] = colors[colorIndex++];
@@ -81,24 +98,24 @@ internal static class IntermediateBlock
 
             data.Endpoints[i] = ep;
         }
+    }
 
-        data.EndpointRange = info.ColorValuesRange;
-
+    /// <summary>
+    /// BISE-decodes the weight stream (ASTC spec §C.2.5 — written from the high end of the
+    /// block, so the bits are reversed before decode). Dual-plane blocks encode two weight
+    /// arrays interleaved.
+    /// </summary>
+    private static void DecodeWeights(UInt128 bits, in BlockInfo info, ref IntermediateBlockData data)
+    {
         UInt128 weightBits = UInt128Extensions.ReverseBits(bits) & UInt128Extensions.OnesMask(info.WeightBitCount);
         BitStream weightBitStream = new(weightBits, 128);
 
         BoundedIntegerSequenceDecoder weightDecoder = BoundedIntegerSequenceDecoder.GetCached(data.WeightRange);
-        int weightsCount = data.WeightGridX * data.WeightGridY;
-        if (info.IsDualPlane)
-        {
-            weightsCount *= 2;
-        }
+        int weightsCount = data.WeightGridX * data.WeightGridY * (info.IsDualPlane ? 2 : 1);
 
         data.Weights = new int[weightsCount];
         data.WeightsCount = weightsCount;
         weightDecoder.Decode(weightsCount, ref weightBitStream, data.Weights);
-
-        return data;
     }
 
     public static int EndpointRangeForBlock(in IntermediateBlockData data)
