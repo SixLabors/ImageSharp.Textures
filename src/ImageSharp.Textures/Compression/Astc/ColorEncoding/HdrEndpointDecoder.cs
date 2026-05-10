@@ -103,6 +103,35 @@ internal static class HdrEndpointDecoder
     ];
 #pragma warning restore SA1201
 
+    /// <summary>
+    /// Applies a mode-gated bit-placement table. For each row, if the current one-hot mode
+    /// matches <see cref="BitPlacement.ModeMask"/>, the bit at the row's source index is
+    /// OR'd into <paramref name="targets"/>[<c>p.Target - firstTargetIndex</c>] at the row's
+    /// target shift.
+    /// </summary>
+    /// <param name="placements">The table rows to apply (constant per decoder).</param>
+    /// <param name="oneHotMode">1 &lt;&lt; modeValue — the one-hot mode selector.</param>
+    /// <param name="sourceBits">The per-bit source values extracted from the v-inputs.</param>
+    /// <param name="targets">The output slots; each entry is OR'd in place.</param>
+    /// <param name="firstTargetIndex">The <see cref="Target"/> value of <c>targets[0]</c>;
+    /// used to translate enum positions into span indices.</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void ApplyBitPlacements(
+        ReadOnlySpan<BitPlacement> placements,
+        int oneHotMode,
+        ReadOnlySpan<int> sourceBits,
+        Span<int> targets,
+        int firstTargetIndex)
+    {
+        foreach (BitPlacement p in placements)
+        {
+            if ((oneHotMode & p.ModeMask) != 0)
+            {
+                targets[(int)p.Target - firstTargetIndex] |= sourceBits[p.SourceBit] << p.TargetShift;
+            }
+        }
+    }
+
     public static (Rgba64 Low, Rgba64 High) DecodeHdrMode(ReadOnlySpan<int> values, int maxValue, ColorEndpointMode mode)
     {
         int count = mode.GetColorValuesCount();
@@ -193,13 +222,17 @@ internal static class HdrEndpointDecoder
             _ => (0, 5)
         };
 
-        int red = v0 & 0x3F;
-        int green = v1 & 0x1F;
-        int blue = v2 & 0x1F;
-        int scale = v3 & 0x1F;
+        // Targets indexed by Target enum positions: [Red, Green, Blue, Scale].
+        Span<int> targets =
+        [
+            v0 & 0x3F,
+            v1 & 0x1F,
+            v2 & 0x1F,
+            v3 & 0x1F,
+        ];
 
-        Span<int> sourceBits = stackalloc int[7]
-        {
+        Span<int> sourceBits =
+        [
             (v1 >> 6) & 1,
             (v1 >> 5) & 1,
             (v2 >> 6) & 1,
@@ -207,23 +240,14 @@ internal static class HdrEndpointDecoder
             (v3 >> 7) & 1,
             (v3 >> 6) & 1,
             (v3 >> 5) & 1,
-        };
+        ];
 
-        int oneHotMode = 1 << mode;
-        foreach (BitPlacement p in BaseScalePlacements)
-        {
-            if ((oneHotMode & p.ModeMask) != 0)
-            {
-                int contribution = sourceBits[p.SourceBit] << p.TargetShift;
-                switch (p.Target)
-                {
-                    case Target.Red: red |= contribution; break;
-                    case Target.Green: green |= contribution; break;
-                    case Target.Blue: blue |= contribution; break;
-                    case Target.Scale: scale |= contribution; break;
-                }
-            }
-        }
+        ApplyBitPlacements(BaseScalePlacements, oneHotMode: 1 << mode, sourceBits, targets, firstTargetIndex: (int)Target.Red);
+
+        int red = targets[(int)Target.Red];
+        int green = targets[(int)Target.Green];
+        int blue = targets[(int)Target.Blue];
+        int scale = targets[(int)Target.Scale];
 
         int shiftAmount = BaseScaleShiftByMode[mode];
         red <<= shiftAmount;
@@ -271,40 +295,35 @@ internal static class HdrEndpointDecoder
             return (passthroughLow, passthroughHigh);
         }
 
-        int a = v0 | ((v1 & 0x40) << 2);
-        int b0 = v2 & 0x3F;
-        int b1 = v3 & 0x3F;
-        int c = v1 & 0x3F;
-        int d0 = v4 & 0x7F;
-        int d1 = v5 & 0x7F;
+        // Targets indexed by offset from Target.A: [A, B0, B1, C, D0, D1].
+        Span<int> targets =
+        [
+            v0 | ((v1 & 0x40) << 2),
+            v2 & 0x3F,
+            v3 & 0x3F,
+            v1 & 0x3F,
+            v4 & 0x7F,
+            v5 & 0x7F,
+        ];
 
-        Span<int> sourceBits = stackalloc int[6]
-        {
+        Span<int> sourceBits =
+        [
             (v2 >> 6) & 1,
             (v3 >> 6) & 1,
             (v4 >> 6) & 1,
             (v5 >> 6) & 1,
             (v4 >> 5) & 1,
             (v5 >> 5) & 1,
-        };
+        ];
 
-        int oneHotMode = 1 << modeValue;
-        foreach (BitPlacement p in DirectPlacements)
-        {
-            if ((oneHotMode & p.ModeMask) != 0)
-            {
-                int contribution = sourceBits[p.SourceBit] << p.TargetShift;
-                switch (p.Target)
-                {
-                    case Target.A: a |= contribution; break;
-                    case Target.B0: b0 |= contribution; break;
-                    case Target.B1: b1 |= contribution; break;
-                    case Target.C: c |= contribution; break;
-                    case Target.D0: d0 |= contribution; break;
-                    case Target.D1: d1 |= contribution; break;
-                }
-            }
-        }
+        ApplyBitPlacements(DirectPlacements, oneHotMode: 1 << modeValue, sourceBits, targets, firstTargetIndex: (int)Target.A);
+
+        int a = targets[(int)Target.A - (int)Target.A];
+        int b0 = targets[(int)Target.B0 - (int)Target.A];
+        int b1 = targets[(int)Target.B1 - (int)Target.A];
+        int c = targets[(int)Target.C - (int)Target.A];
+        int d0 = targets[(int)Target.D0 - (int)Target.A];
+        int d1 = targets[(int)Target.D1 - (int)Target.A];
 
         // Sign-extend the signed offsets d0, d1 based on mode-specific data-bit width.
         int dataBits = DirectDataBitsByMode[modeValue];
