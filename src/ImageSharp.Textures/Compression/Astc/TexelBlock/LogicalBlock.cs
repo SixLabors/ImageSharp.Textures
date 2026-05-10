@@ -13,7 +13,6 @@ namespace SixLabors.ImageSharp.Textures.Compression.Astc.TexelBlock;
 internal sealed class LogicalBlock
 {
     private readonly ColorEndpointPair[] endpoints;
-    private readonly int endpointCount;
     private readonly int[] weights;
     private readonly Partition partition;
     private readonly DualPlaneData? dualPlane;
@@ -22,7 +21,7 @@ internal sealed class LogicalBlock
     {
         this.endpoints = [DecodeVoidExtentEndpoint(bits, isHdrVoidExtent)];
         this.endpointCount = 1;
-        this.partition = GenerateSinglePartition(footprint);
+        this.partition = Partition.GetSinglePartition(footprint);
         this.weights = new int[footprint.PixelCount];
     }
 
@@ -81,7 +80,7 @@ internal sealed class LogicalBlock
                 footprint,
                 info.PartitionCount,
                 (int)BitOperations.GetBits(bits.Low(), 13, 10))
-            : GenerateSinglePartition(footprint);
+            : Partition.GetSinglePartition(footprint);
 
     /// <summary>
     /// BISE-decodes, unquantises, and infills the weight grid for a block. Fills
@@ -355,11 +354,6 @@ internal sealed class LogicalBlock
         Rgba32 ldrColor = new((byte)(r >> 8), (byte)(g >> 8), (byte)(b >> 8), (byte)(a >> 8));
         return ColorEndpointPair.Ldr(ldrColor, ldrColor);
     }
-
-    private static Partition GenerateSinglePartition(Footprint footprint) => new(footprint, 1, 0)
-    {
-        Assignment = new int[footprint.PixelCount]
-    };
 
     /// <summary>
     /// Interpolates an LDR channel value and returns the full 16-bit UNORM result

@@ -8,6 +8,7 @@ namespace SixLabors.ImageSharp.Textures.Compression.Astc.ColorEncoding;
 internal sealed class Partition
 {
     private static readonly System.Collections.Concurrent.ConcurrentDictionary<(Footprint, int, int), Partition> PartitionCache = new();
+    private static readonly System.Collections.Concurrent.ConcurrentDictionary<Footprint, Partition> SinglePartitionCache = new();
 
     public Partition(Footprint footprint, int partitionCount, int? id = null)
     {
@@ -17,13 +18,25 @@ internal sealed class Partition
         this.Assignment = [];
     }
 
-    public Footprint Footprint { get; set; }
+    public Footprint Footprint { get; }
 
-    public int PartitionCount { get; set; }
+    public int PartitionCount { get; }
 
-    public int? PartitionId { get; set; }
+    public int? PartitionId { get; }
 
-    public int[] Assignment { get; set; }
+    public int[] Assignment { get; private set; }
+
+    /// <summary>
+    /// Returns the shared single-partition assignment for the given footprint. Every texel is
+    /// assigned to subset 0, so one zero-filled <see cref="Assignment"/> array is reused across
+    /// all callers (void-extent blocks and single-partition logical-path blocks). The returned
+    /// <see cref="Assignment"/> must not be mutated.
+    /// </summary>
+    public static Partition GetSinglePartition(Footprint footprint)
+        => SinglePartitionCache.GetOrAdd(footprint, static fp => new Partition(fp, 1, 0)
+        {
+            Assignment = new int[fp.PixelCount],
+        });
 
     public static Partition GetASTCPartition(Footprint footprint, int partitionCount, int partitionId)
     {
