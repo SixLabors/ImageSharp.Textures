@@ -252,7 +252,7 @@ internal static class EndpointEncoder
             ScoreBaseOffsetBlueContract(bcOffsetSwappedQuantized, endpointLowRgba, endpointHighRgba, swapped: true, withAlpha),
         ];
 
-        candidates.Sort((a, b) => a.Error().CompareTo(b.Error()));
+        candidates.Sort((a, b) => a.Error.CompareTo(b.Error));
 
         foreach (CEEncodingOption candidate in candidates)
         {
@@ -297,8 +297,8 @@ internal static class EndpointEncoder
         Rgba32 originalHigh,
         bool withAlpha)
     {
-        Rgba32 decodedLow = ArrayToRgba32(pair.UnquantizedLow());
-        Rgba32 decodedHigh = ArrayToRgba32(pair.UnquantizedHigh());
+        Rgba32 decodedLow = ArrayToRgba32(pair.UnquantizedLow);
+        Rgba32 decodedHigh = ArrayToRgba32(pair.UnquantizedHigh);
         int error = ChannelError(decodedLow, originalLow, withAlpha) + ChannelError(decodedHigh, originalHigh, withAlpha);
         return new CEEncodingOption(error, pair, swapEndpoints: false, blueContract: false, useOffsetMode: false);
     }
@@ -310,8 +310,8 @@ internal static class EndpointEncoder
         Rgba32 originalHigh,
         bool withAlpha)
     {
-        int[] decodedLow = pair.UnquantizedLow();
-        int[] decodedHigh = pair.UnquantizedHigh();
+        int[] decodedLow = pair.UnquantizedLow;
+        int[] decodedHigh = pair.UnquantizedHigh;
         Rgba32 contractedLow = RgbaColorExtensions.WithBlueContract(decodedLow[0], decodedLow[1], decodedLow[2], decodedLow[3]);
         Rgba32 contractedHigh = RgbaColorExtensions.WithBlueContract(decodedHigh[0], decodedHigh[1], decodedHigh[2], decodedHigh[3]);
         int error = ChannelError(contractedLow, originalLow, withAlpha) + ChannelError(contractedHigh, originalHigh, withAlpha);
@@ -364,8 +364,8 @@ internal static class EndpointEncoder
     /// </summary>
     private static (Rgba32 DecodedLow, Rgba32 DecodedHigh) ReconstructBaseOffset(QuantizedEndpointPair pair, bool swapped)
     {
-        Rgba32 baseColor = ArrayToRgba32(pair.UnquantizedLow());
-        Rgba32 offsetColor = ArrayToRgba32(pair.UnquantizedHigh()).AsOffsetFrom(baseColor);
+        Rgba32 baseColor = ArrayToRgba32(pair.UnquantizedLow);
+        Rgba32 offsetColor = ArrayToRgba32(pair.UnquantizedHigh).AsOffsetFrom(baseColor);
         return swapped ? (offsetColor, baseColor) : (baseColor, offsetColor);
     }
 
@@ -374,177 +374,4 @@ internal static class EndpointEncoder
 
     private static int ChannelError(Rgba32 a, Rgba32 b, bool withAlpha)
         => withAlpha ? SquaredError(a, b) : SquaredErrorRgb(a, b);
-
-    private class QuantizedEndpointPair
-    {
-        private readonly Rgba32 originalLow;
-        private readonly Rgba32 originalHigh;
-        private readonly int[] quantizedLow;
-        private readonly int[] quantizedHigh;
-        private readonly int[] unquantizedLow;
-        private readonly int[] unquantizedHigh;
-
-        public QuantizedEndpointPair(Rgba32 low, Rgba32 high, int maxValue)
-        {
-            this.originalLow = low;
-            this.originalHigh = high;
-            this.quantizedLow = QuantizeColorArray(low, maxValue);
-            this.quantizedHigh = QuantizeColorArray(high, maxValue);
-            this.unquantizedLow = EndpointCodec.UnquantizeArray(this.quantizedLow, maxValue);
-            this.unquantizedHigh = EndpointCodec.UnquantizeArray(this.quantizedHigh, maxValue);
-        }
-
-        public int[] QuantizedLow() => this.quantizedLow;
-
-        public int[] QuantizedHigh() => this.quantizedHigh;
-
-        public int[] UnquantizedLow() => this.unquantizedLow;
-
-        public int[] UnquantizedHigh() => this.unquantizedHigh;
-
-        public Rgba32 OriginalLow() => this.originalLow;
-
-        public Rgba32 OriginalHigh() => this.originalHigh;
-    }
-
-    private class CEEncodingOption
-    {
-        private readonly int squaredError;
-        private readonly QuantizedEndpointPair quantizedEndpoints;
-        private readonly bool swapEndpoints;
-        private readonly bool blueContract;
-        private readonly bool useOffsetMode;
-
-        public CEEncodingOption(
-            int squaredError,
-            QuantizedEndpointPair quantizedEndpoints,
-            bool swapEndpoints,
-            bool blueContract,
-            bool useOffsetMode)
-        {
-            this.squaredError = squaredError;
-            this.quantizedEndpoints = quantizedEndpoints;
-            this.swapEndpoints = swapEndpoints;
-            this.blueContract = blueContract;
-            this.useOffsetMode = useOffsetMode;
-        }
-
-        public bool Pack(bool hasAlpha, out ColorEndpointMode endpointMode, List<int> values, ref bool needsWeightSwap)
-        {
-            endpointMode = ColorEndpointMode.LdrLumaDirect;
-            int[] unquantizedLowOriginal = this.quantizedEndpoints.UnquantizedLow();
-            int[] unquantizedHighOriginal = this.quantizedEndpoints.UnquantizedHigh();
-
-            int[] unquantizedLow = (int[])unquantizedLowOriginal.Clone();
-            int[] unquantizedHigh = (int[])unquantizedHighOriginal.Clone();
-
-            if (this.useOffsetMode)
-            {
-                for (int i = 0; i < 4; ++i)
-                {
-                    (unquantizedHigh[i], unquantizedLow[i]) = BitOperations.TransferPrecision(unquantizedHigh[i], unquantizedLow[i]);
-                }
-            }
-
-            int sum0 = 0, sum1 = 0;
-            for (int i = 0; i < 3; ++i)
-            {
-                sum0 += unquantizedLow[i];
-                sum1 += unquantizedHigh[i];
-            }
-
-            bool swapVals = false;
-            if (this.useOffsetMode)
-            {
-                if (this.blueContract)
-                {
-                    swapVals = sum1 >= 0;
-                }
-                else
-                {
-                    swapVals = sum1 < 0;
-                }
-
-                if (swapVals)
-                {
-                    return false;
-                }
-            }
-            else
-            {
-                if (this.blueContract)
-                {
-                    if (sum1 == sum0)
-                    {
-                        return false;
-                    }
-
-                    swapVals = sum1 > sum0;
-                    needsWeightSwap = !needsWeightSwap;
-                }
-                else
-                {
-                    swapVals = sum1 < sum0;
-                }
-            }
-
-            int[] quantizedLowOriginal = this.quantizedEndpoints.QuantizedLow();
-            int[] quantizedHighOriginal = this.quantizedEndpoints.QuantizedHigh();
-
-            int[] quantizedLow = (int[])quantizedLowOriginal.Clone();
-            int[] quantizedHigh = (int[])quantizedHighOriginal.Clone();
-
-            if (swapVals)
-            {
-                if (this.useOffsetMode)
-                {
-                    throw new InvalidOperationException();
-                }
-
-                (quantizedHigh, quantizedLow) = (quantizedLow, quantizedHigh);
-                needsWeightSwap = !needsWeightSwap;
-            }
-
-            values[0] = quantizedLow[0];
-            values[1] = quantizedHigh[0];
-            values[2] = quantizedLow[1];
-            values[3] = quantizedHigh[1];
-            values[4] = quantizedLow[2];
-            values[5] = quantizedHigh[2];
-
-            if (this.useOffsetMode)
-            {
-                endpointMode = ColorEndpointMode.LdrRgbBaseOffset;
-            }
-            else
-            {
-                endpointMode = ColorEndpointMode.LdrRgbDirect;
-            }
-
-            if (hasAlpha)
-            {
-                values[6] = quantizedLow[3];
-                values[7] = quantizedHigh[3];
-                if (this.useOffsetMode)
-                {
-                    endpointMode = ColorEndpointMode.LdrRgbaBaseOffset;
-                }
-                else
-                {
-                    endpointMode = ColorEndpointMode.LdrRgbaDirect;
-                }
-            }
-
-            if (this.swapEndpoints)
-            {
-                needsWeightSwap = !needsWeightSwap;
-            }
-
-            return true;
-        }
-
-        public bool BlueContract() => this.blueContract;
-
-        public int Error() => this.squaredError;
-    }
 }

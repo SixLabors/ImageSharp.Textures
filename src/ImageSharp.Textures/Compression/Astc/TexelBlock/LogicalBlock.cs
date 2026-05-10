@@ -129,13 +129,9 @@ internal sealed class LogicalBlock
 
         DecimationTable.InfillWeights(plane0, decimationInfo, texelWeights);
 
-        DualPlaneData dualPlane = new()
-        {
-            Channel = info.DualPlaneChannel,
-            Weights = new int[footprint.PixelCount]
-        };
-        DecimationTable.InfillWeights(plane1, decimationInfo, dualPlane.Weights);
-        return dualPlane;
+        int[] secondaryWeights = new int[footprint.PixelCount];
+        DecimationTable.InfillWeights(plane1, decimationInfo, secondaryWeights);
+        return new DualPlaneData(info.DualPlaneChannel, secondaryWeights);
     }
 
     /// <summary>
@@ -254,7 +250,7 @@ internal sealed class LogicalBlock
         }
         else
         {
-            this.WriteLdrSinglePartitionDualPlane(footprint, buffer, in endpoint0, this.dualPlane);
+            this.WriteLdrSinglePartitionDualPlane(footprint, buffer, in endpoint0, this.dualPlane.Value);
         }
     }
 
@@ -477,12 +473,5 @@ internal sealed class LogicalBlock
         buffer[dstOffset + 1] = (byte)(InterpolateChannelHdr(endpoint.HdrLow.G, endpoint.HdrHigh.G, gWeight) >> 8);
         buffer[dstOffset + 2] = (byte)(InterpolateChannelHdr(endpoint.HdrLow.B, endpoint.HdrHigh.B, bWeight) >> 8);
         buffer[dstOffset + 3] = (byte)(InterpolateChannelHdr(endpoint.HdrLow.A, endpoint.HdrHigh.A, aWeight) >> 8);
-    }
-
-    private class DualPlaneData
-    {
-        public int Channel { get; set; }
-
-        public int[] Weights { get; set; } = [];
     }
 }

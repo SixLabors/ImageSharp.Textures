@@ -9,17 +9,18 @@ namespace SixLabors.ImageSharp.Textures.Compression.Astc.TexelBlock;
 
 internal static class IntermediateBlockPacker
 {
-    private static readonly BlockModeInfo[] BlockModeInfoTable = [
-        new BlockModeInfo { MinWeightGridDimX = 4, MaxWeightGridDimX = 7, MinWeightGridDimY = 2, MaxWeightGridDimY = 5, R0BitPos = 4, R1BitPos = 0, R2BitPos = 1, WeightGridXOffsetBitPos = 7, WeightGridYOffsetBitPos = 5, RequireSinglePlaneLowPrec = false },
-        new BlockModeInfo { MinWeightGridDimX = 8, MaxWeightGridDimX = 11, MinWeightGridDimY = 2, MaxWeightGridDimY = 5, R0BitPos = 4, R1BitPos = 0, R2BitPos = 1, WeightGridXOffsetBitPos = 7, WeightGridYOffsetBitPos = 5, RequireSinglePlaneLowPrec = false },
-        new BlockModeInfo { MinWeightGridDimX = 2, MaxWeightGridDimX = 5, MinWeightGridDimY = 8, MaxWeightGridDimY = 11, R0BitPos = 4, R1BitPos = 0, R2BitPos = 1, WeightGridXOffsetBitPos = 5, WeightGridYOffsetBitPos = 7, RequireSinglePlaneLowPrec = false },
-        new BlockModeInfo { MinWeightGridDimX = 2, MaxWeightGridDimX = 5, MinWeightGridDimY = 6, MaxWeightGridDimY = 7, R0BitPos = 4, R1BitPos = 0, R2BitPos = 1, WeightGridXOffsetBitPos = 5, WeightGridYOffsetBitPos = 7, RequireSinglePlaneLowPrec = false },
-        new BlockModeInfo { MinWeightGridDimX = 2, MaxWeightGridDimX = 3, MinWeightGridDimY = 2, MaxWeightGridDimY = 5, R0BitPos = 4, R1BitPos = 0, R2BitPos = 1, WeightGridXOffsetBitPos = 7, WeightGridYOffsetBitPos = 5, RequireSinglePlaneLowPrec = false },
-        new BlockModeInfo { MinWeightGridDimX = 12, MaxWeightGridDimX = 12, MinWeightGridDimY = 2, MaxWeightGridDimY = 5, R0BitPos = 4, R1BitPos = 2, R2BitPos = 3, WeightGridXOffsetBitPos = -1, WeightGridYOffsetBitPos = 5, RequireSinglePlaneLowPrec = false },
-        new BlockModeInfo { MinWeightGridDimX = 2, MaxWeightGridDimX = 5, MinWeightGridDimY = 12, MaxWeightGridDimY = 12, R0BitPos = 4, R1BitPos = 2, R2BitPos = 3, WeightGridXOffsetBitPos = 5, WeightGridYOffsetBitPos = -1, RequireSinglePlaneLowPrec = false },
-        new BlockModeInfo { MinWeightGridDimX = 6, MaxWeightGridDimX = 6, MinWeightGridDimY = 10, MaxWeightGridDimY = 10, R0BitPos = 4, R1BitPos = 2, R2BitPos = 3, WeightGridXOffsetBitPos = -1, WeightGridYOffsetBitPos = -1, RequireSinglePlaneLowPrec = false },
-        new BlockModeInfo { MinWeightGridDimX = 10, MaxWeightGridDimX = 10, MinWeightGridDimY = 6, MaxWeightGridDimY = 6, R0BitPos = 4, R1BitPos = 2, R2BitPos = 3, WeightGridXOffsetBitPos = -1, WeightGridYOffsetBitPos = -1, RequireSinglePlaneLowPrec = false },
-        new BlockModeInfo { MinWeightGridDimX = 6, MaxWeightGridDimX = 9, MinWeightGridDimY = 6, MaxWeightGridDimY = 9, R0BitPos = 4, R1BitPos = 2, R2BitPos = 3, WeightGridXOffsetBitPos = 5, WeightGridYOffsetBitPos = 9, RequireSinglePlaneLowPrec = true }
+    private static readonly BlockModeInfo[] BlockModeInfoTable =
+    [
+        new(MinWeightGridDimX: 4, MaxWeightGridDimX: 7, MinWeightGridDimY: 2, MaxWeightGridDimY: 5, R0BitPos: 4, R1BitPos: 0, R2BitPos: 1, WeightGridXOffsetBitPos: 7, WeightGridYOffsetBitPos: 5, RequireSinglePlaneLowPrec: false),
+        new(MinWeightGridDimX: 8, MaxWeightGridDimX: 11, MinWeightGridDimY: 2, MaxWeightGridDimY: 5, R0BitPos: 4, R1BitPos: 0, R2BitPos: 1, WeightGridXOffsetBitPos: 7, WeightGridYOffsetBitPos: 5, RequireSinglePlaneLowPrec: false),
+        new(MinWeightGridDimX: 2, MaxWeightGridDimX: 5, MinWeightGridDimY: 8, MaxWeightGridDimY: 11, R0BitPos: 4, R1BitPos: 0, R2BitPos: 1, WeightGridXOffsetBitPos: 5, WeightGridYOffsetBitPos: 7, RequireSinglePlaneLowPrec: false),
+        new(MinWeightGridDimX: 2, MaxWeightGridDimX: 5, MinWeightGridDimY: 6, MaxWeightGridDimY: 7, R0BitPos: 4, R1BitPos: 0, R2BitPos: 1, WeightGridXOffsetBitPos: 5, WeightGridYOffsetBitPos: 7, RequireSinglePlaneLowPrec: false),
+        new(MinWeightGridDimX: 2, MaxWeightGridDimX: 3, MinWeightGridDimY: 2, MaxWeightGridDimY: 5, R0BitPos: 4, R1BitPos: 0, R2BitPos: 1, WeightGridXOffsetBitPos: 7, WeightGridYOffsetBitPos: 5, RequireSinglePlaneLowPrec: false),
+        new(MinWeightGridDimX: 12, MaxWeightGridDimX: 12, MinWeightGridDimY: 2, MaxWeightGridDimY: 5, R0BitPos: 4, R1BitPos: 2, R2BitPos: 3, WeightGridXOffsetBitPos: -1, WeightGridYOffsetBitPos: 5, RequireSinglePlaneLowPrec: false),
+        new(MinWeightGridDimX: 2, MaxWeightGridDimX: 5, MinWeightGridDimY: 12, MaxWeightGridDimY: 12, R0BitPos: 4, R1BitPos: 2, R2BitPos: 3, WeightGridXOffsetBitPos: 5, WeightGridYOffsetBitPos: -1, RequireSinglePlaneLowPrec: false),
+        new(MinWeightGridDimX: 6, MaxWeightGridDimX: 6, MinWeightGridDimY: 10, MaxWeightGridDimY: 10, R0BitPos: 4, R1BitPos: 2, R2BitPos: 3, WeightGridXOffsetBitPos: -1, WeightGridYOffsetBitPos: -1, RequireSinglePlaneLowPrec: false),
+        new(MinWeightGridDimX: 10, MaxWeightGridDimX: 10, MinWeightGridDimY: 6, MaxWeightGridDimY: 6, R0BitPos: 4, R1BitPos: 2, R2BitPos: 3, WeightGridXOffsetBitPos: -1, WeightGridYOffsetBitPos: -1, RequireSinglePlaneLowPrec: false),
+        new(MinWeightGridDimX: 6, MaxWeightGridDimX: 9, MinWeightGridDimY: 6, MaxWeightGridDimY: 9, R0BitPos: 4, R1BitPos: 2, R2BitPos: 3, WeightGridXOffsetBitPos: 5, WeightGridYOffsetBitPos: 9, RequireSinglePlaneLowPrec: true),
     ];
 
     private static readonly uint[] BlockModeMasks = [0x0u, 0x4u, 0x8u, 0xCu, 0x10Cu, 0x0u, 0x80u, 0x180u, 0x1A0u, 0x100u];
@@ -489,19 +490,5 @@ internal static class IntermediateBlockPacker
         }
 
         return (null, extraConfig);
-    }
-
-    private struct BlockModeInfo
-    {
-        public int MinWeightGridDimX;
-        public int MaxWeightGridDimX;
-        public int MinWeightGridDimY;
-        public int MaxWeightGridDimY;
-        public int R0BitPos;
-        public int R1BitPos;
-        public int R2BitPos;
-        public int WeightGridXOffsetBitPos;
-        public int WeightGridYOffsetBitPos;
-        public bool RequireSinglePlaneLowPrec;
     }
 }
