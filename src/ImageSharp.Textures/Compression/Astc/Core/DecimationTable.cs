@@ -61,12 +61,20 @@ internal static class DecimationTable
         }
     }
 
+    /// <summary>
+    /// Scale factor for mapping texel index to grid position (ASTC spec §C.2.18).
+    /// </summary>
     private static int GetScaleFactorD(int blockDimensions) => (int)((1024f + (blockDimensions >> 1)) / (blockDimensions - 1));
 
+    /// <summary>
+    /// Builds the weight-infill lookup for one (footprint, weight-grid) combination.
+    /// For each texel, computes the four surrounding weight-grid indices and bilinear
+    /// interpolation factors (ASTC spec §C.2.18), storing them in parallel transposed
+    /// arrays so that decode can iterate by contribution slot.
+    /// </summary>
     private static DecimationInfo Compute(int footprintWidth, int footprintHeight, int gridWidth, int gridHeight)
     {
         int texelCount = footprintWidth * footprintHeight;
-
         int[] indices = new int[4 * texelCount];
         int[] factors = new int[4 * texelCount];
 
@@ -79,67 +87,84 @@ internal static class DecimationTable
         int texelIndex = 0;
         for (int texelY = 0; texelY < footprintHeight; ++texelY)
         {
-            int scaledY = scaleVertical * texelY;
-            int gridY = ((scaledY * maxGridY) + 32) >> 6;
-            int gridRowIndex = gridY >> 4;
-            int fractionY = gridY & 0xF;
-
+            (int gridRowIndex, int fractionY) = MapTexelToGridAxis(texelY, scaleVertical, maxGridY);
             for (int texelX = 0; texelX < footprintWidth; ++texelX)
             {
-                int scaledX = scaleHorizontal * texelX;
-                int gridX = ((scaledX * maxGridX) + 32) >> 6;
-                int gridColIndex = gridX >> 4;
-                int fractionX = gridX & 0xF;
-
-                int gridPoint0 = gridColIndex + (gridWidth * gridRowIndex);
-                int gridPoint1 = gridPoint0 + 1;
-                int gridPoint2 = gridColIndex + (gridWidth * (gridRowIndex + 1));
-                int gridPoint3 = gridPoint2 + 1;
-
-                int factor3 = ((fractionX * fractionY) + 8) >> 4;
-                int factor2 = fractionY - factor3;
-                int factor1 = fractionX - factor3;
-                int factor0 = 16 - fractionX - fractionY + factor3;
-
-                // For out-of-bounds grid points, zero the factor and use index 0 (safe dummy)
-                if (gridPoint3 >= gridLimit)
-                {
-                    factor3 = 0;
-                    gridPoint3 = 0;
-                }
-
-                if (gridPoint2 >= gridLimit)
-                {
-                    factor2 = 0;
-                    gridPoint2 = 0;
-                }
-
-                if (gridPoint1 >= gridLimit)
-                {
-                    factor1 = 0;
-                    gridPoint1 = 0;
-                }
-
-                if (gridPoint0 >= gridLimit)
-                {
-                    factor0 = 0;
-                    gridPoint0 = 0;
-                }
-
-                indices[(0 * texelCount) + texelIndex] = gridPoint0;
-                indices[(1 * texelCount) + texelIndex] = gridPoint1;
-                indices[(2 * texelCount) + texelIndex] = gridPoint2;
-                indices[(3 * texelCount) + texelIndex] = gridPoint3;
-
-                factors[(0 * texelCount) + texelIndex] = factor0;
-                factors[(1 * texelCount) + texelIndex] = factor1;
-                factors[(2 * texelCount) + texelIndex] = factor2;
-                factors[(3 * texelCount) + texelIndex] = factor3;
-
+                (int gridColIndex, int fractionX) = MapTexelToGridAxis(texelX, scaleHorizontal, maxGridX);
+                StoreTexelContributions(texelIndex, texelCount, indices, factors, gridColIndex, gridRowIndex, fractionX, fractionY, gridWidth, gridLimit);
                 texelIndex++;
             }
         }
 
         return new DecimationInfo(texelCount, indices, factors);
+    }
+
+    /// <summary>
+    /// Maps a texel coordinate along one axis to the (gridIndex, fraction) pair used for
+    /// bilinear interpolation. The grid index is in Q4 fixed-point (top bits) and the
+    /// fraction occupies the low four bits.
+    /// </summary>
+    private static (int GridIndex, int Fraction) MapTexelToGridAxis(int texel, int scale, int maxGrid)
+    {
+        int scaled = scale * texel;
+        int grid = ((scaled * maxGrid) + 32) >> 6;
+        return (grid >> 4, grid & 0xF);
+    }
+
+    /// <summary>
+    /// Computes the four (gridPoint, factor) contributions for one texel and writes them
+    /// into the transposed output arrays. Each contribution slot has <paramref name="texelCount"/>
+    /// entries so lookups at decode time touch contiguous memory per slot.
+    /// Out-of-bounds grid points collapse to index 0 with a zero factor.
+    /// </summary>
+    private static void StoreTexelContributions(
+        int texelIndex,
+        int texelCount,
+        int[] indices,
+        int[] factors,
+        int gridColIndex,
+        int gridRowIndex,
+        int fractionX,
+        int fractionY,
+        int gridWidth,
+        int gridLimit)
+    {
+        int gridPoint0 = gridColIndex + (gridWidth * gridRowIndex);
+        int gridPoint1 = gridPoint0 + 1;
+        int gridPoint2 = gridColIndex + (gridWidth * (gridRowIndex + 1));
+        int gridPoint3 = gridPoint2 + 1;
+
+        int factor3 = ((fractionX * fractionY) + 8) >> 4;
+        int factor2 = fractionY - factor3;
+        int factor1 = fractionX - factor3;
+        int factor0 = 16 - fractionX - fractionY + factor3;
+
+        ClampGridPoint(ref gridPoint0, ref factor0, gridLimit);
+        ClampGridPoint(ref gridPoint1, ref factor1, gridLimit);
+        ClampGridPoint(ref gridPoint2, ref factor2, gridLimit);
+        ClampGridPoint(ref gridPoint3, ref factor3, gridLimit);
+
+        indices[texelIndex] = gridPoint0;
+        indices[texelCount + texelIndex] = gridPoint1;
+        indices[(2 * texelCount) + texelIndex] = gridPoint2;
+        indices[(3 * texelCount) + texelIndex] = gridPoint3;
+
+        factors[texelIndex] = factor0;
+        factors[texelCount + texelIndex] = factor1;
+        factors[(2 * texelCount) + texelIndex] = factor2;
+        factors[(3 * texelCount) + texelIndex] = factor3;
+    }
+
+    /// <summary>
+    /// Replaces an out-of-bounds grid point with a safe dummy index (0) and zeros its
+    /// contribution factor so the corresponding term drops out of the bilinear blend.
+    /// </summary>
+    private static void ClampGridPoint(ref int gridPoint, ref int factor, int gridLimit)
+    {
+        if (gridPoint >= gridLimit)
+        {
+            factor = 0;
+            gridPoint = 0;
+        }
     }
 }

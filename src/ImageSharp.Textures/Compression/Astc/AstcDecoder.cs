@@ -178,19 +178,13 @@ public static class AstcDecoder
         ArgumentOutOfRangeException.ThrowIfLessThan(blockData.Length, PhysicalBlock.SizeInBytes);
         ArgumentOutOfRangeException.ThrowIfLessThan(buffer.Length, footprint.PixelCount * BytesPerPixelUnorm8);
 
-        // Read the 16 bytes that make up the ASTC block as a 128-bit value
-        ulong low = BinaryPrimitives.ReadUInt64LittleEndian(blockData);
-        ulong high = BinaryPrimitives.ReadUInt64LittleEndian(blockData[8..]);
-        UInt128 blockBits = new(high, low);
-
-        BlockInfo info = BlockInfo.Decode(blockBits);
-        if (!info.IsValid)
+        if (!TryReadBlockInfo(blockData, out UInt128 blockBits, out BlockInfo info))
         {
             return;
         }
 
-        // Per ASTC spec §C.2.19, the LDR (decode_unorm8) profile cannot decode blocks
-        // that carry HDR content. See DecompressImage for the same guard.
+        // ASTC spec §C.2.19: LDR profile cannot decode HDR-endpoint blocks. Callers wanting
+        // HDR values must use DecompressHdrBlock.
         if (IsHdrBlock(blockBits, in info))
         {
             throw new TextureFormatException(
@@ -198,22 +192,16 @@ public static class AstcDecoder
                 "Use AstcDecoder.DecompressHdrBlock to decode HDR content.");
         }
 
-        // Fully fused fast path for single-partition, non-dual-plane, LDR blocks
-        if (!info.IsVoidExtent && info.PartitionCount == 1 && !info.IsDualPlane
-            && !info.EndpointMode0.IsHdr())
+        // Fused fast path: single-partition, non-dual-plane, LDR-endpoint, non-void-extent.
+        if (!info.IsVoidExtent && info.PartitionCount == 1 && !info.IsDualPlane && !info.EndpointMode0.IsHdr())
         {
             FusedLdrBlockDecoder.DecompressBlockFusedLdr(blockBits, in info, footprint, buffer);
             return;
         }
 
-        // Fallback for void extent, multi-partition, dual plane, HDR
+        // Fallback: void-extent, multi-partition, dual-plane, or HDR endpoint (narrowed to LDR).
         LogicalBlock? logicalBlock = LogicalBlock.UnpackLogicalBlock(footprint, blockBits, in info);
-        if (logicalBlock is null)
-        {
-            return;
-        }
-
-        logicalBlock.WriteAllPixelsLdr(footprint, buffer);
+        logicalBlock?.WriteAllPixelsLdr(footprint, buffer);
     }
 
     /// <summary>
@@ -376,32 +364,21 @@ public static class AstcDecoder
         ArgumentOutOfRangeException.ThrowIfLessThan(blockData.Length, PhysicalBlock.SizeInBytes);
         ArgumentOutOfRangeException.ThrowIfLessThan(buffer.Length, footprint.PixelCount * 4);
 
-        // Read the 16 bytes that make up the ASTC block as a 128-bit value
-        ulong low = BinaryPrimitives.ReadUInt64LittleEndian(blockData);
-        ulong high = BinaryPrimitives.ReadUInt64LittleEndian(blockData[8..]);
-        UInt128 blockBits = new(high, low);
-
-        BlockInfo info = BlockInfo.Decode(blockBits);
-        if (!info.IsValid)
+        if (!TryReadBlockInfo(blockData, out UInt128 blockBits, out BlockInfo info))
         {
             return;
         }
 
-        // Fused fast path for single-partition, non-dual-plane blocks
+        // Fused fast path: single-partition, non-dual-plane, non-void-extent.
         if (!info.IsVoidExtent && info.PartitionCount == 1 && !info.IsDualPlane)
         {
             FusedHdrBlockDecoder.DecompressBlockFusedHdr(blockBits, in info, footprint, buffer);
             return;
         }
 
-        // Fallback for void extent, multi-partition, dual plane
+        // Fallback for void-extent, multi-partition, or dual-plane blocks.
         LogicalBlock? logicalBlock = LogicalBlock.UnpackLogicalBlock(footprint, blockBits, in info);
-        if (logicalBlock is null)
-        {
-            return;
-        }
-
-        logicalBlock.WriteAllPixelsHdr(footprint, buffer);
+        logicalBlock?.WriteAllPixelsHdr(footprint, buffer);
     }
 
     internal static Span<byte> DecompressImage(AstcFile file)
@@ -482,6 +459,21 @@ public static class AstcDecoder
 
         long totalElements = totalPixels * bytesPerPixel;
         ArgumentOutOfRangeException.ThrowIfLessThan((long)bufferLength, totalElements);
+    }
+
+    /// <summary>
+    /// Reads a 16-byte ASTC block starting at <paramref name="blockData"/>[0] into a
+    /// <see cref="UInt128"/> and decodes its <see cref="BlockInfo"/>. Returns false when
+    /// the block is structurally invalid (the caller should skip it without output).
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static bool TryReadBlockInfo(ReadOnlySpan<byte> blockData, out UInt128 blockBits, out BlockInfo info)
+    {
+        ulong low = BinaryPrimitives.ReadUInt64LittleEndian(blockData);
+        ulong high = BinaryPrimitives.ReadUInt64LittleEndian(blockData[8..]);
+        blockBits = new UInt128(high, low);
+        info = BlockInfo.Decode(blockBits);
+        return info.IsValid;
     }
 
     /// <summary>

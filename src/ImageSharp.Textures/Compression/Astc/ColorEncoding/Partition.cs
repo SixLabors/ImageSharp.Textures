@@ -51,7 +51,13 @@ internal sealed class Partition
         return part;
     }
 
-    // Very small port of selection function; behavior taken from C++ file.
+    /// <summary>
+    /// Computes the partition index (0..<paramref name="partitionCount"/>-1) for a texel at
+    /// (<paramref name="x"/>, <paramref name="y"/>, <paramref name="z"/>) given the block's
+    /// 10-bit partition <paramref name="seed"/>. Implements ASTC spec §C.2.21's partition
+    /// selection hash: a PRNG scrambles the seed, then 12 small seeds weight the texel
+    /// coordinates into four candidate values whose largest wins.
+    /// </summary>
     private static int SelectASTCPartition(int seed, int x, int y, int z, int partitionCount, int pixelCount)
     {
         if (partitionCount <= 1)
@@ -59,6 +65,8 @@ internal sealed class Partition
             return 0;
         }
 
+        // Small footprints (< 31 texels) have all coordinates doubled so neighbouring texels
+        // spread further through the hash and avoid degenerate single-partition patterns.
         if (pixelCount < 31)
         {
             x <<= 1;
@@ -66,81 +74,116 @@ internal sealed class Partition
             z <<= 1;
         }
 
-        seed += (partitionCount - 1) * 1024;
-        uint randomNumber = (uint)seed;
-        randomNumber ^= randomNumber >> 15;
-        randomNumber -= randomNumber << 17;
-        randomNumber += randomNumber << 7;
-        randomNumber += randomNumber << 4;
-        randomNumber ^= randomNumber >> 5;
-        randomNumber += randomNumber << 16;
-        randomNumber ^= randomNumber >> 7;
-        randomNumber ^= randomNumber >> 3;
-        randomNumber ^= randomNumber << 6;
-        randomNumber ^= randomNumber >> 17;
+        uint randomNumber = ScrambleSeed(seed, partitionCount);
+        Span<uint> subseeds = stackalloc uint[12];
+        ExtractSubSeeds(randomNumber, subseeds);
+        ShiftSubSeeds(subseeds, seed, partitionCount);
 
-        uint seed1 = randomNumber & 0xF;
-        uint seed2 = (randomNumber >> 4) & 0xF;
-        uint seed3 = (randomNumber >> 8) & 0xF;
-        uint seed4 = (randomNumber >> 12) & 0xF;
-        uint seed5 = (randomNumber >> 16) & 0xF;
-        uint seed6 = (randomNumber >> 20) & 0xF;
-        uint seed7 = (randomNumber >> 24) & 0xF;
-        uint seed8 = (randomNumber >> 28) & 0xF;
-        uint seed9 = (randomNumber >> 18) & 0xF;
-        uint seed10 = (randomNumber >> 22) & 0xF;
-        uint seed11 = (randomNumber >> 26) & 0xF;
-        uint seed12 = ((randomNumber >> 30) | (randomNumber << 2)) & 0xF;
+        (int a, int b, int c, int d) = MixSubSeedsWithCoords(subseeds, randomNumber, x, y, z);
+        return SelectPartitionFromCandidates(a, b, c, d, partitionCount);
+    }
 
-        seed1 *= seed1;
-        seed2 *= seed2;
-        seed3 *= seed3;
-        seed4 *= seed4;
-        seed5 *= seed5;
-        seed6 *= seed6;
-        seed7 *= seed7;
-        seed8 *= seed8;
-        seed9 *= seed9;
-        seed10 *= seed10;
-        seed11 *= seed11;
-        seed12 *= seed12;
+    /// <summary>
+    /// Applies the 10-step PRNG scramble from ASTC spec §C.2.21 Listing 11 to the 10-bit
+    /// seed offset by <paramref name="partitionCount"/>.
+    /// </summary>
+    private static uint ScrambleSeed(int seed, int partitionCount)
+    {
+        uint random = (uint)(seed + ((partitionCount - 1) * 1024));
+        random ^= random >> 15;
+        random -= random << 17;
+        random += random << 7;
+        random += random << 4;
+        random ^= random >> 5;
+        random += random << 16;
+        random ^= random >> 7;
+        random ^= random >> 3;
+        random ^= random << 6;
+        random ^= random >> 17;
+        return random;
+    }
 
-        int sh1, sh2, sh3;
+    /// <summary>
+    /// Extracts the 12 4-bit sub-seeds from the scrambled number and squares each. The squaring
+    /// biases the distribution so small values stay small and large values become dominant.
+    /// </summary>
+    private static void ExtractSubSeeds(uint random, Span<uint> subseeds)
+    {
+        subseeds[0] = random & 0xF;
+        subseeds[1] = (random >> 4) & 0xF;
+        subseeds[2] = (random >> 8) & 0xF;
+        subseeds[3] = (random >> 12) & 0xF;
+        subseeds[4] = (random >> 16) & 0xF;
+        subseeds[5] = (random >> 20) & 0xF;
+        subseeds[6] = (random >> 24) & 0xF;
+        subseeds[7] = (random >> 28) & 0xF;
+        subseeds[8] = (random >> 18) & 0xF;
+        subseeds[9] = (random >> 22) & 0xF;
+        subseeds[10] = (random >> 26) & 0xF;
+        subseeds[11] = ((random >> 30) | (random << 2)) & 0xF;
+
+        for (int i = 0; i < 12; ++i)
+        {
+            subseeds[i] *= subseeds[i];
+        }
+    }
+
+    /// <summary>
+    /// Right-shifts each sub-seed by one of three mode-dependent shift amounts (sh1, sh2, sh3)
+    /// per ASTC spec §C.2.21. The shift choice is driven by low-order bits of the original
+    /// seed together with the partition count.
+    /// </summary>
+    private static void ShiftSubSeeds(Span<uint> subseeds, int seed, int partitionCount)
+    {
+        int sh1, sh2;
         if ((seed & 1) != 0)
         {
             sh1 = (seed & 2) != 0 ? 4 : 5;
-            sh2 = (partitionCount == 3) ? 6 : 5;
+            sh2 = partitionCount == 3 ? 6 : 5;
         }
         else
         {
-            sh1 = (partitionCount == 3) ? 6 : 5;
+            sh1 = partitionCount == 3 ? 6 : 5;
             sh2 = (seed & 2) != 0 ? 4 : 5;
         }
 
-        sh3 = (seed & 0x10) != 0 ? sh1 : sh2;
+        int sh3 = (seed & 0x10) != 0 ? sh1 : sh2;
 
-        seed1 >>= sh1;
-        seed2 >>= sh2;
-        seed3 >>= sh1;
-        seed4 >>= sh2;
-        seed5 >>= sh1;
-        seed6 >>= sh2;
-        seed7 >>= sh1;
-        seed8 >>= sh2;
-        seed9 >>= sh3;
-        seed10 >>= sh3;
-        seed11 >>= sh3;
-        seed12 >>= sh3;
+        subseeds[0] >>= sh1;
+        subseeds[1] >>= sh2;
+        subseeds[2] >>= sh1;
+        subseeds[3] >>= sh2;
+        subseeds[4] >>= sh1;
+        subseeds[5] >>= sh2;
+        subseeds[6] >>= sh1;
+        subseeds[7] >>= sh2;
+        subseeds[8] >>= sh3;
+        subseeds[9] >>= sh3;
+        subseeds[10] >>= sh3;
+        subseeds[11] >>= sh3;
+    }
 
-        int a = (int)((seed1 * x) + (seed2 * y) + (seed11 * z) + (randomNumber >> 14));
-        int b = (int)((seed3 * x) + (seed4 * y) + (seed12 * z) + (randomNumber >> 10));
-        int c = (int)((seed5 * x) + (seed6 * y) + (seed9 * z) + (randomNumber >> 6));
-        int d = (int)((seed7 * x) + (seed8 * y) + (seed10 * z) + (randomNumber >> 2));
+    /// <summary>
+    /// Computes the four candidate values a, b, c, d as weighted combinations of the texel
+    /// coordinates with sub-seeds as weights, plus the scrambled-number shifted by a
+    /// candidate-specific amount. Low six bits are retained to match the spec.
+    /// </summary>
+    private static (int A, int B, int C, int D) MixSubSeedsWithCoords(ReadOnlySpan<uint> subseeds, uint random, int x, int y, int z)
+    {
+        int a = (int)((subseeds[0] * x) + (subseeds[1] * y) + (subseeds[10] * z) + (random >> 14));
+        int b = (int)((subseeds[2] * x) + (subseeds[3] * y) + (subseeds[11] * z) + (random >> 10));
+        int c = (int)((subseeds[4] * x) + (subseeds[5] * y) + (subseeds[8] * z) + (random >> 6));
+        int d = (int)((subseeds[6] * x) + (subseeds[7] * y) + (subseeds[9] * z) + (random >> 2));
+        return (a & 0x3F, b & 0x3F, c & 0x3F, d & 0x3F);
+    }
 
-        a &= 0x3F;
-        b &= 0x3F;
-        c &= 0x3F;
-        d &= 0x3F;
+    /// <summary>
+    /// Returns the index of the largest of a, b, c, d after zeroing the unused ones based on
+    /// <paramref name="partitionCount"/>. Ties prefer the lower index (matches the spec's
+    /// cascade of ≥ comparisons).
+    /// </summary>
+    private static int SelectPartitionFromCandidates(int a, int b, int c, int d, int partitionCount)
+    {
         if (partitionCount <= 3)
         {
             d = 0;
@@ -155,17 +198,12 @@ internal sealed class Partition
         {
             return 0;
         }
-        else if (b >= c && b >= d)
+
+        if (b >= c && b >= d)
         {
             return 1;
         }
-        else if (c >= d)
-        {
-            return 2;
-        }
-        else
-        {
-            return 3;
-        }
+
+        return c >= d ? 2 : 3;
     }
 }
