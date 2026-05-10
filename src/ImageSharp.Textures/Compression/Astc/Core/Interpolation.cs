@@ -28,4 +28,13 @@ internal static class Interpolation
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int BlendLdrReplicated(int p0, int p1, int weight)
         => BlendWeighted((p0 << 8) | p0, (p1 << 8) | p1, weight);
+
+    /// <summary>
+    /// Normalises a UNORM16 value (clamped to [0, 0xFFFF]) to the [0.0, 1.0] float range.
+    /// Used by the HDR output path when an LDR endpoint or mode-14 LDR alpha (ASTC spec §C.2.14)
+    /// has already been interpolated as an integer.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static float Unorm16ToFloat(int interpolated)
+        => Math.Clamp(interpolated, 0, 0xFFFF) / 65535.0f;
 }

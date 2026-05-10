@@ -25,8 +25,8 @@ public static class AstcDecoder
     private static readonly ArrayPool<byte> ArrayPool = ArrayPool<byte>.Shared;
 
     // ASTC decodes to 4-channel RGBA in both LDR (UNORM8) and HDR (float32) profiles.
+    // For LDR this is bytes-per-pixel; for HDR it's float-elements-per-pixel.
     private const int ChannelsPerPixel = 4;
-    private const int BytesPerPixelUnorm8 = ChannelsPerPixel;
 
     /// <summary>
     /// Decompresses ASTC-compressed data to uncompressed RGBA8 format (4 bytes per pixel).
@@ -45,9 +45,9 @@ public static class AstcDecoder
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(height);
 
         long totalPixels = (long)width * height;
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(totalPixels, (long)int.MaxValue / BytesPerPixelUnorm8);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(totalPixels, (long)int.MaxValue / ChannelsPerPixel);
 
-        int totalBytes = (int)(totalPixels * BytesPerPixelUnorm8);
+        int totalBytes = (int)(totalPixels * ChannelsPerPixel);
         byte[] imageBuffer = new byte[totalBytes];
 
         return DecompressImage(astcData, width, height, footprint, imageBuffer)
@@ -69,7 +69,7 @@ public static class AstcDecoder
     /// </returns>
     public static bool DecompressImage(ReadOnlySpan<byte> astcData, int width, int height, Footprint footprint, Span<byte> imageBuffer)
     {
-        ValidateImageArgs(width, height, imageBuffer.Length, BytesPerPixelUnorm8);
+        ValidateImageArgs(width, height, imageBuffer.Length, ChannelsPerPixel);
 
         if (!TryGetBlockLayout(astcData, width, height, footprint, out int blocksWide, out int blocksHigh))
         {
@@ -78,7 +78,7 @@ public static class AstcDecoder
 
         // Scratch is rented outside the try/finally so a failing Rent never hands the default
         // sentinel to Return.
-        byte[] decodedBlock = ArrayPool.Rent(footprint.PixelCount * BytesPerPixelUnorm8);
+        byte[] decodedBlock = ArrayPool.Rent(footprint.PixelCount * ChannelsPerPixel);
         try
         {
             DecodeAllBlocks<LdrPipeline, byte>(astcData, width, height, footprint, blocksWide, blocksHigh, imageBuffer, decodedBlock.AsSpan());
@@ -416,9 +416,7 @@ public static class AstcDecoder
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static bool TryReadBlockInfo(ReadOnlySpan<byte> blockData, out UInt128 blockBits, out BlockInfo info)
     {
-        ulong low = BinaryPrimitives.ReadUInt64LittleEndian(blockData);
-        ulong high = BinaryPrimitives.ReadUInt64LittleEndian(blockData[8..]);
-        blockBits = new UInt128(high, low);
+        blockBits = BinaryPrimitives.ReadUInt128LittleEndian(blockData);
         info = BlockInfo.Decode(blockBits);
         return info.IsValid;
     }
@@ -437,9 +435,7 @@ public static class AstcDecoder
             return false;
         }
 
-        ulong low = BinaryPrimitives.ReadUInt64LittleEndian(astcData[offset..]);
-        ulong high = BinaryPrimitives.ReadUInt64LittleEndian(astcData[(offset + 8)..]);
-        blockBits = new UInt128(high, low);
+        blockBits = BinaryPrimitives.ReadUInt128LittleEndian(astcData.Slice(offset, PhysicalBlock.SizeInBytes));
         return true;
     }
 

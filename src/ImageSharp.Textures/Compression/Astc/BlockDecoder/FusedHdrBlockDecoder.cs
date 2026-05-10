@@ -141,8 +141,8 @@ internal static class FusedHdrBlockDecoder
 
                 if (alphaIsLdr)
                 {
-                    int interpolated = Interpolation.BlendWeighted(lowA, highA, weight);
-                    buffer[dstOffset + 3] = (ushort)Math.Clamp(interpolated, 0, 0xFFFF) / 65535.0f;
+                    // Mode 14 (ASTC spec §C.2.14): alpha is a UNORM16 value interpolated like LDR.
+                    buffer[dstOffset + 3] = Interpolation.Unorm16ToFloat(Interpolation.BlendWeighted(lowA, highA, weight));
                 }
                 else
                 {
@@ -154,17 +154,12 @@ internal static class FusedHdrBlockDecoder
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static float InterpolateLdrAsFloat(int p0, int p1, int weight)
-    {
-        int interpolated = Interpolation.BlendLdrReplicated(p0, p1, weight);
-        return Math.Clamp(interpolated, 0, 0xFFFF) / 65535.0f;
-    }
+        => Interpolation.Unorm16ToFloat(Interpolation.BlendLdrReplicated(p0, p1, weight));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static float InterpolateHdrAsFloat(int p0, int p1, int weight)
     {
         int interpolated = Interpolation.BlendWeighted(p0, p1, weight);
-        ushort clamped = (ushort)Math.Clamp(interpolated, 0, 0xFFFF);
-        ushort halfFloatBits = Fp16.FromLns(clamped);
-        return (float)BitConverter.UInt16BitsToHalf(halfFloatBits);
+        return Fp16.LnsToFloat(Math.Clamp(interpolated, 0, 0xFFFF));
     }
 }

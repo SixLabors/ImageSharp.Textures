@@ -15,7 +15,7 @@ namespace SixLabors.ImageSharp.Textures.Compression.Astc.BlockDecoder;
 /// </summary>
 internal static class FusedLdrBlockDecoder
 {
-    private const int BytesPerPixelUnorm8 = 4;
+    private const int ChannelsPerPixel = 4;
 
     /// <summary>
     /// Fused LDR decode to a contiguous buffer.
@@ -30,7 +30,7 @@ internal static class FusedLdrBlockDecoder
             buffer,
             dstBaseX: 0,
             dstBaseY: 0,
-            dstRowStride: footprint.Width * BytesPerPixelUnorm8);
+            dstRowStride: footprint.Width * ChannelsPerPixel);
 
     /// <summary>
     /// Fused LDR decode writing directly to image buffer at strided positions.
@@ -52,7 +52,7 @@ internal static class FusedLdrBlockDecoder
             imageBuffer,
             dstBaseX,
             dstBaseY,
-            dstRowStride: imageWidth * BytesPerPixelUnorm8);
+            dstRowStride: imageWidth * ChannelsPerPixel);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void DecompressBlock(
@@ -92,7 +92,7 @@ internal static class FusedLdrBlockDecoder
 
         for (int pixelY = 0; pixelY < footprintHeight; pixelY++)
         {
-            int dstRowOffset = ((dstBaseY + pixelY) * dstRowStride) + (dstBaseX * BytesPerPixelUnorm8);
+            int dstRowOffset = ((dstBaseY + pixelY) * dstRowStride) + (dstBaseX * ChannelsPerPixel);
             int srcRowBase = pixelY * footprintWidth;
             int pixelX = 0;
 
@@ -109,7 +109,7 @@ internal static class FusedLdrBlockDecoder
                         texelWeights[texelIndex + 3]);
                     SimdHelpers.Write4PixelLdr(
                         buffer,
-                        dstRowOffset + (pixelX * BytesPerPixelUnorm8),
+                        dstRowOffset + (pixelX * ChannelsPerPixel),
                         lowR,
                         lowG,
                         lowB,
@@ -126,7 +126,7 @@ internal static class FusedLdrBlockDecoder
             {
                 SimdHelpers.WriteSinglePixelLdr(
                     buffer,
-                    dstRowOffset + (pixelX * BytesPerPixelUnorm8),
+                    dstRowOffset + (pixelX * ChannelsPerPixel),
                     lowR,
                     lowG,
                     lowB,

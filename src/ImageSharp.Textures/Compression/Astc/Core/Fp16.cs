@@ -1,6 +1,8 @@
 // Copyright (c) Six Labors.
 // Licensed under the Six Labors Split License.
 
+using System.Runtime.CompilerServices;
+
 namespace SixLabors.ImageSharp.Textures.Compression.Astc.Core;
 
 /// <summary>
@@ -44,4 +46,20 @@ internal static class Fp16
         int result = (exponentComponent << 10) | (mantissaTransformed >> 3);
         return (ushort)Math.Min(result, MaxFinite);
     }
+
+    /// <summary>
+    /// Decodes a 16-bit LNS value to a single-precision float by converting through FP16,
+    /// per ASTC spec §C.2.15. The LNS value is passed through <see cref="FromLns"/>, reinterpreted
+    /// as FP16 bits, and widened to <see cref="float"/>.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static float LnsToFloat(int lns) => (float)BitConverter.UInt16BitsToHalf(FromLns(lns));
+
+    /// <summary>
+    /// Widens an FP16 bit pattern (already in SF16 form, no LNS conversion) to <see cref="float"/>.
+    /// Used for HDR void-extent blocks (ASTC spec §C.2.23), whose channel values are stored as
+    /// FP16 bit patterns directly rather than as LNS values.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static float Fp16ToFloat(ushort fp16Bits) => (float)BitConverter.UInt16BitsToHalf(fp16Bits);
 }

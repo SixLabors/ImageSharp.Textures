@@ -192,18 +192,18 @@ internal sealed class LogicalBlock
 
             if (channel == 3 && alphaIsLdr)
             {
-                // Mode 14: alpha is UNORM16, normalise directly.
+                // Mode 14 (spec §C.2.14): alpha is UNORM16, normalise directly.
                 pixel[channel] = interpolated / 65535.0f;
             }
             else if (valuesAreLns)
             {
-                // Normal HDR block: convert from LNS to FP16, then widen to float.
-                pixel[channel] = (float)BitConverter.UInt16BitsToHalf(Fp16.FromLns(interpolated));
+                // Normal HDR block (spec §C.2.15): LNS → FP16 → float.
+                pixel[channel] = Fp16.LnsToFloat(interpolated);
             }
             else
             {
-                // Void-extent HDR: values are already FP16 bit patterns.
-                pixel[channel] = (float)BitConverter.UInt16BitsToHalf(interpolated);
+                // Void-extent HDR (spec §C.2.23): values are already FP16 bit patterns.
+                pixel[channel] = Fp16.Fp16ToFloat(interpolated);
             }
         }
     }
