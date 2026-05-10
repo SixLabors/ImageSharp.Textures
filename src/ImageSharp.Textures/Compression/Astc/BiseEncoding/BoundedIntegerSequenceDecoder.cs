@@ -1,7 +1,7 @@
 // Copyright (c) Six Labors.
 // Licensed under the Six Labors Split License.
 
-using System.Threading;
+using System.Runtime.CompilerServices;
 using SixLabors.ImageSharp.Textures.Compression.Astc.IO;
 
 namespace SixLabors.ImageSharp.Textures.Compression.Astc.BiseEncoding;
@@ -99,65 +99,79 @@ internal sealed class BoundedIntegerSequenceDecoder : BoundedIntegerSequenceCode
     }
 
     /// <summary>
-    /// Decode a trit/quint block into a caller-provided span.
-    /// Returns the number of values written.
-    /// Uses direct bit extraction (no BitStream) and flat encoding tables.
+    /// Decodes one trit/quint BISE block (ASTC spec §C.2.12) into <paramref name="result"/>.
+    /// Returns the number of values written (5 for trits, 3 for quints). Uses direct bit
+    /// extraction (no BitStream) and flat encoding tables for speed — this is on the hot path.
     /// </summary>
     public static int DecodeISEBlock(BiseEncodingMode mode, ulong encodedBlock, int encodedBitCount, Span<int> result)
     {
         ulong mantissaMask = (1UL << encodedBitCount) - 1;
+        return mode == BiseEncodingMode.TritEncoding
+            ? DecodeTritBlock(encodedBlock, encodedBitCount, mantissaMask, result)
+            : DecodeQuintBlock(encodedBlock, encodedBitCount, mantissaMask, result);
+    }
 
-        if (mode == BiseEncodingMode.TritEncoding)
-        {
-            // 5 values, interleaved bits = [2, 2, 1, 2, 1] = 8 bits total
-            int bitPosition = 0;
-            int mantissa0 = (int)((encodedBlock >> bitPosition) & mantissaMask);
-            bitPosition += encodedBitCount;
-            ulong encodedTrits = (encodedBlock >> bitPosition) & 0x3;
-            bitPosition += 2;
-            int mantissa1 = (int)((encodedBlock >> bitPosition) & mantissaMask);
-            bitPosition += encodedBitCount;
-            encodedTrits |= ((encodedBlock >> bitPosition) & 0x3) << 2;
-            bitPosition += 2;
-            int mantissa2 = (int)((encodedBlock >> bitPosition) & mantissaMask);
-            bitPosition += encodedBitCount;
-            encodedTrits |= ((encodedBlock >> bitPosition) & 0x1) << 4;
-            bitPosition += 1;
-            int mantissa3 = (int)((encodedBlock >> bitPosition) & mantissaMask);
-            bitPosition += encodedBitCount;
-            encodedTrits |= ((encodedBlock >> bitPosition) & 0x3) << 5;
-            bitPosition += 2;
-            int mantissa4 = (int)((encodedBlock >> bitPosition) & mantissaMask);
-            encodedTrits |= ((encodedBlock >> (bitPosition + encodedBitCount)) & 0x1) << 7;
+    /// <summary>
+    /// Decodes a five-value trit block. The ASTC spec §C.2.12 layout interleaves mantissas
+    /// and an 8-bit packed trit selector as [m0, t0(2), m1, t1(2), m2, t2(1), m3, t3(2), m4, t4(1)].
+    /// The 8 selector bits look up a row in the pre-flattened trit encoding table.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static int DecodeTritBlock(ulong encodedBlock, int encodedBitCount, ulong mantissaMask, Span<int> result)
+    {
+        int bitPosition = 0;
+        int mantissa0 = (int)((encodedBlock >> bitPosition) & mantissaMask);
+        bitPosition += encodedBitCount;
+        ulong encodedTrits = (encodedBlock >> bitPosition) & 0x3;
+        bitPosition += 2;
+        int mantissa1 = (int)((encodedBlock >> bitPosition) & mantissaMask);
+        bitPosition += encodedBitCount;
+        encodedTrits |= ((encodedBlock >> bitPosition) & 0x3) << 2;
+        bitPosition += 2;
+        int mantissa2 = (int)((encodedBlock >> bitPosition) & mantissaMask);
+        bitPosition += encodedBitCount;
+        encodedTrits |= ((encodedBlock >> bitPosition) & 0x1) << 4;
+        bitPosition += 1;
+        int mantissa3 = (int)((encodedBlock >> bitPosition) & mantissaMask);
+        bitPosition += encodedBitCount;
+        encodedTrits |= ((encodedBlock >> bitPosition) & 0x3) << 5;
+        bitPosition += 2;
+        int mantissa4 = (int)((encodedBlock >> bitPosition) & mantissaMask);
+        encodedTrits |= ((encodedBlock >> (bitPosition + encodedBitCount)) & 0x1) << 7;
 
-            int tritTableBase = (int)encodedTrits * 5;
-            result[0] = (FlatTritEncodings[tritTableBase] << encodedBitCount) | mantissa0;
-            result[1] = (FlatTritEncodings[tritTableBase + 1] << encodedBitCount) | mantissa1;
-            result[2] = (FlatTritEncodings[tritTableBase + 2] << encodedBitCount) | mantissa2;
-            result[3] = (FlatTritEncodings[tritTableBase + 3] << encodedBitCount) | mantissa3;
-            result[4] = (FlatTritEncodings[tritTableBase + 4] << encodedBitCount) | mantissa4;
-            return 5;
-        }
-        else
-        {
-            // 3 values, interleaved bits = [3, 2, 2] = 7 bits total
-            int bitPosition = 0;
-            int mantissa0 = (int)((encodedBlock >> bitPosition) & mantissaMask);
-            bitPosition += encodedBitCount;
-            ulong encodedQuints = (encodedBlock >> bitPosition) & 0x7;
-            bitPosition += 3;
-            int mantissa1 = (int)((encodedBlock >> bitPosition) & mantissaMask);
-            bitPosition += encodedBitCount;
-            encodedQuints |= ((encodedBlock >> bitPosition) & 0x3) << 3;
-            bitPosition += 2;
-            int mantissa2 = (int)((encodedBlock >> bitPosition) & mantissaMask);
-            encodedQuints |= ((encodedBlock >> (bitPosition + encodedBitCount)) & 0x3) << 5;
+        int tritTableBase = (int)encodedTrits * 5;
+        result[0] = (FlatTritEncodings[tritTableBase] << encodedBitCount) | mantissa0;
+        result[1] = (FlatTritEncodings[tritTableBase + 1] << encodedBitCount) | mantissa1;
+        result[2] = (FlatTritEncodings[tritTableBase + 2] << encodedBitCount) | mantissa2;
+        result[3] = (FlatTritEncodings[tritTableBase + 3] << encodedBitCount) | mantissa3;
+        result[4] = (FlatTritEncodings[tritTableBase + 4] << encodedBitCount) | mantissa4;
+        return 5;
+    }
 
-            int quintTableBase = (int)encodedQuints * 3;
-            result[0] = (FlatQuintEncodings[quintTableBase] << encodedBitCount) | mantissa0;
-            result[1] = (FlatQuintEncodings[quintTableBase + 1] << encodedBitCount) | mantissa1;
-            result[2] = (FlatQuintEncodings[quintTableBase + 2] << encodedBitCount) | mantissa2;
-            return 3;
-        }
+    /// <summary>
+    /// Decodes a three-value quint block (ASTC spec §C.2.12). The 7-bit packed quint
+    /// selector is interleaved as [m0, q0(3), m1, q1(2), m2, q2(2)] and indexes a row in
+    /// the pre-flattened quint encoding table.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static int DecodeQuintBlock(ulong encodedBlock, int encodedBitCount, ulong mantissaMask, Span<int> result)
+    {
+        int bitPosition = 0;
+        int mantissa0 = (int)((encodedBlock >> bitPosition) & mantissaMask);
+        bitPosition += encodedBitCount;
+        ulong encodedQuints = (encodedBlock >> bitPosition) & 0x7;
+        bitPosition += 3;
+        int mantissa1 = (int)((encodedBlock >> bitPosition) & mantissaMask);
+        bitPosition += encodedBitCount;
+        encodedQuints |= ((encodedBlock >> bitPosition) & 0x3) << 3;
+        bitPosition += 2;
+        int mantissa2 = (int)((encodedBlock >> bitPosition) & mantissaMask);
+        encodedQuints |= ((encodedBlock >> (bitPosition + encodedBitCount)) & 0x3) << 5;
+
+        int quintTableBase = (int)encodedQuints * 3;
+        result[0] = (FlatQuintEncodings[quintTableBase] << encodedBitCount) | mantissa0;
+        result[1] = (FlatQuintEncodings[quintTableBase + 1] << encodedBitCount) | mantissa1;
+        result[2] = (FlatQuintEncodings[quintTableBase + 2] << encodedBitCount) | mantissa2;
+        return 3;
     }
 }

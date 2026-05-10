@@ -214,48 +214,49 @@ internal static class IntermediateBlockPacker
         return (block.IdentifyInvalidEncodingIssues(), physicalBlockBits);
     }
 
+    /// <summary>
+    /// Packs a void-extent block (ASTC spec §C.2.23): the low 64 bits are the header and
+    /// four 13-bit texel-space coordinates, the high 64 bits hold the four 16-bit RGBA
+    /// channels. When RGBA is all-zero the compact single-ulong representation is emitted.
+    /// </summary>
     public static (string? Error, UInt128 PhysicalBlockBits) Pack(IntermediateBlock.VoidExtentData data)
     {
-        // Pack void extent
-        // Assemble the 128-bit value explicitly: low 64 bits = RGBA (4x16)
-        // high 64 bits = 12-bit header (0xDFC) followed by four 13-bit coords.
-        ulong high64 = ((ulong)data.A << 48) | ((ulong)data.B << 32) | ((ulong)data.G << 16) | data.R;
-        ulong low64 = 0UL;
+        ulong rgba = PackVoidExtentRgba(in data);
+        ulong headerAndCoords = PackVoidExtentHeaderAndCoords(in data);
 
-        // Header occupies lowest 12 bits of the high word
-        low64 |= 0xDFCu;
-        for (int i = 0; i < 4; ++i)
-        {
-            low64 |= ((ulong)(data.Coords[i] & 0x1FFF)) << (12 + (13 * i));
-        }
-
-        UInt128 physicalBlockBits;
-
-        // Decide representation: if the RGBA low word is zero we emit the
-        // compact single-ulong representation (low word = header+coords,
-        // high word = 0) to match the reference tests. Otherwise the
-        // low word holds RGBA and the high word holds header+coords.
-        if (high64 == 0UL)
-        {
-            physicalBlockBits = (UInt128)low64;
-
-            // using compact void extent representation
-        }
-        else
-        {
-            physicalBlockBits = new UInt128(high64, low64);
-
-            // using full void extent representation
-        }
+        // Compact representation (high 64 bits = 0) applies when RGBA is all zero.
+        UInt128 physicalBlockBits = rgba == 0UL
+            ? (UInt128)headerAndCoords
+            : new UInt128(rgba, headerAndCoords);
 
         PhysicalBlock block = PhysicalBlock.Create(physicalBlockBits);
         string? illegal = block.IdentifyInvalidEncodingIssues();
         if (illegal is not null)
         {
-            throw new InvalidOperationException($"{nameof(Pack)}(void extent) produced illegal encoding");
+            throw new InvalidOperationException("Pack(void extent) produced illegal encoding");
         }
 
-        return (illegal, physicalBlockBits);
+        return (null, physicalBlockBits);
+    }
+
+    /// <summary>Packs the four 16-bit RGBA channels into one ulong (R low, A high).</summary>
+    private static ulong PackVoidExtentRgba(in IntermediateBlock.VoidExtentData data)
+        => ((ulong)data.A << 48) | ((ulong)data.B << 32) | ((ulong)data.G << 16) | data.R;
+
+    /// <summary>
+    /// Packs the void-extent header (<c>0xDFC</c>, 12 bits) plus four 13-bit texel coords
+    /// into one ulong. Spec §C.2.23 places the header in bits [0..11] and coord i in
+    /// bits [12 + 13*i .. 12 + 13*i + 12].
+    /// </summary>
+    private static ulong PackVoidExtentHeaderAndCoords(in IntermediateBlock.VoidExtentData data)
+    {
+        ulong bits = 0xDFCu;
+        for (int i = 0; i < 4; ++i)
+        {
+            bits |= ((ulong)(data.Coords[i] & 0x1FFF)) << (12 + (13 * i));
+        }
+
+        return bits;
     }
 
     private static (string? Error, int[] Range) GetEncodedWeightRange(int range)
@@ -422,73 +423,129 @@ internal static class IntermediateBlockPacker
         return (weightSink, weightBitsCount);
     }
 
+    /// <summary>
+    /// Writes the color-endpoint-mode (CEM) bits for the block (ASTC spec §C.2.11). Shared
+    /// CEM uses the compact form (2 bits marker + 4 bits mode); non-shared CEM encodes a
+    /// 2-bit base class plus per-partition class-selector and mode bits. Returns the
+    /// high-order CEM bits that spill into the extra-config region, plus the dual-plane
+    /// channel if present.
+    /// </summary>
     private static (string? Error, int ExtraConfig) EncodeColorEndpointModes(in IntermediateBlock.IntermediateBlockData data, int partitionCount, ref BitStream bitSink)
     {
-        int extraConfig = 0;
-        bool sharedEndpointMode = IntermediateBlock.SharedEndpointModes(data);
+        int extraConfig;
 
-        if (sharedEndpointMode)
+        if (IntermediateBlock.SharedEndpointModes(data))
         {
-            if (partitionCount > 1)
-            {
-                bitSink.PutBits(0u, 2);
-            }
-
-            bitSink.PutBits((uint)data.Endpoints[0].Mode, 4);
+            WriteSharedCem(in data, partitionCount, ref bitSink);
+            extraConfig = 0;
         }
         else
         {
-            // compute min_class, max_class
-            int minClass = 2;
-            int maxClass = 0;
-            for (int i = 0; i < data.EndpointCount; i++)
+            if (!TryWriteNonSharedCem(in data, partitionCount, ref bitSink, out extraConfig, out string? error))
             {
-                int endpointModeClass = ((int)data.Endpoints[i].Mode) >> 2;
-                minClass = Math.Min(minClass, endpointModeClass);
-                maxClass = Math.Max(maxClass, endpointModeClass);
+                return (error, 0);
             }
-
-            if (maxClass - minClass > 1)
-            {
-                return ("Endpoint modes are invalid", 0);
-            }
-
-            BitStream cemEncoder = new(0UL, 0);
-            cemEncoder.PutBits((uint)(minClass + 1), 2);
-
-            for (int i = 0; i < data.EndpointCount; i++)
-            {
-                int endpointModeClass = ((int)data.Endpoints[i].Mode) >> 2;
-                int classSelectorBit = endpointModeClass - minClass;
-                cemEncoder.PutBits((ulong)classSelectorBit, 1);
-            }
-
-            for (int i = 0; i < data.EndpointCount; i++)
-            {
-                int epMode = ((int)data.Endpoints[i].Mode) & 3;
-                cemEncoder.PutBits((ulong)epMode, 2);
-            }
-
-            int cemBits = 2 + (partitionCount * 3);
-            if (!cemEncoder.TryGetBits(cemBits, out uint encodedCem))
-            {
-                throw new InvalidOperationException();
-            }
-
-            extraConfig = (int)(encodedCem >> 6);
-
-            bitSink.PutBits(encodedCem, Math.Min(6, cemBits));
         }
 
-        // dual plane channel
-        if (data.DualPlaneChannel.HasValue)
+        return (null, ApplyDualPlaneChannel(extraConfig, data.DualPlaneChannel));
+    }
+
+    /// <summary>
+    /// Writes the shared-CEM form: a 2-bit marker (only for multi-partition blocks)
+    /// followed by the 4-bit endpoint mode used by every partition.
+    /// </summary>
+    private static void WriteSharedCem(in IntermediateBlock.IntermediateBlockData data, int partitionCount, ref BitStream bitSink)
+    {
+        if (partitionCount > 1)
         {
-            int channel = data.DualPlaneChannel.Value;
-            ArgumentOutOfRangeException.ThrowIfLessThan(channel, 0);
-            ArgumentOutOfRangeException.ThrowIfGreaterThan(channel, 3);
-            extraConfig = (extraConfig << 2) | channel;
+            bitSink.PutBits(0u, 2);
         }
 
-        return (null, extraConfig);
+        bitSink.PutBits((uint)data.Endpoints[0].Mode, 4);
+    }
+
+    /// <summary>
+    /// Writes the non-shared CEM form: a 2-bit base-class marker plus per-partition
+    /// class-selector and mode bits. Returns false when the endpoints span more than two
+    /// adjacent CEM classes, which the non-shared encoding cannot represent.
+    /// </summary>
+    private static bool TryWriteNonSharedCem(
+        in IntermediateBlock.IntermediateBlockData data,
+        int partitionCount,
+        ref BitStream bitSink,
+        out int extraConfig,
+        out string? error)
+    {
+        extraConfig = 0;
+        error = null;
+
+        (int minClass, int maxClass) = GetEndpointModeClassRange(in data);
+        if (maxClass - minClass > 1)
+        {
+            error = "Endpoint modes are invalid";
+            return false;
+        }
+
+        BitStream cemEncoder = new(0UL, 0);
+        cemEncoder.PutBits((uint)(minClass + 1), 2);
+
+        // Per-partition class selectors first, then per-partition 2-bit modes.
+        for (int i = 0; i < data.EndpointCount; i++)
+        {
+            int endpointModeClass = ((int)data.Endpoints[i].Mode) >> 2;
+            cemEncoder.PutBits((ulong)(endpointModeClass - minClass), 1);
+        }
+
+        for (int i = 0; i < data.EndpointCount; i++)
+        {
+            int epMode = ((int)data.Endpoints[i].Mode) & 3;
+            cemEncoder.PutBits((ulong)epMode, 2);
+        }
+
+        int cemBits = 2 + (partitionCount * 3);
+        if (!cemEncoder.TryGetBits(cemBits, out uint encodedCem))
+        {
+            throw new InvalidOperationException("Failed to flush CEM bit stream");
+        }
+
+        // First six bits go into the main stream; anything above spills into the extra-config
+        // region (§C.2.11).
+        extraConfig = (int)(encodedCem >> 6);
+        bitSink.PutBits(encodedCem, Math.Min(6, cemBits));
+        return true;
+    }
+
+    /// <summary>
+    /// Returns the min/max endpoint-mode class (mode >> 2) across all partitions.
+    /// </summary>
+    private static (int MinClass, int MaxClass) GetEndpointModeClassRange(in IntermediateBlock.IntermediateBlockData data)
+    {
+        int minClass = 2;
+        int maxClass = 0;
+        for (int i = 0; i < data.EndpointCount; i++)
+        {
+            int endpointModeClass = ((int)data.Endpoints[i].Mode) >> 2;
+            minClass = Math.Min(minClass, endpointModeClass);
+            maxClass = Math.Max(maxClass, endpointModeClass);
+        }
+
+        return (minClass, maxClass);
+    }
+
+    /// <summary>
+    /// Appends the 2-bit dual-plane channel selector to the accumulated extra-config bits
+    /// (ASTC spec §C.2.20). When the block has no dual plane the value is unchanged.
+    /// </summary>
+    private static int ApplyDualPlaneChannel(int extraConfig, int? dualPlaneChannel)
+    {
+        if (!dualPlaneChannel.HasValue)
+        {
+            return extraConfig;
+        }
+
+        int channel = dualPlaneChannel.Value;
+        ArgumentOutOfRangeException.ThrowIfLessThan(channel, 0);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(channel, 3);
+        return (extraConfig << 2) | channel;
     }
 }
