@@ -166,7 +166,7 @@ internal static class FusedHdrBlockDecoder
     {
         int interpolated = ((p0 * (64 - weight)) + (p1 * weight) + 32) / 64;
         ushort clamped = (ushort)Math.Clamp(interpolated, 0, 0xFFFF);
-        ushort halfFloatBits = LogicalBlock.LnsToSf16(clamped);
+        ushort halfFloatBits = Fp16.FromLns(clamped);
         return (float)BitConverter.UInt16BitsToHalf(halfFloatBits);
     }
 }

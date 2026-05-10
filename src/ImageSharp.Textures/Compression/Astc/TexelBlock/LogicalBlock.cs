@@ -111,69 +111,68 @@ internal sealed class LogicalBlock
     }
 
     /// <summary>
-    /// Writes the HDR float values for the pixel at (x, y) into the output span.
+    /// Writes all pixels in the block as RGBA floats into <paramref name="buffer"/>.
     /// </summary>
     /// <remarks>
     /// For HDR endpoints, values are in LNS (Log-Normalized Space). After interpolation
-    /// in LNS, the result is converted to FP16 via <see cref="LnsToSf16"/> then widened to float.
+    /// in LNS, the result is converted to FP16 via <see cref="Fp16.FromLns"/> then widened to float.
     /// For Mode 14 (HDR RGB + LDR Alpha), the alpha channel is UNORM16 instead of LNS.
     /// For LDR endpoints, the interpolated UNORM16 value is normalized to 0.0-1.0.
     /// </remarks>
-    public void WriteHdrPixel(int x, int y, Span<float> output)
+    public void WriteAllPixelsHdr(Footprint footprint, Span<float> buffer)
     {
-        Footprint footprint = this.partition.Footprint;
-
-        ArgumentOutOfRangeException.ThrowIfNegative(x);
-        ArgumentOutOfRangeException.ThrowIfNegative(y);
-        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(x, footprint.Width);
-        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(y, footprint.Height);
-
-        int index = (y * footprint.Width) + x;
-        int part = this.partition.Assignment[index];
-        ref ColorEndpointPair endpoint = ref this.endpoints[part];
-
-        int weight = this.weights[index];
         int dualPlaneChannel = this.dualPlane?.Channel ?? -1;
-        int dualPlaneWeight = this.dualPlane?.Weights[index] ?? weight;
+        int[]? dualPlaneWeights = this.dualPlane?.Weights;
+        int pixelCount = footprint.PixelCount;
 
-        if (endpoint.IsHdr)
+        for (int i = 0; i < pixelCount; i++)
         {
-            for (int channel = 0; channel < 4; ++channel)
-            {
-                int channelWeight = (channel == dualPlaneChannel)
-                    ? dualPlaneWeight
-                    : weight;
-                ushort interpolated = InterpolateChannelHdr(endpoint.HdrLow.GetChannel(channel), endpoint.HdrHigh.GetChannel(channel), channelWeight);
+            int part = this.partition.Assignment[i];
+            ref ColorEndpointPair endpoint = ref this.endpoints[part];
 
-                if (channel == 3 && endpoint.AlphaIsLdr)
+            int weight = this.weights[i];
+            int dpWeight = dualPlaneWeights?[i] ?? weight;
+            int dstOffset = i * 4;
+
+            if (endpoint.IsHdr)
+            {
+                for (int channel = 0; channel < 4; ++channel)
                 {
-                    // Mode 14: alpha is UNORM16, normalize directly
-                    output[channel] = interpolated / 65535.0f;
-                }
-                else if (endpoint.ValuesAreLns)
-                {
-                    // Normal HDR block: convert from LNS to FP16, then to float
-                    ushort halfFloatBits = LnsToSf16(interpolated);
-                    output[channel] = (float)BitConverter.UInt16BitsToHalf(halfFloatBits);
-                }
-                else
-                {
-                    // Void extent HDR: values are already FP16 bit patterns
-                    output[channel] = (float)BitConverter.UInt16BitsToHalf(interpolated);
+                    int channelWeight = (channel == dualPlaneChannel) ? dpWeight : weight;
+                    ushort interpolated = InterpolateChannelHdr(
+                        endpoint.HdrLow.GetChannel(channel),
+                        endpoint.HdrHigh.GetChannel(channel),
+                        channelWeight);
+
+                    if (channel == 3 && endpoint.AlphaIsLdr)
+                    {
+                        // Mode 14: alpha is UNORM16, normalize directly
+                        buffer[dstOffset + channel] = interpolated / 65535.0f;
+                    }
+                    else if (endpoint.ValuesAreLns)
+                    {
+                        // Normal HDR block: convert from LNS to FP16, then to float
+                        ushort halfFloatBits = Fp16.FromLns(interpolated);
+                        buffer[dstOffset + channel] = (float)BitConverter.UInt16BitsToHalf(halfFloatBits);
+                    }
+                    else
+                    {
+                        // Void extent HDR: values are already FP16 bit patterns
+                        buffer[dstOffset + channel] = (float)BitConverter.UInt16BitsToHalf(interpolated);
+                    }
                 }
             }
-        }
-        else
-        {
-            for (int channel = 0; channel < 4; ++channel)
+            else
             {
-                int channelWeight = (channel == dualPlaneChannel)
-                    ? dualPlaneWeight
-                    : weight;
-                int p0 = endpoint.LdrLow.GetChannel(channel);
-                int p1 = endpoint.LdrHigh.GetChannel(channel);
-                ushort unorm16 = InterpolateLdrAsUnorm16(p0, p1, channelWeight);
-                output[channel] = unorm16 / 65535.0f;
+                for (int channel = 0; channel < 4; ++channel)
+                {
+                    int channelWeight = (channel == dualPlaneChannel) ? dpWeight : weight;
+                    ushort unorm16 = InterpolateLdrAsUnorm16(
+                        endpoint.LdrLow.GetChannel(channel),
+                        endpoint.LdrHigh.GetChannel(channel),
+                        channelWeight);
+                    buffer[dstOffset + channel] = unorm16 / 65535.0f;
+                }
             }
         }
     }
@@ -250,37 +249,6 @@ internal sealed class LogicalBlock
         {
             return new LogicalBlock(footprint, bits, in info);
         }
-    }
-
-    /// <summary>
-    /// Converts a 16-bit LNS (Log-Normalized Space) value to a 16-bit SF16 (FP16) bit pattern.
-    /// </summary>
-    /// <remarks>
-    /// The LNS value encodes a 5-bit exponent in the upper bits and an 11-bit mantissa
-    /// in the lower bits. The mantissa is transformed using a piecewise linear function
-    /// before being combined with the exponent to form the FP16 result.
-    /// </remarks>
-    internal static ushort LnsToSf16(int lns)
-    {
-        int mantissaComponent = lns & 0x7FF;       // Lower 11 bits: mantissa component
-        int exponentComponent = (lns >> 11) & 0x1F; // Upper 5 bits: exponent component
-
-        int mantissaTransformed;
-        if (mantissaComponent < 512)
-        {
-            mantissaTransformed = mantissaComponent * 3;
-        }
-        else if (mantissaComponent < 1536)
-        {
-            mantissaTransformed = (mantissaComponent * 4) - 512;
-        }
-        else
-        {
-            mantissaTransformed = (mantissaComponent * 5) - 2048;
-        }
-
-        int result = (exponentComponent << 10) | (mantissaTransformed >> 3);
-        return (ushort)Math.Min(result, Fp16.MaxFinite);
     }
 
     private static int DecodeEndpoints(IntermediateBlock.VoidExtentData block, ColorEndpointPair[] endpointPair)

@@ -350,14 +350,7 @@ public static class AstcDecoder
                             continue;
                         }
 
-                        for (int row = 0; row < footprintHeight; row++)
-                        {
-                            for (int column = 0; column < footprintWidth; ++column)
-                            {
-                                int pixelOffset = (footprintWidth * row * channelsPerPixel) + (column * channelsPerPixel);
-                                logicalBlock.WriteHdrPixel(column, row, decodedPixels.Slice(pixelOffset, channelsPerPixel));
-                            }
-                        }
+                        logicalBlock.WriteAllPixelsHdr(footprint, decodedPixels);
                     }
 
                     int copyFloats = copyWidth * channelsPerPixel;
@@ -431,15 +424,7 @@ public static class AstcDecoder
             return;
         }
 
-        const int channelsPerPixel = 4;
-        for (int row = 0; row < footprint.Height; row++)
-        {
-            for (int column = 0; column < footprint.Width; ++column)
-            {
-                int pixelOffset = (footprint.Width * row * channelsPerPixel) + (column * channelsPerPixel);
-                logicalBlock.WriteHdrPixel(column, row, buffer.Slice(pixelOffset, channelsPerPixel));
-            }
-        }
+        logicalBlock.WriteAllPixelsHdr(footprint, buffer);
     }
 
     internal static Span<byte> DecompressImage(AstcFile file)
