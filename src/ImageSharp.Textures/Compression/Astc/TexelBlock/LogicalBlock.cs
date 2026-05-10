@@ -389,8 +389,9 @@ internal sealed class LogicalBlock
 
     /// <summary>
     /// General writer for the LDR output pipeline. Handles multi-partition blocks and
-    /// blocks whose partition(s) use HDR endpoint modes decoded into an LDR byte buffer
-    /// (ASTC spec §C.2.14 allows per-partition HDR/LDR mixing).
+    /// single-partition dual-plane blocks. HDR-endpoint blocks never reach this method: the
+    /// LDR entry points in <see cref="AstcDecoder"/> throw on any block with an HDR endpoint
+    /// mode or HDR void-extent, so every partition's endpoint is LDR by the time we get here.
     /// </summary>
     private void WriteAllPixelsGeneral(Footprint footprint, Span<byte> buffer)
     {
@@ -403,14 +404,9 @@ internal sealed class LogicalBlock
             int part = this.partition.Assignment[i];
             ref ColorEndpointPair endpoint = ref this.endpoints[part];
             int weight = this.weights[i];
-            int dpWeight = dualPlaneWeights?[i] ?? weight;
             int dstOffset = i * 4;
 
-            if (endpoint.IsHdr)
-            {
-                WriteHdrAsLdrPixel(buffer, dstOffset, in endpoint, weight, dpWeight, dualPlaneChannel);
-            }
-            else if (dualPlaneWeights is not null)
+            if (dualPlaneWeights is not null)
             {
                 SimdHelpers.WriteSinglePixelLdrDualPlane(
                     buffer,
@@ -425,7 +421,7 @@ internal sealed class LogicalBlock
                     endpoint.LdrHigh.A,
                     weight,
                     dualPlaneChannel,
-                    dpWeight);
+                    dualPlaneWeights[i]);
             }
             else
             {
@@ -443,29 +439,5 @@ internal sealed class LogicalBlock
                     weight);
             }
         }
-    }
-
-    /// <summary>
-    /// Interpolates the four HDR channels of a single pixel and narrows each to the LDR
-    /// byte range with a <c>&gt;&gt; 8</c> truncation. The dual-plane weight applies only
-    /// to <paramref name="dualPlaneChannel"/>.
-    /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void WriteHdrAsLdrPixel(
-        Span<byte> buffer,
-        int dstOffset,
-        in ColorEndpointPair endpoint,
-        int weight,
-        int dpWeight,
-        int dualPlaneChannel)
-    {
-        int rWeight = dualPlaneChannel == 0 ? dpWeight : weight;
-        int gWeight = dualPlaneChannel == 1 ? dpWeight : weight;
-        int bWeight = dualPlaneChannel == 2 ? dpWeight : weight;
-        int aWeight = dualPlaneChannel == 3 ? dpWeight : weight;
-        buffer[dstOffset + 0] = (byte)(InterpolateChannelHdr(endpoint.HdrLow.R, endpoint.HdrHigh.R, rWeight) >> 8);
-        buffer[dstOffset + 1] = (byte)(InterpolateChannelHdr(endpoint.HdrLow.G, endpoint.HdrHigh.G, gWeight) >> 8);
-        buffer[dstOffset + 2] = (byte)(InterpolateChannelHdr(endpoint.HdrLow.B, endpoint.HdrHigh.B, bWeight) >> 8);
-        buffer[dstOffset + 3] = (byte)(InterpolateChannelHdr(endpoint.HdrLow.A, endpoint.HdrHigh.A, aWeight) >> 8);
     }
 }

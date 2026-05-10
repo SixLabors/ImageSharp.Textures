@@ -148,8 +148,9 @@ public static class AstcDecoder
         Span<byte> imageBuffer,
         Span<byte> decodedPixels)
     {
-        bool isFusableLdr = !info.IsVoidExtent && info.PartitionCount == 1
-            && !info.IsDualPlane && !info.EndpointMode0.IsHdr();
+        // HDR-endpoint blocks already triggered a throw in the outer loop, so the
+        // single-partition case here is guaranteed LDR — no explicit IsHdr check needed.
+        bool isFusableLdr = !info.IsVoidExtent && info.PartitionCount == 1 && !info.IsDualPlane;
 
         if (isFusableLdr && dest.IsFullInteriorBlock)
         {
@@ -201,14 +202,15 @@ public static class AstcDecoder
                 "Use AstcDecoder.DecompressHdrBlock to decode HDR content.");
         }
 
-        // Fused fast path: single-partition, non-dual-plane, LDR-endpoint, non-void-extent.
-        if (!info.IsVoidExtent && info.PartitionCount == 1 && !info.IsDualPlane && !info.EndpointMode0.IsHdr())
+        // Fused fast path: single-partition, non-dual-plane, non-void-extent. HDR-endpoint
+        // blocks already threw above, so the single-partition case is guaranteed LDR here.
+        if (!info.IsVoidExtent && info.PartitionCount == 1 && !info.IsDualPlane)
         {
             FusedLdrBlockDecoder.DecompressBlockFusedLdr(blockBits, in info, footprint, buffer);
             return;
         }
 
-        // Fallback: void-extent, multi-partition, dual-plane, or HDR endpoint (narrowed to LDR).
+        // Fallback: void-extent, multi-partition, or dual-plane.
         LogicalBlock? logicalBlock = LogicalBlock.UnpackLogicalBlock(footprint, blockBits, in info);
         logicalBlock?.WriteAllPixelsLdr(footprint, buffer);
     }
