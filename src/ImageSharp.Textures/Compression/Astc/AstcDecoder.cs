@@ -25,7 +25,10 @@ namespace SixLabors.ImageSharp.Textures.Compression.Astc;
 public static class AstcDecoder
 {
     private static readonly ArrayPool<byte> ArrayPool = ArrayPool<byte>.Shared;
-    private const int BytesPerPixelUnorm8 = 4;
+
+    // ASTC decodes to 4-channel RGBA in both LDR (UNORM8) and HDR (float32) profiles.
+    private const int ChannelsPerPixel = 4;
+    private const int BytesPerPixelUnorm8 = ChannelsPerPixel;
 
     /// <summary>
     /// Decompresses ASTC-compressed data to uncompressed RGBA8 format (4 bytes per pixel).
@@ -80,7 +83,7 @@ public static class AstcDecoder
         byte[] decodedBlock = ArrayPool.Rent(footprint.PixelCount * BytesPerPixelUnorm8);
         try
         {
-            DecodeAllBlocksLdr(astcData, width, height, footprint, blocksWide, blocksHigh, imageBuffer, decodedBlock);
+            DecodeAllBlocks<LdrPipeline, byte>(astcData, width, height, footprint, blocksWide, blocksHigh, imageBuffer, decodedBlock.AsSpan());
         }
         finally
         {
@@ -90,17 +93,23 @@ public static class AstcDecoder
         return true;
     }
 
-    private static void DecodeAllBlocksLdr(
+    /// <summary>
+    /// Shared image-decode loop for both LDR and HDR
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void DecodeAllBlocks<TPipeline, T>(
         ReadOnlySpan<byte> astcData,
         int width,
         int height,
         Footprint footprint,
         int blocksWide,
         int blocksHigh,
-        Span<byte> imageBuffer,
-        byte[] decodedBlock)
+        Span<T> imageBuffer,
+        Span<T> decodedPixels)
+        where TPipeline : struct, IBlockPipeline<T>
+        where T : unmanaged
     {
-        Span<byte> decodedPixels = decodedBlock.AsSpan();
+        TPipeline pipeline = default;
         int blockIndex = 0;
 
         for (int blockY = 0; blockY < blocksHigh; blockY++)
@@ -119,49 +128,43 @@ public static class AstcDecoder
                     continue;
                 }
 
-                // ASTC spec §C.2.19: the LDR (decode_unorm8) profile cannot decode blocks that
-                // carry HDR content. Callers wanting HDR values must use DecompressHdrImage.
-                if (IsHdrBlock(blockBits, in info))
-                {
-                    throw new TextureFormatException(
-                        "ASTC block uses HDR endpoint data but was passed to the LDR decoder. " +
-                        "Use AstcDecoder.DecompressHdrImage to decode HDR content.");
-                }
+                pipeline.PreDispatchCheck(blockBits, in info);
 
                 BlockDestination dest = ComputeBlockDestination(blockX, blockY, footprint, width, height);
-                DecodeLdrBlock(blockBits, in info, footprint, dest, width, imageBuffer, decodedPixels);
+                DecodeBlock<TPipeline, T>(blockBits, in info, footprint, dest, width, imageBuffer, decodedPixels);
             }
         }
     }
 
     /// <summary>
-    /// Routes a single LDR block to the best available path (fused direct-to-image for full
+    /// Routes a single block to the best available path (fused direct-to-image for full
     /// interior blocks; fused-to-scratch then copy for edge blocks; general
     /// <see cref="LogicalBlock"/> pipeline for void-extent / multi-partition / dual-plane).
     /// </summary>
-    private static void DecodeLdrBlock(
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void DecodeBlock<TPipeline, T>(
         UInt128 blockBits,
         in BlockInfo info,
         Footprint footprint,
         BlockDestination dest,
         int imageWidth,
-        Span<byte> imageBuffer,
-        Span<byte> decodedPixels)
+        Span<T> imageBuffer,
+        Span<T> decodedPixels)
+        where TPipeline : struct, IBlockPipeline<T>
+        where T : unmanaged
     {
-        // HDR-endpoint blocks already triggered a throw in the outer loop, so the
-        // single-partition case here is guaranteed LDR — no explicit IsHdr check needed.
-        bool isFusableLdr = !info.IsVoidExtent && info.PartitionCount == 1 && !info.IsDualPlane;
+        TPipeline pipeline = default;
+        bool isFusable = !info.IsVoidExtent && info.PartitionCount == 1 && !info.IsDualPlane;
 
-        if (isFusableLdr && dest.IsFullInteriorBlock)
+        if (isFusable && dest.IsFullInteriorBlock)
         {
-            FusedLdrBlockDecoder.DecompressBlockFusedLdrToImage(
-                blockBits, in info, footprint, dest.DstBaseX, dest.DstBaseY, imageWidth, imageBuffer);
+            pipeline.FusedToImage(blockBits, in info, footprint, dest.DstBaseX, dest.DstBaseY, imageWidth, imageBuffer);
             return;
         }
 
-        if (isFusableLdr)
+        if (isFusable)
         {
-            FusedLdrBlockDecoder.DecompressBlockFusedLdr(blockBits, in info, footprint, decodedPixels);
+            pipeline.FusedToScratch(blockBits, in info, footprint, decodedPixels);
         }
         else
         {
@@ -171,10 +174,10 @@ public static class AstcDecoder
                 return;
             }
 
-            logicalBlock.WriteAllPixelsLdr(footprint, decodedPixels);
+            pipeline.LogicalWrite(logicalBlock, footprint, decodedPixels);
         }
 
-        CopyBlockRect(decodedPixels, imageBuffer, footprint.Width, dest.CopyWidth, dest.CopyHeight, dest.DstBaseX, dest.DstBaseY, imageWidth, BytesPerPixelUnorm8);
+        CopyBlockRect(decodedPixels, imageBuffer, footprint.Width, dest.CopyWidth, dest.CopyHeight, dest.DstBaseX, dest.DstBaseY, imageWidth, ChannelsPerPixel);
     }
 
     /// <summary>
@@ -257,18 +260,18 @@ public static class AstcDecoder
     /// </returns>
     public static bool DecompressHdrImage(ReadOnlySpan<byte> astcData, int width, int height, Footprint footprint, Span<float> imageBuffer)
     {
-        const int channelsPerPixel = 4;
-        ValidateImageArgs(width, height, imageBuffer.Length, channelsPerPixel);
+        ValidateImageArgs(width, height, imageBuffer.Length, ChannelsPerPixel);
 
         if (!TryGetBlockLayout(astcData, width, height, footprint, out int blocksWide, out int blocksHigh))
         {
             return false;
         }
 
-        float[] decodedBlock = ArrayPool<float>.Shared.Rent(footprint.PixelCount * channelsPerPixel);
+        float[] decodedBlock = ArrayPool<float>.Shared.Rent(footprint.PixelCount * ChannelsPerPixel);
         try
         {
-            DecodeAllBlocksHdr(astcData, width, height, footprint, blocksWide, blocksHigh, imageBuffer, decodedBlock);
+            DecodeAllBlocks<HdrPipeline, float>(
+                astcData, width, height, footprint, blocksWide, blocksHigh, imageBuffer, decodedBlock.AsSpan());
         }
         finally
         {
@@ -276,82 +279,6 @@ public static class AstcDecoder
         }
 
         return true;
-    }
-
-    private static void DecodeAllBlocksHdr(
-        ReadOnlySpan<byte> astcData,
-        int width,
-        int height,
-        Footprint footprint,
-        int blocksWide,
-        int blocksHigh,
-        Span<float> imageBuffer,
-        float[] decodedBlock)
-    {
-        Span<float> decodedPixels = decodedBlock.AsSpan();
-        int blockIndex = 0;
-
-        for (int blockY = 0; blockY < blocksHigh; blockY++)
-        {
-            for (int blockX = 0; blockX < blocksWide; blockX++)
-            {
-                int index = blockIndex++;
-                if (!TryReadBlockBits(astcData, index, out UInt128 blockBits))
-                {
-                    continue;
-                }
-
-                BlockInfo info = BlockInfo.Decode(blockBits);
-                if (!info.IsValid)
-                {
-                    continue;
-                }
-
-                BlockDestination dest = ComputeBlockDestination(blockX, blockY, footprint, width, height);
-                DecodeHdrBlock(blockBits, in info, footprint, dest, width, imageBuffer, decodedPixels);
-            }
-        }
-    }
-
-    /// <summary>
-    /// Routes a single HDR block: fused direct-to-image for full interior blocks; fused-to-scratch
-    /// then copy for edge blocks; general pipeline for void-extent / multi-partition / dual-plane.
-    /// </summary>
-    private static void DecodeHdrBlock(
-        UInt128 blockBits,
-        in BlockInfo info,
-        Footprint footprint,
-        BlockDestination dest,
-        int imageWidth,
-        Span<float> imageBuffer,
-        Span<float> decodedPixels)
-    {
-        const int channelsPerPixel = 4;
-        bool isFusableHdr = !info.IsVoidExtent && info.PartitionCount == 1 && !info.IsDualPlane;
-
-        if (isFusableHdr && dest.IsFullInteriorBlock)
-        {
-            FusedHdrBlockDecoder.DecompressBlockFusedHdrToImage(
-                blockBits, in info, footprint, dest.DstBaseX, dest.DstBaseY, imageWidth, imageBuffer);
-            return;
-        }
-
-        if (isFusableHdr)
-        {
-            FusedHdrBlockDecoder.DecompressBlockFusedHdr(blockBits, in info, footprint, decodedPixels);
-        }
-        else
-        {
-            LogicalBlock? logicalBlock = LogicalBlock.UnpackLogicalBlock(footprint, blockBits, in info);
-            if (logicalBlock is null)
-            {
-                return;
-            }
-
-            logicalBlock.WriteAllPixelsHdr(footprint, decodedPixels);
-        }
-
-        CopyBlockRect(decodedPixels, imageBuffer, footprint.Width, dest.CopyWidth, dest.CopyHeight, dest.DstBaseX, dest.DstBaseY, imageWidth, channelsPerPixel);
     }
 
     /// <summary>
@@ -448,7 +375,7 @@ public static class AstcDecoder
     /// any partition, or an HDR void-extent flag). The LDR decoder paths use this as a
     /// precondition check — HDR content must be routed through the HDR decoder instead.
     /// </summary>
-    private static bool IsHdrBlock(UInt128 blockBits, in BlockInfo info)
+    internal static bool IsHdrBlock(UInt128 blockBits, in BlockInfo info)
     {
         // ASTC spec §C.2.23: for void-extent blocks bit 9 of the block mode distinguishes
         // LDR (1, UNORM16) from HDR (0, FP16).
@@ -475,7 +402,7 @@ public static class AstcDecoder
         ArgumentOutOfRangeException.ThrowIfGreaterThan(totalPixels, (long)int.MaxValue / bytesPerPixel);
 
         long totalElements = totalPixels * bytesPerPixel;
-        ArgumentOutOfRangeException.ThrowIfLessThan((long)bufferLength, totalElements);
+        ArgumentOutOfRangeException.ThrowIfLessThan(bufferLength, totalElements);
     }
 
     /// <summary>
