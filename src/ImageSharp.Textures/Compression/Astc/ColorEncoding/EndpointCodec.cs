@@ -84,163 +84,153 @@ internal static class EndpointCodec
     /// </summary>
     internal static ColorEndpointPair DecodeColorsForModeUnquantized(ReadOnlySpan<int> unquantizedValues, ColorEndpointMode mode)
     {
-        Rgba32 endpointLowRgba, endpointHighRgba;
-
-        switch (mode)
+        (Rgba32 low, Rgba32 high) = mode switch
         {
-            case ColorEndpointMode.LdrLumaDirect:
-                endpointLowRgba = ClampedRgba32(unquantizedValues[0], unquantizedValues[0], unquantizedValues[0]);
-                endpointHighRgba = ClampedRgba32(unquantizedValues[1], unquantizedValues[1], unquantizedValues[1]);
-                break;
-            case ColorEndpointMode.LdrLumaBaseOffset:
-            {
-                int l0 = (unquantizedValues[0] >> 2) | (unquantizedValues[1] & 0xC0);
-                int l1 = Math.Min(l0 + (unquantizedValues[1] & 0x3F), 0xFF);
-                endpointLowRgba = ClampedRgba32(l0, l0, l0);
-                endpointHighRgba = ClampedRgba32(l1, l1, l1);
-                break;
-            }
+            ColorEndpointMode.LdrLumaDirect => DecodeLumaDirect(unquantizedValues),
+            ColorEndpointMode.LdrLumaBaseOffset => DecodeLumaBaseOffset(unquantizedValues),
+            ColorEndpointMode.LdrLumaAlphaDirect => DecodeLumaAlphaDirect(unquantizedValues),
+            ColorEndpointMode.LdrLumaAlphaBaseOffset => DecodeLumaAlphaBaseOffset(unquantizedValues),
+            ColorEndpointMode.LdrRgbBaseScale => DecodeRgbBaseScale(unquantizedValues),
+            ColorEndpointMode.LdrRgbDirect => DecodeRgbDirect(unquantizedValues),
+            ColorEndpointMode.LdrRgbBaseOffset => DecodeRgbBaseOffset(unquantizedValues),
+            ColorEndpointMode.LdrRgbBaseScaleTwoA => DecodeRgbBaseScaleTwoAlpha(unquantizedValues),
+            ColorEndpointMode.LdrRgbaDirect => DecodeRgbaDirect(unquantizedValues),
+            ColorEndpointMode.LdrRgbaBaseOffset => DecodeRgbaBaseOffset(unquantizedValues),
+            _ => throw new ArgumentOutOfRangeException(
+                nameof(mode),
+                mode,
+                "DecodeColorsForModeUnquantized received a mode that is neither LDR nor a known HDR mode."),
+        };
 
-            case ColorEndpointMode.LdrLumaAlphaDirect:
-                endpointLowRgba = ClampedRgba32(unquantizedValues[0], unquantizedValues[0], unquantizedValues[0], unquantizedValues[2]);
-                endpointHighRgba = ClampedRgba32(unquantizedValues[1], unquantizedValues[1], unquantizedValues[1], unquantizedValues[3]);
-                break;
-            case ColorEndpointMode.LdrLumaAlphaBaseOffset:
-            {
-                (int b0, int a0) = BitOperations.TransferPrecision(unquantizedValues[1], unquantizedValues[0]);
-                (int b2, int a2) = BitOperations.TransferPrecision(unquantizedValues[3], unquantizedValues[2]);
-                endpointLowRgba = ClampedRgba32(a0, a0, a0, a2);
-                int highLuma = a0 + b0;
-                endpointHighRgba = ClampedRgba32(highLuma, highLuma, highLuma, a2 + b2);
-                break;
-            }
+        return ColorEndpointPair.Ldr(low, high);
+    }
 
-            case ColorEndpointMode.LdrRgbBaseScale:
-                endpointLowRgba = ClampedRgba32(
-                    (unquantizedValues[0] * unquantizedValues[3]) >> 8,
-                    (unquantizedValues[1] * unquantizedValues[3]) >> 8,
-                    (unquantizedValues[2] * unquantizedValues[3]) >> 8);
-                endpointHighRgba = ClampedRgba32(unquantizedValues[0], unquantizedValues[1], unquantizedValues[2]);
-                break;
-            case ColorEndpointMode.LdrRgbDirect:
-            {
-                int sum0 = unquantizedValues[0] + unquantizedValues[2] + unquantizedValues[4];
-                int sum1 = unquantizedValues[1] + unquantizedValues[3] + unquantizedValues[5];
-                if (sum1 < sum0)
-                {
-                    endpointLowRgba = ClampedRgba32(
-                        r: (unquantizedValues[1] + unquantizedValues[5]) >> 1,
-                        g: (unquantizedValues[3] + unquantizedValues[5]) >> 1,
-                        b: unquantizedValues[5]);
-                    endpointHighRgba = ClampedRgba32(
-                        r: (unquantizedValues[0] + unquantizedValues[4]) >> 1,
-                        g: (unquantizedValues[2] + unquantizedValues[4]) >> 1,
-                        b: unquantizedValues[4]);
-                }
-                else
-                {
-                    endpointLowRgba = ClampedRgba32(unquantizedValues[0], unquantizedValues[2], unquantizedValues[4]);
-                    endpointHighRgba = ClampedRgba32(unquantizedValues[1], unquantizedValues[3], unquantizedValues[5]);
-                }
+    // Each decoder below implements one LDR endpoint mode per ASTC spec §C.2.14
+    // (Color Endpoint Decoding). Inputs are the unquantized color values for that mode.
 
-                break;
-            }
+    // Mode 0 (§C.2.14 "LDR luminance, direct"): two 8-bit luma values.
+    private static (Rgba32 Low, Rgba32 High) DecodeLumaDirect(ReadOnlySpan<int> v)
+        => (ClampedRgba32(v[0], v[0], v[0]),
+            ClampedRgba32(v[1], v[1], v[1]));
 
-            case ColorEndpointMode.LdrRgbBaseOffset:
-            {
-                (int b0, int a0) = BitOperations.TransferPrecision(unquantizedValues[1], unquantizedValues[0]);
-                (int b1, int a1) = BitOperations.TransferPrecision(unquantizedValues[3], unquantizedValues[2]);
-                (int b2, int a2) = BitOperations.TransferPrecision(unquantizedValues[5], unquantizedValues[4]);
-                if (b0 + b1 + b2 < 0)
-                {
-                    endpointLowRgba = ClampedRgba32(
-                        r: (a0 + b0 + a2 + b2) >> 1,
-                        g: (a1 + b1 + a2 + b2) >> 1,
-                        b: a2 + b2);
-                    endpointHighRgba = ClampedRgba32(
-                        r: (a0 + a2) >> 1,
-                        g: (a1 + a2) >> 1,
-                        b: a2);
-                }
-                else
-                {
-                    endpointLowRgba = ClampedRgba32(a0, a1, a2);
-                    endpointHighRgba = ClampedRgba32(a0 + b0, a1 + b1, a2 + b2);
-                }
+    // Mode 1 (§C.2.14 "LDR luminance, base+offset"): v0 plus the top bits of v1 form the low
+    // luma; the bottom six bits of v1 are a saturated offset added to form the high luma.
+    private static (Rgba32 Low, Rgba32 High) DecodeLumaBaseOffset(ReadOnlySpan<int> v)
+    {
+        int l0 = (v[0] >> 2) | (v[1] & 0xC0);
+        int l1 = Math.Min(l0 + (v[1] & 0x3F), 0xFF);
+        return (ClampedRgba32(l0, l0, l0),
+                ClampedRgba32(l1, l1, l1));
+    }
 
-                break;
-            }
+    // Mode 4 (§C.2.14 "LDR luminance+alpha, direct"): v0,v1 → luma; v2,v3 → alpha.
+    private static (Rgba32 Low, Rgba32 High) DecodeLumaAlphaDirect(ReadOnlySpan<int> v)
+        => (ClampedRgba32(v[0], v[0], v[0], v[2]),
+            ClampedRgba32(v[1], v[1], v[1], v[3]));
 
-            case ColorEndpointMode.LdrRgbBaseScaleTwoA:
-                endpointLowRgba = ClampedRgba32(
-                    r: (unquantizedValues[0] * unquantizedValues[3]) >> 8,
-                    g: (unquantizedValues[1] * unquantizedValues[3]) >> 8,
-                    b: (unquantizedValues[2] * unquantizedValues[3]) >> 8,
-                    a: unquantizedValues[4]);
-                endpointHighRgba = ClampedRgba32(unquantizedValues[0], unquantizedValues[1], unquantizedValues[2], unquantizedValues[5]);
-                break;
-            case ColorEndpointMode.LdrRgbaDirect:
-            {
-                int sum0 = unquantizedValues[0] + unquantizedValues[2] + unquantizedValues[4];
-                int sum1 = unquantizedValues[1] + unquantizedValues[3] + unquantizedValues[5];
-                if (sum1 >= sum0)
-                {
-                    endpointLowRgba = ClampedRgba32(unquantizedValues[0], unquantizedValues[2], unquantizedValues[4], unquantizedValues[6]);
-                    endpointHighRgba = ClampedRgba32(unquantizedValues[1], unquantizedValues[3], unquantizedValues[5], unquantizedValues[7]);
-                }
-                else
-                {
-                    endpointLowRgba = ClampedRgba32(
-                        r: (unquantizedValues[1] + unquantizedValues[5]) >> 1,
-                        g: (unquantizedValues[3] + unquantizedValues[5]) >> 1,
-                        b: unquantizedValues[5],
-                        a: unquantizedValues[7]);
-                    endpointHighRgba = ClampedRgba32(
-                        r: (unquantizedValues[0] + unquantizedValues[4]) >> 1,
-                        g: (unquantizedValues[2] + unquantizedValues[4]) >> 1,
-                        b: unquantizedValues[4],
-                        a: unquantizedValues[6]);
-                }
+    // Mode 5 (§C.2.14 "LDR luminance+alpha, base+offset"): TransferPrecision unpacks each
+    // (high,low) pair into a signed offset b and a base a.
+    private static (Rgba32 Low, Rgba32 High) DecodeLumaAlphaBaseOffset(ReadOnlySpan<int> v)
+    {
+        (int bL, int aL) = BitOperations.TransferPrecision(v[1], v[0]);
+        (int bA, int aA) = BitOperations.TransferPrecision(v[3], v[2]);
+        int highLuma = aL + bL;
+        return (ClampedRgba32(aL, aL, aL, aA),
+                ClampedRgba32(highLuma, highLuma, highLuma, aA + bA));
+    }
 
-                break;
-            }
+    // Mode 6 (§C.2.14 "LDR RGB, base+scale"): high = (v0,v1,v2); low = high * v3 >> 8.
+    private static (Rgba32 Low, Rgba32 High) DecodeRgbBaseScale(ReadOnlySpan<int> v)
+    {
+        Rgba32 low = ClampedRgba32((v[0] * v[3]) >> 8, (v[1] * v[3]) >> 8, (v[2] * v[3]) >> 8);
+        Rgba32 high = ClampedRgba32(v[0], v[1], v[2]);
+        return (low, high);
+    }
 
-            case ColorEndpointMode.LdrRgbaBaseOffset:
-            {
-                (int b0, int a0) = BitOperations.TransferPrecision(unquantizedValues[1], unquantizedValues[0]);
-                (int b1, int a1) = BitOperations.TransferPrecision(unquantizedValues[3], unquantizedValues[2]);
-                (int b2, int a2) = BitOperations.TransferPrecision(unquantizedValues[5], unquantizedValues[4]);
-                (int b3, int a3) = BitOperations.TransferPrecision(unquantizedValues[7], unquantizedValues[6]);
-                if (b0 + b1 + b2 < 0)
-                {
-                    endpointLowRgba = ClampedRgba32(
-                        r: (a0 + b0 + a2 + b2) >> 1,
-                        g: (a1 + b1 + a2 + b2) >> 1,
-                        b: a2 + b2,
-                        a: a3 + b3);
-                    endpointHighRgba = ClampedRgba32(
-                        r: (a0 + a2) >> 1,
-                        g: (a1 + a2) >> 1,
-                        b: a2,
-                        a: a3);
-                }
-                else
-                {
-                    endpointLowRgba = ClampedRgba32(a0, a1, a2, a3);
-                    endpointHighRgba = ClampedRgba32(a0 + b0, a1 + b1, a2 + b2, a3 + b3);
-                }
+    // Mode 8 (§C.2.14 "LDR RGB, direct"): if the high triple is dimmer than the low triple
+    // the endpoints are swapped and the R/G channels are averaged against the B channel
+    // ("blue contract" per §C.2.14).
+    private static (Rgba32 Low, Rgba32 High) DecodeRgbDirect(ReadOnlySpan<int> v)
+    {
+        int sumLow = v[0] + v[2] + v[4];
+        int sumHigh = v[1] + v[3] + v[5];
 
-                break;
-            }
-
-            default:
-                throw new ArgumentOutOfRangeException(
-                    nameof(mode),
-                    mode,
-                    "DecodeColorsForModeUnquantized received a mode that is neither LDR nor a known HDR mode.");
+        if (sumHigh < sumLow)
+        {
+            return (ClampedRgba32((v[1] + v[5]) >> 1, (v[3] + v[5]) >> 1, v[5]),
+                    ClampedRgba32((v[0] + v[4]) >> 1, (v[2] + v[4]) >> 1, v[4]));
         }
 
-        return ColorEndpointPair.Ldr(endpointLowRgba, endpointHighRgba);
+        return (ClampedRgba32(v[0], v[2], v[4]),
+                ClampedRgba32(v[1], v[3], v[5]));
+    }
+
+    // Mode 9 (§C.2.14 "LDR RGB, base+offset"): per-channel (base, offset). When the sum of
+    // offsets is negative the blue-contract branch applies, otherwise low = base and
+    // high = base + offset.
+    private static (Rgba32 Low, Rgba32 High) DecodeRgbBaseOffset(ReadOnlySpan<int> v)
+    {
+        (int bR, int aR) = BitOperations.TransferPrecision(v[1], v[0]);
+        (int bG, int aG) = BitOperations.TransferPrecision(v[3], v[2]);
+        (int bB, int aB) = BitOperations.TransferPrecision(v[5], v[4]);
+
+        if (bR + bG + bB < 0)
+        {
+            return (ClampedRgba32((aR + bR + aB + bB) >> 1, (aG + bG + aB + bB) >> 1, aB + bB),
+                    ClampedRgba32((aR + aB) >> 1, (aG + aB) >> 1, aB));
+        }
+
+        return (ClampedRgba32(aR, aG, aB),
+                ClampedRgba32(aR + bR, aG + bG, aB + bB));
+    }
+
+    // Mode 10 (§C.2.14 "LDR RGB, base+scale plus two alpha values"): same RGB scaling as
+    // mode 6, but v4 and v5 carry independent low/high alpha values.
+    private static (Rgba32 Low, Rgba32 High) DecodeRgbBaseScaleTwoAlpha(ReadOnlySpan<int> v)
+    {
+        Rgba32 low = ClampedRgba32(
+            r: (v[0] * v[3]) >> 8,
+            g: (v[1] * v[3]) >> 8,
+            b: (v[2] * v[3]) >> 8,
+            a: v[4]);
+        Rgba32 high = ClampedRgba32(v[0], v[1], v[2], v[5]);
+        return (low, high);
+    }
+
+    // Mode 12 (§C.2.14 "LDR RGBA, direct"): like RGB-direct plus alpha. When the high
+    // triple is dimmer the endpoints are swapped (RGB via blue-contract, alpha by
+    // index-swap).
+    private static (Rgba32 Low, Rgba32 High) DecodeRgbaDirect(ReadOnlySpan<int> v)
+    {
+        int sumLow = v[0] + v[2] + v[4];
+        int sumHigh = v[1] + v[3] + v[5];
+
+        if (sumHigh >= sumLow)
+        {
+            return (ClampedRgba32(v[0], v[2], v[4], v[6]),
+                    ClampedRgba32(v[1], v[3], v[5], v[7]));
+        }
+
+        return (ClampedRgba32((v[1] + v[5]) >> 1, (v[3] + v[5]) >> 1, v[5], v[7]),
+                ClampedRgba32((v[0] + v[4]) >> 1, (v[2] + v[4]) >> 1, v[4], v[6]));
+    }
+
+    // Mode 13 (§C.2.14 "LDR RGBA, base+offset"): mode 9 extended with alpha.
+    private static (Rgba32 Low, Rgba32 High) DecodeRgbaBaseOffset(ReadOnlySpan<int> v)
+    {
+        (int bR, int aR) = BitOperations.TransferPrecision(v[1], v[0]);
+        (int bG, int aG) = BitOperations.TransferPrecision(v[3], v[2]);
+        (int bB, int aB) = BitOperations.TransferPrecision(v[5], v[4]);
+        (int bA, int aA) = BitOperations.TransferPrecision(v[7], v[6]);
+
+        if (bR + bG + bB < 0)
+        {
+            return (ClampedRgba32((aR + bR + aB + bB) >> 1, (aG + bG + aB + bB) >> 1, aB + bB, aA + bA),
+                    ClampedRgba32((aR + aB) >> 1, (aG + aB) >> 1, aB, aA));
+        }
+
+        return (ClampedRgba32(aR, aG, aB, aA),
+                ClampedRgba32(aR + bR, aG + bG, aB + bB, aA + bA));
     }
 
     internal static int[] UnquantizeArray(int[] values, int maxValue)

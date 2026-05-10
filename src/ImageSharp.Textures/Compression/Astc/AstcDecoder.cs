@@ -3,6 +3,7 @@
 
 using System.Buffers;
 using System.Buffers.Binary;
+using System.Runtime.CompilerServices;
 using SixLabors.ImageSharp.Textures.Common.Exceptions;
 using SixLabors.ImageSharp.Textures.Compression.Astc.BlockDecoder;
 using SixLabors.ImageSharp.Textures.Compression.Astc.ColorEncoding;
@@ -67,109 +68,19 @@ public static class AstcDecoder
     /// </returns>
     public static bool DecompressImage(ReadOnlySpan<byte> astcData, int width, int height, Footprint footprint, Span<byte> imageBuffer)
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(width);
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(height);
-
-        long totalPixels = (long)width * height;
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(totalPixels, (long)int.MaxValue / BytesPerPixelUnorm8);
-
-        long totalBytes = totalPixels * BytesPerPixelUnorm8;
-        ArgumentOutOfRangeException.ThrowIfLessThan((long)imageBuffer.Length, totalBytes);
+        ValidateImageArgs(width, height, imageBuffer.Length, BytesPerPixelUnorm8);
 
         if (!TryGetBlockLayout(astcData, width, height, footprint, out int blocksWide, out int blocksHigh))
         {
             return false;
         }
 
-        // Rent outside the try/finally so a failing Rent doesn't hand the default sentinel to Return.
-        byte[] decodedBlock = ArrayPool.Rent(footprint.Width * footprint.Height * BytesPerPixelUnorm8);
-
+        // Scratch is rented outside the try/finally so a failing Rent never hands the default
+        // sentinel to Return.
+        byte[] decodedBlock = ArrayPool.Rent(footprint.PixelCount * BytesPerPixelUnorm8);
         try
         {
-            Span<byte> decodedPixels = decodedBlock.AsSpan();
-            int blockIndex = 0;
-            int footprintWidth = footprint.Width;
-            int footprintHeight = footprint.Height;
-
-            for (int blockY = 0; blockY < blocksHigh; blockY++)
-            {
-                for (int blockX = 0; blockX < blocksWide; blockX++)
-                {
-                    int blockDataOffset = blockIndex++ * PhysicalBlock.SizeInBytes;
-                    if (blockDataOffset + PhysicalBlock.SizeInBytes > astcData.Length)
-                    {
-                        continue;
-                    }
-
-                    ulong low = BinaryPrimitives.ReadUInt64LittleEndian(astcData[blockDataOffset..]);
-                    ulong high = BinaryPrimitives.ReadUInt64LittleEndian(astcData[(blockDataOffset + 8)..]);
-                    UInt128 blockBits = new(high, low);
-
-                    int dstBaseX = blockX * footprintWidth;
-                    int dstBaseY = blockY * footprintHeight;
-                    int copyWidth = Math.Min(footprintWidth, width - dstBaseX);
-                    int copyHeight = Math.Min(footprintHeight, height - dstBaseY);
-
-                    BlockInfo info = BlockInfo.Decode(blockBits);
-                    if (!info.IsValid)
-                    {
-                        continue;
-                    }
-
-                    // Per ASTC spec §C.2.19, the LDR (decode_unorm8) profile cannot decode blocks
-                    // that carry HDR content. ARM's astcenc returns ASTCENC_ERR_BAD_DECODE_MODE in
-                    // this case; we do the same via an exception. Callers who want HDR values
-                    // should use DecompressHdrImage instead.
-                    if (IsHdrBlock(blockBits, in info))
-                    {
-                        throw new TextureFormatException(
-                            "ASTC block uses HDR endpoint data but was passed to the LDR decoder. " +
-                            "Use AstcDecoder.DecompressHdrImage to decode HDR content.");
-                    }
-
-                    // Fast path: fuse decode directly into image buffer for interior full blocks
-                    if (!info.IsVoidExtent && info.PartitionCount == 1 && !info.IsDualPlane
-                        && !info.EndpointMode0.IsHdr()
-                        && copyWidth == footprintWidth && copyHeight == footprintHeight)
-                    {
-                        FusedLdrBlockDecoder.DecompressBlockFusedLdrToImage(
-                            blockBits,
-                            in info,
-                            footprint,
-                            dstBaseX,
-                            dstBaseY,
-                            width,
-                            imageBuffer);
-                        continue;
-                    }
-
-                    // Fallback: decode to temp buffer, then copy
-                    if (!info.IsVoidExtent && info.PartitionCount == 1 && !info.IsDualPlane
-                        && !info.EndpointMode0.IsHdr())
-                    {
-                        FusedLdrBlockDecoder.DecompressBlockFusedLdr(blockBits, in info, footprint, decodedPixels);
-                    }
-                    else
-                    {
-                        LogicalBlock? logicalBlock = LogicalBlock.UnpackLogicalBlock(footprint, blockBits, in info);
-                        if (logicalBlock is null)
-                        {
-                            continue;
-                        }
-
-                        logicalBlock.WriteAllPixelsLdr(footprint, decodedPixels);
-                    }
-
-                    int copyBytes = copyWidth * BytesPerPixelUnorm8;
-                    for (int pixelY = 0; pixelY < copyHeight; pixelY++)
-                    {
-                        int srcOffset = pixelY * footprintWidth * BytesPerPixelUnorm8;
-                        int dstOffset = (((dstBaseY + pixelY) * width) + dstBaseX) * BytesPerPixelUnorm8;
-                        decodedPixels.Slice(srcOffset, copyBytes)
-                            .CopyTo(imageBuffer.Slice(dstOffset, copyBytes));
-                    }
-                }
-            }
+            DecodeAllBlocksLdr(astcData, width, height, footprint, blocksWide, blocksHigh, imageBuffer, decodedBlock);
         }
         finally
         {
@@ -177,6 +88,83 @@ public static class AstcDecoder
         }
 
         return true;
+    }
+
+    private static void DecodeAllBlocksLdr(
+        ReadOnlySpan<byte> astcData,
+        int width,
+        int height,
+        Footprint footprint,
+        int blocksWide,
+        int blocksHigh,
+        Span<byte> imageBuffer,
+        byte[] decodedBlock)
+    {
+        Span<byte> decodedPixels = decodedBlock.AsSpan();
+        int blockIndex = 0;
+        int footprintWidth = footprint.Width;
+        int footprintHeight = footprint.Height;
+
+        for (int blockY = 0; blockY < blocksHigh; blockY++)
+        {
+            for (int blockX = 0; blockX < blocksWide; blockX++)
+            {
+                int index = blockIndex++;
+                if (!TryReadBlockBits(astcData, index, out UInt128 blockBits))
+                {
+                    continue;
+                }
+
+                BlockInfo info = BlockInfo.Decode(blockBits);
+                if (!info.IsValid)
+                {
+                    continue;
+                }
+
+                // ASTC spec §C.2.19: the LDR (decode_unorm8) profile cannot decode blocks that
+                // carry HDR content. Callers wanting HDR values must use DecompressHdrImage.
+                if (IsHdrBlock(blockBits, in info))
+                {
+                    throw new TextureFormatException(
+                        "ASTC block uses HDR endpoint data but was passed to the LDR decoder. " +
+                        "Use AstcDecoder.DecompressHdrImage to decode HDR content.");
+                }
+
+                int dstBaseX = blockX * footprintWidth;
+                int dstBaseY = blockY * footprintHeight;
+                int copyWidth = Math.Min(footprintWidth, width - dstBaseX);
+                int copyHeight = Math.Min(footprintHeight, height - dstBaseY);
+
+                bool isFusableLdr = !info.IsVoidExtent && info.PartitionCount == 1
+                    && !info.IsDualPlane && !info.EndpointMode0.IsHdr();
+                bool isFullInteriorBlock = copyWidth == footprintWidth && copyHeight == footprintHeight;
+
+                // Fast path: fuse decode directly into image buffer for interior full blocks.
+                if (isFusableLdr && isFullInteriorBlock)
+                {
+                    FusedLdrBlockDecoder.DecompressBlockFusedLdrToImage(
+                        blockBits, in info, footprint, dstBaseX, dstBaseY, width, imageBuffer);
+                    continue;
+                }
+
+                if (isFusableLdr)
+                {
+                    FusedLdrBlockDecoder.DecompressBlockFusedLdr(blockBits, in info, footprint, decodedPixels);
+                }
+                else
+                {
+                    LogicalBlock? logicalBlock = LogicalBlock.UnpackLogicalBlock(footprint, blockBits, in info);
+                    if (logicalBlock is null)
+                    {
+                        continue;
+                    }
+
+                    logicalBlock.WriteAllPixelsLdr(footprint, decodedPixels);
+                }
+
+                CopyBlockRect(decodedPixels, imageBuffer, footprintWidth, copyWidth, copyHeight, dstBaseX, dstBaseY, width, BytesPerPixelUnorm8);
+            }
+        }
     }
 
     /// <summary>
@@ -270,99 +258,18 @@ public static class AstcDecoder
     /// </returns>
     public static bool DecompressHdrImage(ReadOnlySpan<byte> astcData, int width, int height, Footprint footprint, Span<float> imageBuffer)
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(width);
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(height);
-
-        long totalPixels = (long)width * height;
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(totalPixels, (long)int.MaxValue / 4);
-
-        long totalFloats = totalPixels * 4;
-        ArgumentOutOfRangeException.ThrowIfLessThan((long)imageBuffer.Length, totalFloats);
+        const int channelsPerPixel = 4;
+        ValidateImageArgs(width, height, imageBuffer.Length, channelsPerPixel);
 
         if (!TryGetBlockLayout(astcData, width, height, footprint, out int blocksWide, out int blocksHigh))
         {
             return false;
         }
 
-        const int channelsPerPixel = 4;
-
-        // Rent outside the try/finally so a failing Rent doesn't hand the default sentinel to Return.
-        float[] decodedBlock = ArrayPool<float>.Shared.Rent(footprint.Width * footprint.Height * channelsPerPixel);
-
+        float[] decodedBlock = ArrayPool<float>.Shared.Rent(footprint.PixelCount * channelsPerPixel);
         try
         {
-            Span<float> decodedPixels = decodedBlock.AsSpan();
-            int blockIndex = 0;
-            int footprintWidth = footprint.Width;
-            int footprintHeight = footprint.Height;
-
-            for (int blockY = 0; blockY < blocksHigh; blockY++)
-            {
-                for (int blockX = 0; blockX < blocksWide; blockX++)
-                {
-                    int blockDataOffset = blockIndex++ * PhysicalBlock.SizeInBytes;
-                    if (blockDataOffset + PhysicalBlock.SizeInBytes > astcData.Length)
-                    {
-                        continue;
-                    }
-
-                    ulong low = BinaryPrimitives.ReadUInt64LittleEndian(astcData[blockDataOffset..]);
-                    ulong high = BinaryPrimitives.ReadUInt64LittleEndian(astcData[(blockDataOffset + 8)..]);
-                    UInt128 blockBits = new(high, low);
-
-                    int dstBaseX = blockX * footprintWidth;
-                    int dstBaseY = blockY * footprintHeight;
-                    int copyWidth = Math.Min(footprintWidth, width - dstBaseX);
-                    int copyHeight = Math.Min(footprintHeight, height - dstBaseY);
-
-                    BlockInfo info = BlockInfo.Decode(blockBits);
-                    if (!info.IsValid)
-                    {
-                        continue;
-                    }
-
-                    // Fast path: fuse decode directly into image buffer for interior full blocks
-                    if (!info.IsVoidExtent && info.PartitionCount == 1 && !info.IsDualPlane
-                        && copyWidth == footprintWidth && copyHeight == footprintHeight)
-                    {
-                        FusedHdrBlockDecoder.DecompressBlockFusedHdrToImage(
-                            blockBits,
-                            in info,
-                            footprint,
-                            dstBaseX,
-                            dstBaseY,
-                            width,
-                            imageBuffer);
-                        continue;
-                    }
-
-                    // Fused decode to temp buffer for single-partition non-dual-plane
-                    if (!info.IsVoidExtent && info.PartitionCount == 1 && !info.IsDualPlane)
-                    {
-                        FusedHdrBlockDecoder.DecompressBlockFusedHdr(blockBits, in info, footprint, decodedPixels);
-                    }
-                    else
-                    {
-                        // Fallback: LogicalBlock path for void extent, multi-partition, dual plane
-                        LogicalBlock? logicalBlock = LogicalBlock.UnpackLogicalBlock(footprint, blockBits, in info);
-                        if (logicalBlock is null)
-                        {
-                            continue;
-                        }
-
-                        logicalBlock.WriteAllPixelsHdr(footprint, decodedPixels);
-                    }
-
-                    int copyFloats = copyWidth * channelsPerPixel;
-                    for (int pixelY = 0; pixelY < copyHeight; pixelY++)
-                    {
-                        int srcOffset = pixelY * footprintWidth * channelsPerPixel;
-                        int dstOffset = (((dstBaseY + pixelY) * width) + dstBaseX) * channelsPerPixel;
-                        decodedPixels.Slice(srcOffset, copyFloats)
-                            .CopyTo(imageBuffer.Slice(dstOffset, copyFloats));
-                    }
-                }
-            }
+            DecodeAllBlocksHdr(astcData, width, height, footprint, blocksWide, blocksHigh, imageBuffer, decodedBlock);
         }
         finally
         {
@@ -370,6 +277,76 @@ public static class AstcDecoder
         }
 
         return true;
+    }
+
+    private static void DecodeAllBlocksHdr(
+        ReadOnlySpan<byte> astcData,
+        int width,
+        int height,
+        Footprint footprint,
+        int blocksWide,
+        int blocksHigh,
+        Span<float> imageBuffer,
+        float[] decodedBlock)
+    {
+        const int channelsPerPixel = 4;
+        Span<float> decodedPixels = decodedBlock.AsSpan();
+        int blockIndex = 0;
+        int footprintWidth = footprint.Width;
+        int footprintHeight = footprint.Height;
+
+        for (int blockY = 0; blockY < blocksHigh; blockY++)
+        {
+            for (int blockX = 0; blockX < blocksWide; blockX++)
+            {
+                int index = blockIndex++;
+                if (!TryReadBlockBits(astcData, index, out UInt128 blockBits))
+                {
+                    continue;
+                }
+
+                BlockInfo info = BlockInfo.Decode(blockBits);
+                if (!info.IsValid)
+                {
+                    continue;
+                }
+
+                int dstBaseX = blockX * footprintWidth;
+                int dstBaseY = blockY * footprintHeight;
+                int copyWidth = Math.Min(footprintWidth, width - dstBaseX);
+                int copyHeight = Math.Min(footprintHeight, height - dstBaseY);
+
+                bool isFusableHdr = !info.IsVoidExtent && info.PartitionCount == 1 && !info.IsDualPlane;
+                bool isFullInteriorBlock = copyWidth == footprintWidth && copyHeight == footprintHeight;
+
+                // Fast path: fuse decode directly into image buffer for interior full blocks.
+                if (isFusableHdr && isFullInteriorBlock)
+                {
+                    FusedHdrBlockDecoder.DecompressBlockFusedHdrToImage(
+                        blockBits, in info, footprint, dstBaseX, dstBaseY, width, imageBuffer);
+                    continue;
+                }
+
+                if (isFusableHdr)
+                {
+                    FusedHdrBlockDecoder.DecompressBlockFusedHdr(blockBits, in info, footprint, decodedPixels);
+                }
+                else
+                {
+                    // Fallback: void-extent, multi-partition or dual-plane blocks go through the
+                    // generic LogicalBlock pipeline.
+                    LogicalBlock? logicalBlock = LogicalBlock.UnpackLogicalBlock(footprint, blockBits, in info);
+                    if (logicalBlock is null)
+                    {
+                        continue;
+                    }
+
+                    logicalBlock.WriteAllPixelsHdr(footprint, decodedPixels);
+                }
+
+                CopyBlockRect(decodedPixels, imageBuffer, footprintWidth, copyWidth, copyHeight, dstBaseX, dstBaseY, width, channelsPerPixel);
+            }
+        }
     }
 
     /// <summary>
@@ -479,13 +456,76 @@ public static class AstcDecoder
     /// </summary>
     private static bool IsHdrBlock(UInt128 blockBits, in BlockInfo info)
     {
-        // Void-extent: bit 9 of the block-mode prefix distinguishes LDR (1) from HDR (0).
-        // Matches ARM's astcenc_symbolic_physical.cpp — `if (block_mode & 0x200) SYM_BTYPE_CONST_F16`.
+        // ASTC spec §C.2.23: for void-extent blocks bit 9 of the block mode distinguishes
+        // LDR (1, UNORM16) from HDR (0, FP16).
         if (info.IsVoidExtent)
         {
             return (blockBits.Low() & (1UL << 9)) != 0;
         }
 
         return info.HasHdrEndpoints();
+    }
+
+    /// <summary>
+    /// Validates that <paramref name="width"/> and <paramref name="height"/> are positive,
+    /// that width × height × <paramref name="bytesPerPixel"/> does not overflow
+    /// <see cref="int.MaxValue"/>, and that <paramref name="bufferLength"/> has room for
+    /// the decoded output.
+    /// </summary>
+    private static void ValidateImageArgs(int width, int height, int bufferLength, int bytesPerPixel)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(width);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(height);
+
+        long totalPixels = (long)width * height;
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(totalPixels, (long)int.MaxValue / bytesPerPixel);
+
+        long totalElements = totalPixels * bytesPerPixel;
+        ArgumentOutOfRangeException.ThrowIfLessThan((long)bufferLength, totalElements);
+    }
+
+    /// <summary>
+    /// Reads the 16 bytes of the ASTC block at <paramref name="blockIndex"/> into a
+    /// <see cref="UInt128"/> (little-endian). Returns false if the stream is short.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static bool TryReadBlockBits(ReadOnlySpan<byte> astcData, int blockIndex, out UInt128 blockBits)
+    {
+        int offset = blockIndex * PhysicalBlock.SizeInBytes;
+        if (offset + PhysicalBlock.SizeInBytes > astcData.Length)
+        {
+            blockBits = default;
+            return false;
+        }
+
+        ulong low = BinaryPrimitives.ReadUInt64LittleEndian(astcData[offset..]);
+        ulong high = BinaryPrimitives.ReadUInt64LittleEndian(astcData[(offset + 8)..]);
+        blockBits = new UInt128(high, low);
+        return true;
+    }
+
+    /// <summary>
+    /// Copies a decoded block from its scratch buffer into the image at the block's pixel
+    /// offset, row by row, clamped to the image bounds on right/bottom edges.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void CopyBlockRect<T>(
+        ReadOnlySpan<T> source,
+        Span<T> destination,
+        int blockWidth,
+        int copyWidth,
+        int copyHeight,
+        int dstBaseX,
+        int dstBaseY,
+        int imageWidth,
+        int channelsPerPixel)
+    {
+        int copyElements = copyWidth * channelsPerPixel;
+        for (int pixelY = 0; pixelY < copyHeight; pixelY++)
+        {
+            int srcOffset = pixelY * blockWidth * channelsPerPixel;
+            int dstOffset = (((dstBaseY + pixelY) * imageWidth) + dstBaseX) * channelsPerPixel;
+            source.Slice(srcOffset, copyElements).CopyTo(destination.Slice(dstOffset, copyElements));
+        }
     }
 }

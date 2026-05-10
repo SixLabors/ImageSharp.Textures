@@ -223,158 +223,157 @@ internal static class EndpointEncoder
     private static bool EncodeColorsRGBA(Rgba32 endpointLowRgba, Rgba32 endpointHighRgba, int maxValue, bool withAlpha, out ColorEndpointMode astcMode, List<int> values)
     {
         astcMode = ColorEndpointMode.LdrRgbDirect;
-        int numChannels = withAlpha ? 4 : 3;
 
-        Rgba32 invertedBlueContractLow = endpointLowRgba.WithInvertedBlueContract();
-        Rgba32 invertedBlueContractHigh = endpointHighRgba.WithInvertedBlueContract();
+        // Blue-contract (ASTC spec §C.2.14) rewrites (R,G,B) such that B stays and R,G
+        // shift toward 2R-B / 2G-B. The inverted form is fed back through decode to score
+        // a candidate representation.
+        Rgba32 invertedBcLow = endpointLowRgba.WithInvertedBlueContract();
+        Rgba32 invertedBcHigh = endpointHighRgba.WithInvertedBlueContract();
 
-        int[] directBase = new int[4];
-        int[] directOffset = new int[4];
-        for (int i = 0; i < 4; ++i)
-        {
-            directBase[i] = endpointLowRgba.GetChannel(i);
-            directOffset[i] = Math.Clamp(endpointHighRgba.GetChannel(i) - endpointLowRgba.GetChannel(i), -32, 31);
-            (directOffset[i], directBase[i]) = BitOperations.TransferPrecisionInverse(directOffset[i], directBase[i]);
-        }
-
-        int[] invertedBlueContractBase = new int[4];
-        int[] invertedBlueContractOffset = new int[4];
-        for (int i = 0; i < 4; ++i)
-        {
-            invertedBlueContractBase[i] = invertedBlueContractHigh.GetChannel(i);
-            invertedBlueContractOffset[i] = Math.Clamp(invertedBlueContractLow.GetChannel(i) - invertedBlueContractHigh.GetChannel(i), -32, 31);
-            (invertedBlueContractOffset[i], invertedBlueContractBase[i]) = BitOperations.TransferPrecisionInverse(invertedBlueContractOffset[i], invertedBlueContractBase[i]);
-        }
-
-        int[] directBaseSwapped = new int[4];
-        int[] directOffsetSwapped = new int[4];
-        for (int i = 0; i < 4; ++i)
-        {
-            directBaseSwapped[i] = endpointHighRgba.GetChannel(i);
-            directOffsetSwapped[i] = Math.Clamp(endpointLowRgba.GetChannel(i) - endpointHighRgba.GetChannel(i), -32, 31);
-            (directOffsetSwapped[i], directBaseSwapped[i]) = BitOperations.TransferPrecisionInverse(directOffsetSwapped[i], directBaseSwapped[i]);
-        }
-
-        int[] invertedBlueContractBaseSwapped = new int[4];
-        int[] invertedBlueContractOffsetSwapped = new int[4];
-        for (int i = 0; i < 4; ++i)
-        {
-            invertedBlueContractBaseSwapped[i] = invertedBlueContractLow.GetChannel(i);
-            invertedBlueContractOffsetSwapped[i] = Math.Clamp(invertedBlueContractHigh.GetChannel(i) - invertedBlueContractLow.GetChannel(i), -32, 31);
-            (invertedBlueContractOffsetSwapped[i], invertedBlueContractBaseSwapped[i]) = BitOperations.TransferPrecisionInverse(invertedBlueContractOffsetSwapped[i], invertedBlueContractBaseSwapped[i]);
-        }
+        // Build four (base, offset) encoded pairs: direct and blue-contract forms, each
+        // with normal (low=base) and swapped (high=base) variants. These feed the
+        // base-offset mode (spec §C.2.14 "RGB/RGBA, base+offset").
+        QuantizedEndpointPair offsetQuantized = BuildBaseOffsetPair(endpointLowRgba, endpointHighRgba, swapped: false, maxValue);
+        QuantizedEndpointPair bcOffsetQuantized = BuildBaseOffsetPair(invertedBcHigh, invertedBcLow, swapped: false, maxValue);
+        QuantizedEndpointPair offsetSwappedQuantized = BuildBaseOffsetPair(endpointLowRgba, endpointHighRgba, swapped: true, maxValue);
+        QuantizedEndpointPair bcOffsetSwappedQuantized = BuildBaseOffsetPair(invertedBcLow, invertedBcHigh, swapped: true, maxValue);
 
         QuantizedEndpointPair directQuantized = new(endpointLowRgba, endpointHighRgba, maxValue);
-        QuantizedEndpointPair bcQuantized = new(invertedBlueContractLow, invertedBlueContractHigh, maxValue);
+        QuantizedEndpointPair bcQuantized = new(invertedBcLow, invertedBcHigh, maxValue);
 
-        QuantizedEndpointPair offsetQuantized = new(ClampedRgba32(directBase[0], directBase[1], directBase[2], directBase[3]), ClampedRgba32(directOffset[0], directOffset[1], directOffset[2], directOffset[3]), maxValue);
-        QuantizedEndpointPair bcOffsetQuantized = new(ClampedRgba32(invertedBlueContractBase[0], invertedBlueContractBase[1], invertedBlueContractBase[2], invertedBlueContractBase[3]), ClampedRgba32(invertedBlueContractOffset[0], invertedBlueContractOffset[1], invertedBlueContractOffset[2], invertedBlueContractOffset[3]), maxValue);
+        // Rank six candidate encodings by reconstruction error; pack the first that fits.
+        List<CEEncodingOption> candidates =
+        [
+            ScoreDirect(directQuantized, endpointLowRgba, endpointHighRgba, withAlpha),
+            ScoreBlueContract(bcQuantized, endpointLowRgba, endpointHighRgba, withAlpha),
+            ScoreBaseOffset(offsetQuantized, endpointLowRgba, endpointHighRgba, swapped: false, withAlpha),
+            ScoreBaseOffsetBlueContract(bcOffsetQuantized, endpointLowRgba, endpointHighRgba, swapped: false, withAlpha),
+            ScoreBaseOffset(offsetSwappedQuantized, endpointLowRgba, endpointHighRgba, swapped: true, withAlpha),
+            ScoreBaseOffsetBlueContract(bcOffsetSwappedQuantized, endpointLowRgba, endpointHighRgba, swapped: true, withAlpha),
+        ];
 
-        QuantizedEndpointPair offsetSwappedQuantized = new(ClampedRgba32(directBaseSwapped[0], directBaseSwapped[1], directBaseSwapped[2], directBaseSwapped[3]), ClampedRgba32(directOffsetSwapped[0], directOffsetSwapped[1], directOffsetSwapped[2], directOffsetSwapped[3]), maxValue);
-        QuantizedEndpointPair bcOffsetSwappedQuantized = new(ClampedRgba32(invertedBlueContractBaseSwapped[0], invertedBlueContractBaseSwapped[1], invertedBlueContractBaseSwapped[2], invertedBlueContractBaseSwapped[3]), ClampedRgba32(invertedBlueContractOffsetSwapped[0], invertedBlueContractOffsetSwapped[1], invertedBlueContractOffsetSwapped[2], invertedBlueContractOffsetSwapped[3]), maxValue);
+        candidates.Sort((a, b) => a.Error().CompareTo(b.Error()));
 
-        List<CEEncodingOption> errors = new(6);
-
-        // 3.1 regular unquantized error
-        {
-            int[] rgbaLow = directQuantized.UnquantizedLow();
-            int[] rgbaHigh = directQuantized.UnquantizedHigh();
-            Rgba32 lowColor = ClampedRgba32(rgbaLow[0], rgbaLow[1], rgbaLow[2], rgbaLow[3]);
-            Rgba32 highColor = ClampedRgba32(rgbaHigh[0], rgbaHigh[1], rgbaHigh[2], rgbaHigh[3]);
-            int squaredRgbError = withAlpha
-                ? SquaredError(lowColor, endpointLowRgba) + SquaredError(highColor, endpointHighRgba)
-                : SquaredErrorRgb(lowColor, endpointLowRgba) + SquaredErrorRgb(highColor, endpointHighRgba);
-            errors.Add(new CEEncodingOption(squaredRgbError, directQuantized, false, false, false));
-        }
-
-        // 3.2 blue-contract
-        {
-            int[] blueContractUnquantizedLow = bcQuantized.UnquantizedLow();
-            int[] blueContractUnquantizedHigh = bcQuantized.UnquantizedHigh();
-            Rgba32 blueContractLow = RgbaColorExtensions.WithBlueContract(blueContractUnquantizedLow[0], blueContractUnquantizedLow[1], blueContractUnquantizedLow[2], blueContractUnquantizedLow[3]);
-            Rgba32 blueContractHigh = RgbaColorExtensions.WithBlueContract(blueContractUnquantizedHigh[0], blueContractUnquantizedHigh[1], blueContractUnquantizedHigh[2], blueContractUnquantizedHigh[3]);
-
-            // TODO: How to handle alpha for this entire functions??
-            int blueContractSquaredError = withAlpha
-                ? SquaredError(blueContractLow, endpointLowRgba) + SquaredError(blueContractHigh, endpointHighRgba)
-                : SquaredErrorRgb(blueContractLow, endpointLowRgba) + SquaredErrorRgb(blueContractHigh, endpointHighRgba);
-
-            errors.Add(new CEEncodingOption(blueContractSquaredError, bcQuantized, swapEndpoints: false, blueContract: true, useOffsetMode: false));
-        }
-
-        // 3.3 base/offset
-        void ComputeBaseOffsetError(QuantizedEndpointPair pair, bool swapped)
-        {
-            int[] baseArr = pair.UnquantizedLow();
-            int[] offsetArr = pair.UnquantizedHigh();
-
-            Rgba32 baseColor = ClampedRgba32(baseArr[0], baseArr[1], baseArr[2], baseArr[3]);
-            Rgba32 offsetColor = ClampedRgba32(offsetArr[0], offsetArr[1], offsetArr[2], offsetArr[3]).AsOffsetFrom(baseColor);
-
-            int baseOffsetError = 0;
-            if (swapped)
-            {
-                baseOffsetError = withAlpha
-                    ? SquaredError(baseColor, endpointHighRgba) + SquaredError(offsetColor, endpointLowRgba)
-                    : SquaredErrorRgb(baseColor, endpointHighRgba) + SquaredErrorRgb(offsetColor, endpointLowRgba);
-            }
-            else
-            {
-                baseOffsetError = withAlpha
-                    ? SquaredError(baseColor, endpointLowRgba) + SquaredError(offsetColor, endpointHighRgba)
-                    : SquaredErrorRgb(baseColor, endpointLowRgba) + SquaredErrorRgb(offsetColor, endpointHighRgba);
-            }
-
-            errors.Add(new CEEncodingOption(baseOffsetError, pair, swapped, false, true));
-        }
-
-        ComputeBaseOffsetError(offsetQuantized, false);
-
-        void ComputeBaseOffsetBlueContractError(QuantizedEndpointPair pair, bool swapped)
-        {
-            int[] baseArr = pair.UnquantizedLow();
-            int[] offsetArr = pair.UnquantizedHigh();
-
-            Rgba32 baseColor = ClampedRgba32(baseArr[0], baseArr[1], baseArr[2], baseArr[3]);
-            Rgba32 offsetColor = ClampedRgba32(offsetArr[0], offsetArr[1], offsetArr[2], offsetArr[3]).AsOffsetFrom(baseColor);
-
-            baseColor = baseColor.WithBlueContract();
-            offsetColor = offsetColor.WithBlueContract();
-
-            int squaredBlueContractError = 0;
-            if (swapped)
-            {
-                squaredBlueContractError = withAlpha
-                    ? SquaredError(baseColor, endpointLowRgba) + SquaredError(offsetColor, endpointHighRgba)
-                    : SquaredErrorRgb(baseColor, endpointLowRgba) + SquaredErrorRgb(offsetColor, endpointHighRgba);
-            }
-            else
-            {
-                squaredBlueContractError = withAlpha
-                    ? SquaredError(baseColor, endpointHighRgba) + SquaredError(offsetColor, endpointLowRgba)
-                    : SquaredErrorRgb(baseColor, endpointHighRgba) + SquaredErrorRgb(offsetColor, endpointLowRgba);
-            }
-
-            errors.Add(new CEEncodingOption(squaredBlueContractError, pair, swapped, true, true));
-        }
-
-        ComputeBaseOffsetBlueContractError(bcOffsetQuantized, false);
-        ComputeBaseOffsetError(offsetSwappedQuantized, true);
-        ComputeBaseOffsetBlueContractError(bcOffsetSwappedQuantized, true);
-
-        errors.Sort((a, b) => a.Error().CompareTo(b.Error()));
-
-        foreach (CEEncodingOption measurement in errors)
+        foreach (CEEncodingOption candidate in candidates)
         {
             bool needsWeightSwap = false;
-            if (measurement.Pack(withAlpha, out ColorEndpointMode modeUnused, values, ref needsWeightSwap))
+            if (candidate.Pack(withAlpha, out ColorEndpointMode _, values, ref needsWeightSwap))
             {
                 return needsWeightSwap;
             }
         }
 
-        throw new InvalidOperationException("Shouldn't have reached this point");
+        throw new InvalidOperationException("No candidate color-endpoint encoding fit the available bits");
     }
+
+    /// <summary>
+    /// Builds a quantized (base, offset) endpoint pair for base-offset mode. Takes the
+    /// channel-wise difference, clamps to ASTC's signed 6-bit offset range, then converts
+    /// via <see cref="BitOperations.TransferPrecisionInverse"/>.
+    /// </summary>
+    private static QuantizedEndpointPair BuildBaseOffsetPair(Rgba32 low, Rgba32 high, bool swapped, int maxValue)
+    {
+        Rgba32 baseColor = swapped ? high : low;
+        Rgba32 offsetColor = swapped ? low : high;
+        Span<int> baseChannels = stackalloc int[4];
+        Span<int> offsetChannels = stackalloc int[4];
+        for (int i = 0; i < 4; ++i)
+        {
+            baseChannels[i] = baseColor.GetChannel(i);
+            offsetChannels[i] = Math.Clamp(offsetColor.GetChannel(i) - baseColor.GetChannel(i), -32, 31);
+            (offsetChannels[i], baseChannels[i]) = BitOperations.TransferPrecisionInverse(offsetChannels[i], baseChannels[i]);
+        }
+
+        return new QuantizedEndpointPair(
+            ClampedRgba32(baseChannels[0], baseChannels[1], baseChannels[2], baseChannels[3]),
+            ClampedRgba32(offsetChannels[0], offsetChannels[1], offsetChannels[2], offsetChannels[3]),
+            maxValue);
+    }
+
+    /// <summary>Scores the direct (unswapped) encoding: compare decoded endpoints to originals.</summary>
+    private static CEEncodingOption ScoreDirect(
+        QuantizedEndpointPair pair,
+        Rgba32 originalLow,
+        Rgba32 originalHigh,
+        bool withAlpha)
+    {
+        Rgba32 decodedLow = ArrayToRgba32(pair.UnquantizedLow());
+        Rgba32 decodedHigh = ArrayToRgba32(pair.UnquantizedHigh());
+        int error = ChannelError(decodedLow, originalLow, withAlpha) + ChannelError(decodedHigh, originalHigh, withAlpha);
+        return new CEEncodingOption(error, pair, swapEndpoints: false, blueContract: false, useOffsetMode: false);
+    }
+
+    /// <summary>Scores a blue-contracted direct encoding (ASTC spec §C.2.14 blue-contract branch).</summary>
+    private static CEEncodingOption ScoreBlueContract(
+        QuantizedEndpointPair pair,
+        Rgba32 originalLow,
+        Rgba32 originalHigh,
+        bool withAlpha)
+    {
+        int[] decodedLow = pair.UnquantizedLow();
+        int[] decodedHigh = pair.UnquantizedHigh();
+        Rgba32 contractedLow = RgbaColorExtensions.WithBlueContract(decodedLow[0], decodedLow[1], decodedLow[2], decodedLow[3]);
+        Rgba32 contractedHigh = RgbaColorExtensions.WithBlueContract(decodedHigh[0], decodedHigh[1], decodedHigh[2], decodedHigh[3]);
+        int error = ChannelError(contractedLow, originalLow, withAlpha) + ChannelError(contractedHigh, originalHigh, withAlpha);
+        return new CEEncodingOption(error, pair, swapEndpoints: false, blueContract: true, useOffsetMode: false);
+    }
+
+    /// <summary>
+    /// Scores a base-offset encoding (spec §C.2.14). The candidate stores (base, offset)
+    /// in its low/high slots; we reconstruct the decoded low/high endpoints by adding the
+    /// offset and compare to the original.
+    /// </summary>
+    private static CEEncodingOption ScoreBaseOffset(
+        QuantizedEndpointPair pair,
+        Rgba32 originalLow,
+        Rgba32 originalHigh,
+        bool swapped,
+        bool withAlpha)
+    {
+        (Rgba32 decodedLow, Rgba32 decodedHigh) = ReconstructBaseOffset(pair, swapped);
+        int error = ChannelError(decodedLow, originalLow, withAlpha) + ChannelError(decodedHigh, originalHigh, withAlpha);
+        return new CEEncodingOption(error, pair, swapEndpoints: swapped, blueContract: false, useOffsetMode: true);
+    }
+
+    /// <summary>
+    /// Scores a base-offset encoding combined with blue-contract application on the
+    /// reconstructed decoded endpoints.
+    /// </summary>
+    private static CEEncodingOption ScoreBaseOffsetBlueContract(
+        QuantizedEndpointPair pair,
+        Rgba32 originalLow,
+        Rgba32 originalHigh,
+        bool swapped,
+        bool withAlpha)
+    {
+        (Rgba32 decodedLow, Rgba32 decodedHigh) = ReconstructBaseOffset(pair, swapped);
+        decodedLow = decodedLow.WithBlueContract();
+        decodedHigh = decodedHigh.WithBlueContract();
+
+        // Note: the swap flag here compares decodedLow to originalHigh (and vice versa).
+        int error = swapped
+            ? ChannelError(decodedLow, originalLow, withAlpha) + ChannelError(decodedHigh, originalHigh, withAlpha)
+            : ChannelError(decodedLow, originalHigh, withAlpha) + ChannelError(decodedHigh, originalLow, withAlpha);
+        return new CEEncodingOption(error, pair, swapEndpoints: swapped, blueContract: true, useOffsetMode: true);
+    }
+
+    /// <summary>
+    /// Reconstructs decoded (low, high) from a base-offset candidate.
+    /// When <paramref name="swapped"/>, the stored "high" slot is the offset applied to the
+    /// "low" base, and the caller's decoded low corresponds to the original high endpoint.
+    /// </summary>
+    private static (Rgba32 DecodedLow, Rgba32 DecodedHigh) ReconstructBaseOffset(QuantizedEndpointPair pair, bool swapped)
+    {
+        Rgba32 baseColor = ArrayToRgba32(pair.UnquantizedLow());
+        Rgba32 offsetColor = ArrayToRgba32(pair.UnquantizedHigh()).AsOffsetFrom(baseColor);
+        return swapped ? (offsetColor, baseColor) : (baseColor, offsetColor);
+    }
+
+    private static Rgba32 ArrayToRgba32(int[] channels)
+        => ClampedRgba32(channels[0], channels[1], channels[2], channels[3]);
+
+    private static int ChannelError(Rgba32 a, Rgba32 b, bool withAlpha)
+        => withAlpha ? SquaredError(a, b) : SquaredErrorRgb(a, b);
 
     private class QuantizedEndpointPair
     {

@@ -26,27 +26,66 @@ internal static class IntermediateBlockPacker
 
     public static (string? Error, UInt128 PhysicalBlockBits) Pack(in IntermediateBlock.IntermediateBlockData data)
     {
-        UInt128 physicalBlockBits = 0;
-        int expectedWeightsCount = data.WeightGridX * data.WeightGridY
-            * (data.DualPlaneChannel.HasValue ? 2 : 1);
-        int actualWeightsCount = data.WeightsCount > 0
-            ? data.WeightsCount
-            : (data.Weights?.Length ?? 0);
-        if (actualWeightsCount != expectedWeightsCount)
+        if (!ValidateWeightCount(data))
         {
             return ("Incorrect number of weights!", 0);
         }
 
         BitStream bitSink = new(0UL, 0);
 
-        // First we need to encode the block mode.
-        string? errorMessage = PackBlockMode(data.WeightGridX, data.WeightGridY, data.WeightRange, data.DualPlaneChannel.HasValue, ref bitSink);
-        if (errorMessage != null)
+        // Block mode (ASTC spec §C.2.8 Table 24) — weight-grid dimensions, weight range,
+        // and dual-plane flag.
+        string? modeError = PackBlockMode(data.WeightGridX, data.WeightGridY, data.WeightRange, data.DualPlaneChannel.HasValue, ref bitSink);
+        if (modeError != null)
         {
-            return (errorMessage, 0);
+            return (modeError, 0);
         }
 
-        // number of partitions minus one
+        WritePartitionFields(data, ref bitSink);
+
+        (BitStream weightSink, int weightBitsCount) = EncodeWeights(data);
+
+        (string? cemError, int extraConfig) = EncodeColorEndpointModes(data, data.EndpointCount, ref bitSink);
+        if (cemError != null)
+        {
+            return (cemError, 0);
+        }
+
+        if (!TryResolveColorRange(data, out int colorValueRange, out string? rangeError))
+        {
+            return (rangeError, 0);
+        }
+
+        if (!TryEncodeColorValues(data, colorValueRange, ref bitSink, out string? colorError))
+        {
+            return (colorError, 0);
+        }
+
+        WriteExtraConfigAndPadding(data, weightBitsCount, extraConfig, ref bitSink);
+
+        return ComposePhysicalBlock(ref bitSink, ref weightSink, weightBitsCount);
+    }
+
+    /// <summary>
+    /// Validates that the caller-supplied weight count matches the weight-grid dimensions
+    /// (doubled for dual-plane blocks per ASTC spec §C.2.20).
+    /// </summary>
+    private static bool ValidateWeightCount(in IntermediateBlock.IntermediateBlockData data)
+    {
+        int expectedWeightsCount = data.WeightGridX * data.WeightGridY
+            * (data.DualPlaneChannel.HasValue ? 2 : 1);
+        int actualWeightsCount = data.WeightsCount > 0
+            ? data.WeightsCount
+            : (data.Weights?.Length ?? 0);
+        return actualWeightsCount == expectedWeightsCount;
+    }
+
+    /// <summary>
+    /// Writes the 2-bit partition count (encoded as count − 1) and, for multi-partition
+    /// blocks, the 10-bit partition id (ASTC spec §C.2.10).
+    /// </summary>
+    private static void WritePartitionFields(in IntermediateBlock.IntermediateBlockData data, ref BitStream bitSink)
+    {
         int partitionCount = data.EndpointCount;
         bitSink.PutBits((uint)(partitionCount - 1), 2);
 
@@ -56,26 +95,44 @@ internal static class IntermediateBlockPacker
             ArgumentOutOfRangeException.ThrowIfLessThan(id, 0);
             bitSink.PutBits((uint)id, 10);
         }
+    }
 
-        (BitStream weightSink, int weightBitsCount) = EncodeWeights(data);
+    /// <summary>
+    /// Chooses the BISE color-value range (ASTC spec §C.2.16). <paramref name="error"/> is
+    /// non-null only when the block is structurally legal but no BISE range fits.
+    /// </summary>
+    private static bool TryResolveColorRange(
+        in IntermediateBlock.IntermediateBlockData data,
+        out int colorValueRange,
+        out string? error)
+    {
+        colorValueRange = data.EndpointRange ?? IntermediateBlock.EndpointRangeForBlock(data);
+        error = null;
 
-        (string? error, int extraConfig) = EncodeColorEndpointModes(data, partitionCount, ref bitSink);
-        if (error != null)
-        {
-            return (error, 0);
-        }
-
-        int colorValueRange = data.EndpointRange ?? IntermediateBlock.EndpointRangeForBlock(data);
         if (colorValueRange == -1)
         {
-            throw new InvalidOperationException($"{nameof(colorValueRange)} must not be EndpointRangeInvalidWeightDimensions");
+            throw new InvalidOperationException("Color value range must not be EndpointRangeInvalidWeightDimensions");
         }
 
         if (colorValueRange == -2)
         {
-            return ("Intermediate block emits illegal color range", 0);
+            error = "Intermediate block emits illegal color range";
+            return false;
         }
 
+        return true;
+    }
+
+    /// <summary>
+    /// BISE-encodes the per-partition color endpoint values (ASTC spec §C.2.14).
+    /// Returns false if any value exceeds the selected BISE range.
+    /// </summary>
+    private static bool TryEncodeColorValues(
+        in IntermediateBlock.IntermediateBlockData data,
+        int colorValueRange,
+        ref BitStream bitSink,
+        out string? error)
+    {
         BoundedIntegerSequenceEncoder colorEncoder = new(colorValueRange);
         for (int i = 0; i < data.EndpointCount; i++)
         {
@@ -85,7 +142,8 @@ internal static class IntermediateBlockPacker
                 int color = ep.Colors[j];
                 if (color > colorValueRange)
                 {
-                    return ("Color outside available color range!", 0);
+                    error = "Color outside available color range!";
+                    return false;
                 }
 
                 colorEncoder.AddValue(color);
@@ -93,7 +151,20 @@ internal static class IntermediateBlockPacker
         }
 
         colorEncoder.Encode(ref bitSink);
+        error = null;
+        return true;
+    }
 
+    /// <summary>
+    /// Pads the bitstream out to the extra-CEM bit position with zero bits, then writes the
+    /// extra-CEM configuration bits if any (ASTC spec §C.2.11).
+    /// </summary>
+    private static void WriteExtraConfigAndPadding(
+        in IntermediateBlock.IntermediateBlockData data,
+        int weightBitsCount,
+        int extraConfig,
+        ref BitStream bitSink)
+    {
         int extraConfigBitPosition = IntermediateBlock.ExtraConfigBitPosition(data);
         int extraConfigBits = 128 - weightBitsCount - extraConfigBitPosition;
 
@@ -115,8 +186,18 @@ internal static class IntermediateBlockPacker
         }
 
         ArgumentOutOfRangeException.ThrowIfNotEqual(bitSink.Bits, 128u - weightBitsCount);
+    }
 
-        // Flush out the bit writer
+    /// <summary>
+    /// Assembles the 128-bit physical block. The forward stream occupies the low bits and
+    /// the reversed weight stream (per ASTC spec §C.2.5 — weights are written from the top
+    /// of the block down) occupies the high bits.
+    /// </summary>
+    private static (string? Error, UInt128 PhysicalBlockBits) ComposePhysicalBlock(
+        ref BitStream bitSink,
+        ref BitStream weightSink,
+        int weightBitsCount)
+    {
         if (!bitSink.TryGetBits(128 - weightBitsCount, out UInt128 astcBits))
         {
             throw new InvalidOperationException();
@@ -127,13 +208,9 @@ internal static class IntermediateBlockPacker
             throw new InvalidOperationException();
         }
 
-        UInt128 combined = astcBits | UInt128Extensions.ReverseBits(revWeightBits);
-        physicalBlockBits = combined;
-
+        UInt128 physicalBlockBits = astcBits | UInt128Extensions.ReverseBits(revWeightBits);
         PhysicalBlock block = PhysicalBlock.Create(physicalBlockBits);
-        string? illegal = block.IdentifyInvalidEncodingIssues();
-
-        return (illegal, physicalBlockBits);
+        return (block.IdentifyInvalidEncodingIssues(), physicalBlockBits);
     }
 
     public static (string? Error, UInt128 PhysicalBlockBits) Pack(IntermediateBlock.VoidExtentData data)
@@ -207,79 +284,34 @@ internal static class IntermediateBlockPacker
     private static string? PackBlockMode(int dimX, int dimY, int range, bool dualPlane, ref BitStream bitSink)
     {
         bool highPrec = range > 7;
-        (string? maybeErr, int[]? rangeValues) = GetEncodedWeightRange(range);
-        if (maybeErr != null)
+        (string? rangeError, int[]? rangeValues) = GetEncodedWeightRange(range);
+        if (rangeError != null)
         {
-            return maybeErr;
+            return rangeError;
         }
 
-        // Ensure top two bits of r1 and r2 not both zero per reference
+        // ASTC spec §C.2.9: the top two bits of r1 and r2 cannot both be zero, so at least
+        // one of them must be set in any encoded mode.
         if ((rangeValues[1] | rangeValues[2]) <= 0)
         {
-            throw new InvalidOperationException($"{nameof(rangeValues)}[1] | {nameof(rangeValues)}[2] must be > 0");
+            throw new InvalidOperationException("rangeValues[1] | rangeValues[2] must be > 0");
         }
 
-        for (int mode = 0; mode < BlockModeInfoTable.Length; ++mode)
+        // Try each block-mode layout in BlockModeInfoTable; the first one whose grid bounds
+        // and precision constraints fit produces a valid encoding.
+        for (int modeIndex = 0; modeIndex < BlockModeInfoTable.Length; ++modeIndex)
         {
-            BlockModeInfo blockMode = BlockModeInfoTable[mode];
-            bool isValidMode = true;
-            isValidMode &= blockMode.MinWeightGridDimX <= dimX;
-            isValidMode &= dimX <= blockMode.MaxWeightGridDimX;
-            isValidMode &= blockMode.MinWeightGridDimY <= dimY;
-            isValidMode &= dimY <= blockMode.MaxWeightGridDimY;
-            isValidMode &= !(blockMode.RequireSinglePlaneLowPrec && dualPlane);
-            isValidMode &= !(blockMode.RequireSinglePlaneLowPrec && highPrec);
-
-            if (!isValidMode)
+            BlockModeInfo blockMode = BlockModeInfoTable[modeIndex];
+            if (!IsBlockModeCompatible(in blockMode, dimX, dimY, dualPlane, highPrec))
             {
                 continue;
             }
 
-            uint encodedMode = BlockModeMasks[mode];
-            void SetBit(uint value, int offset)
-            {
-                if (offset < 0)
-                {
-                    return;
-                }
-
-                encodedMode = (encodedMode & ~(1u << offset)) | ((value & 1u) << offset);
-            }
-
-            SetBit((uint)rangeValues[0], blockMode.R0BitPos);
-            SetBit((uint)rangeValues[1], blockMode.R1BitPos);
-            SetBit((uint)rangeValues[2], blockMode.R2BitPos);
-
-            int offsetX = dimX - blockMode.MinWeightGridDimX;
-            int offsetY = dimY - blockMode.MinWeightGridDimY;
-
-            if (blockMode.WeightGridXOffsetBitPos >= 0)
-            {
-                encodedMode |= (uint)(offsetX << blockMode.WeightGridXOffsetBitPos);
-            }
-            else
-            {
-                ArgumentOutOfRangeException.ThrowIfNotEqual(offsetX, 0);
-            }
-
-            if (blockMode.WeightGridYOffsetBitPos >= 0)
-            {
-                encodedMode |= (uint)(offsetY << blockMode.WeightGridYOffsetBitPos);
-            }
-            else
-            {
-                ArgumentOutOfRangeException.ThrowIfNotEqual(offsetY, 0);
-            }
-
-            if (!blockMode.RequireSinglePlaneLowPrec)
-            {
-                SetBit(highPrec ? 1u : 0u, 9);
-                SetBit(dualPlane ? 1u : 0u, 10);
-            }
+            uint encodedMode = AssembleEncodedMode(in blockMode, BlockModeMasks[modeIndex], rangeValues, dimX, dimY, dualPlane, highPrec);
 
             if (bitSink.Bits != 0)
             {
-                throw new InvalidOperationException($"{nameof(bitSink)}.{nameof(bitSink.Bits)} must be 0");
+                throw new InvalidOperationException("bitSink must be empty before writing the block mode");
             }
 
             bitSink.PutBits(encodedMode, 11);
@@ -287,6 +319,78 @@ internal static class IntermediateBlockPacker
         }
 
         return "Could not find viable block mode";
+    }
+
+    /// <summary>
+    /// Returns true if the given block-mode layout supports the requested weight grid size
+    /// and precision/dual-plane combination (ASTC spec §C.2.8 Table 24).
+    /// </summary>
+    private static bool IsBlockModeCompatible(in BlockModeInfo blockMode, int dimX, int dimY, bool dualPlane, bool highPrec)
+        => blockMode.MinWeightGridDimX <= dimX
+           && dimX <= blockMode.MaxWeightGridDimX
+           && blockMode.MinWeightGridDimY <= dimY
+           && dimY <= blockMode.MaxWeightGridDimY
+           && !(blockMode.RequireSinglePlaneLowPrec && (dualPlane || highPrec));
+
+    /// <summary>
+    /// Builds the 11-bit encoded block mode by placing the range selector bits, grid size
+    /// offset bits, and (for layouts that support them) the precision and dual-plane bits
+    /// into the template mask from <see cref="BlockModeMasks"/>.
+    /// </summary>
+    private static uint AssembleEncodedMode(
+        in BlockModeInfo blockMode,
+        uint template,
+        int[] rangeValues,
+        int dimX,
+        int dimY,
+        bool dualPlane,
+        bool highPrec)
+    {
+        uint encodedMode = template;
+        SetBit(ref encodedMode, (uint)rangeValues[0], blockMode.R0BitPos);
+        SetBit(ref encodedMode, (uint)rangeValues[1], blockMode.R1BitPos);
+        SetBit(ref encodedMode, (uint)rangeValues[2], blockMode.R2BitPos);
+
+        int offsetX = dimX - blockMode.MinWeightGridDimX;
+        int offsetY = dimY - blockMode.MinWeightGridDimY;
+        PlaceGridOffset(ref encodedMode, offsetX, blockMode.WeightGridXOffsetBitPos);
+        PlaceGridOffset(ref encodedMode, offsetY, blockMode.WeightGridYOffsetBitPos);
+
+        if (!blockMode.RequireSinglePlaneLowPrec)
+        {
+            SetBit(ref encodedMode, highPrec ? 1u : 0u, 9);
+            SetBit(ref encodedMode, dualPlane ? 1u : 0u, 10);
+        }
+
+        return encodedMode;
+    }
+
+    /// <summary>Sets bit <paramref name="offset"/> of <paramref name="encoded"/> from the LSB of <paramref name="value"/>. No-op if offset &lt; 0.</summary>
+    private static void SetBit(ref uint encoded, uint value, int offset)
+    {
+        if (offset < 0)
+        {
+            return;
+        }
+
+        encoded = (encoded & ~(1u << offset)) | ((value & 1u) << offset);
+    }
+
+    /// <summary>
+    /// Shifts the grid-dimension offset into place. When the layout has no offset bits
+    /// (offsetBitPos &lt; 0) the caller must supply offset 0, per the fixed-grid rows in
+    /// ASTC spec §C.2.8 Table 24.
+    /// </summary>
+    private static void PlaceGridOffset(ref uint encoded, int offset, int offsetBitPos)
+    {
+        if (offsetBitPos >= 0)
+        {
+            encoded |= (uint)(offset << offsetBitPos);
+        }
+        else
+        {
+            ArgumentOutOfRangeException.ThrowIfNotEqual(offset, 0);
+        }
     }
 
     private static (BitStream WeightSink, int WeightBitsCount) EncodeWeights(in IntermediateBlock.IntermediateBlockData data)

@@ -240,45 +240,82 @@ internal sealed class LogicalBlock
     public void WriteAllPixelsLdr(Footprint footprint, Span<byte> buffer)
     {
         ref ColorEndpointPair endpoint0 = ref this.endpoints[0];
+        bool isSinglePartitionLdr = !endpoint0.IsHdr && this.partition.PartitionCount == 1;
 
-        if (!endpoint0.IsHdr && this.partition.PartitionCount == 1)
+        if (!isSinglePartitionLdr)
         {
-            // Fast path: single-partition LDR block (most common case)
-            int lowR = endpoint0.LdrLow.R, lowG = endpoint0.LdrLow.G, lowB = endpoint0.LdrLow.B, lowA = endpoint0.LdrLow.A;
-            int highR = endpoint0.LdrHigh.R, highG = endpoint0.LdrHigh.G, highB = endpoint0.LdrHigh.B, highA = endpoint0.LdrHigh.A;
+            this.WriteAllPixelsGeneral(footprint, buffer);
+            return;
+        }
 
-            if (this.dualPlane == null)
-            {
-                this.WriteLdrSinglePartition(buffer, footprint, lowR, lowG, lowB, lowA, highR, highG, highB, highA);
-            }
-            else
-            {
-                int dualPlaneChannel = this.dualPlane.Channel;
-                int[] dpWeights = this.dualPlane.Weights;
-                int pixelCount = footprint.PixelCount;
-                for (int i = 0; i < pixelCount; i++)
-                {
-                    SimdHelpers.WriteSinglePixelLdrDualPlane(
-                        buffer,
-                        i * 4,
-                        lowR,
-                        lowG,
-                        lowB,
-                        lowA,
-                        highR,
-                        highG,
-                        highB,
-                        highA,
-                        this.weights[i],
-                        dualPlaneChannel,
-                        dpWeights[i]);
-                }
-            }
+        if (this.dualPlane is null)
+        {
+            this.WriteLdrSinglePartitionSinglePlane(footprint, buffer, in endpoint0);
         }
         else
         {
-            // General path: multi-partition or HDR blocks
-            this.WriteAllPixelsGeneral(footprint, buffer);
+            this.WriteLdrSinglePartitionDualPlane(footprint, buffer, in endpoint0, this.dualPlane);
+        }
+    }
+
+    /// <summary>
+    /// Hot-path writer: single-partition LDR block, one weight plane. Every pixel
+    /// interpolates the same <paramref name="endpoint"/>.
+    /// </summary>
+    private void WriteLdrSinglePartitionSinglePlane(Footprint footprint, Span<byte> buffer, in ColorEndpointPair endpoint)
+    {
+        Rgba32 low = endpoint.LdrLow;
+        Rgba32 high = endpoint.LdrHigh;
+        int pixelCount = footprint.PixelCount;
+        for (int i = 0; i < pixelCount; i++)
+        {
+            SimdHelpers.WriteSinglePixelLdr(
+                buffer,
+                i * 4,
+                low.R,
+                low.G,
+                low.B,
+                low.A,
+                high.R,
+                high.G,
+                high.B,
+                high.A,
+                this.weights[i]);
+        }
+    }
+
+    /// <summary>
+    /// Single-partition LDR block with a secondary weight plane (ASTC spec §C.2.20): the
+    /// channel identified by <see cref="DualPlaneData.Channel"/> uses the second plane's
+    /// weights; the others use the primary plane.
+    /// </summary>
+    private void WriteLdrSinglePartitionDualPlane(
+        Footprint footprint,
+        Span<byte> buffer,
+        in ColorEndpointPair endpoint,
+        DualPlaneData dualPlane)
+    {
+        Rgba32 low = endpoint.LdrLow;
+        Rgba32 high = endpoint.LdrHigh;
+        int dpChannel = dualPlane.Channel;
+        int[] dpWeights = dualPlane.Weights;
+        int pixelCount = footprint.PixelCount;
+        for (int i = 0; i < pixelCount; i++)
+        {
+            SimdHelpers.WriteSinglePixelLdrDualPlane(
+                buffer,
+                i * 4,
+                low.R,
+                low.G,
+                low.B,
+                low.A,
+                high.R,
+                high.G,
+                high.B,
+                high.A,
+                this.weights[i],
+                dpChannel,
+                dpWeights[i]);
         }
     }
 
@@ -360,106 +397,86 @@ internal sealed class LogicalBlock
         return (ushort)Math.Clamp(c, 0, 0xFFFF);
     }
 
-    private void WriteLdrSinglePartition(
-        Span<byte> buffer,
-        Footprint footprint,
-        int lowR,
-        int lowG,
-        int lowB,
-        int lowA,
-        int highR,
-        int highG,
-        int highB,
-        int highA)
-    {
-        int pixelCount = footprint.PixelCount;
-        for (int i = 0; i < pixelCount; i++)
-        {
-            SimdHelpers.WriteSinglePixelLdr(
-                buffer,
-                i * 4,
-                lowR,
-                lowG,
-                lowB,
-                lowA,
-                highR,
-                highG,
-                highB,
-                highA,
-                this.weights[i]);
-        }
-    }
-
+    /// <summary>
+    /// General writer for the LDR output pipeline. Handles multi-partition blocks and
+    /// blocks whose partition(s) use HDR endpoint modes decoded into an LDR byte buffer
+    /// (ASTC spec §C.2.14 allows per-partition HDR/LDR mixing).
+    /// </summary>
     private void WriteAllPixelsGeneral(Footprint footprint, Span<byte> buffer)
     {
+        int dualPlaneChannel = this.dualPlane?.Channel ?? -1;
+        int[]? dualPlaneWeights = this.dualPlane?.Weights;
         int pixelCount = footprint.PixelCount;
+
         for (int i = 0; i < pixelCount; i++)
         {
             int part = this.partition.Assignment[i];
             ref ColorEndpointPair endpoint = ref this.endpoints[part];
-
             int weight = this.weights[i];
-            if (!endpoint.IsHdr)
+            int dpWeight = dualPlaneWeights?[i] ?? weight;
+            int dstOffset = i * 4;
+
+            if (endpoint.IsHdr)
             {
-                if (this.dualPlane is not null)
-                {
-                    SimdHelpers.WriteSinglePixelLdrDualPlane(
-                        buffer,
-                        i * 4,
-                        endpoint.LdrLow.R,
-                        endpoint.LdrLow.G,
-                        endpoint.LdrLow.B,
-                        endpoint.LdrLow.A,
-                        endpoint.LdrHigh.R,
-                        endpoint.LdrHigh.G,
-                        endpoint.LdrHigh.B,
-                        endpoint.LdrHigh.A,
-                        weight,
-                        this.dualPlane.Channel,
-                        this.dualPlane.Weights[i]);
-                }
-                else
-                {
-                    SimdHelpers.WriteSinglePixelLdr(
-                        buffer,
-                        i * 4,
-                        endpoint.LdrLow.R,
-                        endpoint.LdrLow.G,
-                        endpoint.LdrLow.B,
-                        endpoint.LdrLow.A,
-                        endpoint.LdrHigh.R,
-                        endpoint.LdrHigh.G,
-                        endpoint.LdrHigh.B,
-                        endpoint.LdrHigh.A,
-                        weight);
-                }
+                WriteHdrAsLdrPixel(buffer, dstOffset, in endpoint, weight, dpWeight, dualPlaneChannel);
+            }
+            else if (dualPlaneWeights is not null)
+            {
+                SimdHelpers.WriteSinglePixelLdrDualPlane(
+                    buffer,
+                    dstOffset,
+                    endpoint.LdrLow.R,
+                    endpoint.LdrLow.G,
+                    endpoint.LdrLow.B,
+                    endpoint.LdrLow.A,
+                    endpoint.LdrHigh.R,
+                    endpoint.LdrHigh.G,
+                    endpoint.LdrHigh.B,
+                    endpoint.LdrHigh.A,
+                    weight,
+                    dualPlaneChannel,
+                    dpWeight);
             }
             else
             {
-                int dualPlaneChannel = this.dualPlane?.Channel ?? -1;
-                int dualPlaneWeight = this.dualPlane?.Weights[i] ?? weight;
-                int rWeight = dualPlaneChannel == 0 ? dualPlaneWeight : weight;
-                int gWeight = dualPlaneChannel == 1 ? dualPlaneWeight : weight;
-                int bWeight = dualPlaneChannel == 2 ? dualPlaneWeight : weight;
-                int aWeight = dualPlaneChannel == 3 ? dualPlaneWeight : weight;
-                buffer[(i * 4) + 0] = (byte)(InterpolateChannelHdr(
-                    endpoint.HdrLow.R,
-                    endpoint.HdrHigh.R,
-                    rWeight) >> 8);
-                buffer[(i * 4) + 1] = (byte)(InterpolateChannelHdr(
-                    endpoint.HdrLow.G,
-                    endpoint.HdrHigh.G,
-                    gWeight) >> 8);
-                buffer[(i * 4) + 2] = (byte)(InterpolateChannelHdr(
-                    endpoint.HdrLow.B,
-                    endpoint.HdrHigh.B,
-                    bWeight) >> 8);
-                buffer[(i * 4) + 3] = (byte)(InterpolateChannelHdr(
-                    endpoint.HdrLow.A,
-                    endpoint.HdrHigh.A,
-                    aWeight) >> 8);
+                SimdHelpers.WriteSinglePixelLdr(
+                    buffer,
+                    dstOffset,
+                    endpoint.LdrLow.R,
+                    endpoint.LdrLow.G,
+                    endpoint.LdrLow.B,
+                    endpoint.LdrLow.A,
+                    endpoint.LdrHigh.R,
+                    endpoint.LdrHigh.G,
+                    endpoint.LdrHigh.B,
+                    endpoint.LdrHigh.A,
+                    weight);
             }
         }
+    }
+
+    /// <summary>
+    /// Interpolates the four HDR channels of a single pixel and narrows each to the LDR
+    /// byte range with a <c>&gt;&gt; 8</c> truncation. The dual-plane weight applies only
+    /// to <paramref name="dualPlaneChannel"/>.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void WriteHdrAsLdrPixel(
+        Span<byte> buffer,
+        int dstOffset,
+        in ColorEndpointPair endpoint,
+        int weight,
+        int dpWeight,
+        int dualPlaneChannel)
+    {
+        int rWeight = dualPlaneChannel == 0 ? dpWeight : weight;
+        int gWeight = dualPlaneChannel == 1 ? dpWeight : weight;
+        int bWeight = dualPlaneChannel == 2 ? dpWeight : weight;
+        int aWeight = dualPlaneChannel == 3 ? dpWeight : weight;
+        buffer[dstOffset + 0] = (byte)(InterpolateChannelHdr(endpoint.HdrLow.R, endpoint.HdrHigh.R, rWeight) >> 8);
+        buffer[dstOffset + 1] = (byte)(InterpolateChannelHdr(endpoint.HdrLow.G, endpoint.HdrHigh.G, gWeight) >> 8);
+        buffer[dstOffset + 2] = (byte)(InterpolateChannelHdr(endpoint.HdrLow.B, endpoint.HdrHigh.B, bWeight) >> 8);
+        buffer[dstOffset + 3] = (byte)(InterpolateChannelHdr(endpoint.HdrLow.A, endpoint.HdrHigh.A, aWeight) >> 8);
     }
 
     private class DualPlaneData
