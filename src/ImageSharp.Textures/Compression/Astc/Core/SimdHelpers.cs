@@ -131,11 +131,8 @@ internal static class SimdHelpers
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static int InterpolateChannelScalar(int p0, int p1, int weight)
     {
-        int c0 = (p0 << 8) | p0;
-        int c1 = (p1 << 8) | p1;
-        int c = ((c0 * (64 - weight)) + (c1 * weight) + 32) / 64;
+        int c = Interpolation.BlendLdrReplicated(p0, p1, weight);
         int quantized = ((c * 255) + 32767) / 65536;
-
         return Math.Clamp(quantized, 0, 255);
     }
 }

@@ -20,7 +20,6 @@ internal sealed class LogicalBlock
     private LogicalBlock(Footprint footprint, UInt128 bits, bool isHdrVoidExtent)
     {
         this.endpoints = [DecodeVoidExtentEndpoint(bits, isHdrVoidExtent)];
-        this.endpointCount = 1;
         this.partition = Partition.GetSinglePartition(footprint);
         this.weights = new int[footprint.PixelCount];
     }
@@ -33,7 +32,6 @@ internal sealed class LogicalBlock
     private LogicalBlock(Footprint footprint, UInt128 bits, in BlockInfo info)
     {
         this.endpoints = DecodeEndpointsFromBits(bits, in info);
-        this.endpointCount = info.PartitionCount;
         this.partition = ResolvePartition(bits, in info, footprint);
         this.weights = new int[footprint.PixelCount];
         this.dualPlane = DecodeAndInfillWeights(bits, in info, footprint, this.weights);
@@ -360,26 +358,15 @@ internal sealed class LogicalBlock
     /// (before reduction to byte). Used by the HDR output path for LDR endpoints.
     /// </summary>
     private static ushort InterpolateLdrAsUnorm16(int p0, int p1, int weight)
-    {
-        int c0 = (p0 << 8) | p0;
-        int c1 = (p1 << 8) | p1;
-        int c = ((c0 * (64 - weight)) + (c1 * weight) + 32) / 64;
-        return (ushort)Math.Clamp(c, 0, 0xFFFF);
-    }
+        => (ushort)Math.Clamp(Interpolation.BlendLdrReplicated(p0, p1, weight), 0, 0xFFFF);
 
     /// <summary>
     /// Interpolates an HDR channel value between two endpoints using the specified weight.
+    /// HDR endpoints are already 16-bit values (FP16 bit patterns), unlike LDR interpolation
+    /// which expands 8-bit to 16-bit first.
     /// </summary>
-    /// <remarks>
-    /// HDR endpoints are already 16-bit values (FP16 bit patterns). Unlike LDR interpolation
-    /// which expands 8-bit to 16-bit before interpolating, HDR interpolation operates directly
-    /// on the 16-bit values
-    /// </remarks>
     private static ushort InterpolateChannelHdr(int p0, int p1, int weight)
-    {
-        int c = ((p0 * (64 - weight)) + (p1 * weight) + 32) / 64;
-        return (ushort)Math.Clamp(c, 0, 0xFFFF);
-    }
+        => (ushort)Math.Clamp(Interpolation.BlendWeighted(p0, p1, weight), 0, 0xFFFF);
 
     /// <summary>
     /// General writer for the LDR output pipeline. Handles multi-partition blocks and
