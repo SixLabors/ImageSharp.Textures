@@ -23,18 +23,14 @@ internal static class FusedLdrBlockDecoder
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     internal static void DecompressBlockFusedLdr(UInt128 bits, in BlockInfo info, Footprint footprint, Span<byte> buffer)
-    {
-        Span<int> texelWeights = stackalloc int[footprint.PixelCount];
-        ColorEndpointPair endpointPair = FusedBlockDecoder.DecodeFusedCore(bits, in info, footprint, texelWeights);
-        WriteLdrPixels(
-            buffer,
+        => DecompressBlock(
+            bits,
+            in info,
             footprint,
+            buffer,
             dstBaseX: 0,
             dstBaseY: 0,
-            dstRowStride: footprint.Width * BytesPerPixelUnorm8,
-            in endpointPair,
-            texelWeights);
-    }
+            dstRowStride: footprint.Width * BytesPerPixelUnorm8);
 
     /// <summary>
     /// Fused LDR decode writing directly to image buffer at strided positions.
@@ -49,17 +45,28 @@ internal static class FusedLdrBlockDecoder
         int dstBaseY,
         int imageWidth,
         Span<byte> imageBuffer)
+        => DecompressBlock(
+            bits,
+            in info,
+            footprint,
+            imageBuffer,
+            dstBaseX,
+            dstBaseY,
+            dstRowStride: imageWidth * BytesPerPixelUnorm8);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void DecompressBlock(
+        UInt128 bits,
+        in BlockInfo info,
+        Footprint footprint,
+        Span<byte> buffer,
+        int dstBaseX,
+        int dstBaseY,
+        int dstRowStride)
     {
         Span<int> texelWeights = stackalloc int[footprint.PixelCount];
         ColorEndpointPair endpointPair = FusedBlockDecoder.DecodeFusedCore(bits, in info, footprint, texelWeights);
-        WriteLdrPixels(
-            imageBuffer,
-            footprint,
-            dstBaseX,
-            dstBaseY,
-            dstRowStride: imageWidth * BytesPerPixelUnorm8,
-            in endpointPair,
-            texelWeights);
+        WriteLdrPixels(buffer, footprint, dstBaseX, dstBaseY, dstRowStride, in endpointPair, texelWeights);
     }
 
     /// <summary>

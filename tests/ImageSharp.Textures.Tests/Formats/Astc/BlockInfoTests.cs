@@ -114,4 +114,99 @@ public class BlockInfoTests
 
         Assert.False(info.IsValid);
     }
+
+    // Bit-layout corner cases previously covered via the PhysicalBlock getter wrappers.
+    [Fact]
+    public void Decode_DualPlaneBlock_ReturnsExpectedShape()
+    {
+        UInt128 bits = (UInt128)0x0000000001FE0005FFUL;
+        BlockInfo info = BlockInfo.Decode(bits);
+
+        Assert.True(info.IsValid);
+        Assert.True(info.IsDualPlane);
+        Assert.Equal(3, info.GridWidth);
+        Assert.Equal(5, info.GridHeight);
+    }
+
+    [Fact]
+    public void Decode_NonSharedCemBlock_ReturnsExpectedShape()
+    {
+        // Two partitions, non-shared CEM with mode 0 (LdrLumaDirect) and mode 1 (LdrLumaBaseOffset).
+        UInt128 bits = (UInt128)0x4000000000800D44UL;
+        BlockInfo info = BlockInfo.Decode(bits);
+
+        Assert.True(info.IsValid);
+        Assert.Equal(2, info.PartitionCount);
+        Assert.Equal(8, info.GridWidth);
+        Assert.Equal(8, info.GridHeight);
+        Assert.Equal(1, info.WeightRange);
+        Assert.Equal(29, info.ColorStartBit);
+        Assert.Equal(ColorEndpointMode.LdrLumaDirect, info.GetEndpointMode(0));
+        Assert.Equal(ColorEndpointMode.LdrLumaBaseOffset, info.GetEndpointMode(1));
+    }
+
+    [Fact]
+    public void Decode_WithWeightRange1_ReturnsWeightRange1()
+    {
+        BlockInfo info = BlockInfo.Decode((UInt128)0x4000000000800D44UL);
+
+        Assert.Equal(1, info.WeightRange);
+    }
+
+    [Fact]
+    public void Decode_FourPartitionSharedCem_PopulatesAllPartitionsWithSameMode()
+    {
+        UInt128 bits = (UInt128)0x000000000000001961UL;
+        BlockInfo info = BlockInfo.Decode(bits);
+
+        Assert.True(info.IsValid);
+        Assert.Equal(4, info.PartitionCount);
+        for (int i = 0; i < 4; i++)
+        {
+            Assert.Equal(ColorEndpointMode.LdrLumaDirect, info.GetEndpointMode(i));
+        }
+    }
+
+    [Theory]
+    [InlineData(0x0000000001FE000173UL, 17)]
+    [InlineData(0x0000000001FE0005FFUL, 17)]
+    [InlineData(0x0000000001FE000108UL, 17)]
+    [InlineData(0x4000000000FFED44UL, 29)]
+    [InlineData(0x4000000000AAAD44UL, 29)]
+    public void Decode_ColorStartBit_MatchesPartitionCount(ulong blockBits, int expectedStartBit)
+    {
+        BlockInfo info = BlockInfo.Decode((UInt128)blockBits);
+
+        Assert.True(info.IsValid);
+        Assert.Equal(expectedStartBit, info.ColorStartBit);
+    }
+
+    [Theory]
+    [InlineData(0x0000000001FE000173UL, 2)]
+    [InlineData(0x4000000000800D44UL, 4)]
+    public void Decode_ColorValuesCount_MatchesEndpointModes(ulong blockBits, int expectedCount)
+    {
+        BlockInfo info = BlockInfo.Decode((UInt128)blockBits);
+
+        Assert.True(info.IsValid);
+        Assert.Equal(expectedCount, info.ColorValuesCount);
+    }
+
+    [Fact]
+    public void Decode_StandardBlock_ReturnsColorValuesRange255()
+    {
+        BlockInfo info = BlockInfo.Decode((UInt128)0x0000000001FE000173UL);
+
+        Assert.True(info.IsValid);
+        Assert.Equal(255, info.ColorValuesRange);
+    }
+
+    [Fact]
+    public void Decode_StandardBlock_ReturnsWeightBitCount90()
+    {
+        BlockInfo info = BlockInfo.Decode((UInt128)0x0000000001FE000173UL);
+
+        Assert.True(info.IsValid);
+        Assert.Equal(90, info.WeightBitCount);
+    }
 }

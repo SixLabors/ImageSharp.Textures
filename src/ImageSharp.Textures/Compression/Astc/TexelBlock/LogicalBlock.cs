@@ -18,10 +18,10 @@ internal sealed class LogicalBlock
     private readonly Partition partition;
     private readonly DualPlaneData? dualPlane;
 
-    private LogicalBlock(Footprint footprint, IntermediateBlock.VoidExtentData block)
+    private LogicalBlock(Footprint footprint, UInt128 bits, bool isHdrVoidExtent)
     {
-        this.endpoints = new ColorEndpointPair[1];
-        this.endpointCount = DecodeEndpoints(block, this.endpoints);
+        this.endpoints = [DecodeVoidExtentEndpoint(bits, isHdrVoidExtent)];
+        this.endpointCount = 1;
         this.partition = GenerateSinglePartition(footprint);
         this.weights = new int[footprint.PixelCount];
     }
@@ -324,42 +324,36 @@ internal sealed class LogicalBlock
 
         if (info.IsVoidExtent)
         {
-            // Void extent blocks are rare; fall back to existing PhysicalBlock path
-            PhysicalBlock pb = PhysicalBlock.Create(bits);
-            IntermediateBlock.VoidExtentData? voidExtentData = IntermediateBlock.UnpackVoidExtent(pb);
-            if (voidExtentData is null)
-            {
-                return null;
-            }
+            // ASTC spec §C.2.23: bit 9 of the block mode is the HDR flag for void-extent
+            // (set → FP16, clear → UNORM16 LDR). Matches ARM's astcenc reference decoder.
+            bool isHdrVoidExtent = (bits.Low() & (1UL << 9)) != 0;
+            return new LogicalBlock(footprint, bits, isHdrVoidExtent);
+        }
 
-            return new LogicalBlock(footprint, voidExtentData.Value);
-        }
-        else
-        {
-            return new LogicalBlock(footprint, bits, in info);
-        }
+        return new LogicalBlock(footprint, bits, in info);
     }
 
-    private static int DecodeEndpoints(IntermediateBlock.VoidExtentData block, ColorEndpointPair[] endpointPair)
+    /// <summary>
+    /// Reads the four 16-bit RGBA channels from the high half of a void-extent block (ASTC spec §C.2.23)
+    /// and wraps them in a <see cref="ColorEndpointPair"/>. LDR void-extent channels are UNORM16
+    /// (reduced to the byte range for the LDR output path); HDR channels are FP16 bit patterns.
+    /// </summary>
+    private static ColorEndpointPair DecodeVoidExtentEndpoint(UInt128 bits, bool isHdr)
     {
-        if (block.IsHdr)
+        ulong high = bits.High();
+        ushort r = (ushort)(high & 0xFFFF);
+        ushort g = (ushort)((high >> 16) & 0xFFFF);
+        ushort b = (ushort)((high >> 32) & 0xFFFF);
+        ushort a = (ushort)((high >> 48) & 0xFFFF);
+
+        if (isHdr)
         {
-            // HDR void extent: ushort values are FP16 bit patterns (not LNS)
-            Rgba64 hdrColor = new(block.R, block.G, block.B, block.A);
-            endpointPair[0] = ColorEndpointPair.Hdr(hdrColor, hdrColor, valuesAreLns: false);
-        }
-        else
-        {
-            // LDR void extent: ushort values are UNORM16, convert to byte range
-            Rgba32 ldrColor = new(
-                (byte)(block.R >> 8),
-                (byte)(block.G >> 8),
-                (byte)(block.B >> 8),
-                (byte)(block.A >> 8));
-            endpointPair[0] = ColorEndpointPair.Ldr(ldrColor, ldrColor);
+            Rgba64 hdrColor = new(r, g, b, a);
+            return ColorEndpointPair.Hdr(hdrColor, hdrColor, valuesAreLns: false);
         }
 
-        return 1;
+        Rgba32 ldrColor = new((byte)(r >> 8), (byte)(g >> 8), (byte)(b >> 8), (byte)(a >> 8));
+        return ColorEndpointPair.Ldr(ldrColor, ldrColor);
     }
 
     private static Partition GenerateSinglePartition(Footprint footprint) => new(footprint, 1, 0)

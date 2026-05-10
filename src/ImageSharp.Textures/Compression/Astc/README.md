@@ -105,7 +105,7 @@ The 128-bit bit buffer (`IO/BitStream.cs`) special-cases `count == 0` and `count
 
 ### Single-pass block mode decode
 
-`BlockInfo.Decode` parses the entire block mode, weight grid dimensions, partition count, CEM (colour endpoint mode) layout, dual-plane flag, and colour value count in one pass over the 128-bit block, rejecting reserved configurations inline. The alternative — a `PhysicalBlock` → `IntermediateBlock` → `LogicalBlock` chain, which the original AstcSharp port used — is still present in `TexelBlock/IntermediateBlock.cs` as the reference path and is used by the tests; the fused pipelines skip it to avoid allocations.
+`BlockInfo.Decode` parses the entire block mode, weight grid dimensions, partition count, CEM (colour endpoint mode) layout, dual-plane flag, and colour value count in one pass over the 128-bit block, rejecting reserved configurations inline.
 
 ## Decimation
 

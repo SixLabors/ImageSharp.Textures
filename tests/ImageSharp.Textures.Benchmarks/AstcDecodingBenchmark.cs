@@ -35,18 +35,18 @@ public class AstcDecodingBenchmark
     }
 
     [Benchmark]
-    public bool DecodeEndpoints()
+    public bool DecodeBlockInfo()
     {
         ReadOnlySpan<byte> blocks = this.astcFile!.Blocks;
         Span<byte> blockBytes = stackalloc byte[16];
         blocks[..16].CopyTo(blockBytes);
         ulong low = BitConverter.ToUInt64(blockBytes);
         ulong high = BitConverter.ToUInt64(blockBytes[8..]);
-        PhysicalBlock physicalBlock = PhysicalBlock.Create((UInt128)low | ((UInt128)high << 64));
+        UInt128 bits = (UInt128)low | ((UInt128)high << 64);
 
-        IntermediateBlock.IntermediateBlockData? blockData = IntermediateBlock.UnpackIntermediateBlock(physicalBlock);
+        BlockInfo info = BlockInfo.Decode(bits);
 
-        return blockData is not null;
+        return info.IsValid;
     }
 
     [Benchmark]

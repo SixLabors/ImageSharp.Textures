@@ -3,6 +3,8 @@
 
 using System.Buffers.Binary;
 using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Textures.Compression.Astc.BiseEncoding.Quantize;
+using SixLabors.ImageSharp.Textures.Compression.Astc.BlockDecoder;
 using SixLabors.ImageSharp.Textures.Compression.Astc.ColorEncoding;
 using SixLabors.ImageSharp.Textures.Compression.Astc.Core;
 using SixLabors.ImageSharp.Textures.Compression.Astc.TexelBlock;
@@ -330,32 +332,33 @@ public class EndpointCodecTests
 
         for (int i = 0; i < astcData.Length; i += PhysicalBlock.SizeInBytes)
         {
-            // Read block bytes
-            UInt128 blockData = BinaryPrimitives.ReadUInt128LittleEndian(astcData.AsSpan(i, PhysicalBlock.SizeInBytes));
-            PhysicalBlock physicalBlock = PhysicalBlock.Create(blockData);
+            UInt128 blockBits = BinaryPrimitives.ReadUInt128LittleEndian(astcData.AsSpan(i, PhysicalBlock.SizeInBytes));
+            BlockInfo info = BlockInfo.Decode(blockBits);
+            Assert.True(info.IsValid);
+            Assert.False(info.IsVoidExtent);
+            Assert.True(info.PartitionCount > 0, "block should have endpoints");
 
-            // Unpack to intermediate block
-            IntermediateBlock.IntermediateBlockData? intermediateBlock = IntermediateBlock.UnpackIntermediateBlock(physicalBlock);
-            Assert.NotNull(intermediateBlock);
-            IntermediateBlock.IntermediateBlockData ib = intermediateBlock!.Value;
+            Span<int> colors = stackalloc int[info.ColorValuesCount];
+            FusedBlockDecoder.DecodeBiseValues(
+                blockBits,
+                info.ColorStartBit,
+                info.ColorBitCount,
+                info.ColorValuesRange,
+                info.ColorValuesCount,
+                colors);
+            Quantization.UnquantizeCEValuesBatch(colors, info.ColorValuesCount, info.ColorValuesRange);
 
-            // Verify endpoints exist
-            Assert.True(ib.EndpointCount > 0, "block should have endpoints");
-
-            int colorRange = IntermediateBlock.EndpointRangeForBlock(ib);
-            Assert.True(colorRange > 0, "color range should be valid");
-
-            // Check all endpoint pairs decode to grayscale. The checkerboard content is LDR
-            // but the encoder happens to emit HDR luma endpoint modes for it, so the test
-            // must go through the polymorphic decoder and assert on both LDR and HDR pairs.
-            for (int ep = 0; ep < ib.EndpointCount; ep++)
+            // The checkerboard content is LDR but the encoder happens to emit HDR luma
+            // endpoint modes for it, so the test must go through the polymorphic decoder
+            // and assert on both LDR and HDR pairs.
+            int colorIndex = 0;
+            for (int ep = 0; ep < info.PartitionCount; ep++)
             {
-                IntermediateBlock.IntermediateEndpointData endpoints = ib.Endpoints[ep];
-                ReadOnlySpan<int> colorSpan = ((ReadOnlySpan<int>)endpoints.Colors)[..endpoints.ColorCount];
-                ColorEndpointPair pair = EndpointCodec.DecodeColorsForModePolymorphic(
-                    colorSpan,
-                    colorRange,
-                    endpoints.Mode);
+                ColorEndpointMode mode = info.GetEndpointMode(ep);
+                int colorCount = mode.GetColorValuesCount();
+                ReadOnlySpan<int> slice = ((ReadOnlySpan<int>)colors).Slice(colorIndex, colorCount);
+                ColorEndpointPair pair = EndpointCodec.DecodeColorsForModePolymorphicUnquantized(slice, mode);
+                colorIndex += colorCount;
 
                 if (pair.IsHdr)
                 {
@@ -376,7 +379,6 @@ public class EndpointCodecTests
             blocksDecoded++;
         }
 
-        // Verify we decoded a reasonable number of blocks
         Assert.True(blocksDecoded > 0);
     }
 

@@ -120,7 +120,7 @@ internal struct BlockInfo
 
         Span<ColorEndpointMode> cems = stackalloc ColorEndpointMode[4];
         int colorValuesCount = DecodeEndpointModes(bits, lowBits, partitionCount, weightBitCount, cems, out int numExtraCEMBits);
-        if (colorValuesCount < 0 || colorValuesCount > 18)
+        if (colorValuesCount is < 0 or > 18)
         {
             return default;
         }
@@ -408,7 +408,7 @@ internal struct BlockInfo
     }
 
     /// <summary>
-    /// Inline void extent validation (replaces PhysicalBlock.CheckVoidExtentIsIllegal).
+    /// Inline void extent validation
     /// </summary>
     private static bool CheckVoidExtentIsIllegal(UInt128 bits, ulong lowBits)
     {
@@ -428,7 +428,7 @@ internal struct BlockInfo
         return !coordsAll1s && (c0 >= c1 || c2 >= c3);
     }
 
-    [System.Runtime.CompilerServices.InlineArray(4)]
+    [InlineArray(4)]
     public struct EndpointModeBuffer
     {
 #pragma warning disable CS0169, IDE0051, S1144 // Accessed by runtime via [InlineArray]
