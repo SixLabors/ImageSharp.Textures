@@ -89,8 +89,7 @@ internal struct BlockInfo
     {
         ulong lowBits = bits.Low();
 
-        // ---- Step 1: Check void extent ----
-        // Void extent: bits[0:9] == 0x1FC (9 bits)
+        // Void extent: bits[0:9] == 0x1FC (9 bits). See ASTC spec §C.2.23.
         if ((lowBits & 0x1FF) == 0x1FC)
         {
             return new BlockInfo
@@ -100,186 +99,33 @@ internal struct BlockInfo
             };
         }
 
-        // ---- Step 2: Decode block mode, grid dims, weight range in ONE pass ----
-        // This inlines DecodeBlockMode + DecodeWeightProperties
-        int gridWidth, gridHeight;
-        bool isWidthA6HeightB6 = false;
-        uint rBits; // 3-bit range index component
-
-        // bits[0:2] != 0
-        if ((lowBits & 0x3) != 0)
-        {
-            ulong modeBits = (lowBits >> 2) & 0x3; // bits[2:4]
-            int a = (int)((lowBits >> 5) & 0x3); // bits[5:7]
-
-            (gridWidth, gridHeight) = modeBits switch
-            {
-                0 => ((int)((lowBits >> 7) & 0x3) + 4, a + 2),
-                1 => ((int)((lowBits >> 7) & 0x3) + 8, a + 2),
-                2 => (a + 2, (int)((lowBits >> 7) & 0x3) + 8),
-                3 when ((lowBits >> 8) & 1) != 0 => ((int)((lowBits >> 7) & 0x1) + 2, a + 2),
-                3 => (a + 2, (int)((lowBits >> 7) & 0x1) + 6),
-                _ => default // unreachable
-            };
-
-            // Range r[2:0] = {bit4, bit1, bit0} for these modes
-            rBits = (uint)(((lowBits >> 4) & 1) | (((lowBits >> 0) & 0x3) << 1));
-        }
-        else
-        {
-            // bits[0:2] == 0
-            ulong modeBits = (lowBits >> 5) & 0xF; // bits[5:9]
-            int a = (int)((lowBits >> 5) & 0x3); // bits[5:7]
-
-            switch (modeBits)
-            {
-                case var _ when (modeBits & 0xC) == 0x0:
-                    if ((lowBits & 0xF) == 0)
-                    {
-                        return default; // reserved block mode
-                    }
-
-                    gridWidth = 12;
-                    gridHeight = a + 2;
-                    break;
-                case var _ when (modeBits & 0xC) == 0x4:
-                    gridWidth = a + 2;
-                    gridHeight = 12;
-                    break;
-                case 0xC:
-                    gridWidth = 6;
-                    gridHeight = 10;
-                    break;
-                case 0xD:
-                    gridWidth = 10;
-                    gridHeight = 6;
-                    break;
-                case var _ when (modeBits & 0xC) == 0x8:
-                    gridWidth = a + 6;
-                    gridHeight = (int)((lowBits >> 9) & 0x3) + 6;
-                    isWidthA6HeightB6 = true;
-                    break;
-                default:
-                    return default; // reserved
-            }
-
-            // Range r[2:0] = {bit4, bit3, bit2} for these modes
-            rBits = (uint)(((lowBits >> 4) & 1) | (((lowBits >> 2) & 0x3) << 1));
-        }
-
-        // ---- Step 3: Compute weight range from r and h bits ----
-        uint hBit = isWidthA6HeightB6
-            ? 0u
-            : (uint)((lowBits >> 9) & 1);
-        int rangeIdx = (int)((hBit << 3) | rBits);
-        if ((uint)rangeIdx >= (uint)WeightRanges.Length)
+        if (!TryDecodeWeightGrid(lowBits, out int gridWidth, out int gridHeight, out uint rBits, out bool isWidthA6HeightB6))
         {
             return default;
         }
 
-        int weightRange = WeightRanges[rangeIdx];
-        if (weightRange < 0)
+        if (!TryResolveWeightRange(lowBits, rBits, isWidthA6HeightB6, out int weightRange))
         {
             return default;
         }
 
-        // ---- Step 4: Dual plane ----
-        // WidthA6HeightB6 mode never has dual plane; otherwise check bit 10
+        // WidthA6HeightB6 mode never has dual plane; otherwise check bit 10.
         bool isDualPlane = !isWidthA6HeightB6 && ((lowBits >> 10) & 1) != 0;
-
-        // ---- Step 5: Partition count ----
         int partitionCount = 1 + (int)((lowBits >> 11) & 0x3);
 
-        // ---- Step 6: Validate weight count ----
-        int numWeights = gridWidth * gridHeight;
-        if (isDualPlane)
-        {
-            numWeights *= 2;
-        }
-
-        if (numWeights > 64)
+        if (!TryComputeWeightBitCount(gridWidth, gridHeight, isDualPlane, partitionCount, weightRange, out int weightBitCount))
         {
             return default;
         }
 
-        // 4 partitions + dual plane is illegal
-        if (partitionCount == 4 && isDualPlane)
-        {
-            return default;
-        }
-
-        // ---- Step 7: Weight bit count ----
-        int weightBitCount = BoundedIntegerSequenceCodec.GetBitCountForRange(numWeights, weightRange);
-        if (weightBitCount is < 24 or > 96)
-        {
-            return default;
-        }
-
-        // ---- Step 8: Endpoint modes + extra CEM bits ----
         Span<ColorEndpointMode> cems = stackalloc ColorEndpointMode[4];
-        int colorValuesCount = 0;
-        int numExtraCEMBits = 0;
-
-        if (partitionCount == 1)
-        {
-            cems[0] = (ColorEndpointMode)((lowBits >> 13) & 0xF);
-            colorValuesCount = (((int)cems[0] / 4) + 1) * 2;
-        }
-        else
-        {
-            // Multi-partition CEM decode
-            ulong sharedCemMarker = (lowBits >> 23) & 0x3;
-
-            if (sharedCemMarker == 0)
-            {
-                // Shared CEM: all partitions use the same mode
-                ColorEndpointMode sharedCem = (ColorEndpointMode)((lowBits >> 25) & 0xF);
-                for (int i = 0; i < partitionCount; i++)
-                {
-                    cems[i] = sharedCem;
-                    colorValuesCount += sharedCem.GetColorValuesCount();
-                }
-            }
-            else
-            {
-                // Non-shared CEM: per-partition modes
-                numExtraCEMBits = ExtraCemBitsForPartition[partitionCount - 1];
-
-                int extraCemStartPos = 128 - numExtraCEMBits - weightBitCount;
-                UInt128 extraCem = BitOperations.GetBits(bits, extraCemStartPos, numExtraCEMBits);
-
-                ulong cemval = (lowBits >> 23) & 0x3F; // 6 bits starting at bit 23
-                int baseCem = (int)(((cemval & 0x3) - 1) * 4);
-                cemval >>= 2;
-
-                ulong cembits = cemval | (extraCem.Low() << 4);
-
-                // Extract c bits (1 bit per partition)
-                Span<int> c = stackalloc int[4];
-                for (int i = 0; i < partitionCount; i++)
-                {
-                    c[i] = (int)(cembits & 0x1);
-                    cembits >>= 1;
-                }
-
-                // Extract m bits (2 bits per partition)
-                for (int i = 0; i < partitionCount; i++)
-                {
-                    int m = (int)(cembits & 0x3);
-                    cembits >>= 2;
-                    ColorEndpointMode mode = (ColorEndpointMode)(baseCem + (4 * c[i]) + m);
-                    cems[i] = mode;
-                    colorValuesCount += mode.GetColorValuesCount();
-                }
-            }
-        }
-
-        if (colorValuesCount > 18)
+        int colorValuesCount = DecodeEndpointModes(bits, lowBits, partitionCount, weightBitCount, cems, out int numExtraCEMBits);
+        if (colorValuesCount < 0 || colorValuesCount > 18)
         {
             return default;
         }
 
-        // ---- Step 9: Dual plane start position and channel ----
+        // Dual plane and color bit positions depend on weight + extra-CEM bit allocation.
         int dualPlaneBitStartPos = 128 - weightBitCount - numExtraCEMBits;
         if (isDualPlane)
         {
@@ -290,37 +136,14 @@ internal struct BlockInfo
             ? (int)BitOperations.GetBits(bits, dualPlaneBitStartPos, 2).Low()
             : -1;
 
-        // ---- Step 10: Color values info ----
         int colorStartBit = (partitionCount == 1) ? 17 : 29;
         int maxColorBits = dualPlaneBitStartPos - colorStartBit;
 
-        // Minimum bits needed check
-        int requiredColorBits = ((13 * colorValuesCount) + 4) / 5;
-        if (maxColorBits < requiredColorBits)
+        if (!TryFitColorRange(colorValuesCount, maxColorBits, out int colorValuesRange, out int colorBitCount))
         {
             return default;
         }
 
-        // Find max color range that fits (only check valid BISE ranges: 17 vs up to 255)
-        int colorValuesRange = 0, colorBitCount = 0;
-        foreach (int rv in ValidEndpointRanges)
-        {
-            int bitCount = BoundedIntegerSequenceCodec.GetBitCountForRange(colorValuesCount, rv);
-            if (bitCount <= maxColorBits)
-            {
-                colorValuesRange = rv;
-                colorBitCount = bitCount;
-                break;
-            }
-        }
-
-        if (colorValuesRange == 0)
-        {
-            return default;
-        }
-
-        // ---- Step 11: Validate endpoint modes are not HDR for batchable checks ----
-        // (HDR blocks are still valid, just flagged for downstream use)
         BlockInfo result = new()
         {
             IsValid = true,
@@ -342,6 +165,246 @@ internal struct BlockInfo
         result.EndpointModes[2] = cems[2];
         result.EndpointModes[3] = cems[3];
         return result;
+    }
+
+    /// <summary>
+    /// Decodes the block-mode / weight-grid dimensions section of the block mode.
+    /// Returns false for reserved block-mode encodings.
+    /// See ASTC spec §C.2.8 Table 24 (block mode layout A).
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static bool TryDecodeWeightGrid(
+        ulong lowBits,
+        out int gridWidth,
+        out int gridHeight,
+        out uint rBits,
+        out bool isWidthA6HeightB6)
+    {
+        isWidthA6HeightB6 = false;
+
+        if ((lowBits & 0x3) != 0)
+        {
+            // bits[0..1] != 0 : layout A (modeBits = bits[2..3]).
+            ulong modeBits = (lowBits >> 2) & 0x3;
+            int a = (int)((lowBits >> 5) & 0x3);
+
+            (gridWidth, gridHeight) = modeBits switch
+            {
+                0 => ((int)((lowBits >> 7) & 0x3) + 4, a + 2),
+                1 => ((int)((lowBits >> 7) & 0x3) + 8, a + 2),
+                2 => (a + 2, (int)((lowBits >> 7) & 0x3) + 8),
+                3 when ((lowBits >> 8) & 1) != 0 => ((int)((lowBits >> 7) & 0x1) + 2, a + 2),
+                3 => (a + 2, (int)((lowBits >> 7) & 0x1) + 6),
+                _ => default // unreachable — modeBits is 2 bits wide.
+            };
+
+            // r[2:0] = { bit4, bit1, bit0 } for layout A.
+            rBits = (uint)(((lowBits >> 4) & 1) | ((lowBits & 0x3) << 1));
+            return true;
+        }
+
+        // bits[0..1] == 0 : layout B (modeBits = bits[5..8]).
+        ulong layoutBBits = (lowBits >> 5) & 0xF;
+        int aLow = (int)((lowBits >> 5) & 0x3);
+
+        switch (layoutBBits)
+        {
+            case var _ when (layoutBBits & 0xC) == 0x0:
+                if ((lowBits & 0xF) == 0)
+                {
+                    // Reserved: all of bits[0..4] are zero.
+                    gridWidth = gridHeight = 0;
+                    rBits = 0;
+                    return false;
+                }
+
+                gridWidth = 12;
+                gridHeight = aLow + 2;
+                break;
+            case var _ when (layoutBBits & 0xC) == 0x4:
+                gridWidth = aLow + 2;
+                gridHeight = 12;
+                break;
+            case 0xC:
+                gridWidth = 6;
+                gridHeight = 10;
+                break;
+            case 0xD:
+                gridWidth = 10;
+                gridHeight = 6;
+                break;
+            case var _ when (layoutBBits & 0xC) == 0x8:
+                gridWidth = aLow + 6;
+                gridHeight = (int)((lowBits >> 9) & 0x3) + 6;
+                isWidthA6HeightB6 = true;
+                break;
+            default:
+                // Reserved block mode.
+                gridWidth = gridHeight = 0;
+                rBits = 0;
+                return false;
+        }
+
+        // r[2:0] = { bit4, bit3, bit2 } for layout B.
+        rBits = (uint)(((lowBits >> 4) & 1) | (((lowBits >> 2) & 0x3) << 1));
+        return true;
+    }
+
+    /// <summary>
+    /// Looks up the weight range from the 3-bit r selector plus high-precision h bit.
+    /// Returns false if the resulting index points at a reserved slot in <see cref="WeightRanges"/>.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static bool TryResolveWeightRange(ulong lowBits, uint rBits, bool isWidthA6HeightB6, out int weightRange)
+    {
+        uint hBit = isWidthA6HeightB6 ? 0u : (uint)((lowBits >> 9) & 1);
+        int rangeIdx = (int)((hBit << 3) | rBits);
+        if ((uint)rangeIdx >= (uint)WeightRanges.Length)
+        {
+            weightRange = 0;
+            return false;
+        }
+
+        weightRange = WeightRanges[rangeIdx];
+        return weightRange >= 0;
+    }
+
+    /// <summary>
+    /// Validates weight count constraints and resolves weight bit count. Rejects blocks with
+    /// more than 64 weights, illegal 4-partition-with-dual-plane combos, and weight bit totals
+    /// outside the [24, 96] window.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static bool TryComputeWeightBitCount(
+        int gridWidth,
+        int gridHeight,
+        bool isDualPlane,
+        int partitionCount,
+        int weightRange,
+        out int weightBitCount)
+    {
+        int numWeights = gridWidth * gridHeight;
+        if (isDualPlane)
+        {
+            numWeights *= 2;
+        }
+
+        // 4 partitions + dual plane is illegal per spec §C.2.11.
+        if (numWeights > 64 || (partitionCount == 4 && isDualPlane))
+        {
+            weightBitCount = 0;
+            return false;
+        }
+
+        weightBitCount = BoundedIntegerSequenceCodec.GetBitCountForRange(numWeights, weightRange);
+        return weightBitCount is >= 24 and <= 96;
+    }
+
+    /// <summary>
+    /// Decodes per-partition color endpoint modes and returns the total color-values count.
+    /// Returns -1 on any structural error. The shared-CEM and non-shared-CEM paths both
+    /// populate <paramref name="cems"/> (length 4) and tell the caller how many extra CEM bits
+    /// were consumed, which affects subsequent bit layout.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static int DecodeEndpointModes(
+        UInt128 bits,
+        ulong lowBits,
+        int partitionCount,
+        int weightBitCount,
+        Span<ColorEndpointMode> cems,
+        out int numExtraCEMBits)
+    {
+        numExtraCEMBits = 0;
+
+        if (partitionCount == 1)
+        {
+            ColorEndpointMode mode = (ColorEndpointMode)((lowBits >> 13) & 0xF);
+            cems[0] = mode;
+            return (((int)mode / 4) + 1) * 2;
+        }
+
+        // Multi-partition: either shared CEM (marker 0) or per-partition (non-zero marker).
+        ulong sharedCemMarker = (lowBits >> 23) & 0x3;
+        if (sharedCemMarker == 0)
+        {
+            ColorEndpointMode sharedCem = (ColorEndpointMode)((lowBits >> 25) & 0xF);
+            int colorValuesCount = 0;
+            for (int i = 0; i < partitionCount; i++)
+            {
+                cems[i] = sharedCem;
+                colorValuesCount += sharedCem.GetColorValuesCount();
+            }
+
+            return colorValuesCount;
+        }
+
+        numExtraCEMBits = ExtraCemBitsForPartition[partitionCount - 1];
+
+        int extraCemStartPos = 128 - numExtraCEMBits - weightBitCount;
+        UInt128 extraCem = BitOperations.GetBits(bits, extraCemStartPos, numExtraCEMBits);
+
+        ulong cemval = (lowBits >> 23) & 0x3F;
+        int baseCem = (int)(((cemval & 0x3) - 1) * 4);
+        cemval >>= 2;
+        ulong cembits = cemval | (extraCem.Low() << 4);
+
+        // 1 selector bit per partition (c[i]), then 2 mode bits per partition (m).
+        Span<int> c = stackalloc int[4];
+        for (int i = 0; i < partitionCount; i++)
+        {
+            c[i] = (int)(cembits & 0x1);
+            cembits >>= 1;
+        }
+
+        int total = 0;
+        for (int i = 0; i < partitionCount; i++)
+        {
+            int m = (int)(cembits & 0x3);
+            cembits >>= 2;
+            ColorEndpointMode mode = (ColorEndpointMode)(baseCem + (4 * c[i]) + m);
+            cems[i] = mode;
+            total += mode.GetColorValuesCount();
+        }
+
+        return total;
+    }
+
+    /// <summary>
+    /// Finds the greatest valid BISE endpoint range whose encoding fits within
+    /// <paramref name="maxColorBits"/>. Returns false if the minimum encoding
+    /// already exceeds the budget.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static bool TryFitColorRange(
+        int colorValuesCount,
+        int maxColorBits,
+        out int colorValuesRange,
+        out int colorBitCount)
+    {
+        // Spec §C.2.16 minimum: 13 bits per 5 color values, rounded up.
+        int requiredColorBits = ((13 * colorValuesCount) + 4) / 5;
+        if (maxColorBits < requiredColorBits)
+        {
+            colorValuesRange = 0;
+            colorBitCount = 0;
+            return false;
+        }
+
+        foreach (int rv in ValidEndpointRanges)
+        {
+            int bitCount = BoundedIntegerSequenceCodec.GetBitCountForRange(colorValuesCount, rv);
+            if (bitCount <= maxColorBits)
+            {
+                colorValuesRange = rv;
+                colorBitCount = bitCount;
+                return true;
+            }
+        }
+
+        colorValuesRange = 0;
+        colorBitCount = 0;
+        return false;
     }
 
     /// <summary>

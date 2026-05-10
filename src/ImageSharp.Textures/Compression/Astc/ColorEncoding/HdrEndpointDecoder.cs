@@ -1,6 +1,7 @@
 // Copyright (c) Six Labors.
 // Licensed under the Six Labors Split License.
 
+using System.Runtime.CompilerServices;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Textures.Compression.Astc.BiseEncoding.Quantize;
 using SixLabors.ImageSharp.Textures.Compression.Astc.Core;
@@ -16,6 +17,92 @@ namespace SixLabors.ImageSharp.Textures.Compression.Astc.ColorEncoding;
 /// </remarks>
 internal static class HdrEndpointDecoder
 {
+    /// <summary>
+    /// Target channel of a <see cref="BitPlacement"/> — which decoded field should receive
+    /// the OR'd bit contribution.
+    /// </summary>
+    private enum Target : byte
+    {
+        Red,
+        Green,
+        Blue,
+        Scale,
+        A,
+        B0,
+        B1,
+        C,
+        D0,
+        D1,
+    }
+
+    /// <summary>
+    /// One row of an HDR bit-placement table. For each entry, when the current one-hot mode
+    /// matches <see cref="ModeMask"/>, the bit at source index <see cref="SourceBit"/> is
+    /// OR'd into <see cref="Target"/> shifted left by <see cref="TargetShift"/>.
+    /// </summary>
+    private readonly record struct BitPlacement(Target Target, int ModeMask, int SourceBit, int TargetShift);
+
+    // Shift amounts for the HdrRgbBaseScale mode, indexed by the mode selector (0..5).
+    // See ARM astcenc_color_unquantize.cpp rgb_hdr_unpack.
+#pragma warning disable SA1201 // Readability: keep tables adjacent to the types they use.
+    private static readonly int[] BaseScaleShiftByMode = [1, 1, 2, 3, 4, 5];
+
+    // Bit placements for the HdrRgbBaseScale mode (ASTC CEM 7). Each entry represents:
+    // "if the current one-hot mode matches ModeMask, OR sourceBits[SourceBit] into Target at
+    // position TargetShift." The table reproduces the if-statement ladder from the ARM
+    // reference while making the per-mode pattern directly inspectable.
+    private static readonly BitPlacement[] BaseScalePlacements =
+    [
+        new(Target.Green, ModeMask: 0x30, SourceBit: 0, TargetShift: 6),
+        new(Target.Green, ModeMask: 0x3A, SourceBit: 1, TargetShift: 5),
+        new(Target.Blue, ModeMask: 0x30, SourceBit: 2, TargetShift: 6),
+        new(Target.Blue, ModeMask: 0x3A, SourceBit: 3, TargetShift: 5),
+        new(Target.Scale, ModeMask: 0x3D, SourceBit: 6, TargetShift: 5),
+        new(Target.Scale, ModeMask: 0x2D, SourceBit: 5, TargetShift: 6),
+        new(Target.Scale, ModeMask: 0x04, SourceBit: 4, TargetShift: 7),
+        new(Target.Red, ModeMask: 0x3B, SourceBit: 4, TargetShift: 6),
+        new(Target.Red, ModeMask: 0x04, SourceBit: 3, TargetShift: 6),
+        new(Target.Red, ModeMask: 0x10, SourceBit: 5, TargetShift: 7),
+        new(Target.Red, ModeMask: 0x0F, SourceBit: 2, TargetShift: 7),
+        new(Target.Red, ModeMask: 0x05, SourceBit: 1, TargetShift: 8),
+        new(Target.Red, ModeMask: 0x0A, SourceBit: 0, TargetShift: 8),
+        new(Target.Red, ModeMask: 0x05, SourceBit: 0, TargetShift: 9),
+        new(Target.Red, ModeMask: 0x02, SourceBit: 6, TargetShift: 9),
+        new(Target.Red, ModeMask: 0x01, SourceBit: 3, TargetShift: 10),
+        new(Target.Red, ModeMask: 0x02, SourceBit: 5, TargetShift: 10),
+    ];
+
+    // Data-bit widths for the HdrRgbDirect mode (ASTC CEM 11), indexed by modeValue (0..7).
+    // Used for sign-extension of the d0/d1 offsets. From ARM reference.
+    private static readonly int[] DirectDataBitsByMode = [7, 6, 7, 6, 5, 6, 5, 6];
+
+    // Bit placements for the HdrRgbDirect mode (ASTC CEM 11). Each entry: if the current
+    // one-hot modeValue matches ModeMask, OR sourceBits[SourceBit] into Target at TargetShift.
+    // Entries are grouped by Target (a, c, b0/b1, d0/d1 — see the ARM reference).
+    // Pairs like (b0, b1) or (d0, d1) share a single ModeMask in the ARM reference but
+    // consume different source bits per target, so they appear as two entries here.
+    private static readonly BitPlacement[] DirectPlacements =
+    [
+        new(Target.A, ModeMask: 0xA4, SourceBit: 0, TargetShift: 9),
+        new(Target.A, ModeMask: 0x08, SourceBit: 2, TargetShift: 9),
+        new(Target.A, ModeMask: 0x50, SourceBit: 4, TargetShift: 9),
+        new(Target.A, ModeMask: 0x50, SourceBit: 5, TargetShift: 10),
+        new(Target.A, ModeMask: 0xA0, SourceBit: 1, TargetShift: 10),
+        new(Target.A, ModeMask: 0xC0, SourceBit: 2, TargetShift: 11),
+        new(Target.C, ModeMask: 0x04, SourceBit: 1, TargetShift: 6),
+        new(Target.C, ModeMask: 0xE8, SourceBit: 3, TargetShift: 6),
+        new(Target.C, ModeMask: 0x20, SourceBit: 2, TargetShift: 7),
+        new(Target.B0, ModeMask: 0x5B, SourceBit: 0, TargetShift: 6),
+        new(Target.B1, ModeMask: 0x5B, SourceBit: 1, TargetShift: 6),
+        new(Target.B0, ModeMask: 0x12, SourceBit: 2, TargetShift: 7),
+        new(Target.B1, ModeMask: 0x12, SourceBit: 3, TargetShift: 7),
+        new(Target.D0, ModeMask: 0xAF, SourceBit: 4, TargetShift: 5),
+        new(Target.D1, ModeMask: 0xAF, SourceBit: 5, TargetShift: 5),
+        new(Target.D0, ModeMask: 0x05, SourceBit: 2, TargetShift: 6),
+        new(Target.D1, ModeMask: 0x05, SourceBit: 3, TargetShift: 6),
+    ];
+#pragma warning restore SA1201
+
     public static (Rgba64 Low, Rgba64 High) DecodeHdrMode(ReadOnlySpan<int> values, int maxValue, ColorEndpointMode mode)
     {
         int count = mode.GetColorValuesCount();
@@ -99,10 +186,7 @@ internal static class HdrEndpointDecoder
     {
         int modeValue = ((v0 & 0xC0) >> 6) | (((v1 & 0x80) >> 7) << 2) | (((v2 & 0x80) >> 7) << 3);
 
-        int majorComponent;
-        int mode;
-
-        (majorComponent, mode) = modeValue switch
+        (int majorComponent, int mode) = modeValue switch
         {
             _ when (modeValue & 0xC) != 0xC => (modeValue >> 2, modeValue & 3),
             not 0xF => (modeValue & 3, 4),
@@ -114,105 +198,34 @@ internal static class HdrEndpointDecoder
         int blue = v2 & 0x1F;
         int scale = v3 & 0x1F;
 
-        int bit0 = (v1 >> 6) & 1;
-        int bit1 = (v1 >> 5) & 1;
-        int bit2 = (v2 >> 6) & 1;
-        int bit3 = (v2 >> 5) & 1;
-        int bit4 = (v3 >> 7) & 1;
-        int bit5 = (v3 >> 6) & 1;
-        int bit6 = (v3 >> 5) & 1;
+        Span<int> sourceBits = stackalloc int[7]
+        {
+            (v1 >> 6) & 1,
+            (v1 >> 5) & 1,
+            (v2 >> 6) & 1,
+            (v2 >> 5) & 1,
+            (v3 >> 7) & 1,
+            (v3 >> 6) & 1,
+            (v3 >> 5) & 1,
+        };
 
         int oneHotMode = 1 << mode;
-
-        if ((oneHotMode & 0x30) != 0)
+        foreach (BitPlacement p in BaseScalePlacements)
         {
-            green |= bit0 << 6;
+            if ((oneHotMode & p.ModeMask) != 0)
+            {
+                int contribution = sourceBits[p.SourceBit] << p.TargetShift;
+                switch (p.Target)
+                {
+                    case Target.Red: red |= contribution; break;
+                    case Target.Green: green |= contribution; break;
+                    case Target.Blue: blue |= contribution; break;
+                    case Target.Scale: scale |= contribution; break;
+                }
+            }
         }
 
-        if ((oneHotMode & 0x3A) != 0)
-        {
-            green |= bit1 << 5;
-        }
-
-        if ((oneHotMode & 0x30) != 0)
-        {
-            blue |= bit2 << 6;
-        }
-
-        if ((oneHotMode & 0x3A) != 0)
-        {
-            blue |= bit3 << 5;
-        }
-
-        if ((oneHotMode & 0x3D) != 0)
-        {
-            scale |= bit6 << 5;
-        }
-
-        if ((oneHotMode & 0x2D) != 0)
-        {
-            scale |= bit5 << 6;
-        }
-
-        if ((oneHotMode & 0x04) != 0)
-        {
-            scale |= bit4 << 7;
-        }
-
-        if ((oneHotMode & 0x3B) != 0)
-        {
-            red |= bit4 << 6;
-        }
-
-        if ((oneHotMode & 0x04) != 0)
-        {
-            red |= bit3 << 6;
-        }
-
-        if ((oneHotMode & 0x10) != 0)
-        {
-            red |= bit5 << 7;
-        }
-
-        if ((oneHotMode & 0x0F) != 0)
-        {
-            red |= bit2 << 7;
-        }
-
-        if ((oneHotMode & 0x05) != 0)
-        {
-            red |= bit1 << 8;
-        }
-
-        if ((oneHotMode & 0x0A) != 0)
-        {
-            red |= bit0 << 8;
-        }
-
-        if ((oneHotMode & 0x05) != 0)
-        {
-            red |= bit0 << 9;
-        }
-
-        if ((oneHotMode & 0x02) != 0)
-        {
-            red |= bit6 << 9;
-        }
-
-        if ((oneHotMode & 0x01) != 0)
-        {
-            red |= bit3 << 10;
-        }
-
-        if ((oneHotMode & 0x02) != 0)
-        {
-            red |= bit5 << 10;
-        }
-
-        // Shift amounts per mode (from ARM reference)
-        ReadOnlySpan<int> shiftAmounts = [1, 1, 2, 3, 4, 5];
-        int shiftAmount = shiftAmounts[mode];
-
+        int shiftAmount = BaseScaleShiftByMode[mode];
         red <<= shiftAmount;
         green <<= shiftAmount;
         blue <<= shiftAmount;
@@ -224,7 +237,7 @@ internal static class HdrEndpointDecoder
             blue = red - blue;
         }
 
-        // Swap components based on major component
+        // Swap channels based on major component (spec §C.2.14).
         (red, green, blue) = majorComponent switch
         {
             1 => (green, red, blue),
@@ -232,18 +245,13 @@ internal static class HdrEndpointDecoder
             _ => (red, green, blue)
         };
 
-        // Low endpoint is base minus scale offset
-        int red0 = red - scale;
-        int green0 = green - scale;
-        int blue0 = blue - scale;
-
-        // Clamp to [0, 0xFFF]
+        // Low endpoint = base minus scale; clamp both to [0, 0xFFF] before the FP16-range shift.
+        int red0 = Math.Max(red - scale, 0);
+        int green0 = Math.Max(green - scale, 0);
+        int blue0 = Math.Max(blue - scale, 0);
         red = Math.Max(red, 0);
         green = Math.Max(green, 0);
         blue = Math.Max(blue, 0);
-        red0 = Math.Max(red0, 0);
-        green0 = Math.Max(green0, 0);
-        blue0 = Math.Max(blue0, 0);
 
         Rgba64 low = new((ushort)(red0 << 4), (ushort)(green0 << 4), (ushort)(blue0 << 4), Fp16.One);
         Rgba64 high = new((ushort)(red << 4), (ushort)(green << 4), (ushort)(blue << 4), Fp16.One);
@@ -255,20 +263,12 @@ internal static class HdrEndpointDecoder
         int modeValue = ((v1 & 0x80) >> 7) | (((v2 & 0x80) >> 7) << 1) | (((v3 & 0x80) >> 7) << 2);
         int majorComponent = ((v4 & 0x80) >> 7) | (((v5 & 0x80) >> 7) << 1);
 
-        // Special case: majorComponent == 3 (direct passthrough)
+        // majorComponent == 3: skip bit-placement tree and use direct passthrough of v0..v5.
         if (majorComponent == 3)
         {
-            Rgba64 low = new(
-                (ushort)(v0 << 8),
-                (ushort)(v2 << 8),
-                (ushort)((v4 & 0x7F) << 9),
-                Fp16.One);
-            Rgba64 high = new(
-                (ushort)(v1 << 8),
-                (ushort)(v3 << 8),
-                (ushort)((v5 & 0x7F) << 9),
-                Fp16.One);
-            return (low, high);
+            Rgba64 passthroughLow = new((ushort)(v0 << 8), (ushort)(v2 << 8), (ushort)((v4 & 0x7F) << 9), Fp16.One);
+            Rgba64 passthroughHigh = new((ushort)(v1 << 8), (ushort)(v3 << 8), (ushort)((v5 & 0x7F) << 9), Fp16.One);
+            return (passthroughLow, passthroughHigh);
         }
 
         int a = v0 | ((v1 & 0x40) << 2);
@@ -278,98 +278,41 @@ internal static class HdrEndpointDecoder
         int d0 = v4 & 0x7F;
         int d1 = v5 & 0x7F;
 
-        // Data bits table from ARM reference
-        ReadOnlySpan<int> dataBitsTable = [7, 6, 7, 6, 5, 6, 5, 6];
-        int dataBits = dataBitsTable[modeValue];
-
-        int bit0 = (v2 >> 6) & 1;
-        int bit1 = (v3 >> 6) & 1;
-        int bit2 = (v4 >> 6) & 1;
-        int bit3 = (v5 >> 6) & 1;
-        int bit4 = (v4 >> 5) & 1;
-        int bit5 = (v5 >> 5) & 1;
-
-        int oneHotModeValue = 1 << modeValue;
-
-        // Bit placement for 'a'
-        if ((oneHotModeValue & 0xA4) != 0)
+        Span<int> sourceBits = stackalloc int[6]
         {
-            a |= bit0 << 9;
+            (v2 >> 6) & 1,
+            (v3 >> 6) & 1,
+            (v4 >> 6) & 1,
+            (v5 >> 6) & 1,
+            (v4 >> 5) & 1,
+            (v5 >> 5) & 1,
+        };
+
+        int oneHotMode = 1 << modeValue;
+        foreach (BitPlacement p in DirectPlacements)
+        {
+            if ((oneHotMode & p.ModeMask) != 0)
+            {
+                int contribution = sourceBits[p.SourceBit] << p.TargetShift;
+                switch (p.Target)
+                {
+                    case Target.A: a |= contribution; break;
+                    case Target.B0: b0 |= contribution; break;
+                    case Target.B1: b1 |= contribution; break;
+                    case Target.C: c |= contribution; break;
+                    case Target.D0: d0 |= contribution; break;
+                    case Target.D1: d1 |= contribution; break;
+                }
+            }
         }
 
-        if ((oneHotModeValue & 0x8) != 0)
-        {
-            a |= bit2 << 9;
-        }
-
-        if ((oneHotModeValue & 0x50) != 0)
-        {
-            a |= bit4 << 9;
-        }
-
-        if ((oneHotModeValue & 0x50) != 0)
-        {
-            a |= bit5 << 10;
-        }
-
-        if ((oneHotModeValue & 0xA0) != 0)
-        {
-            a |= bit1 << 10;
-        }
-
-        if ((oneHotModeValue & 0xC0) != 0)
-        {
-            a |= bit2 << 11;
-        }
-
-        // Bit placement for 'c'
-        if ((oneHotModeValue & 0x4) != 0)
-        {
-            c |= bit1 << 6;
-        }
-
-        if ((oneHotModeValue & 0xE8) != 0)
-        {
-            c |= bit3 << 6;
-        }
-
-        if ((oneHotModeValue & 0x20) != 0)
-        {
-            c |= bit2 << 7;
-        }
-
-        // Bit placement for 'b0' and 'b1'
-        if ((oneHotModeValue & 0x5B) != 0)
-        {
-            b0 |= bit0 << 6;
-            b1 |= bit1 << 6;
-        }
-
-        if ((oneHotModeValue & 0x12) != 0)
-        {
-            b0 |= bit2 << 7;
-            b1 |= bit3 << 7;
-        }
-
-        // Bit placement for 'd0' and 'd1'
-        if ((oneHotModeValue & 0xAF) != 0)
-        {
-            d0 |= bit4 << 5;
-            d1 |= bit5 << 5;
-        }
-
-        if ((oneHotModeValue & 0x5) != 0)
-        {
-            d0 |= bit2 << 6;
-            d1 |= bit3 << 6;
-        }
-
-        // Sign-extend d0 and d1 based on dataBits
+        // Sign-extend the signed offsets d0, d1 based on mode-specific data-bit width.
+        int dataBits = DirectDataBitsByMode[modeValue];
         int signExtendShift = 32 - dataBits;
         d0 = (d0 << signExtendShift) >> signExtendShift;
         d1 = (d1 << signExtendShift) >> signExtendShift;
 
-        // Expand to 12 bits
+        // Expand to 12 bits: per ARM reference, shift amount depends on mode.
         int valueShift = (modeValue >> 1) ^ 3;
         a = SafeSignedLeftShift(a, valueShift);
         b0 = SafeSignedLeftShift(b0, valueShift);
@@ -378,23 +321,15 @@ internal static class HdrEndpointDecoder
         d0 = SafeSignedLeftShift(d0, valueShift);
         d1 = SafeSignedLeftShift(d1, valueShift);
 
-        // Compute color values per ARM reference
-        int red1 = a;
-        int green1 = a - b0;
-        int blue1 = a - b1;
-        int red0 = a - c;
-        int green0 = a - b0 - c - d0;
-        int blue0 = a - b1 - c - d1;
+        // Compose high and low endpoints per ARM reference, then clamp to [0, 0xFFF].
+        int red1 = Math.Clamp(a, 0, 0xFFF);
+        int green1 = Math.Clamp(a - b0, 0, 0xFFF);
+        int blue1 = Math.Clamp(a - b1, 0, 0xFFF);
+        int red0 = Math.Clamp(a - c, 0, 0xFFF);
+        int green0 = Math.Clamp(a - b0 - c - d0, 0, 0xFFF);
+        int blue0 = Math.Clamp(a - b1 - c - d1, 0, 0xFFF);
 
-        // Clamp to [0, 4095]
-        red0 = Math.Clamp(red0, 0, 0xFFF);
-        green0 = Math.Clamp(green0, 0, 0xFFF);
-        blue0 = Math.Clamp(blue0, 0, 0xFFF);
-        red1 = Math.Clamp(red1, 0, 0xFFF);
-        green1 = Math.Clamp(green1, 0, 0xFFF);
-        blue1 = Math.Clamp(blue1, 0, 0xFFF);
-
-        // Swap components based on major component
+        // Swap channels based on major component (spec §C.2.14).
         (red0, green0, blue0, red1, green1, blue1) = majorComponent switch
         {
             1 => (green0, red0, blue0, green1, red1, blue1),

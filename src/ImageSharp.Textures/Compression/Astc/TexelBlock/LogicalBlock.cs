@@ -1,6 +1,7 @@
 // Copyright (c) Six Labors.
 // Licensed under the Six Labors Split License.
 
+using System.Runtime.CompilerServices;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Textures.Compression.Astc.BiseEncoding.Quantize;
 using SixLabors.ImageSharp.Textures.Compression.Astc.BlockDecoder;
@@ -32,7 +33,19 @@ internal sealed class LogicalBlock
     /// </summary>
     private LogicalBlock(Footprint footprint, UInt128 bits, in BlockInfo info)
     {
-        // --- BISE decode + batch unquantize color endpoint values ---
+        this.endpoints = DecodeEndpointsFromBits(bits, in info);
+        this.endpointCount = info.PartitionCount;
+        this.partition = ResolvePartition(bits, in info, footprint);
+        this.weights = new int[footprint.PixelCount];
+        this.dualPlane = DecodeAndInfillWeights(bits, in info, footprint, this.weights);
+    }
+
+    /// <summary>
+    /// BISE-decodes + unquantises the per-partition color endpoint values and returns the
+    /// decoded <see cref="ColorEndpointPair"/> array (one entry per partition).
+    /// </summary>
+    private static ColorEndpointPair[] DecodeEndpointsFromBits(UInt128 bits, in BlockInfo info)
+    {
         Span<int> colors = stackalloc int[info.ColorValuesCount];
         FusedBlockDecoder.DecodeBiseValues(
             bits,
@@ -43,28 +56,44 @@ internal sealed class LogicalBlock
             colors);
         Quantization.UnquantizeCEValuesBatch(colors, info.ColorValuesCount, info.ColorValuesRange);
 
-        // --- Decode endpoints per partition ---
-        this.endpointCount = info.PartitionCount;
-        this.endpoints = new ColorEndpointPair[this.endpointCount];
+        ColorEndpointPair[] endpoints = new ColorEndpointPair[info.PartitionCount];
         int colorIndex = 0;
-        for (int i = 0; i < this.endpointCount; i++)
+        for (int i = 0; i < info.PartitionCount; i++)
         {
             ColorEndpointMode mode = info.GetEndpointMode(i);
             int colorCount = mode.GetColorValuesCount();
             ReadOnlySpan<int> slice = colors.Slice(colorIndex, colorCount);
-            this.endpoints[i] = EndpointCodec.DecodeColorsForModePolymorphicUnquantized(slice, mode);
+            endpoints[i] = EndpointCodec.DecodeColorsForModePolymorphicUnquantized(slice, mode);
             colorIndex += colorCount;
         }
 
-        // --- Set up partition ---
-        this.partition = info.PartitionCount > 1
+        return endpoints;
+    }
+
+    /// <summary>
+    /// Returns the cached partition for multi-partition blocks, or a synthetic single
+    /// partition that assigns every texel to subset 0.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static Partition ResolvePartition(UInt128 bits, in BlockInfo info, Footprint footprint)
+        => info.PartitionCount > 1
             ? Partition.GetASTCPartition(
                 footprint,
                 info.PartitionCount,
                 (int)BitOperations.GetBits(bits.Low(), 13, 10))
             : GenerateSinglePartition(footprint);
 
-        // --- BISE decode + unquantize + infill weights ---
+    /// <summary>
+    /// BISE-decodes, unquantises, and infills the weight grid for a block. Fills
+    /// <paramref name="texelWeights"/> in place and returns the <see cref="DualPlaneData"/>
+    /// if the block uses a dual plane (otherwise null).
+    /// </summary>
+    private static DualPlaneData? DecodeAndInfillWeights(
+        UInt128 bits,
+        in BlockInfo info,
+        Footprint footprint,
+        int[] texelWeights)
+    {
         int gridSize = info.GridWidth * info.GridHeight;
         bool isDualPlane = info.IsDualPlane;
         int totalWeights = isDualPlane ? gridSize * 2 : gridSize;
@@ -78,36 +107,35 @@ internal sealed class LogicalBlock
             rawWeights);
 
         DecimationInfo decimationInfo = DecimationTable.Get(footprint, info.GridWidth, info.GridHeight);
-        this.weights = new int[footprint.PixelCount];
 
         if (!isDualPlane)
         {
             Quantization.UnquantizeWeightsBatch(rawWeights, gridSize, info.WeightRange);
-            DecimationTable.InfillWeights(rawWeights[..gridSize], decimationInfo, this.weights);
+            DecimationTable.InfillWeights(rawWeights[..gridSize], decimationInfo, texelWeights);
+            return null;
         }
-        else
+
+        // Dual-plane weights are interleaved: even indices drive the main plane, odd the secondary.
+        Span<int> plane0 = stackalloc int[gridSize];
+        Span<int> plane1 = stackalloc int[gridSize];
+        for (int i = 0; i < gridSize; i++)
         {
-            // De-interleave: even indices -> plane0, odd indices -> plane1
-            Span<int> plane0 = stackalloc int[gridSize];
-            Span<int> plane1 = stackalloc int[gridSize];
-            for (int i = 0; i < gridSize; i++)
-            {
-                plane0[i] = rawWeights[i * 2];
-                plane1[i] = rawWeights[(i * 2) + 1];
-            }
-
-            Quantization.UnquantizeWeightsBatch(plane0, gridSize, info.WeightRange);
-            Quantization.UnquantizeWeightsBatch(plane1, gridSize, info.WeightRange);
-
-            DecimationTable.InfillWeights(plane0, decimationInfo, this.weights);
-
-            this.dualPlane = new DualPlaneData
-            {
-                Channel = info.DualPlaneChannel,
-                Weights = new int[footprint.PixelCount]
-            };
-            DecimationTable.InfillWeights(plane1, decimationInfo, this.dualPlane.Weights);
+            plane0[i] = rawWeights[i * 2];
+            plane1[i] = rawWeights[(i * 2) + 1];
         }
+
+        Quantization.UnquantizeWeightsBatch(plane0, gridSize, info.WeightRange);
+        Quantization.UnquantizeWeightsBatch(plane1, gridSize, info.WeightRange);
+
+        DecimationTable.InfillWeights(plane0, decimationInfo, texelWeights);
+
+        DualPlaneData dualPlane = new()
+        {
+            Channel = info.DualPlaneChannel,
+            Weights = new int[footprint.PixelCount]
+        };
+        DecimationTable.InfillWeights(plane1, decimationInfo, dualPlane.Weights);
+        return dualPlane;
     }
 
     /// <summary>
@@ -127,53 +155,81 @@ internal sealed class LogicalBlock
 
         for (int i = 0; i < pixelCount; i++)
         {
-            int part = this.partition.Assignment[i];
-            ref ColorEndpointPair endpoint = ref this.endpoints[part];
-
+            ref ColorEndpointPair endpoint = ref this.endpoints[this.partition.Assignment[i]];
             int weight = this.weights[i];
             int dpWeight = dualPlaneWeights?[i] ?? weight;
-            int dstOffset = i * 4;
+            Span<float> pixel = buffer.Slice(i * 4, 4);
 
             if (endpoint.IsHdr)
             {
-                for (int channel = 0; channel < 4; ++channel)
-                {
-                    int channelWeight = (channel == dualPlaneChannel) ? dpWeight : weight;
-                    ushort interpolated = InterpolateChannelHdr(
-                        endpoint.HdrLow.GetChannel(channel),
-                        endpoint.HdrHigh.GetChannel(channel),
-                        channelWeight);
-
-                    if (channel == 3 && endpoint.AlphaIsLdr)
-                    {
-                        // Mode 14: alpha is UNORM16, normalize directly
-                        buffer[dstOffset + channel] = interpolated / 65535.0f;
-                    }
-                    else if (endpoint.ValuesAreLns)
-                    {
-                        // Normal HDR block: convert from LNS to FP16, then to float
-                        ushort halfFloatBits = Fp16.FromLns(interpolated);
-                        buffer[dstOffset + channel] = (float)BitConverter.UInt16BitsToHalf(halfFloatBits);
-                    }
-                    else
-                    {
-                        // Void extent HDR: values are already FP16 bit patterns
-                        buffer[dstOffset + channel] = (float)BitConverter.UInt16BitsToHalf(interpolated);
-                    }
-                }
+                WriteHdrPixelChannels(pixel, in endpoint, weight, dpWeight, dualPlaneChannel);
             }
             else
             {
-                for (int channel = 0; channel < 4; ++channel)
-                {
-                    int channelWeight = (channel == dualPlaneChannel) ? dpWeight : weight;
-                    ushort unorm16 = InterpolateLdrAsUnorm16(
-                        endpoint.LdrLow.GetChannel(channel),
-                        endpoint.LdrHigh.GetChannel(channel),
-                        channelWeight);
-                    buffer[dstOffset + channel] = unorm16 / 65535.0f;
-                }
+                WriteLdrAsHdrPixelChannels(pixel, in endpoint, weight, dpWeight, dualPlaneChannel);
             }
+        }
+    }
+
+    /// <summary>
+    /// Writes the four HDR-endpoint channels for a single pixel: LNS → FP16 → float, with
+    /// mode-14 alpha (LDR-as-UNORM16) and void-extent (direct FP16) special cases.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void WriteHdrPixelChannels(
+        Span<float> pixel,
+        in ColorEndpointPair endpoint,
+        int weight,
+        int dpWeight,
+        int dualPlaneChannel)
+    {
+        bool alphaIsLdr = endpoint.AlphaIsLdr;
+        bool valuesAreLns = endpoint.ValuesAreLns;
+        for (int channel = 0; channel < 4; ++channel)
+        {
+            int channelWeight = channel == dualPlaneChannel ? dpWeight : weight;
+            ushort interpolated = InterpolateChannelHdr(
+                endpoint.HdrLow.GetChannel(channel),
+                endpoint.HdrHigh.GetChannel(channel),
+                channelWeight);
+
+            if (channel == 3 && alphaIsLdr)
+            {
+                // Mode 14: alpha is UNORM16, normalise directly.
+                pixel[channel] = interpolated / 65535.0f;
+            }
+            else if (valuesAreLns)
+            {
+                // Normal HDR block: convert from LNS to FP16, then widen to float.
+                pixel[channel] = (float)BitConverter.UInt16BitsToHalf(Fp16.FromLns(interpolated));
+            }
+            else
+            {
+                // Void-extent HDR: values are already FP16 bit patterns.
+                pixel[channel] = (float)BitConverter.UInt16BitsToHalf(interpolated);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Writes the four LDR-endpoint channels for a single pixel as HDR floats: UNORM16 → [0,1].
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void WriteLdrAsHdrPixelChannels(
+        Span<float> pixel,
+        in ColorEndpointPair endpoint,
+        int weight,
+        int dpWeight,
+        int dualPlaneChannel)
+    {
+        for (int channel = 0; channel < 4; ++channel)
+        {
+            int channelWeight = channel == dualPlaneChannel ? dpWeight : weight;
+            ushort unorm16 = InterpolateLdrAsUnorm16(
+                endpoint.LdrLow.GetChannel(channel),
+                endpoint.LdrHigh.GetChannel(channel),
+                channelWeight);
+            pixel[channel] = unorm16 / 65535.0f;
         }
     }
 
