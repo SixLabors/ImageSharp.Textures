@@ -103,8 +103,14 @@ internal static class FusedLdrBlockDecoder
                     SimdHelpers.Write4PixelLdr(
                         buffer,
                         dstRowOffset + (pixelX * BytesPerPixelUnorm8),
-                        lowR, lowG, lowB, lowA,
-                        highR, highG, highB, highA,
+                        lowR,
+                        lowG,
+                        lowB,
+                        lowA,
+                        highR,
+                        highG,
+                        highB,
+                        highA,
                         weights);
                 }
             }
@@ -114,8 +120,14 @@ internal static class FusedLdrBlockDecoder
                 SimdHelpers.WriteSinglePixelLdr(
                     buffer,
                     dstRowOffset + (pixelX * BytesPerPixelUnorm8),
-                    lowR, lowG, lowB, lowA,
-                    highR, highG, highB, highA,
+                    lowR,
+                    lowG,
+                    lowB,
+                    lowA,
+                    highR,
+                    highG,
+                    highB,
+                    highA,
                     texelWeights[srcRowBase + pixelX]);
             }
         }

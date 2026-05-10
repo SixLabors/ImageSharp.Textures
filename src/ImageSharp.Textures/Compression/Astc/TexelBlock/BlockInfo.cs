@@ -59,14 +59,6 @@ internal struct BlockInfo
             ? this.EndpointModes[partition]
             : this.EndpointModes[0];
 
-    [System.Runtime.CompilerServices.InlineArray(4)]
-    public struct EndpointModeBuffer
-    {
-#pragma warning disable CS0169, IDE0051, S1144 // Accessed by runtime via [InlineArray]
-        private ColorEndpointMode element0;
-#pragma warning restore CS0169, IDE0051, S1144
-    }
-
     /// <summary>
     /// Returns true if any of this block's active partitions uses an HDR endpoint mode.
     /// Does not detect HDR void-extent blocks (those carry their own HDR flag and have
@@ -371,5 +363,13 @@ internal struct BlockInfo
         bool coordsAll1s = c0 == all1s && c1 == all1s && c2 == all1s && c3 == all1s;
 
         return !coordsAll1s && (c0 >= c1 || c2 >= c3);
+    }
+
+    [System.Runtime.CompilerServices.InlineArray(4)]
+    public struct EndpointModeBuffer
+    {
+#pragma warning disable CS0169, IDE0051, S1144 // Accessed by runtime via [InlineArray]
+        private ColorEndpointMode element0;
+#pragma warning restore CS0169, IDE0051, S1144
     }
 }

@@ -23,8 +23,7 @@ internal static class AstcDecoder
 
     /// <summary>
     /// Decompresses ASTC-compressed image data to float-RGBA pixels, returned as a raw byte buffer
-    /// of length <c>width * height * 16</c> suitable for <see cref="Image.LoadPixelData{TPixel}(byte[], int, int)"/>
-    /// with <c>Rgba128Float</c>.
+    /// of length <c>width * height * 16</c> suitable for <c>Image.LoadPixelData&lt;Rgba128Float&gt;</c>.
     /// </summary>
     public static byte[] DecompressHdrImage(
         byte[] blockData,

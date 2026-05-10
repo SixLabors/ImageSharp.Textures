@@ -23,7 +23,7 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx
         /// <summary>
         /// The endian handler for reading and converting data based on file endianness.
         /// </summary>
-        private readonly IEndianHandler endianHandler;
+        private readonly EndianHandler endianHandler;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="KtxProcessor" /> class.
