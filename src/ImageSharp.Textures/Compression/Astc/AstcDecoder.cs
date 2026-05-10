@@ -4,9 +4,7 @@
 using System.Buffers;
 using System.Buffers.Binary;
 using System.Runtime.CompilerServices;
-using SixLabors.ImageSharp.Textures.Common.Exceptions;
 using SixLabors.ImageSharp.Textures.Compression.Astc.BlockDecoder;
-using SixLabors.ImageSharp.Textures.Compression.Astc.ColorEncoding;
 using SixLabors.ImageSharp.Textures.Compression.Astc.Core;
 using SixLabors.ImageSharp.Textures.Compression.Astc.IO;
 using SixLabors.ImageSharp.Textures.Compression.Astc.TexelBlock;
@@ -181,6 +179,41 @@ public static class AstcDecoder
     }
 
     /// <summary>
+    /// Shared single-block decode path for the public <c>DecompressBlock</c> entry points.
+    /// Runs the pipeline's pre-dispatch check (LDR throws on HDR content), then dispatches
+    /// to the fused fast path for the common shape or the general <see cref="LogicalBlock"/>
+    /// pipeline otherwise. The caller's <paramref name="buffer"/> is sized for exactly one
+    /// block so there's no interior/edge distinction — the fused writer writes straight into it.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void DecodeSingleBlock<TPipeline, T>(ReadOnlySpan<byte> blockData, Footprint footprint, Span<T> buffer)
+        where TPipeline : struct, IBlockPipeline<T>
+        where T : unmanaged
+    {
+        if (!TryReadBlockInfo(blockData, out UInt128 blockBits, out BlockInfo info))
+        {
+            return;
+        }
+
+        TPipeline pipeline = default;
+        pipeline.PreDispatchCheck(blockBits, in info);
+
+        if (!info.IsVoidExtent && info.PartitionCount == 1 && !info.IsDualPlane)
+        {
+            pipeline.FusedToScratch(blockBits, in info, footprint, buffer);
+            return;
+        }
+
+        LogicalBlock? logicalBlock = LogicalBlock.UnpackLogicalBlock(footprint, blockBits, in info);
+        if (logicalBlock is null)
+        {
+            return;
+        }
+
+        pipeline.LogicalWrite(logicalBlock, footprint, buffer);
+    }
+
+    /// <summary>
     /// Decompresses a single ASTC block to RGBA8 pixel data
     /// </summary>
     /// <param name="blockData">The data to decode</param>
@@ -189,33 +222,9 @@ public static class AstcDecoder
     public static void DecompressBlock(ReadOnlySpan<byte> blockData, Footprint footprint, Span<byte> buffer)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(blockData.Length, PhysicalBlock.SizeInBytes);
-        ArgumentOutOfRangeException.ThrowIfLessThan(buffer.Length, footprint.PixelCount * BytesPerPixelUnorm8);
+        ArgumentOutOfRangeException.ThrowIfLessThan(buffer.Length, footprint.PixelCount * ChannelsPerPixel);
 
-        if (!TryReadBlockInfo(blockData, out UInt128 blockBits, out BlockInfo info))
-        {
-            return;
-        }
-
-        // ASTC spec §C.2.19: LDR profile cannot decode HDR-endpoint blocks. Callers wanting
-        // HDR values must use DecompressHdrBlock.
-        if (IsHdrBlock(blockBits, in info))
-        {
-            throw new TextureFormatException(
-                "ASTC block uses HDR endpoint data but was passed to the LDR decoder. " +
-                "Use AstcDecoder.DecompressHdrBlock to decode HDR content.");
-        }
-
-        // Fused fast path: single-partition, non-dual-plane, non-void-extent. HDR-endpoint
-        // blocks already threw above, so the single-partition case is guaranteed LDR here.
-        if (!info.IsVoidExtent && info.PartitionCount == 1 && !info.IsDualPlane)
-        {
-            FusedLdrBlockDecoder.DecompressBlockFusedLdr(blockBits, in info, footprint, buffer);
-            return;
-        }
-
-        // Fallback: void-extent, multi-partition, or dual-plane.
-        LogicalBlock? logicalBlock = LogicalBlock.UnpackLogicalBlock(footprint, blockBits, in info);
-        logicalBlock?.WriteAllPixelsLdr(footprint, buffer);
+        DecodeSingleBlock<LdrPipeline, byte>(blockData, footprint, buffer);
     }
 
     /// <summary>
@@ -306,23 +315,9 @@ public static class AstcDecoder
     public static void DecompressHdrBlock(ReadOnlySpan<byte> blockData, Footprint footprint, Span<float> buffer)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(blockData.Length, PhysicalBlock.SizeInBytes);
-        ArgumentOutOfRangeException.ThrowIfLessThan(buffer.Length, footprint.PixelCount * 4);
+        ArgumentOutOfRangeException.ThrowIfLessThan(buffer.Length, footprint.PixelCount * ChannelsPerPixel);
 
-        if (!TryReadBlockInfo(blockData, out UInt128 blockBits, out BlockInfo info))
-        {
-            return;
-        }
-
-        // Fused fast path: single-partition, non-dual-plane, non-void-extent.
-        if (!info.IsVoidExtent && info.PartitionCount == 1 && !info.IsDualPlane)
-        {
-            FusedHdrBlockDecoder.DecompressBlockFusedHdr(blockBits, in info, footprint, buffer);
-            return;
-        }
-
-        // Fallback for void-extent, multi-partition, or dual-plane blocks.
-        LogicalBlock? logicalBlock = LogicalBlock.UnpackLogicalBlock(footprint, blockBits, in info);
-        logicalBlock?.WriteAllPixelsHdr(footprint, buffer);
+        DecodeSingleBlock<HdrPipeline, float>(blockData, footprint, buffer);
     }
 
     internal static Span<byte> DecompressImage(AstcFile file)
