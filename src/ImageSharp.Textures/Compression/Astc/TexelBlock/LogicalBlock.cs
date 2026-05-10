@@ -38,8 +38,9 @@ internal sealed class LogicalBlock
     }
 
     /// <summary>
-    /// BISE-decodes + unquantises the per-partition color endpoint values and returns the
-    /// decoded <see cref="ColorEndpointPair"/> array (one entry per partition).
+    /// BISE-decodes (spec §C.2.22) + unquantises (spec §C.2.18) the per-partition color
+    /// endpoint values and returns the decoded <see cref="ColorEndpointPair"/> array (one
+    /// entry per partition, colour value count per mode from §C.2.14).
     /// </summary>
     private static ColorEndpointPair[] DecodeEndpointsFromBits(UInt128 bits, in BlockInfo info)
     {
@@ -68,8 +69,9 @@ internal sealed class LogicalBlock
     }
 
     /// <summary>
-    /// Returns the cached partition for multi-partition blocks, or a synthetic single
-    /// partition that assigns every texel to subset 0.
+    /// Returns the cached partition-assignment map for this block. Multi-partition blocks
+    /// use the 10-bit partition id from bits [13..22] (spec §C.2.10) to look up the partition
+    /// hash result (spec §C.2.21); single-partition blocks get a synthetic all-zero map.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static Partition ResolvePartition(UInt128 bits, in BlockInfo info, Footprint footprint)
@@ -81,9 +83,9 @@ internal sealed class LogicalBlock
             : Partition.GetSinglePartition(footprint);
 
     /// <summary>
-    /// BISE-decodes, unquantises, and infills the weight grid for a block. Fills
-    /// <paramref name="texelWeights"/> in place and returns the <see cref="DualPlaneData"/>
-    /// if the block uses a dual plane (otherwise null).
+    /// BISE-decodes (spec §C.2.22), unquantises (spec §C.2.18), and infills the weight grid
+    /// (spec §C.2.17). Fills <paramref name="texelWeights"/> in place and returns the
+    /// <see cref="DualPlaneData"/> if the block uses a dual plane (spec §C.2.20), otherwise null.
     /// </summary>
     private static DualPlaneData? DecodeAndInfillWeights(
         UInt128 bits,
@@ -112,7 +114,8 @@ internal sealed class LogicalBlock
             return null;
         }
 
-        // Dual-plane weights are interleaved: even indices drive the main plane, odd the secondary.
+        // Spec §C.2.20: the two planes' weights are interleaved — even indices drive the
+        // main plane, odd the secondary plane.
         Span<int> plane0 = stackalloc int[gridSize];
         Span<int> plane1 = stackalloc int[gridSize];
         for (int i = 0; i < gridSize; i++)
@@ -135,10 +138,10 @@ internal sealed class LogicalBlock
     /// Writes all pixels in the block as RGBA floats into <paramref name="buffer"/>.
     /// </summary>
     /// <remarks>
-    /// For HDR endpoints, values are in LNS (Log-Normalized Space). After interpolation
-    /// in LNS, the result is converted to FP16 via <see cref="Fp16.FromLns"/> then widened to float.
-    /// For Mode 14 (HDR RGB + LDR Alpha), the alpha channel is UNORM16 instead of LNS.
-    /// For LDR endpoints, the interpolated UNORM16 value is normalized to 0.0-1.0.
+    /// Per ASTC spec §C.2.15: HDR endpoints are interpolated in LNS (Log-Normalised Space),
+    /// then the result is converted to FP16 via <see cref="Fp16.FromLns"/> and widened to float.
+    /// For mode 14 (HDR RGB + LDR Alpha, §C.2.14), the alpha channel is UNORM16 instead of LNS.
+    /// LDR endpoints produce UNORM16 values that are normalised to 0.0-1.0 (§C.2.24).
     /// </remarks>
     public void WriteAllPixelsHdr(Footprint footprint, Span<float> buffer)
     {
@@ -165,8 +168,9 @@ internal sealed class LogicalBlock
     }
 
     /// <summary>
-    /// Writes the four HDR-endpoint channels for a single pixel: LNS → FP16 → float, with
-    /// mode-14 alpha (LDR-as-UNORM16) and void-extent (direct FP16) special cases.
+    /// Writes the four HDR-endpoint channels for a single pixel per ASTC spec §C.2.15: LNS →
+    /// FP16 → float. Mode 14 alpha is LDR-as-UNORM16 (§C.2.14); HDR void-extent values are
+    /// already FP16 bit patterns (§C.2.23) and skip the LNS conversion.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void WriteHdrPixelChannels(

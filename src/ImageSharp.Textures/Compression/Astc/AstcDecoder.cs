@@ -92,7 +92,10 @@ public static class AstcDecoder
     }
 
     /// <summary>
-    /// Shared image-decode loop for both LDR and HDR
+    /// Shared image-decode loop for both LDR and HDR profiles (ASTC spec §C.2.25). Iterates
+    /// the compressed block array in raster order, parses each block via
+    /// <see cref="BlockInfo.Decode"/>, runs the pipeline's profile check, and dispatches to
+    /// the appropriate per-block decoder.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void DecodeAllBlocks<TPipeline, T>(
@@ -135,9 +138,12 @@ public static class AstcDecoder
     }
 
     /// <summary>
-    /// Routes a single block to the best available path (fused direct-to-image for full
-    /// interior blocks; fused-to-scratch then copy for edge blocks; general
-    /// <see cref="LogicalBlock"/> pipeline for void-extent / multi-partition / dual-plane).
+    /// Routes a single block to the best available path. Single-partition, single-plane,
+    /// non-void-extent blocks (the common shape per ASTC spec §C.2.10, §C.2.20, §C.2.23) take
+    /// the fused fast path — directly to the image buffer when the block fits entirely inside
+    /// the image, or to a scratch buffer at image edges that need cropping. Everything else
+    /// (void-extent, multi-partition, dual-plane) falls through to the general
+    /// <see cref="LogicalBlock"/> pipeline.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void DecodeBlock<TPipeline, T>(
@@ -180,10 +186,11 @@ public static class AstcDecoder
 
     /// <summary>
     /// Shared single-block decode path for the public <c>DecompressBlock</c> entry points.
-    /// Runs the pipeline's pre-dispatch check (LDR throws on HDR content), then dispatches
-    /// to the fused fast path for the common shape or the general <see cref="LogicalBlock"/>
-    /// pipeline otherwise. The caller's <paramref name="buffer"/> is sized for exactly one
-    /// block so there's no interior/edge distinction — the fused writer writes straight into it.
+    /// Runs the pipeline's profile check (LDR rejects HDR content per ASTC spec §C.2.19),
+    /// then dispatches to the fused fast path for the common shape (single-partition,
+    /// single-plane, non-void-extent — spec §C.2.10, §C.2.20, §C.2.23) or the general
+    /// <see cref="LogicalBlock"/> pipeline otherwise. The caller's <paramref name="buffer"/>
+    /// is sized for exactly one block, so there's no interior/edge distinction.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void DecodeSingleBlock<TPipeline, T>(ReadOnlySpan<byte> blockData, Footprint footprint, Span<T> buffer)
@@ -366,9 +373,10 @@ public static class AstcDecoder
     }
 
     /// <summary>
-    /// Returns true if the given ASTC block encodes HDR content (HDR endpoint modes in
-    /// any partition, or an HDR void-extent flag). The LDR decoder paths use this as a
-    /// precondition check — HDR content must be routed through the HDR decoder instead.
+    /// Returns true if the given ASTC block encodes HDR content: either the HDR void-extent
+    /// flag (bit 9 of the block mode, ASTC spec §C.2.23) or any HDR endpoint mode in its
+    /// partitions (modes 2, 3, 7, 11, 14, 15 per §C.2.14). Used by the LDR decoder to reject
+    /// HDR content before dispatch per §C.2.19.
     /// </summary>
     internal static bool IsHdrBlock(UInt128 blockBits, in BlockInfo info)
     {

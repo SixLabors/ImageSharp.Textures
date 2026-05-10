@@ -9,8 +9,10 @@ using SixLabors.ImageSharp.Textures.Compression.Astc.TexelBlock;
 namespace SixLabors.ImageSharp.Textures.Compression.Astc.BlockDecoder;
 
 /// <summary>
-/// <see cref="IBlockPipeline{T}"/> implementation for the LDR (byte RGBA) profile.
-/// Rejects HDR-content blocks at pre-dispatch per ASTC spec §C.2.19.
+/// <see cref="IBlockPipeline{T}"/> implementation for the LDR (byte RGBA) <c>decode_unorm8</c>
+/// profile (ASTC spec §C.2.25). Rejects HDR-content blocks at pre-dispatch per §C.2.19 (the
+/// <c>decode_unorm8</c> profile is defined to produce magenta for HDR blocks; this decoder
+/// follows ARM's <c>astcenc</c> in throwing instead).
 /// </summary>
 internal readonly struct LdrPipeline : IBlockPipeline<byte>
 {
