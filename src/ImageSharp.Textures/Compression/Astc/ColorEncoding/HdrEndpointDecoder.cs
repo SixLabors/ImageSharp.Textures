@@ -132,6 +132,34 @@ internal static class HdrEndpointDecoder
         }
     }
 
+    /// <summary>
+    /// Swaps the R/G/B channels of a 12-bit HDR endpoint pair according to
+    /// <paramref name="majorComponent"/> (ASTC spec §C.2.14) and shifts each channel left
+    /// by 4 to produce the FP16 bit patterns stored in the returned <see cref="Rgba64"/>
+    /// pair; alpha is set to <see cref="Fp16.One"/>.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static (Rgba64 Low, Rgba64 High) PackHdrRgbPairWithSwap(
+        int red0,
+        int green0,
+        int blue0,
+        int red1,
+        int green1,
+        int blue1,
+        int majorComponent)
+    {
+        (red0, green0, blue0, red1, green1, blue1) = majorComponent switch
+        {
+            1 => (green0, red0, blue0, green1, red1, blue1),
+            2 => (blue0, green0, red0, blue1, green1, red1),
+            _ => (red0, green0, blue0, red1, green1, blue1)
+        };
+
+        Rgba64 low = new((ushort)(red0 << 4), (ushort)(green0 << 4), (ushort)(blue0 << 4), Fp16.One);
+        Rgba64 high = new((ushort)(red1 << 4), (ushort)(green1 << 4), (ushort)(blue1 << 4), Fp16.One);
+        return (low, high);
+    }
+
     public static (Rgba64 Low, Rgba64 High) DecodeHdrMode(ReadOnlySpan<int> values, int maxValue, ColorEndpointMode mode)
     {
         int count = mode.GetColorValuesCount();
@@ -261,25 +289,15 @@ internal static class HdrEndpointDecoder
             blue = red - blue;
         }
 
-        // Swap channels based on major component (spec §C.2.14).
-        (red, green, blue) = majorComponent switch
-        {
-            1 => (green, red, blue),
-            2 => (blue, green, red),
-            _ => (red, green, blue)
-        };
-
-        // Low endpoint = base minus scale; clamp both to [0, 0xFFF] before the FP16-range shift.
+        // Low endpoint = base minus scale; clamp negatives to zero before channel swap.
         int red0 = Math.Max(red - scale, 0);
         int green0 = Math.Max(green - scale, 0);
         int blue0 = Math.Max(blue - scale, 0);
-        red = Math.Max(red, 0);
-        green = Math.Max(green, 0);
-        blue = Math.Max(blue, 0);
+        int red1 = Math.Max(red, 0);
+        int green1 = Math.Max(green, 0);
+        int blue1 = Math.Max(blue, 0);
 
-        Rgba64 low = new((ushort)(red0 << 4), (ushort)(green0 << 4), (ushort)(blue0 << 4), Fp16.One);
-        Rgba64 high = new((ushort)(red << 4), (ushort)(green << 4), (ushort)(blue << 4), Fp16.One);
-        return (low, high);
+        return PackHdrRgbPairWithSwap(red0, green0, blue0, red1, green1, blue1, majorComponent);
     }
 
     private static (Rgba64 Low, Rgba64 High) UnpackHdrRgbDirectCore(int v0, int v1, int v2, int v3, int v4, int v5)
@@ -340,7 +358,7 @@ internal static class HdrEndpointDecoder
         d0 = SafeSignedLeftShift(d0, valueShift);
         d1 = SafeSignedLeftShift(d1, valueShift);
 
-        // Compose high and low endpoints per ARM reference, then clamp to [0, 0xFFF].
+        // Compose high and low endpoints per ASTC spec §C.2.14, then clamp to [0, 0xFFF].
         int red1 = Math.Clamp(a, 0, 0xFFF);
         int green1 = Math.Clamp(a - b0, 0, 0xFFF);
         int blue1 = Math.Clamp(a - b1, 0, 0xFFF);
@@ -348,17 +366,7 @@ internal static class HdrEndpointDecoder
         int green0 = Math.Clamp(a - b0 - c - d0, 0, 0xFFF);
         int blue0 = Math.Clamp(a - b1 - c - d1, 0, 0xFFF);
 
-        // Swap channels based on major component (spec §C.2.14).
-        (red0, green0, blue0, red1, green1, blue1) = majorComponent switch
-        {
-            1 => (green0, red0, blue0, green1, red1, blue1),
-            2 => (blue0, green0, red0, blue1, green1, red1),
-            _ => (red0, green0, blue0, red1, green1, blue1)
-        };
-
-        Rgba64 lowResult = new((ushort)(red0 << 4), (ushort)(green0 << 4), (ushort)(blue0 << 4), Fp16.One);
-        Rgba64 highResult = new((ushort)(red1 << 4), (ushort)(green1 << 4), (ushort)(blue1 << 4), Fp16.One);
-        return (lowResult, highResult);
+        return PackHdrRgbPairWithSwap(red0, green0, blue0, red1, green1, blue1, majorComponent);
     }
 
     private static (Rgba64 Low, Rgba64 High) UnpackHdrRgbDirectLdrAlphaCore(ReadOnlySpan<int> unquantizedValues)
