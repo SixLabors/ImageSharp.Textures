@@ -10,7 +10,7 @@ using static SixLabors.ImageSharp.Textures.Compression.Astc.Core.Rgba32Extension
 
 namespace SixLabors.ImageSharp.Textures.Compression.Astc.TexelBlock;
 
-internal sealed class LogicalBlock
+internal sealed partial class LogicalBlock
 {
     private ColorEndpointPair[] endpoints;
     private int endpointCount;
@@ -18,31 +18,11 @@ internal sealed class LogicalBlock
     private Partition partition;
     private DualPlaneData? dualPlane;
 
-    public LogicalBlock(Footprint footprint)
-    {
-        this.endpoints = [ColorEndpointPair.Ldr(default, default)];
-        this.endpointCount = 1;
-        this.weights = new int[footprint.PixelCount];
-        this.partition = new Partition(footprint, 1, 0)
-        {
-            Assignment = new int[footprint.PixelCount]
-        };
-    }
-
-    public LogicalBlock(Footprint footprint, in IntermediateBlock.IntermediateBlockData block)
-    {
-        this.endpoints = new ColorEndpointPair[block.EndpointCount];
-        this.endpointCount = DecodeEndpoints(in block, this.endpoints);
-        this.partition = ComputePartition(footprint, in block);
-        this.weights = new int[footprint.PixelCount];
-        this.CalculateWeights(footprint, in block);
-    }
-
-    public LogicalBlock(Footprint footprint, IntermediateBlock.VoidExtentData block)
+    private LogicalBlock(Footprint footprint, IntermediateBlock.VoidExtentData block)
     {
         this.endpoints = new ColorEndpointPair[1];
         this.endpointCount = DecodeEndpoints(block, this.endpoints);
-        this.partition = ComputePartition(footprint);
+        this.partition = GenerateSinglePartition(footprint);
         this.weights = new int[footprint.PixelCount];
     }
 
@@ -133,37 +113,7 @@ internal sealed class LogicalBlock
 
     public Footprint GetFootprint() => this.partition.Footprint;
 
-    public void SetWeightAt(int x, int y, int weight)
-    {
-        if (weight is < 0 or > 64)
-        {
-            throw new ArgumentOutOfRangeException(nameof(weight));
-        }
-
-        this.weights[(y * this.GetFootprint().Width) + x] = weight;
-    }
-
     public int WeightAt(int x, int y) => this.weights[(y * this.GetFootprint().Width) + x];
-
-    public void SetDualPlaneWeightAt(int channel, int x, int y, int weight)
-    {
-        ArgumentOutOfRangeException.ThrowIfNegative(channel);
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(weight, 64);
-
-        if (!this.IsDualPlane())
-        {
-            throw new InvalidOperationException("Not a dual plane block");
-        }
-
-        if (this.dualPlane is not null && this.dualPlane.Channel == channel)
-        {
-            this.dualPlane.Weights[(y * this.GetFootprint().Width) + x] = weight;
-        }
-        else
-        {
-            this.SetWeightAt(x, y, weight);
-        }
-    }
 
     public int DualPlaneWeightAt(int channel, int x, int y)
     {
@@ -412,53 +362,6 @@ internal sealed class LogicalBlock
         }
     }
 
-    public void SetPartition(Partition p)
-    {
-        if (!p.Footprint.Equals(this.partition.Footprint))
-        {
-            throw new InvalidOperationException("New partitions may not be for a different footprint");
-        }
-
-        this.partition = p;
-        if (this.endpointCount < p.PartitionCount)
-        {
-            ColorEndpointPair[] newEndpoints = new ColorEndpointPair[p.PartitionCount];
-            Array.Copy(this.endpoints, newEndpoints, this.endpointCount);
-            for (int i = this.endpointCount; i < p.PartitionCount; i++)
-            {
-                newEndpoints[i] = ColorEndpointPair.Ldr(default, default);
-            }
-
-            this.endpoints = newEndpoints;
-        }
-
-        this.endpointCount = p.PartitionCount;
-    }
-
-    public void SetEndpoints(Rgba32 firstEndpoint, Rgba32 secondEndpoint, int subset)
-    {
-        ArgumentOutOfRangeException.ThrowIfNegative(subset);
-        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(subset, this.partition.PartitionCount);
-
-        this.endpoints[subset] = ColorEndpointPair.Ldr(firstEndpoint, secondEndpoint);
-    }
-
-    public void SetDualPlaneChannel(int channel)
-    {
-        if (channel < 0)
-        {
-            this.dualPlane = null;
-        }
-        else if (this.dualPlane != null)
-        {
-            this.dualPlane.Channel = channel;
-        }
-        else
-        {
-            this.dualPlane = new DualPlaneData { Channel = channel, Weights = (int[])this.weights.Clone() };
-        }
-    }
-
     public bool IsDualPlane() => this.dualPlane is not null;
 
     public static LogicalBlock? UnpackLogicalBlock(Footprint footprint, UInt128 bits, in BlockInfo info)
@@ -517,24 +420,6 @@ internal sealed class LogicalBlock
         return (ushort)Math.Min(result, Fp16.MaxFinite);
     }
 
-    private static int DecodeEndpoints(in IntermediateBlock.IntermediateBlockData block, ColorEndpointPair[] endpointPair)
-    {
-        int endpointRange = block.EndpointRange ?? IntermediateBlock.EndpointRangeForBlock(block);
-        if (endpointRange <= 0)
-        {
-            throw new InvalidOperationException("Invalid endpoint range");
-        }
-
-        for (int i = 0; i < block.EndpointCount; i++)
-        {
-            IntermediateBlock.IntermediateEndpointData ed = block.Endpoints[i];
-            ReadOnlySpan<int> colorSpan = ((ReadOnlySpan<int>)ed.Colors)[..ed.ColorCount];
-            endpointPair[i] = EndpointCodec.DecodeColorsForModePolymorphic(colorSpan, endpointRange, ed.Mode);
-        }
-
-        return block.EndpointCount;
-    }
-
     private static int DecodeEndpoints(IntermediateBlock.VoidExtentData block, ColorEndpointPair[] endpointPair)
     {
         if (block.IsHdr)
@@ -561,50 +446,6 @@ internal sealed class LogicalBlock
     {
         Assignment = new int[footprint.PixelCount]
     };
-
-    private static Partition ComputePartition(Footprint footprint, in IntermediateBlock.IntermediateBlockData block)
-        => block.PartitionId.HasValue
-            ? Partition.GetASTCPartition(footprint, block.EndpointCount, block.PartitionId.Value)
-            : GenerateSinglePartition(footprint);
-
-    private static Partition ComputePartition(Footprint footprint)
-        => GenerateSinglePartition(footprint);
-
-    private void CalculateWeights(Footprint footprint, in IntermediateBlock.IntermediateBlockData block)
-    {
-        int gridSize = block.WeightGridX * block.WeightGridY;
-        int weightFrequency = block.DualPlaneChannel.HasValue ? 2 : 1;
-
-        // Get decimation info once for both planes
-        DecimationInfo decimationInfo = DecimationTable.Get(footprint, block.WeightGridX, block.WeightGridY);
-
-        // stackalloc avoids per-block heap allocation (max 12×12 = 144 ints = 576 bytes)
-        Span<int> unquantized = stackalloc int[gridSize];
-        for (int i = 0; i < gridSize; ++i)
-        {
-            unquantized[i] = Quantization.UnquantizeWeightFromRange(
-                block.Weights[i * weightFrequency], block.WeightRange);
-        }
-
-        DecimationTable.InfillWeights(unquantized, decimationInfo, this.weights);
-
-        if (block.DualPlaneChannel.HasValue)
-        {
-            DualPlaneData dualPlane = new()
-            {
-                Channel = block.DualPlaneChannel.Value,
-                Weights = new int[footprint.PixelCount]
-            };
-            this.dualPlane = dualPlane;
-            for (int i = 0; i < gridSize; ++i)
-            {
-                unquantized[i] = Quantization.UnquantizeWeightFromRange(
-                    block.Weights[(i * weightFrequency) + 1], block.WeightRange);
-            }
-
-            DecimationTable.InfillWeights(unquantized, decimationInfo, this.dualPlane.Weights);
-        }
-    }
 
     private static int InterpolateChannel(int p0, int p1, int weight)
     {
