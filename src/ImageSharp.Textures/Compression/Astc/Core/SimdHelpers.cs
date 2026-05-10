@@ -3,8 +3,6 @@
 
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
-using SixLabors.ImageSharp.PixelFormats;
-using static SixLabors.ImageSharp.Textures.Compression.Astc.Core.Rgba32Extensions;
 
 namespace SixLabors.ImageSharp.Textures.Compression.Astc.Core;
 
@@ -129,40 +127,6 @@ internal static class SimdHelpers
             highA,
             dpChannel == 3 ? dpWeight : weight);
     }
-
-    // Keep the old API for ColorAt() (used by tests and non-hot paths)
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Rgba32 InterpolateColorLdr(Rgba32 low, Rgba32 high, int weight)
-        => ClampedRgba32(
-            r: InterpolateChannelScalar(low.R, high.R, weight),
-            g: InterpolateChannelScalar(low.G, high.G, weight),
-            b: InterpolateChannelScalar(low.B, high.B, weight),
-            a: InterpolateChannelScalar(low.A, high.A, weight));
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Rgba32 InterpolateColorLdrDualPlane(
-        Rgba32 low,
-        Rgba32 high,
-        int weight,
-        int dualPlaneChannel,
-        int dualPlaneWeight)
-        => ClampedRgba32(
-            r: InterpolateChannelScalar(
-                low.R,
-                high.R,
-                dualPlaneChannel == 0 ? dualPlaneWeight : weight),
-            g: InterpolateChannelScalar(
-                low.G,
-                high.G,
-                dualPlaneChannel == 1 ? dualPlaneWeight : weight),
-            b: InterpolateChannelScalar(
-                low.B,
-                high.B,
-                dualPlaneChannel == 2 ? dualPlaneWeight : weight),
-            a: InterpolateChannelScalar(
-                low.A,
-                high.A,
-                dualPlaneChannel == 3 ? dualPlaneWeight : weight));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static int InterpolateChannelScalar(int p0, int p1, int weight)

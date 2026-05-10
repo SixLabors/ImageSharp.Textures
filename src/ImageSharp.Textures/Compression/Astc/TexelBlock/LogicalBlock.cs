@@ -6,17 +6,16 @@ using SixLabors.ImageSharp.Textures.Compression.Astc.BiseEncoding.Quantize;
 using SixLabors.ImageSharp.Textures.Compression.Astc.BlockDecoder;
 using SixLabors.ImageSharp.Textures.Compression.Astc.ColorEncoding;
 using SixLabors.ImageSharp.Textures.Compression.Astc.Core;
-using static SixLabors.ImageSharp.Textures.Compression.Astc.Core.Rgba32Extensions;
 
 namespace SixLabors.ImageSharp.Textures.Compression.Astc.TexelBlock;
 
-internal sealed partial class LogicalBlock
+internal sealed class LogicalBlock
 {
-    private ColorEndpointPair[] endpoints;
-    private int endpointCount;
+    private readonly ColorEndpointPair[] endpoints;
+    private readonly int endpointCount;
     private readonly int[] weights;
-    private Partition partition;
-    private DualPlaneData? dualPlane;
+    private readonly Partition partition;
+    private readonly DualPlaneData? dualPlane;
 
     private LogicalBlock(Footprint footprint, IntermediateBlock.VoidExtentData block)
     {
@@ -111,140 +110,6 @@ internal sealed partial class LogicalBlock
         }
     }
 
-    public Footprint GetFootprint() => this.partition.Footprint;
-
-    public int WeightAt(int x, int y) => this.weights[(y * this.GetFootprint().Width) + x];
-
-    public int DualPlaneWeightAt(int channel, int x, int y)
-    {
-        if (!this.IsDualPlane())
-        {
-            return this.WeightAt(x, y);
-        }
-
-        return this.dualPlane is not null && this.dualPlane.Channel == channel
-            ? this.dualPlane.Weights[(y * this.GetFootprint().Width) + x]
-            : this.WeightAt(x, y);
-    }
-
-    public Rgba32 ColorAt(int x, int y)
-    {
-        Footprint footprint = this.GetFootprint();
-
-        ArgumentOutOfRangeException.ThrowIfNegative(x);
-        ArgumentOutOfRangeException.ThrowIfNegative(y);
-        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(x, footprint.Width);
-        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(y, footprint.Height);
-
-        int index = (y * footprint.Width) + x;
-        int part = this.partition.Assignment[index];
-        ref ColorEndpointPair endpoint = ref this.endpoints[part];
-
-        int weight = this.weights[index];
-        if (!endpoint.IsHdr)
-        {
-            if (this.dualPlane is not null)
-            {
-                return SimdHelpers.InterpolateColorLdrDualPlane(
-                    endpoint.LdrLow, endpoint.LdrHigh, weight, this.dualPlane.Channel, this.dualPlane.Weights[index]);
-            }
-
-            return SimdHelpers.InterpolateColorLdr(endpoint.LdrLow, endpoint.LdrHigh, weight);
-        }
-        else
-        {
-            if (this.dualPlane is not null)
-            {
-                int dualPlaneChannel = this.dualPlane.Channel;
-                int dualPlaneWeight = this.dualPlane.Weights[index];
-                int rWeight = dualPlaneChannel == 0 ? dualPlaneWeight : weight;
-                int gWeight = dualPlaneChannel == 1 ? dualPlaneWeight : weight;
-                int bWeight = dualPlaneChannel == 2 ? dualPlaneWeight : weight;
-                int aWeight = dualPlaneChannel == 3 ? dualPlaneWeight : weight;
-                return ClampedRgba32(
-                    r: InterpolateChannelHdr(endpoint.HdrLow.R, endpoint.HdrHigh.R, rWeight) >> 8,
-                    g: InterpolateChannelHdr(endpoint.HdrLow.G, endpoint.HdrHigh.G, gWeight) >> 8,
-                    b: InterpolateChannelHdr(endpoint.HdrLow.B, endpoint.HdrHigh.B, bWeight) >> 8,
-                    a: InterpolateChannelHdr(endpoint.HdrLow.A, endpoint.HdrHigh.A, aWeight) >> 8);
-            }
-
-            return ClampedRgba32(
-                r: InterpolateChannelHdr(endpoint.HdrLow.R, endpoint.HdrHigh.R, weight) >> 8,
-                g: InterpolateChannelHdr(endpoint.HdrLow.G, endpoint.HdrHigh.G, weight) >> 8,
-                b: InterpolateChannelHdr(endpoint.HdrLow.B, endpoint.HdrHigh.B, weight) >> 8,
-                a: InterpolateChannelHdr(endpoint.HdrLow.A, endpoint.HdrHigh.A, weight) >> 8);
-        }
-    }
-
-    /// <summary>
-    /// Returns the HDR color at the specified pixel position.
-    /// </summary>
-    /// <remarks>
-    /// For HDR endpoints, returns full 16-bit precision (0-65535) per channel.
-    /// For LDR endpoints, upscales to HDR range.
-    /// </remarks>
-    public Rgba64 ColorAtHdr(int x, int y)
-    {
-        Footprint footprint = this.GetFootprint();
-
-        ArgumentOutOfRangeException.ThrowIfNegative(x);
-        ArgumentOutOfRangeException.ThrowIfNegative(y);
-        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(x, footprint.Width);
-        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(y, footprint.Height);
-
-        int index = (y * footprint.Width) + x;
-        int part = this.partition.Assignment[index];
-        ref ColorEndpointPair endpoint = ref this.endpoints[part];
-
-        int weight = this.weights[index];
-        if (endpoint.IsHdr)
-        {
-            if (this.dualPlane != null)
-            {
-                int dualPlaneChannel = this.dualPlane.Channel;
-                int dualPlaneWeight = this.dualPlane.Weights[index];
-                int rWeight = dualPlaneChannel == 0 ? dualPlaneWeight : weight;
-                int gWeight = dualPlaneChannel == 1 ? dualPlaneWeight : weight;
-                int bWeight = dualPlaneChannel == 2 ? dualPlaneWeight : weight;
-                int aWeight = dualPlaneChannel == 3 ? dualPlaneWeight : weight;
-                return new Rgba64(
-                    InterpolateChannelHdr(endpoint.HdrLow.R, endpoint.HdrHigh.R, rWeight),
-                    InterpolateChannelHdr(endpoint.HdrLow.G, endpoint.HdrHigh.G, gWeight),
-                    InterpolateChannelHdr(endpoint.HdrLow.B, endpoint.HdrHigh.B, bWeight),
-                    InterpolateChannelHdr(endpoint.HdrLow.A, endpoint.HdrHigh.A, aWeight));
-            }
-
-            return new Rgba64(
-                InterpolateChannelHdr(endpoint.HdrLow.R, endpoint.HdrHigh.R, weight),
-                InterpolateChannelHdr(endpoint.HdrLow.G, endpoint.HdrHigh.G, weight),
-                InterpolateChannelHdr(endpoint.HdrLow.B, endpoint.HdrHigh.B, weight),
-                InterpolateChannelHdr(endpoint.HdrLow.A, endpoint.HdrHigh.A, weight));
-        }
-        else
-        {
-            if (this.dualPlane != null)
-            {
-                int dualPlaneChannel = this.dualPlane.Channel;
-                int dualPlaneWeight = this.dualPlane.Weights[index];
-                int rWeight = dualPlaneChannel == 0 ? dualPlaneWeight : weight;
-                int gWeight = dualPlaneChannel == 1 ? dualPlaneWeight : weight;
-                int bWeight = dualPlaneChannel == 2 ? dualPlaneWeight : weight;
-                int aWeight = dualPlaneChannel == 3 ? dualPlaneWeight : weight;
-                return new Rgba64(
-                    (ushort)(InterpolateChannel(endpoint.LdrLow.R, endpoint.LdrHigh.R, rWeight) * 257),
-                    (ushort)(InterpolateChannel(endpoint.LdrLow.G, endpoint.LdrHigh.G, gWeight) * 257),
-                    (ushort)(InterpolateChannel(endpoint.LdrLow.B, endpoint.LdrHigh.B, bWeight) * 257),
-                    (ushort)(InterpolateChannel(endpoint.LdrLow.A, endpoint.LdrHigh.A, aWeight) * 257));
-            }
-
-            return new Rgba64(
-                (ushort)(InterpolateChannel(endpoint.LdrLow.R, endpoint.LdrHigh.R, weight) * 257),
-                (ushort)(InterpolateChannel(endpoint.LdrLow.G, endpoint.LdrHigh.G, weight) * 257),
-                (ushort)(InterpolateChannel(endpoint.LdrLow.B, endpoint.LdrHigh.B, weight) * 257),
-                (ushort)(InterpolateChannel(endpoint.LdrLow.A, endpoint.LdrHigh.A, weight) * 257));
-        }
-    }
-
     /// <summary>
     /// Writes the HDR float values for the pixel at (x, y) into the output span.
     /// </summary>
@@ -256,7 +121,7 @@ internal sealed partial class LogicalBlock
     /// </remarks>
     public void WriteHdrPixel(int x, int y, Span<float> output)
     {
-        Footprint footprint = this.GetFootprint();
+        Footprint footprint = this.partition.Footprint;
 
         ArgumentOutOfRangeException.ThrowIfNegative(x);
         ArgumentOutOfRangeException.ThrowIfNegative(y);
@@ -362,8 +227,6 @@ internal sealed partial class LogicalBlock
         }
     }
 
-    public bool IsDualPlane() => this.dualPlane is not null;
-
     public static LogicalBlock? UnpackLogicalBlock(Footprint footprint, UInt128 bits, in BlockInfo info)
     {
         if (!info.IsValid)
@@ -446,15 +309,6 @@ internal sealed partial class LogicalBlock
     {
         Assignment = new int[footprint.PixelCount]
     };
-
-    private static int InterpolateChannel(int p0, int p1, int weight)
-    {
-        int c0 = (p0 << 8) | p0;
-        int c1 = (p1 << 8) | p1;
-        int c = ((c0 * (64 - weight)) + (c1 * weight) + 32) / 64;
-        int quantized = ((c * byte.MaxValue) + short.MaxValue) / (ushort.MaxValue + 1);
-        return Math.Clamp(quantized, 0, byte.MaxValue);
-    }
 
     /// <summary>
     /// Interpolates an LDR channel value and returns the full 16-bit UNORM result
