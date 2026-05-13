@@ -93,7 +93,7 @@ Bit 9 of the block-mode low bits distinguishes LDR (`= 1`, stored as UNORM16) fr
 
 ### Thread-safe lazy caches
 
-`BoundedIntegerSequenceDecoder.Cache` (257 entries) and `DecimationTable.Table` (14 footprints × 11 × 11 grid cells) are lazy-initialised on first access and shared across threads. Publication uses `Volatile.Read` + `Interlocked.CompareExchange`. The cached objects are immutable, so a losing CAS race just drops the duplicate and returns the winner. No lock is held during `Compute`, so concurrent decoders don't serialise on first-use.
+`DecimationTable.Table` (14 footprints × 11 × 11 grid cells) is lazy-initialised on first access and shared across threads. Publication uses `Volatile.Read` + `Interlocked.CompareExchange`. The cached objects are immutable, so a losing CAS race just drops the duplicate and returns the winner. No lock is held during `Compute`, so concurrent decoders don't serialise on first-use.
 
 ### ArrayPool discipline
 

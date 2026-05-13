@@ -87,8 +87,7 @@ internal static class FusedBlockDecoder
         if (encMode != BiseEncodingMode.BitEncoding)
         {
             BitStream stream = new(source, 128);
-            BoundedIntegerSequenceDecoder decoder = BoundedIntegerSequenceDecoder.GetCached(range);
-            decoder.Decode(count, ref stream, result);
+            BoundedIntegerSequenceDecoder.Decode(encMode, bitsPerValue, count, ref stream, result);
             return;
         }
 

@@ -2,10 +2,7 @@
 // Licensed under the Six Labors Split License.
 
 using System.ComponentModel;
-using System.Threading;
-using System.Threading.Tasks;
 using SixLabors.ImageSharp.Textures.Compression.Astc.BiseEncoding;
-using SixLabors.ImageSharp.Textures.Compression.Astc.IO;
 
 namespace SixLabors.ImageSharp.Textures.Tests.Formats.Astc;
 
@@ -188,8 +185,7 @@ public class IntegerSequenceCodecTests
 
         // Decode
         BitStream bitSrc = new(encoded, 19);
-        BoundedIntegerSequenceDecoder decoder = new(valueRange);
-        int[] decoded = decoder.Decode(3, ref bitSrc);
+        int[] decoded = Decode(valueRange, 3, ref bitSrc);
 
         Assert.Equal(values, decoded);
     }
@@ -203,8 +199,7 @@ public class IntegerSequenceCodecTests
 
         // Decode
         BitStream bitSrc = new(encoding, 64);
-        BoundedIntegerSequenceDecoder decoder = new(range);
-        int[] decoded = decoder.Decode(expectedValues.Length, ref bitSrc);
+        int[] decoded = Decode(range, expectedValues.Length, ref bitSrc);
 
         // Check decoded values
         Assert.Equal(expectedValues.Length, decoded.Length);
@@ -249,8 +244,7 @@ public class IntegerSequenceCodecTests
 
         // Decode
         BitStream bitSrc = new(encoded, 19);
-        BoundedIntegerSequenceDecoder decoder = new(valueRange);
-        int[] decoded = decoder.Decode(5, ref bitSrc);
+        int[] decoded = Decode(valueRange, 5, ref bitSrc);
 
         Assert.Equal(values, decoded);
     }
@@ -264,8 +258,7 @@ public class IntegerSequenceCodecTests
 
         // Decode
         BitStream bitSrc = new(encoding, 64);
-        BoundedIntegerSequenceDecoder decoder = new(range);
-        int[] decoded = decoder.Decode(expectedValues.Length, ref bitSrc);
+        int[] decoded = Decode(range, expectedValues.Length, ref bitSrc);
 
         // Check decoded values
         Assert.Equal(expectedValues.Length, decoded.Length);
@@ -325,63 +318,24 @@ public class IntegerSequenceCodecTests
 
             // Decode
             BitStream bitSrc = new(encoded, 64);
-            BoundedIntegerSequenceDecoder decoder = new(range);
-            int[] decoded = decoder.Decode(valueCount, ref bitSrc);
+            int[] decoded = Decode(range, valueCount, ref bitSrc);
 
             Assert.Equal(generated.Count, decoded.Length);
             Assert.Equal(generated, decoded);
         }
     }
 
-    [Theory]
-    [InlineData(5)]
-    [InlineData(31)]
-    [InlineData(255)]
-    public void GetCached_ReturnsSameInstanceForSameRange(int range)
+    /// <summary>
+    /// Test helper: BISE-decodes a sequence by range, mirroring the convenience overload
+    /// that production no longer needs. Production paths already have the BISE
+    /// (encoding, bitCount) pair from <see cref="BoundedIntegerSequenceCodec.GetPackingModeBitCount"/>
+    /// and call <see cref="BoundedIntegerSequenceDecoder.Decode"/> directly.
+    /// </summary>
+    private static int[] Decode(int range, int valuesCount, ref BitStream bitSource)
     {
-        BoundedIntegerSequenceDecoder first = BoundedIntegerSequenceDecoder.GetCached(range);
-        BoundedIntegerSequenceDecoder second = BoundedIntegerSequenceDecoder.GetCached(range);
-
-        Assert.Same(first, second);
-    }
-
-    [Fact]
-    public void GetCached_ReturnsDifferentInstancesForDifferentRanges()
-    {
-        BoundedIntegerSequenceDecoder r5 = BoundedIntegerSequenceDecoder.GetCached(5);
-        BoundedIntegerSequenceDecoder r31 = BoundedIntegerSequenceDecoder.GetCached(31);
-
-        Assert.NotSame(r5, r31);
-    }
-
-    [Fact]
-    public async Task GetCached_UnderConcurrentAccess_AllThreadsSeeSameInstance()
-    {
-        // Pick a less-common range so the slot is likely uncached on a fresh test run. The
-        // assertion still holds if warm, just won't exercise the CAS race.
-        const int range = 79;
-        const int threadCount = 32;
-
-        using Barrier barrier = new(threadCount);
-        BoundedIntegerSequenceDecoder[] results = new BoundedIntegerSequenceDecoder[threadCount];
-        Task[] tasks = new Task[threadCount];
-        for (int i = 0; i < threadCount; i++)
-        {
-            int idx = i;
-            tasks[i] = Task.Run(() =>
-            {
-                barrier.SignalAndWait();
-                results[idx] = BoundedIntegerSequenceDecoder.GetCached(range);
-            });
-        }
-
-        await Task.WhenAll(tasks);
-
-        BoundedIntegerSequenceDecoder winner = results[0];
-        Assert.NotNull(winner);
-        for (int i = 1; i < threadCount; i++)
-        {
-            Assert.Same(winner, results[i]);
-        }
+        (BiseEncodingMode encoding, int bitCount) = BoundedIntegerSequenceCodec.GetPackingModeBitCount(range);
+        int[] result = new int[valuesCount];
+        BoundedIntegerSequenceDecoder.Decode(encoding, bitCount, valuesCount, ref bitSource, result);
+        return result;
     }
 }

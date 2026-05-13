@@ -5,42 +5,27 @@ using System.Runtime.CompilerServices;
 
 namespace SixLabors.ImageSharp.Textures.Compression.Astc.BiseEncoding;
 
-internal sealed class BoundedIntegerSequenceDecoder : BoundedIntegerSequenceCodec
+/// <summary>
+/// BISE decoder (ASTC spec §C.2.22) for bounded integer sequences. Stateless: callers pass
+/// the BISE encoding mode and mantissa bit count directly (both typically already on hand
+/// from <see cref="BoundedIntegerSequenceCodec.GetPackingModeBitCount"/>).
+/// </summary>
+internal static class BoundedIntegerSequenceDecoder
 {
-    private static readonly BoundedIntegerSequenceDecoder?[] Cache = new BoundedIntegerSequenceDecoder?[256];
-
-    public BoundedIntegerSequenceDecoder(int range)
-        : base(range)
-    {
-    }
-
-    public static BoundedIntegerSequenceDecoder GetCached(int range)
-    {
-        // Volatile.Read pairs with the implicit release on CompareExchange below to ensure
-        // other threads observe a fully-constructed decoder. Decoders are immutable, so losing
-        // the CAS race is harmless — the caller discards its own instance and uses the winner.
-        BoundedIntegerSequenceDecoder? decoder = Volatile.Read(ref Cache[range]);
-        if (decoder is null)
-        {
-            BoundedIntegerSequenceDecoder created = new(range);
-            decoder = Interlocked.CompareExchange(ref Cache[range], created, null) ?? created;
-        }
-
-        return decoder;
-    }
-
     /// <summary>
-    /// Decode a sequence of bounded integers into a caller-provided span.
+    /// Decodes a sequence of bounded integers into a caller-provided span.
     /// </summary>
+    /// <param name="encoding">The BISE encoding mode (bits, trits, or quints).</param>
+    /// <param name="bitCount">The number of mantissa bits per value (from the BISE packing).</param>
     /// <param name="valuesCount">The number of values to decode.</param>
     /// <param name="bitSource">The source of values to decode from.</param>
     /// <param name="result">The span to write decoded values into.</param>
     /// <exception cref="ArgumentOutOfRangeException">Thrown when the encoded block size is too large.</exception>
     /// <exception cref="InvalidOperationException">Thrown when there are not enough bits to decode.</exception>
-    public void Decode(int valuesCount, ref BitStream bitSource, Span<int> result)
+    public static void Decode(BiseEncodingMode encoding, int bitCount, int valuesCount, ref BitStream bitSource, Span<int> result)
     {
-        int totalBitCount = GetBitCount(this.Encoding, valuesCount, this.BitCount);
-        int bitsPerBlock = this.GetEncodedBlockSize();
+        int totalBitCount = BoundedIntegerSequenceCodec.GetBitCount(encoding, valuesCount, bitCount);
+        int bitsPerBlock = GetEncodedBlockSize(encoding, bitCount);
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(bitsPerBlock, 64);
 
         Span<int> blockResult = stackalloc int[5];
@@ -55,7 +40,7 @@ internal sealed class BoundedIntegerSequenceDecoder : BoundedIntegerSequenceCode
                 throw new InvalidOperationException("Not enough bits in BitStream to decode BISE block");
             }
 
-            if (this.Encoding == BiseEncodingMode.BitEncoding)
+            if (encoding == BiseEncodingMode.BitEncoding)
             {
                 if (resultIndex < valuesCount)
                 {
@@ -64,7 +49,7 @@ internal sealed class BoundedIntegerSequenceDecoder : BoundedIntegerSequenceCode
             }
             else
             {
-                int decoded = DecodeISEBlock(this.Encoding, blockBits, this.BitCount, blockResult);
+                int decoded = DecodeISEBlock(encoding, blockBits, bitCount, blockResult);
                 for (int i = 0; i < decoded && resultIndex < valuesCount; ++i)
                 {
                     result[resultIndex++] = blockResult[i];
@@ -81,33 +66,34 @@ internal sealed class BoundedIntegerSequenceDecoder : BoundedIntegerSequenceCode
     }
 
     /// <summary>
-    /// Decode a sequence of bounded integers. The number of bits read is dependent on the number
-    /// of bits required to encode <paramref name="valuesCount"/> based on the calculation provided
-    /// in Section C.2.22 of the ASTC specification.
-    /// </summary>
-    /// <param name="valuesCount">The number of values to decode.</param>
-    /// <param name="bitSource">The source of values to decode from.</param>
-    /// <returns>The decoded values. The collection always contains exactly <paramref name="valuesCount"/> elements.</returns>
-    /// <exception cref="ArgumentOutOfRangeException">Thrown when the encoded block size is too large.</exception>
-    /// <exception cref="InvalidOperationException">Thrown when there are not enough bits to decode.</exception>
-    public int[] Decode(int valuesCount, ref BitStream bitSource)
-    {
-        int[] result = new int[valuesCount];
-        this.Decode(valuesCount, ref bitSource, result);
-        return result;
-    }
-
-    /// <summary>
     /// Decodes one trit/quint BISE block (ASTC spec §C.2.12) into <paramref name="result"/>.
     /// Returns the number of values written (5 for trits, 3 for quints). Uses direct bit
-    /// extraction (no BitStream) and flat encoding tables for speed — this is on the hot path.
+    /// extraction (no BitStream) and flat encoding tables for speed.
     /// </summary>
-    public static int DecodeISEBlock(BiseEncodingMode mode, ulong encodedBlock, int encodedBitCount, Span<int> result)
+    private static int DecodeISEBlock(BiseEncodingMode mode, ulong encodedBlock, int encodedBitCount, Span<int> result)
     {
         ulong mantissaMask = (1UL << encodedBitCount) - 1;
         return mode == BiseEncodingMode.TritEncoding
             ? DecodeTritBlock(encodedBlock, encodedBitCount, mantissaMask, result)
             : DecodeQuintBlock(encodedBlock, encodedBitCount, mantissaMask, result);
+    }
+
+    /// <summary>
+    /// The size of a single ISE block in bits — the inverse of the packing computed by
+    /// <see cref="BoundedIntegerSequenceCodec.GetPackingModeBitCount"/>.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static int GetEncodedBlockSize(BiseEncodingMode encoding, int bitCount)
+    {
+        (int blockSize, int extraBlockSize) = encoding switch
+        {
+            BiseEncodingMode.TritEncoding => (5, 8),
+            BiseEncodingMode.QuintEncoding => (3, 7),
+            BiseEncodingMode.BitEncoding => (1, 0),
+            _ => (0, 0),
+        };
+
+        return extraBlockSize + (blockSize * bitCount);
     }
 
     /// <summary>
@@ -139,11 +125,11 @@ internal sealed class BoundedIntegerSequenceDecoder : BoundedIntegerSequenceCode
         encodedTrits |= ((encodedBlock >> (bitPosition + encodedBitCount)) & 0x1) << 7;
 
         int tritTableBase = (int)encodedTrits * 5;
-        result[0] = (FlatTritEncodings[tritTableBase] << encodedBitCount) | mantissa0;
-        result[1] = (FlatTritEncodings[tritTableBase + 1] << encodedBitCount) | mantissa1;
-        result[2] = (FlatTritEncodings[tritTableBase + 2] << encodedBitCount) | mantissa2;
-        result[3] = (FlatTritEncodings[tritTableBase + 3] << encodedBitCount) | mantissa3;
-        result[4] = (FlatTritEncodings[tritTableBase + 4] << encodedBitCount) | mantissa4;
+        result[0] = (BoundedIntegerSequenceCodec.FlatTritEncodings[tritTableBase] << encodedBitCount) | mantissa0;
+        result[1] = (BoundedIntegerSequenceCodec.FlatTritEncodings[tritTableBase + 1] << encodedBitCount) | mantissa1;
+        result[2] = (BoundedIntegerSequenceCodec.FlatTritEncodings[tritTableBase + 2] << encodedBitCount) | mantissa2;
+        result[3] = (BoundedIntegerSequenceCodec.FlatTritEncodings[tritTableBase + 3] << encodedBitCount) | mantissa3;
+        result[4] = (BoundedIntegerSequenceCodec.FlatTritEncodings[tritTableBase + 4] << encodedBitCount) | mantissa4;
         return 5;
     }
 
@@ -168,9 +154,9 @@ internal sealed class BoundedIntegerSequenceDecoder : BoundedIntegerSequenceCode
         encodedQuints |= ((encodedBlock >> (bitPosition + encodedBitCount)) & 0x3) << 5;
 
         int quintTableBase = (int)encodedQuints * 3;
-        result[0] = (FlatQuintEncodings[quintTableBase] << encodedBitCount) | mantissa0;
-        result[1] = (FlatQuintEncodings[quintTableBase + 1] << encodedBitCount) | mantissa1;
-        result[2] = (FlatQuintEncodings[quintTableBase + 2] << encodedBitCount) | mantissa2;
+        result[0] = (BoundedIntegerSequenceCodec.FlatQuintEncodings[quintTableBase] << encodedBitCount) | mantissa0;
+        result[1] = (BoundedIntegerSequenceCodec.FlatQuintEncodings[quintTableBase + 1] << encodedBitCount) | mantissa1;
+        result[2] = (BoundedIntegerSequenceCodec.FlatQuintEncodings[quintTableBase + 2] << encodedBitCount) | mantissa2;
         return 3;
     }
 }
