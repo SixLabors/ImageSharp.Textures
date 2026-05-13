@@ -30,7 +30,7 @@ internal static class FusedBlockDecoder
 
         // 2. Batch unquantize color values, then decode endpoint pair
         Quantization.UnquantizeCEValuesBatch(colors, colorCount, info.ColorValuesRange);
-        ColorEndpointPair endpointPair = EndpointCodec.DecodeColorsForModePolymorphicUnquantized(colors, info.EndpointMode0);
+        ColorEndpointPair endpointPair = EndpointCodec.Decode(colors, info.EndpointMode0);
 
         // 3. BISE decode weights
         int gridSize = info.GridWidth * info.GridHeight;

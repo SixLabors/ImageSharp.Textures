@@ -8,15 +8,14 @@ using SixLabors.ImageSharp.Textures.Compression.Astc.Core;
 namespace SixLabors.ImageSharp.Textures.Tests.Formats.Astc;
 
 // Per-mode pinned decoding tests for the LDR endpoint modes defined in ASTC
-// spec §C.2.14 (Color Endpoint Decoding). Each test feeds a specific unquantized-value
-// vector through DecodeColorsForModeUnquantized and asserts the exact (low, high) pair.
+// spec §C.2.14 (Color Endpoint Decoding).
 // Inputs are chosen to exercise each mode's distinct branches (blue-contract swap,
 // base+offset/underflow, base+scale scaling).
 public class EndpointCodecLdrTests
 {
     private static (Rgba32 Low, Rgba32 High) Decode(ColorEndpointMode mode, params int[] unquantized)
     {
-        ColorEndpointPair pair = EndpointCodec.DecodeColorsForModeUnquantized(unquantized, mode);
+        ColorEndpointPair pair = EndpointCodec.DecodeLdr(unquantized, mode);
         return (pair.LdrLow, pair.LdrHigh);
     }
 
@@ -201,7 +200,7 @@ public class EndpointCodecLdrTests
         static void Act()
         {
             ReadOnlySpan<int> values = [0, 0, 0, 0, 0, 0];
-            EndpointCodec.DecodeColorsForMode(values, maxValue: 255, ColorEndpointMode.HdrRgbDirect);
+            EndpointCodec.DecodeLdr(values, maxValue: 255, ColorEndpointMode.HdrRgbDirect);
         }
 
         Assert.Throws<ArgumentException>(Act);

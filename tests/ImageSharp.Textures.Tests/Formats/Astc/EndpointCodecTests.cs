@@ -270,10 +270,10 @@ public class EndpointCodecTests
         Rgba32 expectedLow, Rgba32 expectedHigh)
     {
         int[] values = EncodeRgbBaseOffset(expectedLow, expectedHigh);
-        (Rgba32 decLow, Rgba32 decHigh) = EndpointCodec.DecodeColorsForMode(values, 255, ColorEndpointMode.LdrRgbBaseOffset);
+        ColorEndpointPair decoded = EndpointCodec.DecodeLdr(values, 255, ColorEndpointMode.LdrRgbBaseOffset);
 
-        Assert.True(decLow == expectedLow);
-        Assert.True(decHigh == expectedHigh);
+        Assert.True(decoded.LdrLow == expectedLow);
+        Assert.True(decoded.LdrHigh == expectedHigh);
     }
 
     [Fact]
@@ -295,10 +295,10 @@ public class EndpointCodecTests
 
             Rgba32 color = new((byte)r, (byte)g, (byte)b, 255);
             int[] values = EncodeRgbBaseOffset(color, color);
-            (Rgba32 decLow, Rgba32 decHigh) = EndpointCodec.DecodeColorsForMode(values, 255, ColorEndpointMode.LdrRgbBaseOffset);
+            ColorEndpointPair decoded = EndpointCodec.DecodeLdr(values, 255, ColorEndpointMode.LdrRgbBaseOffset);
 
-            Assert.True(decLow == color);
-            Assert.True(decHigh == color);
+            Assert.True(decoded.LdrLow == color);
+            Assert.True(decoded.LdrHigh == color);
         }
     }
 
@@ -356,7 +356,7 @@ public class EndpointCodecTests
                 ColorEndpointMode mode = info.GetEndpointMode(ep);
                 int colorCount = mode.GetColorValuesCount();
                 ReadOnlySpan<int> slice = ((ReadOnlySpan<int>)colors).Slice(colorIndex, colorCount);
-                ColorEndpointPair pair = EndpointCodec.DecodeColorsForModePolymorphicUnquantized(slice, mode);
+                ColorEndpointPair pair = EndpointCodec.Decode(slice, mode);
                 colorIndex += colorCount;
 
                 if (pair.IsHdr)
@@ -389,9 +389,9 @@ public class EndpointCodecTests
     {
         List<int> values = [];
         bool needsSwap = EndpointEncoder.EncodeColorsForMode(low, high, quantRange, mode, out ColorEndpointMode astcMode, values);
-        (Rgba32 decLow, Rgba32 decHigh) = EndpointCodec.DecodeColorsForMode(values.ToArray(), quantRange, astcMode);
+        ColorEndpointPair decoded = EndpointCodec.DecodeLdr(values.ToArray(), quantRange, astcMode);
 
-        return needsSwap ? (decHigh, decLow) : (decLow, decHigh);
+        return needsSwap ? (decoded.LdrHigh, decoded.LdrLow) : (decoded.LdrLow, decoded.LdrHigh);
     }
 
     // Regression: DecodeColorsForMode used to silently return (default, default) for HDR modes
@@ -407,6 +407,6 @@ public class EndpointCodecTests
     {
         int[] values = new int[8];
 
-        Assert.Throws<ArgumentException>(() => EndpointCodec.DecodeColorsForMode(values, 255, mode));
+        Assert.Throws<ArgumentException>(() => EndpointCodec.DecodeLdr(values, 255, mode));
     }
 }

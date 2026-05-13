@@ -296,8 +296,8 @@ internal static class EndpointEncoder
     {
         values[0] = v0;
         values[1] = v1;
-        (Rgba32 decodedLow, Rgba32 decodedHigh) = EndpointCodec.DecodeColorsForMode(values.ToArray(), maxValue, mode);
-        return SquaredError(decodedLow, referenceLow) + SquaredError(decodedHigh, referenceHigh);
+        ColorEndpointPair decoded = EndpointCodec.DecodeLdr(values.ToArray(), maxValue, mode);
+        return SquaredError(decoded.LdrLow, referenceLow) + SquaredError(decoded.LdrHigh, referenceHigh);
     }
 
     private static bool EncodeColorsRGBA(Rgba32 endpointLowRgba, Rgba32 endpointHighRgba, int maxValue, bool withAlpha, out ColorEndpointMode astcMode, List<int> values)

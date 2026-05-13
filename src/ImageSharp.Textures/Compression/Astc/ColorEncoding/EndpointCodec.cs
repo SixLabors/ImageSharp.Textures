@@ -11,61 +11,10 @@ namespace SixLabors.ImageSharp.Textures.Compression.Astc.ColorEncoding;
 internal static class EndpointCodec
 {
     /// <summary>
-    /// Decodes color endpoints for the specified mode, returning a polymorphic endpoint pair
-    /// that supports both LDR and HDR modes.
+    /// Decodes color endpoints for the specified mode from already-unquantized values.
+    /// Handles both LDR and HDR endpoint modes (ASTC spec §C.2.14).
     /// </summary>
-    /// <param name="values">Quantized integer values from the ASTC block</param>
-    /// <param name="maxValue">Maximum quantization value</param>
-    /// <param name="mode">The color endpoint mode</param>
-    /// <returns>A ColorEndpointPair representing either LDR or HDR endpoints</returns>
-    public static ColorEndpointPair DecodeColorsForModePolymorphic(ReadOnlySpan<int> values, int maxValue, ColorEndpointMode mode)
-    {
-        if (mode.IsHdr())
-        {
-            (Rgba64 low, Rgba64 high) = HdrEndpointDecoder.DecodeHdrMode(values, maxValue, mode);
-            bool alphaIsLdr = mode == ColorEndpointMode.HdrRgbDirectLdrAlpha;
-            return ColorEndpointPair.Hdr(low, high, alphaIsLdr);
-        }
-        else
-        {
-            (Rgba32 low, Rgba32 high) = DecodeColorsForMode(values, maxValue, mode);
-            return ColorEndpointPair.Ldr(low, high);
-        }
-    }
-
-    /// <summary>
-    /// LDR-only convenience overload that returns the decoded endpoints as a tuple. Throws
-    /// if <paramref name="mode"/> is an HDR endpoint mode — use <see cref="DecodeColorsForModePolymorphic"/>
-    /// for code paths that can encounter HDR content.
-    /// </summary>
-    public static (Rgba32 EndpointLowRgba, Rgba32 EndpointHighRgba) DecodeColorsForMode(ReadOnlySpan<int> values, int maxValue, ColorEndpointMode mode)
-    {
-        if (mode.IsHdr())
-        {
-            throw new ArgumentException(
-                $"DecodeColorsForMode handles LDR modes only. Mode {mode} is HDR; use DecodeColorsForModePolymorphic.",
-                nameof(mode));
-        }
-
-        int count = mode.GetColorValuesCount();
-        Span<int> unquantizedValues = stackalloc int[count];
-        int copyLen = Math.Min(count, values.Length);
-        for (int i = 0; i < copyLen; i++)
-        {
-            unquantizedValues[i] = values[i];
-        }
-
-        UnquantizeInline(unquantizedValues, maxValue);
-        ColorEndpointPair pair = DecodeColorsForModeUnquantized(unquantizedValues, mode);
-        return (pair.LdrLow, pair.LdrHigh);
-    }
-
-    /// <summary>
-    /// Decodes color endpoints from already-unquantized values, supporting both LDR and HDR modes.
-    /// Called from the fused HDR decode path where BISE decode + batch unquantize
-    /// have already been performed. Returns a ColorEndpointPair (LDR or HDR).
-    /// </summary>
-    internal static ColorEndpointPair DecodeColorsForModePolymorphicUnquantized(ReadOnlySpan<int> unquantizedValues, ColorEndpointMode mode)
+    public static ColorEndpointPair Decode(ReadOnlySpan<int> unquantizedValues, ColorEndpointMode mode)
     {
         if (mode.IsHdr())
         {
@@ -74,15 +23,41 @@ internal static class EndpointCodec
             return ColorEndpointPair.Hdr(low, high, alphaIsLdr);
         }
 
-        return DecodeColorsForModeUnquantized(unquantizedValues, mode);
+        return DecodeLdr(unquantizedValues, mode);
     }
 
     /// <summary>
-    /// Decodes color endpoints from already-unquantized values.
-    /// Called from the fused decode path where BISE decode + batch unquantize
-    /// have already been performed. Returns an LDR ColorEndpointPair.
+    /// LDR-only decode from quantized values: unquantizes against <paramref name="maxValue"/>,
+    /// then decodes via <see cref="DecodeLdr(ReadOnlySpan{int}, ColorEndpointMode)"/>. Throws if
+    /// <paramref name="mode"/> is an HDR endpoint mode — use <see cref="Decode"/> for code paths
+    /// that can encounter HDR content.
     /// </summary>
-    internal static ColorEndpointPair DecodeColorsForModeUnquantized(ReadOnlySpan<int> unquantizedValues, ColorEndpointMode mode)
+    public static ColorEndpointPair DecodeLdr(ReadOnlySpan<int> quantizedValues, int maxValue, ColorEndpointMode mode)
+    {
+        if (mode.IsHdr())
+        {
+            throw new ArgumentException(
+                $"DecodeLdr handles LDR modes only. Mode {mode} is HDR; use Decode.",
+                nameof(mode));
+        }
+
+        int count = mode.GetColorValuesCount();
+        Span<int> unquantizedValues = stackalloc int[count];
+        int copyLen = Math.Min(count, quantizedValues.Length);
+        for (int i = 0; i < copyLen; i++)
+        {
+            unquantizedValues[i] = quantizedValues[i];
+        }
+
+        UnquantizeInline(unquantizedValues, maxValue);
+        return DecodeLdr(unquantizedValues, mode);
+    }
+
+    /// <summary>
+    /// LDR-only decode from already-unquantized values. Throws via the switch default if
+    /// <paramref name="mode"/> is an HDR endpoint mode.
+    /// </summary>
+    public static ColorEndpointPair DecodeLdr(ReadOnlySpan<int> unquantizedValues, ColorEndpointMode mode)
     {
         (Rgba32 low, Rgba32 high) = mode switch
         {
@@ -99,7 +74,7 @@ internal static class EndpointCodec
             _ => throw new ArgumentOutOfRangeException(
                 nameof(mode),
                 mode,
-                "DecodeColorsForModeUnquantized received a mode that is neither LDR nor a known HDR mode."),
+                "DecodeLdr received a non-LDR mode. Use Decode for HDR-capable call sites."),
         };
 
         return ColorEndpointPair.Ldr(low, high);

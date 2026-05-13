@@ -60,7 +60,7 @@ internal sealed class LogicalBlock
             ColorEndpointMode mode = info.GetEndpointMode(i);
             int colorCount = mode.GetColorValuesCount();
             ReadOnlySpan<int> slice = colors.Slice(colorIndex, colorCount);
-            endpoints[i] = EndpointCodec.DecodeColorsForModePolymorphicUnquantized(slice, mode);
+            endpoints[i] = EndpointCodec.Decode(slice, mode);
             colorIndex += colorCount;
         }
 
