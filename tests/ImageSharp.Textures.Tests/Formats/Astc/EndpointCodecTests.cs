@@ -4,10 +4,9 @@
 using System.Buffers.Binary;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Textures.Compression.Astc.BiseEncoding.Quantize;
-using SixLabors.ImageSharp.Textures.Compression.Astc.BlockDecoder;
+using SixLabors.ImageSharp.Textures.Compression.Astc.BlockDecoding;
 using SixLabors.ImageSharp.Textures.Compression.Astc.ColorEncoding;
 using SixLabors.ImageSharp.Textures.Compression.Astc.Core;
-using SixLabors.ImageSharp.Textures.Compression.Astc.TexelBlock;
 
 namespace SixLabors.ImageSharp.Textures.Tests.Formats.Astc;
 
@@ -330,10 +329,10 @@ public class EndpointCodecTests
 
         int blocksDecoded = 0;
 
-        for (int i = 0; i < astcData.Length; i += PhysicalBlock.SizeInBytes)
+        for (int i = 0; i < astcData.Length; i += BlockInfo.SizeInBytes)
         {
-            UInt128 blockBits = BinaryPrimitives.ReadUInt128LittleEndian(astcData.AsSpan(i, PhysicalBlock.SizeInBytes));
-            BlockInfo info = BlockInfo.Decode(blockBits);
+            UInt128 blockBits = BinaryPrimitives.ReadUInt128LittleEndian(astcData.AsSpan(i, BlockInfo.SizeInBytes));
+            BlockInfo info = BlockModeDecoder.Decode(blockBits);
             Assert.True(info.IsValid);
             Assert.False(info.IsVoidExtent);
             Assert.True(info.PartitionCount > 0, "block should have endpoints");

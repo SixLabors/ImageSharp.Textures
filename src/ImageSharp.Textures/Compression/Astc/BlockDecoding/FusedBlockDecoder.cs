@@ -6,10 +6,8 @@ using SixLabors.ImageSharp.Textures.Compression.Astc.BiseEncoding;
 using SixLabors.ImageSharp.Textures.Compression.Astc.BiseEncoding.Quantize;
 using SixLabors.ImageSharp.Textures.Compression.Astc.ColorEncoding;
 using SixLabors.ImageSharp.Textures.Compression.Astc.Core;
-using SixLabors.ImageSharp.Textures.Compression.Astc.IO;
-using SixLabors.ImageSharp.Textures.Compression.Astc.TexelBlock;
 
-namespace SixLabors.ImageSharp.Textures.Compression.Astc.BlockDecoder;
+namespace SixLabors.ImageSharp.Textures.Compression.Astc.BlockDecoding;
 
 /// <summary>
 /// Shared decode core for the fused (zero-allocation) ASTC block decode pipeline.

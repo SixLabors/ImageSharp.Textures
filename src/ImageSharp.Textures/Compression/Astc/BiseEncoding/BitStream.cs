@@ -3,7 +3,7 @@
 
 using SixLabors.ImageSharp.Textures.Compression.Astc.Core;
 
-namespace SixLabors.ImageSharp.Textures.Compression.Astc.IO;
+namespace SixLabors.ImageSharp.Textures.Compression.Astc.BiseEncoding;
 
 /// <summary>
 /// A simple bit stream used for reading/writing arbitrary-sized chunks.

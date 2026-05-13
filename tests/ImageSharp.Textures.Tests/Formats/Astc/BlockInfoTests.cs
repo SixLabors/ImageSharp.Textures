@@ -1,12 +1,13 @@
 // Copyright (c) Six Labors.
 // Licensed under the Six Labors Split License.
 
+using SixLabors.ImageSharp.Textures.Compression.Astc.BlockDecoding;
 using SixLabors.ImageSharp.Textures.Compression.Astc.ColorEncoding;
-using SixLabors.ImageSharp.Textures.Compression.Astc.TexelBlock;
+using SixLabors.ImageSharp.Textures.Compression.Astc.Core;
 
 namespace SixLabors.ImageSharp.Textures.Tests.Formats.Astc;
 
-// Direct tests for BlockInfo.Decode covering the spec's corner cases (ASTC spec §C.2.7–§C.2.11).
+// Direct tests for BlockModeDecoder.Decode covering the spec's corner cases (ASTC spec §C.2.7–§C.2.11).
 // Existing integration tests exercise the happy path through LogicalBlock and the decoders;
 // these pin specific validation paths that are easy to break during refactors.
 public class BlockInfoTests
@@ -15,7 +16,7 @@ public class BlockInfoTests
     public void Decode_AllZeroBits_ReturnsInvalid()
     {
         // bits[0..3] == 0 and bits[0..8] == 0 → reserved block mode (§C.2.8).
-        BlockInfo info = BlockInfo.Decode(UInt128.Zero);
+        BlockInfo info = BlockModeDecoder.Decode(UInt128.Zero);
 
         Assert.False(info.IsValid);
     }
@@ -28,7 +29,7 @@ public class BlockInfoTests
         // Bit layout: low 12 bits = 0xFFC (0x1FC | 0xE00 for the reserved 0x3 at bits 10..11);
         // then 4 × 13-bit coords all set = 0x1FFF.
         UInt128 bits = (UInt128)0xFFFFFFFFFFFFFDFCUL;
-        BlockInfo info = BlockInfo.Decode(bits);
+        BlockInfo info = BlockModeDecoder.Decode(bits);
 
         Assert.True(info.IsValid);
         Assert.True(info.IsVoidExtent);
@@ -39,7 +40,7 @@ public class BlockInfoTests
     {
         // Void extent marker with reserved bits 10..11 != 0x3 → invalid per spec.
         UInt128 bits = (UInt128)0x00000000000001FCUL;
-        BlockInfo info = BlockInfo.Decode(bits);
+        BlockInfo info = BlockModeDecoder.Decode(bits);
 
         Assert.False(info.IsValid);
         Assert.True(info.IsVoidExtent);
@@ -51,7 +52,7 @@ public class BlockInfoTests
         // Derived from IntermediateBlockPacker: 6x5 grid, weight range 7, partition count 1,
         // LdrLumaDirect endpoint mode.
         UInt128 bits = (UInt128)0x0000000001FE000173UL;
-        BlockInfo info = BlockInfo.Decode(bits);
+        BlockInfo info = BlockModeDecoder.Decode(bits);
 
         Assert.True(info.IsValid);
         Assert.False(info.IsVoidExtent);
@@ -70,7 +71,7 @@ public class BlockInfoTests
         // For modeBits = 0: gridWidth = (bits[7..8] + 4), gridHeight = (bits[5..6] + 2).
         // Choose all zeros in mode area; this produces weight range index -1 which is rejected.
         UInt128 bits = (UInt128)0b11UL;
-        BlockInfo info = BlockInfo.Decode(bits);
+        BlockInfo info = BlockModeDecoder.Decode(bits);
 
         // bits[4] = 0, bits[0..1] = 11 → rBits = 0|3<<1 = 6; hBit=0 → rangeIdx=6 → WeightRanges[6]=9.
         // gridWidth = 0+4=4, gridHeight = 0+2=2, weights=8, weightBitCount for range 9 = 8*GetBitCountForRange.
@@ -89,7 +90,7 @@ public class BlockInfoTests
         //           bit 10 = 1  (dual plane)
         //           bits 11..12 = 11 (4 partitions)
         UInt128 bits = (UInt128)0b1_1100_0000_0111UL;
-        BlockInfo info = BlockInfo.Decode(bits);
+        BlockInfo info = BlockModeDecoder.Decode(bits);
 
         Assert.False(info.IsValid);
     }
@@ -99,7 +100,7 @@ public class BlockInfoTests
     {
         // bits[0..1] = 00, bits[2..8] = 0 → explicit reserved-mode early return.
         UInt128 bits = (UInt128)0UL;
-        BlockInfo info = BlockInfo.Decode(bits);
+        BlockInfo info = BlockModeDecoder.Decode(bits);
 
         Assert.False(info.IsValid);
     }
@@ -110,7 +111,7 @@ public class BlockInfoTests
         // bits[0..1] = 00, modeBits (bits[5..8]) falls in the reserved default switch arm.
         // Set bits[5..8] = 0xE (1110) which matches the default reserved case.
         UInt128 bits = (UInt128)(0xEUL << 5);
-        BlockInfo info = BlockInfo.Decode(bits);
+        BlockInfo info = BlockModeDecoder.Decode(bits);
 
         Assert.False(info.IsValid);
     }
@@ -120,7 +121,7 @@ public class BlockInfoTests
     public void Decode_DualPlaneBlock_ReturnsExpectedShape()
     {
         UInt128 bits = (UInt128)0x0000000001FE0005FFUL;
-        BlockInfo info = BlockInfo.Decode(bits);
+        BlockInfo info = BlockModeDecoder.Decode(bits);
 
         Assert.True(info.IsValid);
         Assert.True(info.IsDualPlane);
@@ -133,7 +134,7 @@ public class BlockInfoTests
     {
         // Two partitions, non-shared CEM with mode 0 (LdrLumaDirect) and mode 1 (LdrLumaBaseOffset).
         UInt128 bits = (UInt128)0x4000000000800D44UL;
-        BlockInfo info = BlockInfo.Decode(bits);
+        BlockInfo info = BlockModeDecoder.Decode(bits);
 
         Assert.True(info.IsValid);
         Assert.Equal(2, info.PartitionCount);
@@ -148,7 +149,7 @@ public class BlockInfoTests
     [Fact]
     public void Decode_WithWeightRange1_ReturnsWeightRange1()
     {
-        BlockInfo info = BlockInfo.Decode((UInt128)0x4000000000800D44UL);
+        BlockInfo info = BlockModeDecoder.Decode((UInt128)0x4000000000800D44UL);
 
         Assert.Equal(1, info.WeightRange);
     }
@@ -157,7 +158,7 @@ public class BlockInfoTests
     public void Decode_FourPartitionSharedCem_PopulatesAllPartitionsWithSameMode()
     {
         UInt128 bits = (UInt128)0x000000000000001961UL;
-        BlockInfo info = BlockInfo.Decode(bits);
+        BlockInfo info = BlockModeDecoder.Decode(bits);
 
         Assert.True(info.IsValid);
         Assert.Equal(4, info.PartitionCount);
@@ -175,7 +176,7 @@ public class BlockInfoTests
     [InlineData(0x4000000000AAAD44UL, 29)]
     public void Decode_ColorStartBit_MatchesPartitionCount(ulong blockBits, int expectedStartBit)
     {
-        BlockInfo info = BlockInfo.Decode((UInt128)blockBits);
+        BlockInfo info = BlockModeDecoder.Decode((UInt128)blockBits);
 
         Assert.True(info.IsValid);
         Assert.Equal(expectedStartBit, info.ColorStartBit);
@@ -186,7 +187,7 @@ public class BlockInfoTests
     [InlineData(0x4000000000800D44UL, 4)]
     public void Decode_ColorValuesCount_MatchesEndpointModes(ulong blockBits, int expectedCount)
     {
-        BlockInfo info = BlockInfo.Decode((UInt128)blockBits);
+        BlockInfo info = BlockModeDecoder.Decode((UInt128)blockBits);
 
         Assert.True(info.IsValid);
         Assert.Equal(expectedCount, info.ColorValuesCount);
@@ -195,7 +196,7 @@ public class BlockInfoTests
     [Fact]
     public void Decode_StandardBlock_ReturnsColorValuesRange255()
     {
-        BlockInfo info = BlockInfo.Decode((UInt128)0x0000000001FE000173UL);
+        BlockInfo info = BlockModeDecoder.Decode((UInt128)0x0000000001FE000173UL);
 
         Assert.True(info.IsValid);
         Assert.Equal(255, info.ColorValuesRange);
@@ -204,7 +205,7 @@ public class BlockInfoTests
     [Fact]
     public void Decode_StandardBlock_ReturnsWeightBitCount90()
     {
-        BlockInfo info = BlockInfo.Decode((UInt128)0x0000000001FE000173UL);
+        BlockInfo info = BlockModeDecoder.Decode((UInt128)0x0000000001FE000173UL);
 
         Assert.True(info.IsValid);
         Assert.Equal(90, info.WeightBitCount);

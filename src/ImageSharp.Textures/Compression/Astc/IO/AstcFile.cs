@@ -2,7 +2,6 @@
 // Licensed under the Six Labors Split License.
 
 using SixLabors.ImageSharp.Textures.Compression.Astc.Core;
-using SixLabors.ImageSharp.Textures.Compression.Astc.TexelBlock;
 
 namespace SixLabors.ImageSharp.Textures.Compression.Astc.IO;
 
@@ -43,12 +42,12 @@ internal record AstcFile
         AstcFileHeader header = AstcFileHeader.FromMemory(data.AsSpan(0, AstcFileHeader.SizeInBytes));
 
         int blockDataLength = data.Length - AstcFileHeader.SizeInBytes;
-        ArgumentOutOfRangeException.ThrowIfNotEqual(blockDataLength % PhysicalBlock.SizeInBytes, 0);
+        ArgumentOutOfRangeException.ThrowIfNotEqual(blockDataLength % BlockInfo.SizeInBytes, 0);
 
         int blocksWide = (header.ImageWidth + header.BlockWidth - 1) / header.BlockWidth;
         int blocksHigh = (header.ImageHeight + header.BlockHeight - 1) / header.BlockHeight;
         long expectedBlockCount = (long)blocksWide * blocksHigh;
-        long actualBlockCount = blockDataLength / PhysicalBlock.SizeInBytes;
+        long actualBlockCount = blockDataLength / BlockInfo.SizeInBytes;
         if (actualBlockCount != expectedBlockCount)
         {
             throw new ArgumentOutOfRangeException(

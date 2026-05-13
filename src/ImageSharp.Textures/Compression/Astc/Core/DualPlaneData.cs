@@ -1,7 +1,7 @@
 // Copyright (c) Six Labors.
 // Licensed under the Six Labors Split License.
 
-namespace SixLabors.ImageSharp.Textures.Compression.Astc.TexelBlock;
+namespace SixLabors.ImageSharp.Textures.Compression.Astc.Core;
 
 /// <summary>
 /// Per-pixel second weight plane (ASTC spec §C.2.20). A dual-plane block writes weights for

@@ -1,9 +1,7 @@
 // Copyright (c) Six Labors.
 // Licensed under the Six Labors Split License.
 
-using SixLabors.ImageSharp.Textures.Compression.Astc.Core;
-
-namespace SixLabors.ImageSharp.Textures.Compression.Astc.ColorEncoding;
+namespace SixLabors.ImageSharp.Textures.Compression.Astc.Core;
 
 internal sealed class Partition
 {

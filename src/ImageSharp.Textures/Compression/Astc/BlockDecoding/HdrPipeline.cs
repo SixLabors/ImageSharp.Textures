@@ -3,9 +3,8 @@
 
 using System.Runtime.CompilerServices;
 using SixLabors.ImageSharp.Textures.Compression.Astc.Core;
-using SixLabors.ImageSharp.Textures.Compression.Astc.TexelBlock;
 
-namespace SixLabors.ImageSharp.Textures.Compression.Astc.BlockDecoder;
+namespace SixLabors.ImageSharp.Textures.Compression.Astc.BlockDecoding;
 
 /// <summary>
 /// <see cref="IBlockPipeline{T}"/> implementation for the HDR (float RGBA) <c>decode_fp16</c>

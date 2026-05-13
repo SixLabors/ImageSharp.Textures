@@ -5,9 +5,8 @@ using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using SixLabors.ImageSharp.Textures.Compression.Astc.ColorEncoding;
 using SixLabors.ImageSharp.Textures.Compression.Astc.Core;
-using SixLabors.ImageSharp.Textures.Compression.Astc.TexelBlock;
 
-namespace SixLabors.ImageSharp.Textures.Compression.Astc.BlockDecoder;
+namespace SixLabors.ImageSharp.Textures.Compression.Astc.BlockDecoding;
 
 /// <summary>
 /// LDR pixel writers and entry points for the fused decode pipeline.

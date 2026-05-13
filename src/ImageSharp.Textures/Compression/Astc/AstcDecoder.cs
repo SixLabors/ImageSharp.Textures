@@ -4,10 +4,9 @@
 using System.Buffers;
 using System.Buffers.Binary;
 using System.Runtime.CompilerServices;
-using SixLabors.ImageSharp.Textures.Compression.Astc.BlockDecoder;
+using SixLabors.ImageSharp.Textures.Compression.Astc.BlockDecoding;
 using SixLabors.ImageSharp.Textures.Compression.Astc.Core;
 using SixLabors.ImageSharp.Textures.Compression.Astc.IO;
-using SixLabors.ImageSharp.Textures.Compression.Astc.TexelBlock;
 
 namespace SixLabors.ImageSharp.Textures.Compression.Astc;
 
@@ -94,7 +93,7 @@ public static class AstcDecoder
     /// <summary>
     /// Shared image-decode loop for both LDR and HDR profiles (ASTC spec §C.2.25). Iterates
     /// the compressed block array in raster order, parses each block via
-    /// <see cref="BlockInfo.Decode"/>, runs the pipeline's profile check, and dispatches to
+    /// <see cref="BlockModeDecoder.Decode"/>, runs the pipeline's profile check, and dispatches to
     /// the appropriate per-block decoder.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -123,7 +122,7 @@ public static class AstcDecoder
                     continue;
                 }
 
-                BlockInfo info = BlockInfo.Decode(blockBits);
+                BlockInfo info = BlockModeDecoder.Decode(blockBits);
                 if (!info.IsValid)
                 {
                     continue;
@@ -228,7 +227,7 @@ public static class AstcDecoder
     /// <param name="buffer">The buffer to write the decoded pixels into</param>
     public static void DecompressBlock(ReadOnlySpan<byte> blockData, Footprint footprint, Span<byte> buffer)
     {
-        ArgumentOutOfRangeException.ThrowIfLessThan(blockData.Length, PhysicalBlock.SizeInBytes);
+        ArgumentOutOfRangeException.ThrowIfLessThan(blockData.Length, BlockInfo.SizeInBytes);
         ArgumentOutOfRangeException.ThrowIfLessThan(buffer.Length, footprint.PixelCount * ChannelsPerPixel);
 
         DecodeSingleBlock<LdrPipeline, byte>(blockData, footprint, buffer);
@@ -321,7 +320,7 @@ public static class AstcDecoder
     /// <param name="buffer">The buffer to write decoded values into (must be at least footprint.Width * footprint.Height * 4 elements)</param>
     public static void DecompressHdrBlock(ReadOnlySpan<byte> blockData, Footprint footprint, Span<float> buffer)
     {
-        ArgumentOutOfRangeException.ThrowIfLessThan(blockData.Length, PhysicalBlock.SizeInBytes);
+        ArgumentOutOfRangeException.ThrowIfLessThan(blockData.Length, BlockInfo.SizeInBytes);
         ArgumentOutOfRangeException.ThrowIfLessThan(buffer.Length, footprint.PixelCount * ChannelsPerPixel);
 
         DecodeSingleBlock<HdrPipeline, float>(blockData, footprint, buffer);
@@ -364,7 +363,7 @@ public static class AstcDecoder
 
         // Guard against integer overflow in block count calculation
         long expectedBlockCount = (long)blocksWide * blocksHigh;
-        if (astcData.Length % PhysicalBlock.SizeInBytes != 0 || astcData.Length / PhysicalBlock.SizeInBytes != expectedBlockCount)
+        if (astcData.Length % BlockInfo.SizeInBytes != 0 || astcData.Length / BlockInfo.SizeInBytes != expectedBlockCount)
         {
             return false;
         }
@@ -417,7 +416,7 @@ public static class AstcDecoder
     private static bool TryReadBlockInfo(ReadOnlySpan<byte> blockData, out UInt128 blockBits, out BlockInfo info)
     {
         blockBits = BinaryPrimitives.ReadUInt128LittleEndian(blockData);
-        info = BlockInfo.Decode(blockBits);
+        info = BlockModeDecoder.Decode(blockBits);
         return info.IsValid;
     }
 
@@ -428,14 +427,14 @@ public static class AstcDecoder
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static bool TryReadBlockBits(ReadOnlySpan<byte> astcData, int blockIndex, out UInt128 blockBits)
     {
-        int offset = blockIndex * PhysicalBlock.SizeInBytes;
-        if (offset + PhysicalBlock.SizeInBytes > astcData.Length)
+        int offset = blockIndex * BlockInfo.SizeInBytes;
+        if (offset + BlockInfo.SizeInBytes > astcData.Length)
         {
             blockBits = default;
             return false;
         }
 
-        blockBits = BinaryPrimitives.ReadUInt128LittleEndian(astcData.Slice(offset, PhysicalBlock.SizeInBytes));
+        blockBits = BinaryPrimitives.ReadUInt128LittleEndian(astcData.Slice(offset, BlockInfo.SizeInBytes));
         return true;
     }
 

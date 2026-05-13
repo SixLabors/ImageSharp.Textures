@@ -6,83 +6,33 @@ using SixLabors.ImageSharp.Textures.Compression.Astc.BiseEncoding;
 using SixLabors.ImageSharp.Textures.Compression.Astc.ColorEncoding;
 using SixLabors.ImageSharp.Textures.Compression.Astc.Core;
 
-namespace SixLabors.ImageSharp.Textures.Compression.Astc.TexelBlock;
+namespace SixLabors.ImageSharp.Textures.Compression.Astc.BlockDecoding;
 
 /// <summary>
-/// Fused block info computed in a single pass from raw ASTC block bits
+/// Single-pass parser for the 128-bit ASTC block mode (spec §C.2.7–§C.2.16). Produces a
+/// populated <see cref="BlockInfo"/> record describing the block's weight grid, partition
+/// count, colour endpoint modes, dual-plane flag, and the bit-range metadata the per-block
+/// decoders need. Reserved and illegal encodings are rejected inline (IsValid = false).
 /// </summary>
-internal struct BlockInfo
+internal static class BlockModeDecoder
 {
+    // Spec §C.2.7 Table 23: weight range table indexed by r[2:0] + h. Entries marked -1 are
+    // reserved and reject the block. Two six-entry groups (low precision, high precision).
     private static readonly int[] WeightRanges =
         [-1, -1, 1, 2, 3, 4, 5, 7, -1, -1, 9, 11, 15, 19, 23, 31];
 
+    // Spec §C.2.11: extra-CEM bit count by partition count. Indexed [partitionCount - 1].
     private static readonly int[] ExtraCemBitsForPartition = [0, 2, 5, 8];
 
-    // Valid BISE endpoint ranges in descending order (only these produce valid encodings)
+    // Spec §C.2.16: valid BISE endpoint ranges in descending order. Only these produce valid
+    // quantisation encodings; the parser picks the largest that fits in the colour bit budget.
     private static readonly int[] ValidEndpointRanges =
         [255, 191, 159, 127, 95, 79, 63, 47, 39, 31, 23, 19, 15, 11, 9, 7, 5];
 
-    public bool IsValid;
-    public bool IsVoidExtent;
-
-    // Weight grid
-    public int GridWidth;
-    public int GridHeight;
-    public int WeightRange;
-    public int WeightBitCount;
-
-    // Partitions
-    public int PartitionCount;
-
-    // Dual plane
-    public bool IsDualPlane;
-    public int DualPlaneChannel; // only valid if IsDualPlane
-
-    // Color endpoints
-    public int ColorStartBit;
-    public int ColorBitCount;
-    public int ColorValuesRange;
-    public int ColorValuesCount;
-
-    // Endpoint modes (up to 4 partitions). Indexed via GetEndpointMode / SetEndpointMode.
-    public EndpointModeBuffer EndpointModes;
-
-    public ColorEndpointMode EndpointMode0
-    {
-        readonly get => this.EndpointModes[0];
-        set => this.EndpointModes[0] = value;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly ColorEndpointMode GetEndpointMode(int partition)
-        => (uint)partition < 4
-            ? this.EndpointModes[partition]
-            : this.EndpointModes[0];
-
     /// <summary>
-    /// Returns true if any of this block's active partitions uses an HDR endpoint mode.
-    /// Does not detect HDR void-extent blocks (those carry their own HDR flag and have
-    /// <see cref="PartitionCount"/> == 0); callers that need to reject both cases should
-    /// also check <see cref="IsVoidExtent"/> against the HDR flag in the raw bits.
-    /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly bool HasHdrEndpoints()
-    {
-        for (int i = 0; i < this.PartitionCount; i++)
-        {
-            if (this.GetEndpointMode(i).IsHdr())
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    /// <summary>
-    /// Decode all block info from raw 128-bit ASTC block data in a single pass.
-    /// Returns a BlockInfo with IsValid=false if the block is illegal or reserved.
-    /// Returns a BlockInfo with IsVoidExtent=true for void extent blocks.
+    /// Decodes all block-mode info from raw 128-bit ASTC block data in a single pass.
+    /// Returns a <see cref="BlockInfo"/> with <c>IsValid = false</c> if the block is illegal or
+    /// reserved, or with <c>IsVoidExtent = true</c> for void-extent blocks (spec §C.2.23).
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     public static BlockInfo Decode(UInt128 bits)
@@ -168,9 +118,8 @@ internal struct BlockInfo
     }
 
     /// <summary>
-    /// Decodes the block-mode / weight-grid dimensions section of the block mode.
-    /// Returns false for reserved block-mode encodings.
-    /// See ASTC spec §C.2.8 Table 24 (block mode layout A).
+    /// Decodes the block-mode / weight-grid dimensions section of the block mode per ASTC spec
+    /// §C.2.8 Table 24. Returns false for reserved block-mode encodings.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static bool TryDecodeWeightGrid(
@@ -251,8 +200,8 @@ internal struct BlockInfo
     }
 
     /// <summary>
-    /// Looks up the weight range from the 3-bit r selector plus high-precision h bit.
-    /// Returns false if the resulting index points at a reserved slot in <see cref="WeightRanges"/>.
+    /// Looks up the weight range from the 3-bit r selector plus the high-precision h bit per
+    /// ASTC spec §C.2.7 Table 23. Returns false if the resulting index points at a reserved slot.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static bool TryResolveWeightRange(ulong lowBits, uint rBits, bool isWidthA6HeightB6, out int weightRange)
@@ -270,9 +219,9 @@ internal struct BlockInfo
     }
 
     /// <summary>
-    /// Validates weight count constraints and resolves weight bit count. Rejects blocks with
-    /// more than 64 weights, illegal 4-partition-with-dual-plane combos, and weight bit totals
-    /// outside the [24, 96] window.
+    /// Validates weight count constraints and resolves the weight bit count per ASTC spec
+    /// §C.2.11. Rejects blocks with more than 64 weights, illegal 4-partition-with-dual-plane
+    /// combos, and weight bit totals outside the [24, 96] window.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static bool TryComputeWeightBitCount(
@@ -301,10 +250,10 @@ internal struct BlockInfo
     }
 
     /// <summary>
-    /// Decodes per-partition color endpoint modes and returns the total color-values count.
-    /// Returns -1 on any structural error. The shared-CEM and non-shared-CEM paths both
-    /// populate <paramref name="cems"/> (length 4) and tell the caller how many extra CEM bits
-    /// were consumed, which affects subsequent bit layout.
+    /// Decodes per-partition colour endpoint modes per ASTC spec §C.2.11 and returns the total
+    /// colour-values count. The shared-CEM and non-shared-CEM paths both populate
+    /// <paramref name="cems"/> (length 4) and tell the caller how many extra CEM bits were
+    /// consumed, which affects subsequent bit layout.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static int DecodeEndpointModes(
@@ -372,8 +321,8 @@ internal struct BlockInfo
 
     /// <summary>
     /// Finds the greatest valid BISE endpoint range whose encoding fits within
-    /// <paramref name="maxColorBits"/>. Returns false if the minimum encoding
-    /// already exceeds the budget.
+    /// <paramref name="maxColorBits"/> per ASTC spec §C.2.16. Returns false if the minimum
+    /// encoding already exceeds the budget.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static bool TryFitColorRange(
@@ -408,7 +357,9 @@ internal struct BlockInfo
     }
 
     /// <summary>
-    /// Inline void extent validation
+    /// Inline void-extent validation per ASTC spec §C.2.23: reserved bits 10..11 must be 0x3,
+    /// and either the texel coordinates are all-ones (sentinel for "no constraint") or they
+    /// form two valid [min, max] pairs with min &lt; max.
     /// </summary>
     private static bool CheckVoidExtentIsIllegal(UInt128 bits, ulong lowBits)
     {
@@ -426,13 +377,5 @@ internal struct BlockInfo
         bool coordsAll1s = c0 == all1s && c1 == all1s && c2 == all1s && c3 == all1s;
 
         return !coordsAll1s && (c0 >= c1 || c2 >= c3);
-    }
-
-    [InlineArray(4)]
-    public struct EndpointModeBuffer
-    {
-#pragma warning disable CS0169, IDE0051, S1144 // Accessed by runtime via [InlineArray]
-        private ColorEndpointMode element0;
-#pragma warning restore CS0169, IDE0051, S1144
     }
 }

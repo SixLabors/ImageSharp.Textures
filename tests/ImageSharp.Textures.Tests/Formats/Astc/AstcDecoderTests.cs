@@ -4,9 +4,9 @@
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using SixLabors.ImageSharp.Textures.Compression.Astc;
+using SixLabors.ImageSharp.Textures.Compression.Astc.BlockDecoding;
 using SixLabors.ImageSharp.Textures.Compression.Astc.Core;
 using SixLabors.ImageSharp.Textures.Compression.Astc.IO;
-using SixLabors.ImageSharp.Textures.Compression.Astc.TexelBlock;
 using SixLabors.ImageSharp.Textures.Tests.Enums;
 using SixLabors.ImageSharp.Textures.Tests.TestUtilities;
 using SixLabors.ImageSharp.Textures.Tests.TestUtilities.Attributes;
@@ -40,7 +40,7 @@ public class AstcDecoderTests
         byte[] data = new byte[256];
         const int width = 16;
         const int height = 16;
-        byte[] mismatchedData = data.AsSpan(0, data.Length - PhysicalBlock.SizeInBytes).ToArray();
+        byte[] mismatchedData = data.AsSpan(0, data.Length - BlockInfo.SizeInBytes).ToArray();
 
         Span<byte> result = AstcDecoder.DecompressImage(mismatchedData, width, height, FootprintType.Footprint4x4);
 
@@ -112,15 +112,15 @@ public class AstcDecoderTests
         int expectedBlockCount = blocksWide * blocksHigh;
 
         // Check ASTC data structure
-        Assert.Equal(0, astcData.Length % PhysicalBlock.SizeInBytes);
-        Assert.Equal(expectedBlockCount, astcData.Length / PhysicalBlock.SizeInBytes);
+        Assert.Equal(0, astcData.Length % BlockInfo.SizeInBytes);
+        Assert.Equal(expectedBlockCount, astcData.Length / BlockInfo.SizeInBytes);
 
         // Verify all blocks can be unpacked
-        for (int i = 0; i < astcData.Length; i += PhysicalBlock.SizeInBytes)
+        for (int i = 0; i < astcData.Length; i += BlockInfo.SizeInBytes)
         {
-            byte[] block = astcData.AsSpan(i, PhysicalBlock.SizeInBytes).ToArray();
+            byte[] block = astcData.AsSpan(i, BlockInfo.SizeInBytes).ToArray();
             UInt128 bits = new(BitConverter.ToUInt64(block, 8), BitConverter.ToUInt64(block, 0));
-            BlockInfo info = BlockInfo.Decode(bits);
+            BlockInfo info = BlockModeDecoder.Decode(bits);
             LogicalBlock? logicalBlock = LogicalBlock.UnpackLogicalBlock(footprint, bits, in info);
 
             Assert.NotNull(logicalBlock);

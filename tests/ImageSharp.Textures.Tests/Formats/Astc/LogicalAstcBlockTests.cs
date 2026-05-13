@@ -2,9 +2,9 @@
 // Licensed under the Six Labors Split License.
 
 using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Textures.Compression.Astc.BlockDecoding;
 using SixLabors.ImageSharp.Textures.Compression.Astc.Core;
 using SixLabors.ImageSharp.Textures.Compression.Astc.IO;
-using SixLabors.ImageSharp.Textures.Compression.Astc.TexelBlock;
 using SixLabors.ImageSharp.Textures.Tests.Enums;
 using SixLabors.ImageSharp.Textures.Tests.TestUtilities;
 using SixLabors.ImageSharp.Textures.Tests.TestUtilities.Attributes;
@@ -23,7 +23,7 @@ public class LogicalAstcBlockTests
     public void UnpackLogicalBlock_WithErrorBlock_ShouldReturnNull()
     {
         UInt128 bits = UInt128.Zero;
-        BlockInfo info = BlockInfo.Decode(bits);
+        BlockInfo info = BlockModeDecoder.Decode(bits);
 
         LogicalBlock? result = LogicalBlock.UnpackLogicalBlock(Footprint.Get8x8(), bits, in info);
 
@@ -34,7 +34,7 @@ public class LogicalAstcBlockTests
     public void UnpackLogicalBlock_WithVoidExtentBlock_ShouldSucceed()
     {
         UInt128 bits = (UInt128)0xFFFFFFFFFFFFFDFCUL;
-        BlockInfo info = BlockInfo.Decode(bits);
+        BlockInfo info = BlockModeDecoder.Decode(bits);
 
         LogicalBlock? result = LogicalBlock.UnpackLogicalBlock(Footprint.Get8x8(), bits, in info);
 
@@ -45,7 +45,7 @@ public class LogicalAstcBlockTests
     public void UnpackLogicalBlock_WithStandardBlock_ShouldSucceed()
     {
         UInt128 bits = (UInt128)0x0000000001FE000173UL;
-        BlockInfo info = BlockInfo.Decode(bits);
+        BlockInfo info = BlockModeDecoder.Decode(bits);
 
         LogicalBlock? result = LogicalBlock.UnpackLogicalBlock(Footprint.Get6x5(), bits, in info);
 
@@ -91,17 +91,17 @@ public class LogicalAstcBlockTests
         int blocksWide = (width + blockWidth - 1) / blockWidth;
         byte[] blockPixels = new byte[blockWidth * blockHeight * 4];
 
-        for (int i = 0; i < astcData.Length; i += PhysicalBlock.SizeInBytes)
+        for (int i = 0; i < astcData.Length; i += BlockInfo.SizeInBytes)
         {
-            int blockIndex = i / PhysicalBlock.SizeInBytes;
+            int blockIndex = i / BlockInfo.SizeInBytes;
             int blockX = blockIndex % blocksWide;
             int blockY = blockIndex / blocksWide;
 
-            ReadOnlySpan<byte> blockSpan = astcData.AsSpan(i, PhysicalBlock.SizeInBytes);
+            ReadOnlySpan<byte> blockSpan = astcData.AsSpan(i, BlockInfo.SizeInBytes);
             UInt128 bits = new(
                 BitConverter.ToUInt64(blockSpan[8..]),
                 BitConverter.ToUInt64(blockSpan));
-            BlockInfo info = BlockInfo.Decode(bits);
+            BlockInfo info = BlockModeDecoder.Decode(bits);
             LogicalBlock? logicalBlock = LogicalBlock.UnpackLogicalBlock(footprint, bits, in info);
             Assert.NotNull(logicalBlock);
 

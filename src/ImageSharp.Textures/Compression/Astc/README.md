@@ -17,7 +17,7 @@ ASTC was designed by ARM and standardised by Khronos as a single replacement for
 
 ## Code organisation
 
-The code is organised by decoder concern rather than by spec chapter. `AstcDecoder` is the public entry point. Below it, `TexelBlock` owns single-block parsing and the general-purpose decode path; `BlockDecoder` holds the fused fast-path decoders that bypass the generic pipeline. `ColorEncoding` and `BiseEncoding` isolate the two tricky encodings the spec defines for endpoint and weight values respectively. `Core` holds the small utilities shared across all of them — footprints, `UInt128` helpers, SIMD primitives, the decimation tables. `IO` covers `.astc` file parsing and the 128-bit `BitStream` used throughout the decoder.
+The code is organised by decoder concern rather than by spec chapter. `AstcDecoder` is the public entry point. Below it, `BlockDecoding` holds every per-block decode pipeline — the fused fast paths plus the general-purpose `LogicalBlock` pipeline — and the `IBlockPipeline<T>` dispatch strategy that routes LDR and HDR blocks through a shared loop. `ColorEncoding` and `BiseEncoding` isolate the two tricky encodings the spec defines for endpoint and weight values respectively, and `BiseEncoding` also owns the `BitStream` primitive used by the BISE codecs. `Core` holds the shared block-structure primitives — `BlockInfo` (the single-pass block-mode parser), footprints, decimation tables, partition, `UInt128` helpers, SIMD primitives, and scalar blend/FP16 helpers. `IO` covers `.astc` file parsing only.
 
 This grouping makes it easier to change one decoder feature at a time: BISE changes stay inside `BiseEncoding`, endpoint-mode additions stay inside `ColorEncoding`, and the fused paths can be tuned without touching the general pipeline.
 
@@ -29,7 +29,7 @@ A straightforward ASTC decoder can get away with a single pipeline: read the 128
 
 It's also slow at scale. A 2048×2048 4×4 texture contains 262,144 blocks. Each block through the generic pipeline allocates a `LogicalBlock` (a reference type holding endpoint pairs, a weight array, and a partition map), plus intermediate arrays for the BISE-decoded values — all with GC pressure proportional to image size, and with memory traffic reading each intermediate back out on the pixel-write pass. So the decoder has fast paths for the cases that cover the overwhelming majority of real-world blocks.
 
-The split is gated on three flags from `BlockInfo.Decode`:
+The split is gated on three flags from `BlockModeDecoder.Decode`:
 
 ```csharp
 !info.IsVoidExtent && info.PartitionCount == 1 && !info.IsDualPlane
@@ -37,7 +37,7 @@ The split is gated on three flags from `BlockInfo.Decode`:
 
 Real-world ASTC content is overwhelmingly single-partition, single-plane, non-void-extent. The fast paths handle that; everything else falls through to the generic path.
 
-### 1. Fused LDR fast path — `BlockDecoder/FusedLdrBlockDecoder.cs`
+### 1. Fused LDR fast path — `BlockDecoding/FusedLdrBlockDecoder.cs`
 
 Used when all three gate conditions hold and the endpoint mode is LDR (modes 0, 1, 4, 5, 6, 8, 9, 10, 12, 13).
 
@@ -50,7 +50,7 @@ Instead of building a `LogicalBlock`, the fused path does this in one sweep per 
 
 Two sub-entry-points exist: `DecompressBlockFusedLdrToImage` writes straight to image-buffer coordinates for full-footprint interior blocks; `DecompressBlockFusedLdr` writes to a small scratch span for edge blocks that need cropping before the copy-out. Both share `FusedBlockDecoder.DecodeFusedCore`.
 
-### 2. Fused HDR fast path — `BlockDecoder/FusedHdrBlockDecoder.cs`
+### 2. Fused HDR fast path — `BlockDecoding/FusedHdrBlockDecoder.cs`
 
 Same structural shape as the LDR fast path: same gate, same `DecodeFusedCore`, same no-allocation discipline. Differences:
 
@@ -73,7 +73,7 @@ This path still decodes BISE, unquantises, computes partition assignments, and u
 
 ### Dispatching
 
-`AstcDecoder.DecompressImage` and `DecompressBlock` read each 128-bit block, parse its mode via `BlockInfo.Decode`, check the fast-path gate, and route. `BlockInfo.Decode` (`TexelBlock/BlockInfo.cs`) is itself a single-pass parser over spec Tables 17–24: block mode classification, weight grid dimensions, partition count, CEM (colour endpoint mode) extraction, dual-plane flag, colour value count, reserved-configuration rejection — all in one pass with no allocations. It returns a `BlockInfo` struct the caller inspects for dispatch.
+`AstcDecoder.DecompressImage` and `DecompressBlock` read each 128-bit block, parse its mode via `BlockModeDecoder.Decode` (`BlockDecoding/BlockModeDecoder.cs`), check the fast-path gate, and route. The parser is a single pass over spec Tables 17–24: block mode classification, weight grid dimensions, partition count, CEM (colour endpoint mode) extraction, dual-plane flag, colour value count, reserved-configuration rejection — all in one pass with no allocations. It returns a `BlockInfo` (`Core/BlockInfo.cs`) struct the caller inspects for dispatch.
 
 `BlockInfo.IsValid == false` means the block is reserved or illegal per spec; both the fast and general paths skip it (the block contributes zeros to the output, matching ARM's behaviour). `BlockInfo.HasHdrEndpoints()` is the precondition check that raises `TextureFormatException` at the LDR entry points when an HDR-mode block appears in an LDR context (see design decisions below).
 
@@ -81,7 +81,7 @@ This path still decodes BISE, unquantises, computes partition assignments, and u
 
 ### HDR blocks through the LDR API throw
 
-Per spec §C.2.19, the `decode_unorm8` profile (LDR containers) must emit magenta `0xFFFF00FF` for every texel of an HDR-mode block. ARM `astcenc` instead returns `ASTCENC_ERR_BAD_DECODE_MODE` before decoding begins. We match ARM's behaviour: `AstcDecoder.DecompressImage` and `DecompressBlock` throw `TextureFormatException` on the first HDR block they see. The pre-decode profile check maps cleanly onto a precondition in the block loop (the relevant fields are already read by `BlockInfo.Decode`) so there's no extra cost on the happy path. Callers who want HDR values use `DecompressHdrImage` / `DecompressHdrBlock`.
+Per spec §C.2.19, the `decode_unorm8` profile (LDR containers) must emit magenta `0xFFFF00FF` for every texel of an HDR-mode block. ARM `astcenc` instead returns `ASTCENC_ERR_BAD_DECODE_MODE` before decoding begins. We match ARM's behaviour: `AstcDecoder.DecompressImage` and `DecompressBlock` throw `TextureFormatException` on the first HDR block they see. The pre-decode profile check maps cleanly onto a precondition in the block loop (the relevant fields are already read by `BlockModeDecoder.Decode`) so there's no extra cost on the happy path. Callers who want HDR values use `DecompressHdrImage` / `DecompressHdrBlock`.
 
 ### sRGB is not applied at decode time
 
@@ -101,11 +101,11 @@ The LDR and HDR image-level decoders rent a per-block scratch buffer from `Array
 
 ### `BitStream` shift boundaries
 
-The 128-bit bit buffer (`IO/BitStream.cs`) special-cases `count == 0` and `count >= 128` in `ShiftBuffer`. C# masks shift amounts to the operand width, so `ulong << 64` is `<< 0` (identity) rather than zero. Without the explicit guards, a zero-bit read would OR the high half into the low half, corrupting every subsequent read.
+The 128-bit bit buffer (`BiseEncoding/BitStream.cs`) special-cases `count == 0` and `count >= 128` in `ShiftBuffer`. C# masks shift amounts to the operand width, so `ulong << 64` is `<< 0` (identity) rather than zero. Without the explicit guards, a zero-bit read would OR the high half into the low half, corrupting every subsequent read.
 
 ### Single-pass block mode decode
 
-`BlockInfo.Decode` parses the entire block mode, weight grid dimensions, partition count, CEM (colour endpoint mode) layout, dual-plane flag, and colour value count in one pass over the 128-bit block, rejecting reserved configurations inline.
+`BlockModeDecoder.Decode` parses the entire block mode, weight grid dimensions, partition count, CEM (colour endpoint mode) layout, dual-plane flag, and colour value count in one pass over the 128-bit block, rejecting reserved configurations inline.
 
 ## Decimation
 

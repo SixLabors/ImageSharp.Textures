@@ -4,11 +4,10 @@
 using System.Runtime.CompilerServices;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Textures.Compression.Astc.BiseEncoding.Quantize;
-using SixLabors.ImageSharp.Textures.Compression.Astc.BlockDecoder;
 using SixLabors.ImageSharp.Textures.Compression.Astc.ColorEncoding;
 using SixLabors.ImageSharp.Textures.Compression.Astc.Core;
 
-namespace SixLabors.ImageSharp.Textures.Compression.Astc.TexelBlock;
+namespace SixLabors.ImageSharp.Textures.Compression.Astc.BlockDecoding;
 
 internal sealed class LogicalBlock
 {

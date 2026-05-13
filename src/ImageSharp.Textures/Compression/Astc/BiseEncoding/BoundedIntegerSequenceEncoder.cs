@@ -1,8 +1,6 @@
 // Copyright (c) Six Labors.
 // Licensed under the Six Labors Split License.
 
-using SixLabors.ImageSharp.Textures.Compression.Astc.IO;
-
 namespace SixLabors.ImageSharp.Textures.Compression.Astc.BiseEncoding;
 
 internal sealed class BoundedIntegerSequenceEncoder : BoundedIntegerSequenceCodec

@@ -2,9 +2,8 @@
 // Licensed under the Six Labors Split License.
 
 using SixLabors.ImageSharp.Textures.Compression.Astc.Core;
-using SixLabors.ImageSharp.Textures.Compression.Astc.TexelBlock;
 
-namespace SixLabors.ImageSharp.Textures.Compression.Astc.BlockDecoder;
+namespace SixLabors.ImageSharp.Textures.Compression.Astc.BlockDecoding;
 
 /// <summary>
 /// Pipeline strategy for the shared image-decode loop in <see cref="AstcDecoder"/>. Each
