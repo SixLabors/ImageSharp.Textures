@@ -8,12 +8,12 @@ internal sealed class Partition
     private static readonly System.Collections.Concurrent.ConcurrentDictionary<(Footprint, int, int), Partition> PartitionCache = new();
     private static readonly System.Collections.Concurrent.ConcurrentDictionary<Footprint, Partition> SinglePartitionCache = new();
 
-    public Partition(Footprint footprint, int partitionCount, int? id = null)
+    private Partition(Footprint footprint, int partitionCount, int? id, int[] assignment)
     {
         this.Footprint = footprint;
         this.PartitionCount = partitionCount;
         this.PartitionId = id;
-        this.Assignment = [];
+        this.Assignment = assignment;
     }
 
     public Footprint Footprint { get; }
@@ -22,19 +22,22 @@ internal sealed class Partition
 
     public int? PartitionId { get; }
 
-    public int[] Assignment { get; private set; }
+    /// <summary>
+    /// Gets the per-texel partition-subset map (length <see cref="Footprint.PixelCount"/>).
+    /// Cached and shared across blocks that resolve to the same partition;
+    /// <b>callers must not mutate</b>. Same convention as <see cref="DecimationInfo.WeightIndices"/>.
+    /// </summary>
+    public int[] Assignment { get; }
 
     /// <summary>
     /// Returns the shared single-partition assignment for the given footprint. Every texel is
     /// assigned to subset 0, so one zero-filled <see cref="Assignment"/> array is reused across
-    /// all callers (void-extent blocks and single-partition logical-path blocks). The returned
-    /// <see cref="Assignment"/> must not be mutated.
+    /// all callers (void-extent blocks and single-partition logical-path blocks).
     /// </summary>
     public static Partition GetSinglePartition(Footprint footprint)
-        => SinglePartitionCache.GetOrAdd(footprint, static fp => new Partition(fp, 1, 0)
-        {
-            Assignment = new int[fp.PixelCount],
-        });
+        => SinglePartitionCache.GetOrAdd(
+            footprint,
+            static fp => new Partition(fp, partitionCount: 1, id: 0, assignment: new int[fp.PixelCount]));
 
     public static Partition GetASTCPartition(Footprint footprint, int partitionCount, int partitionId)
     {
@@ -44,7 +47,6 @@ internal sealed class Partition
             return cached;
         }
 
-        Partition part = new(footprint, partitionCount, partitionId);
         int w = footprint.Width;
         int h = footprint.Height;
         int[] assignment = new int[w * h];
@@ -57,7 +59,7 @@ internal sealed class Partition
             }
         }
 
-        part.Assignment = assignment;
+        Partition part = new(footprint, partitionCount, partitionId, assignment);
         PartitionCache.TryAdd(key, part);
         return part;
     }
