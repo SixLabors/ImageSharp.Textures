@@ -32,8 +32,7 @@ internal static class Quantization
         ArgumentOutOfRangeException.ThrowIfLessThan(value, 0);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(value, byte.MaxValue);
 
-        QuantizationMap? map = GetQuantMapForValueRange(rangeMaxValue);
-        return map != null ? map.Quantize(value) : 0;
+        return GetQuantMapForValueRange(rangeMaxValue).Quantize(value);
     }
 
     public static int UnquantizeCEValueFromRange(int value, int rangeMaxValue)
@@ -43,8 +42,7 @@ internal static class Quantization
         ArgumentOutOfRangeException.ThrowIfLessThan(value, 0);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(value, rangeMaxValue);
 
-        QuantizationMap? map = GetQuantMapForValueRange(rangeMaxValue);
-        return map != null ? map.Unquantize(value) : 0;
+        return GetQuantMapForValueRange(rangeMaxValue).Unquantize(value);
     }
 
     public static int QuantizeWeightToRange(int weight, int rangeMaxValue)
@@ -59,8 +57,7 @@ internal static class Quantization
             weight -= 1;
         }
 
-        QuantizationMap? map = GetQuantMapForWeightRange(rangeMaxValue);
-        return map != null ? map.Quantize(weight) : 0;
+        return GetQuantMapForWeightRange(rangeMaxValue).Quantize(weight);
     }
 
     public static int UnquantizeWeightFromRange(int weight, int rangeMaxValue)
@@ -70,8 +67,7 @@ internal static class Quantization
         ArgumentOutOfRangeException.ThrowIfLessThan(weight, 0);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(weight, rangeMaxValue);
 
-        QuantizationMap? map = GetQuantMapForWeightRange(rangeMaxValue);
-        int dequantized = map != null ? map.Unquantize(weight) : 0;
+        int dequantized = GetQuantMapForWeightRange(rangeMaxValue).Unquantize(weight);
         if (dequantized > 32)
         {
             dequantized += 1;
@@ -182,25 +178,33 @@ internal static class Quantization
         return flat;
     }
 
-    private static QuantizationMap? GetQuantMapForValueRange(int r)
-    {
-        if ((uint)r >= (uint)EndpointMapByRange.Length)
-        {
-            return null;
-        }
+    /// <summary>
+    /// Returns the endpoint <see cref="QuantizationMap"/> for the given range. Callers must
+    /// have already validated that <paramref name="r"/> is within
+    /// <c>[<see cref="EndpointRangeMinValue"/>, byte.MaxValue]</c>; the public methods on
+    /// <see cref="Quantization"/> do this. Throws if the slot has no associated map.
+    /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// Thrown when <paramref name="r"/> is outside the valid endpoint range.
+    /// </exception>
+    private static QuantizationMap GetQuantMapForValueRange(int r)
+        => (uint)r < (uint)EndpointMapByRange.Length && EndpointMapByRange[r] is { } map
+            ? map
+            : throw new ArgumentOutOfRangeException(nameof(r), r, "No endpoint quantization map for this range");
 
-        return EndpointMapByRange[r];
-    }
-
-    private static QuantizationMap? GetQuantMapForWeightRange(int r)
-    {
-        if ((uint)r >= (uint)WeightMapByRange.Length)
-        {
-            return null;
-        }
-
-        return WeightMapByRange[r];
-    }
+    /// <summary>
+    /// Returns the weight <see cref="QuantizationMap"/> for the given range. Callers must
+    /// have already validated that <paramref name="r"/> is within
+    /// <c>[1, <see cref="WeightRangeMaxValue"/>]</c>; the public methods on
+    /// <see cref="Quantization"/> do this. Throws if the slot has no associated map.
+    /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// Thrown when <paramref name="r"/> is outside the valid weight range.
+    /// </exception>
+    private static QuantizationMap GetQuantMapForWeightRange(int r)
+        => (uint)r < (uint)WeightMapByRange.Length && WeightMapByRange[r] is { } map
+            ? map
+            : throw new ArgumentOutOfRangeException(nameof(r), r, "No weight quantization map for this range");
 
     private static int[]?[] InitializeUnquantizeWeightsFlat()
     {
