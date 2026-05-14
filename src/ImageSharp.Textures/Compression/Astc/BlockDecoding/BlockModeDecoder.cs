@@ -68,6 +68,7 @@ internal static class BlockModeDecoder
             return default;
         }
 
+        // Fixed 4 entries (max partition count per spec §C.2.10)
         Span<ColorEndpointMode> cems = stackalloc ColorEndpointMode[4];
         int colorValuesCount = DecodeEndpointModes(bits, lowBits, partitionCount, weightBitCount, cems, out int numExtraCEMBits);
         if (colorValuesCount is < 0 or > 18)
@@ -299,6 +300,7 @@ internal static class BlockModeDecoder
         ulong cembits = cemval | (extraCem.Low() << 4);
 
         // 1 selector bit per partition (c[i]), then 2 mode bits per partition (m).
+        // Fixed 4 ints (16 bytes) — max partition count per spec §C.2.10.
         Span<int> c = stackalloc int[4];
         for (int i = 0; i < partitionCount; i++)
         {

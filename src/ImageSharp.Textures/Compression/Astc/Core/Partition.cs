@@ -86,6 +86,8 @@ internal sealed class Partition
         }
 
         uint randomNumber = ScrambleSeed(seed, partitionCount);
+
+        // Fixed 12 uints (48 bytes) — partition hash uses 12 4-bit sub-seeds per spec §C.2.21.
         Span<uint> subseeds = stackalloc uint[12];
         ExtractSubSeeds(randomNumber, subseeds);
         ShiftSubSeeds(subseeds, seed, partitionCount);

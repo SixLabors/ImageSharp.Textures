@@ -28,6 +28,7 @@ internal static class BoundedIntegerSequenceDecoder
         int bitsPerBlock = GetEncodedBlockSize(encoding, bitCount);
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(bitsPerBlock, 64);
 
+        // Fixed 5 ints (20 bytes) — one BISE block holds at most 5 trits or 3 quints (spec §C.2.22).
         Span<int> blockResult = stackalloc int[5];
         int resultIndex = 0;
         int bitsRemaining = totalBitCount;

@@ -62,6 +62,7 @@ internal static class FusedHdrBlockDecoder
         int dstBaseY,
         int dstRowStride)
     {
+        // Up to 12×12 = 144 ints (576 bytes) for the largest 2D footprint per spec §C.2.4.
         Span<int> texelWeights = stackalloc int[footprint.PixelCount];
         ColorEndpointPair endpointPair = FusedBlockDecoder.DecodeFusedCore(bits, in info, footprint, texelWeights);
 

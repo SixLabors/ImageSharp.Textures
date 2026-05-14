@@ -356,6 +356,8 @@ internal static class EndpointEncoder
     {
         Rgba32 baseColor = swapped ? high : low;
         Rgba32 offsetColor = swapped ? low : high;
+
+        // Fixed 4 ints each (16 bytes) — one per RGBA channel.
         Span<int> baseChannels = stackalloc int[4];
         Span<int> offsetChannels = stackalloc int[4];
         for (int i = 0; i < 4; ++i)

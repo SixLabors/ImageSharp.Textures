@@ -163,6 +163,9 @@ internal static class HdrEndpointDecoder
     public static (Rgba64 Low, Rgba64 High) DecodeHdrMode(ReadOnlySpan<int> values, int maxValue, ColorEndpointMode mode)
     {
         int count = mode.GetColorValuesCount();
+
+        // Up to 8 ints (32 bytes) — HDR endpoint modes (2, 3, 7, 11, 14, 15 per spec §C.2.14)
+        // emit at most 8 colour values (mode 14: 6 RGB + 2 LDR-alpha).
         Span<int> unquantizedValues = stackalloc int[count];
         int copyLength = Math.Min(count, values.Length);
         for (int i = 0; i < copyLength; i++)

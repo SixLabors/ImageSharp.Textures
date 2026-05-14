@@ -23,7 +23,8 @@ internal static class FusedBlockDecoder
     internal static ColorEndpointPair DecodeFusedCore(
         UInt128 bits, in BlockInfo info, Footprint footprint, Span<int> texelWeights)
     {
-        // 1. BISE decode color endpoint values
+        // 1. BISE decode color endpoint values.
+        // Single-partition fused path: up to 8 ints (32 bytes) — single-mode CEM caps values at 8.
         int colorCount = info.EndpointMode0.GetColorValuesCount();
         Span<int> colors = stackalloc int[colorCount];
         DecodeBiseValues(bits, info.ColorStartBit, info.ColorBitCount, info.ColorValuesRange, colorCount, colors);
@@ -32,7 +33,8 @@ internal static class FusedBlockDecoder
         Quantization.UnquantizeCEValuesBatch(colors, colorCount, info.ColorValuesRange);
         ColorEndpointPair endpointPair = EndpointCodec.Decode(colors, info.EndpointMode0);
 
-        // 3. BISE decode weights
+        // 3. BISE decode weights.
+        // Up to 64 ints (256 bytes) — spec §C.2.11 caps single-plane gridSize at 64.
         int gridSize = info.GridWidth * info.GridHeight;
         Span<int> gridWeights = stackalloc int[gridSize];
         DecodeBiseWeights(bits, info.WeightBitCount, info.WeightRange, gridSize, gridWeights);
