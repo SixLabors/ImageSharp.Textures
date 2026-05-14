@@ -104,6 +104,15 @@ internal class BoundedIntegerSequenceCodec
     /// </remarks>
     internal static readonly int[] MaxRanges = [1, 2, 3, 4, 5, 7, 9, 11, 15, 19, 23, 31, 39, 47, 63, 79, 95, 127, 159, 191, 255];
 
+    // Encoding modes tried in descending alphabet size when picking the most space-efficient
+    // BISE packing for a given range (see InitPackingModeCache).
+    private static readonly BiseEncodingMode[] EncodingModesDescending =
+    [
+        BiseEncodingMode.QuintEncoding,
+        BiseEncodingMode.TritEncoding,
+        BiseEncodingMode.BitEncoding,
+    ];
+
     private static readonly (BiseEncodingMode Mode, int BitCount)[] PackingModeCache = InitPackingModeCache();
 
     /// <summary>
@@ -217,8 +226,7 @@ internal class BoundedIntegerSequenceCodec
 
             // Check QuintEncoding (5), TritEncoding (3), BitEncoding (1) in descending order
             BiseEncodingMode encodingMode = BiseEncodingMode.Unknown;
-            ReadOnlySpan<BiseEncodingMode> modes = [BiseEncodingMode.QuintEncoding, BiseEncodingMode.TritEncoding, BiseEncodingMode.BitEncoding];
-            foreach (BiseEncodingMode em in modes)
+            foreach (BiseEncodingMode em in EncodingModesDescending)
             {
                 if (maxValue % (int)em == 0 && int.IsPow2(maxValue / (int)em))
                 {
