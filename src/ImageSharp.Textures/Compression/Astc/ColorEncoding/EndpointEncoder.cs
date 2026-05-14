@@ -296,7 +296,8 @@ internal static class EndpointEncoder
     {
         values[0] = v0;
         values[1] = v1;
-        ColorEndpointPair decoded = EndpointCodec.DecodeLdr(values.ToArray(), maxValue, mode);
+        int[] unquantized = EndpointCodec.UnquantizeArray(values.ToArray(), maxValue);
+        ColorEndpointPair decoded = EndpointCodec.Decode(unquantized, mode);
         return SquaredError(decoded.LdrLow, referenceLow) + SquaredError(decoded.LdrHigh, referenceHigh);
     }
 

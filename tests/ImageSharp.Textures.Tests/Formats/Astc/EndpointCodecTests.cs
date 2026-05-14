@@ -269,8 +269,9 @@ public class EndpointCodecTests
     internal void DecodeColorsForMode_WithRgbBaseOffset_AndSpecificColorPairs_ShouldDecodeCorrectly(
         Rgba32 expectedLow, Rgba32 expectedHigh)
     {
-        int[] values = EncodeRgbBaseOffset(expectedLow, expectedHigh);
-        ColorEndpointPair decoded = EndpointCodec.DecodeLdr(values, 255, ColorEndpointMode.LdrRgbBaseOffset);
+        int[] quantized = EncodeRgbBaseOffset(expectedLow, expectedHigh);
+        int[] unquantized = EndpointCodec.UnquantizeArray(quantized, 255);
+        ColorEndpointPair decoded = EndpointCodec.Decode(unquantized, ColorEndpointMode.LdrRgbBaseOffset);
 
         Assert.True(decoded.LdrLow == expectedLow);
         Assert.True(decoded.LdrHigh == expectedHigh);
@@ -294,8 +295,9 @@ public class EndpointCodecTests
             }
 
             Rgba32 color = new((byte)r, (byte)g, (byte)b, 255);
-            int[] values = EncodeRgbBaseOffset(color, color);
-            ColorEndpointPair decoded = EndpointCodec.DecodeLdr(values, 255, ColorEndpointMode.LdrRgbBaseOffset);
+            int[] quantized = EncodeRgbBaseOffset(color, color);
+            int[] unquantized = EndpointCodec.UnquantizeArray(quantized, 255);
+            ColorEndpointPair decoded = EndpointCodec.Decode(unquantized, ColorEndpointMode.LdrRgbBaseOffset);
 
             Assert.True(decoded.LdrLow == color);
             Assert.True(decoded.LdrHigh == color);
@@ -389,24 +391,9 @@ public class EndpointCodecTests
     {
         List<int> values = [];
         bool needsSwap = EndpointEncoder.EncodeColorsForMode(low, high, quantRange, mode, out ColorEndpointMode astcMode, values);
-        ColorEndpointPair decoded = EndpointCodec.DecodeLdr(values.ToArray(), quantRange, astcMode);
+        int[] unquantized = EndpointCodec.UnquantizeArray(values.ToArray(), quantRange);
+        ColorEndpointPair decoded = EndpointCodec.Decode(unquantized, astcMode);
 
         return needsSwap ? (decoded.LdrHigh, decoded.LdrLow) : (decoded.LdrLow, decoded.LdrHigh);
-    }
-
-    // Regression: DecodeColorsForMode used to silently return (default, default) for HDR modes
-    // because the internal switch had a default: branch that zeroed the endpoints.
-    [Theory]
-    [InlineData(ColorEndpointMode.HdrLumaLargeRange)]
-    [InlineData(ColorEndpointMode.HdrLumaSmallRange)]
-    [InlineData(ColorEndpointMode.HdrRgbBaseScale)]
-    [InlineData(ColorEndpointMode.HdrRgbDirect)]
-    [InlineData(ColorEndpointMode.HdrRgbDirectLdrAlpha)]
-    [InlineData(ColorEndpointMode.HdrRgbDirectHdrAlpha)]
-    internal void DecodeColorsForMode_WithHdrMode_ShouldThrow(ColorEndpointMode mode)
-    {
-        int[] values = new int[8];
-
-        Assert.Throws<ArgumentException>(() => EndpointCodec.DecodeLdr(values, 255, mode));
     }
 }

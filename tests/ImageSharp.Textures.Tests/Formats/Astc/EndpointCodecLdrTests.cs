@@ -15,7 +15,7 @@ public class EndpointCodecLdrTests
 {
     private static (Rgba32 Low, Rgba32 High) Decode(ColorEndpointMode mode, params int[] unquantized)
     {
-        ColorEndpointPair pair = EndpointCodec.DecodeLdr(unquantized, mode);
+        ColorEndpointPair pair = EndpointCodec.Decode(unquantized, mode);
         return (pair.LdrLow, pair.LdrHigh);
     }
 
@@ -190,19 +190,5 @@ public class EndpointCodecLdrTests
         int hb = Math.Clamp(a2 + b2, 0, 255);
         int ha = Math.Clamp(a3 + b3, 0, 255);
         Assert.Equal(new Rgba32((byte)hr, (byte)hg, (byte)hb, (byte)ha), high);
-    }
-
-    // ---- Error path ----
-
-    [Fact]
-    public void Decode_HdrMode_ThroughLdrEntryPoint_Throws()
-    {
-        static void Act()
-        {
-            ReadOnlySpan<int> values = [0, 0, 0, 0, 0, 0];
-            EndpointCodec.DecodeLdr(values, maxValue: 255, ColorEndpointMode.HdrRgbDirect);
-        }
-
-        Assert.Throws<ArgumentException>(Act);
     }
 }
