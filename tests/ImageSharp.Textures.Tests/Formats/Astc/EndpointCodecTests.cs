@@ -113,6 +113,19 @@ public class EndpointCodecTests
     }
 
     [Fact]
+    public void EncodeColorsForMode_WithDirectRgb_ShouldReturnActualPickedMode()
+    {
+        Rgba32 low = new(0, 0, 32, 255);
+        Rgba32 high = new(0, 16, 36, 255);
+        const int endpointRange = 5;
+
+        List<int> values = [];
+        EndpointEncoder.EncodeColorsForMode(low, high, endpointRange, EndpointEncodingMode.DirectRgb, out ColorEndpointMode astcMode, values);
+
+        Assert.Equal(ColorEndpointMode.LdrRgbBaseOffset, astcMode);
+    }
+
+    [Fact]
     public void EncodeDecodeColors_WithLumaDirect_ShouldProduceLumaValues()
     {
         EndpointEncodingMode mode = EndpointEncodingMode.DirectLuma;

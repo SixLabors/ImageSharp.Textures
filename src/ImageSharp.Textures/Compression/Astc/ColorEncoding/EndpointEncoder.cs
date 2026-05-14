@@ -338,7 +338,7 @@ internal static class EndpointEncoder
         foreach (CEEncodingOption candidate in candidates)
         {
             bool needsWeightSwap = false;
-            if (candidate.Pack(withAlpha, out ColorEndpointMode _, values, ref needsWeightSwap))
+            if (candidate.Pack(withAlpha, out astcMode, values, ref needsWeightSwap))
             {
                 return needsWeightSwap;
             }

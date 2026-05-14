@@ -172,5 +172,4 @@ internal static class EndpointCodec
         return (ClampedRgba32(aR, aG, aB, aA),
                 ClampedRgba32(aR + bR, aG + bG, aB + bB, aA + bA));
     }
-
 }
