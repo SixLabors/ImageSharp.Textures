@@ -113,10 +113,7 @@ public static class AstcDecoder
             for (int blockX = 0; blockX < blocksWide; blockX++)
             {
                 int index = blockIndex++;
-                if (!TryReadBlockBits(astcData, index, out UInt128 blockBits))
-                {
-                    continue;
-                }
+                UInt128 blockBits = ReadBlockBits(astcData, index);
 
                 BlockInfo info = BlockModeDecoder.Decode(blockBits);
                 if (!info.IsValid)
@@ -186,7 +183,9 @@ public static class AstcDecoder
         where TPipeline : struct, IBlockPipeline<T>
         where T : unmanaged
     {
-        if (!TryReadBlockInfo(blockData, out UInt128 blockBits, out BlockInfo info))
+        UInt128 blockBits = BinaryPrimitives.ReadUInt128LittleEndian(blockData);
+        BlockInfo info = BlockModeDecoder.Decode(blockBits);
+        if (!info.IsValid)
         {
             return;
         }
@@ -392,34 +391,16 @@ public static class AstcDecoder
     }
 
     /// <summary>
-    /// Reads a 16-byte ASTC block starting at <paramref name="blockData"/>[0] into a
-    /// <see cref="UInt128"/> and decodes its <see cref="BlockInfo"/>. Returns false when
-    /// the block is structurally invalid (the caller should skip it without output).
-    /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static bool TryReadBlockInfo(ReadOnlySpan<byte> blockData, out UInt128 blockBits, out BlockInfo info)
-    {
-        blockBits = BinaryPrimitives.ReadUInt128LittleEndian(blockData);
-        info = BlockModeDecoder.Decode(blockBits);
-        return info.IsValid;
-    }
-
-    /// <summary>
     /// Reads the 16 bytes of the ASTC block at <paramref name="blockIndex"/> into a
-    /// <see cref="UInt128"/> (little-endian). Returns false if the stream is short.
+    /// <see cref="UInt128"/> (little-endian). The caller is responsible for ensuring the
+    /// stream contains the requested block — <see cref="TryGetBlockLayout"/> verifies
+    /// <c>astcData.Length</c> matches the expected block count before iteration begins.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static bool TryReadBlockBits(ReadOnlySpan<byte> astcData, int blockIndex, out UInt128 blockBits)
+    private static UInt128 ReadBlockBits(ReadOnlySpan<byte> astcData, int blockIndex)
     {
         int offset = blockIndex * BlockInfo.SizeInBytes;
-        if (offset + BlockInfo.SizeInBytes > astcData.Length)
-        {
-            blockBits = default;
-            return false;
-        }
-
-        blockBits = BinaryPrimitives.ReadUInt128LittleEndian(astcData.Slice(offset, BlockInfo.SizeInBytes));
-        return true;
+        return BinaryPrimitives.ReadUInt128LittleEndian(astcData.Slice(offset, BlockInfo.SizeInBytes));
     }
 
     /// <summary>
