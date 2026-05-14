@@ -7,11 +7,6 @@ using SixLabors.ImageSharp.Textures.Compression.Astc.Core;
 
 namespace SixLabors.ImageSharp.Textures.Tests.Formats.Astc.HDR;
 
-// Per-mode pinned decoding tests for HdrEndpointDecoder. Expected values were captured
-// from the current implementation (which has been validated against the ARM reference
-// via the Astc.Reference.Tests round-trip suite) and serve as regression anchors for
-// the refactors. Each test documents the unquantized input values and the expected
-// (Rgba64 low, Rgba64 high) endpoint pair.
 public class HdrEndpointDecoderTests
 {
     // All HDR modes set alpha to Fp16.One (0x7800) unless the mode explicitly decodes alpha.
@@ -79,11 +74,6 @@ public class HdrEndpointDecoderTests
         Assert.Equal((ushort)(0xFFF << 4), high.R);
     }
 
-    // --- HdrRgbBaseScale (mode 7) ---
-    // modeValue = ((v0 & 0xC0) >> 6) | (((v1 & 0x80) >> 7) << 2) | (((v2 & 0x80) >> 7) << 3).
-    // When (modeValue & 0xC) != 0xC, majorComponent = modeValue >> 2, mode = modeValue & 3.
-    // Pinned outputs — captured from current implementation.
-
     [Theory]
     [InlineData(0x00, 0x00, 0x00, 0x00)] // mode 0, majorComponent 0, all zeros
     [InlineData(0x40, 0x00, 0x00, 0x00)] // mode 1, majorComponent 0
@@ -122,19 +112,15 @@ public class HdrEndpointDecoderTests
     [Fact]
     public void Decode_HdrRgbBaseScale_Mode0_NonZeroInputs_ProducesPinnedOutput()
     {
-        // Pinned test: mode 0 (modeValue=0), majorComponent=0, verify exact output.
+        // Mode 0 (modeValue=0), majorComponent=0, verify exact output.
         // Input: red=0x3F (full 6 bits), green=0x1F, blue=0x1F, scale=0x1F.
         // No bit extensions triggered (oneHotMode=1 matches limited gates).
         ReadOnlySpan<int> values = [0x3F, 0x1F, 0x1F, 0x1F];
         (Rgba64 low, Rgba64 high) = HdrEndpointDecoder.DecodeHdrModeUnquantized(values, ColorEndpointMode.HdrRgbBaseScale);
 
-        // These match the current implementation; the Astc.Reference.Tests suite
-        // verifies the implementation matches ARM's astcenc.
         Assert.Equal(HdrOne, low.A);
         Assert.Equal(HdrOne, high.A);
     }
-
-    // --- HdrRgbDirect (mode 11) ---
 
     [Fact]
     public void Decode_HdrRgbDirect_MajorComponent3_UsesPassthroughBranch()
@@ -187,8 +173,6 @@ public class HdrEndpointDecoderTests
         Assert.Equal(HdrOne, high.A);
     }
 
-    // --- HdrRgbDirectLdrAlpha (mode 14) ---
-
     [Fact]
     public void Decode_HdrRgbDirectLdrAlpha_AlphaIsUnorm16()
     {
@@ -199,8 +183,6 @@ public class HdrEndpointDecoderTests
         Assert.Equal((ushort)(0x40 * 257), low.A);
         Assert.Equal((ushort)(0xC0 * 257), high.A);
     }
-
-    // --- HdrRgbDirectHdrAlpha (mode 15) ---
 
     [Fact]
     public void Decode_HdrRgbDirectHdrAlpha_AlphaDecodedAsHdr()

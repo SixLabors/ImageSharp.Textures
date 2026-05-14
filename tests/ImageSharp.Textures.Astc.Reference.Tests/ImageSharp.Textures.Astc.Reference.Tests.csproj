@@ -10,7 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AstcEncoderCSharp" Version="5.3.0" />
+    <PackageReference Include="AstcEncoderCSharp" Version="5.4.3" />
   </ItemGroup>
 
   <ItemGroup>

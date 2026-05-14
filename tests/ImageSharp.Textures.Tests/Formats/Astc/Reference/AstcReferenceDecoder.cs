@@ -5,13 +5,12 @@ using System.Runtime.InteropServices;
 using AstcEncoder;
 using SixLabors.ImageSharp.Textures.Compression.Astc.Core;
 
-namespace SixLabors.ImageSharp.Textures.Astc.Reference.Tests.Utils;
+namespace SixLabors.ImageSharp.Textures.Tests.Formats.Astc.Reference;
 
 /// <summary>
-/// Wrapper around the ARM reference ASTC encoder/decoder (AstcEncoderCSharp package)
-/// for use as a comparison baseline in tests.
+/// Wrapper around the ARM reference ASTC encoder/decoder for use as a comparison baseline in tests.
 /// </summary>
-internal static class ReferenceDecoder
+internal static class AstcReferenceDecoder
 {
     private static readonly AstcencSwizzle IdentitySwizzle = new()
     {

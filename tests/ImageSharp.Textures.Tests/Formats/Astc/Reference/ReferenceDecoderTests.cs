@@ -1,16 +1,14 @@
 // Copyright (c) Six Labors.
 // Licensed under the Six Labors Split License.
 
-using SixLabors.ImageSharp.Textures.Astc.Reference.Tests.Utils;
 using SixLabors.ImageSharp.Textures.Compression.Astc;
 using SixLabors.ImageSharp.Textures.Compression.Astc.Core;
 using SixLabors.ImageSharp.Textures.Compression.Astc.IO;
-using SixLabors.ImageSharp.Textures.Tests;
 using SixLabors.ImageSharp.Textures.Tests.Enums;
 using SixLabors.ImageSharp.Textures.Tests.TestUtilities.Attributes;
 using SixLabors.ImageSharp.Textures.Tests.TestUtilities.TextureProviders;
 
-namespace SixLabors.ImageSharp.Textures.Astc.Reference.Tests;
+namespace SixLabors.ImageSharp.Textures.Tests.Formats.Astc.Reference;
 
 /// <summary>
 /// LDR comparison tests between SixLabors.ImageSharp.Textures.Astc and the ARM reference ASTC decoder.
@@ -20,7 +18,10 @@ namespace SixLabors.ImageSharp.Textures.Astc.Reference.Tests;
 public class ReferenceDecoderTests
 {
     // Per-channel tolerance for RGBA8 comparisons.
-    // ASTC spec conformance allows ±1 for UNORM8 output due to rounding differences.
+    // The ASTC spec (Khronos Data Format §C.2.18–§C.2.19) defines endpoint/weight
+    // unquantization, weight infill, and the 13-bit interpolation step bit-exactly. The
+    // final float → UNORM8 quantization is not pinned by the spec, so there may
+    // be slight variance between implementations.
     private const int Ldr8BitTolerance = 1;
 
     public static TheoryData<FootprintType> AllFootprintTypes =>
@@ -80,10 +81,10 @@ public class ReferenceDecoderTests
     {
         byte[] bytes = File.ReadAllBytes(provider.InputFile);
         AstcFile astcFile = AstcFile.FromMemory(bytes);
-        (int blockX, int blockY) = ReferenceDecoder.ToBlockDimensions(astcFile.Footprint.Type);
+        (int blockX, int blockY) = AstcReferenceDecoder.ToBlockDimensions(astcFile.Footprint.Type);
         string basename = Path.GetFileNameWithoutExtension(provider.InputFile);
 
-        byte[] expected = ReferenceDecoder.DecompressLdr(
+        byte[] expected = AstcReferenceDecoder.DecompressLdr(
             astcFile.Blocks, astcFile.Width, astcFile.Height, blockX, blockY);
         Span<byte> actual = AstcDecoder.DecompressImage(
             astcFile.Blocks, astcFile.Width, astcFile.Height, astcFile.Footprint);
@@ -95,7 +96,7 @@ public class ReferenceDecoderTests
     [MemberData(nameof(AllFootprintTypes))]
     public void DecompressLdr_SolidColor_ShouldMatch(FootprintType footprintType)
     {
-        (int blockX, int blockY) = ReferenceDecoder.ToBlockDimensions(footprintType);
+        (int blockX, int blockY) = AstcReferenceDecoder.ToBlockDimensions(footprintType);
         int width = blockX;
         int height = blockY;
 
@@ -109,10 +110,10 @@ public class ReferenceDecoderTests
             pixels[(index * 4) + 3] = 255; // A
         }
 
-        byte[] compressed = ReferenceDecoder.CompressLdr(pixels, width, height, blockX, blockY);
+        byte[] compressed = AstcReferenceDecoder.CompressLdr(pixels, width, height, blockX, blockY);
         Footprint footprint = Footprint.FromFootprintType(footprintType);
 
-        byte[] expected = ReferenceDecoder.DecompressLdr(compressed, width, height, blockX, blockY);
+        byte[] expected = AstcReferenceDecoder.DecompressLdr(compressed, width, height, blockX, blockY);
         Span<byte> actual = AstcDecoder.DecompressImage(compressed, width, height, footprint);
 
         CompareRgba8(actual, expected, width, height, $"SolidColor_{footprintType}");
@@ -122,7 +123,7 @@ public class ReferenceDecoderTests
     [MemberData(nameof(AllFootprintTypes))]
     public void DecompressLdr_Gradient_ShouldMatch(FootprintType footprintType)
     {
-        (int blockX, int blockY) = ReferenceDecoder.ToBlockDimensions(footprintType);
+        (int blockX, int blockY) = AstcReferenceDecoder.ToBlockDimensions(footprintType);
 
         // 2×2 blocks for gradient
         int width = blockX * 2;
@@ -141,10 +142,10 @@ public class ReferenceDecoderTests
             }
         }
 
-        byte[] compressed = ReferenceDecoder.CompressLdr(pixels, width, height, blockX, blockY);
+        byte[] compressed = AstcReferenceDecoder.CompressLdr(pixels, width, height, blockX, blockY);
         Footprint footprint = Footprint.FromFootprintType(footprintType);
 
-        byte[] expected = ReferenceDecoder.DecompressLdr(compressed, width, height, blockX, blockY);
+        byte[] expected = AstcReferenceDecoder.DecompressLdr(compressed, width, height, blockX, blockY);
         Span<byte> actual = AstcDecoder.DecompressImage(compressed, width, height, footprint);
 
         CompareRgba8(actual, expected, width, height, $"Gradient_{footprintType}");
@@ -154,7 +155,7 @@ public class ReferenceDecoderTests
     [MemberData(nameof(AllFootprintTypes))]
     public void DecompressLdr_RandomNoise_ShouldMatch(FootprintType footprintType)
     {
-        (int blockX, int blockY) = ReferenceDecoder.ToBlockDimensions(footprintType);
+        (int blockX, int blockY) = AstcReferenceDecoder.ToBlockDimensions(footprintType);
 
         // 2×2 blocks
         int width = blockX * 2;
@@ -170,10 +171,10 @@ public class ReferenceDecoderTests
             pixels[index] = byte.MaxValue;
         }
 
-        byte[] compressed = ReferenceDecoder.CompressLdr(pixels, width, height, blockX, blockY);
+        byte[] compressed = AstcReferenceDecoder.CompressLdr(pixels, width, height, blockX, blockY);
         Footprint footprint = Footprint.FromFootprintType(footprintType);
 
-        byte[] expected = ReferenceDecoder.DecompressLdr(compressed, width, height, blockX, blockY);
+        byte[] expected = AstcReferenceDecoder.DecompressLdr(compressed, width, height, blockX, blockY);
         Span<byte> actual = AstcDecoder.DecompressImage(compressed, width, height, footprint);
 
         CompareRgba8(actual, expected, width, height, $"RandomNoise_{footprintType}");
@@ -183,7 +184,7 @@ public class ReferenceDecoderTests
     [MemberData(nameof(AllFootprintTypes))]
     public void DecompressLdr_NonBlockAlignedDimensions_ShouldMatch(FootprintType footprintType)
     {
-        (int blockX, int blockY) = ReferenceDecoder.ToBlockDimensions(footprintType);
+        (int blockX, int blockY) = AstcReferenceDecoder.ToBlockDimensions(footprintType);
 
         // Non-block-aligned dimensions: use dimensions that don't evenly divide by block size
         int width = blockX + (blockX / 2) + 1; // e.g. for 4x4: 7, for 8x8: 13
@@ -197,10 +198,10 @@ public class ReferenceDecoderTests
             pixels[index] = byte.MaxValue;
         }
 
-        byte[] compressed = ReferenceDecoder.CompressLdr(pixels, width, height, blockX, blockY);
+        byte[] compressed = AstcReferenceDecoder.CompressLdr(pixels, width, height, blockX, blockY);
         Footprint footprint = Footprint.FromFootprintType(footprintType);
 
-        byte[] expected = ReferenceDecoder.DecompressLdr(compressed, width, height, blockX, blockY);
+        byte[] expected = AstcReferenceDecoder.DecompressLdr(compressed, width, height, blockX, blockY);
         Span<byte> actual = AstcDecoder.DecompressImage(compressed, width, height, footprint);
 
         CompareRgba8(actual, expected, width, height, $"NonAligned_{footprintType}");
@@ -228,7 +229,7 @@ public class ReferenceDecoderTests
         const int blockY = 4;
         Footprint footprint = Footprint.FromFootprintType(FootprintType.Footprint4x4);
 
-        byte[] expected = ReferenceDecoder.DecompressLdr(block, blockX, blockY, blockX, blockY);
+        byte[] expected = AstcReferenceDecoder.DecompressLdr(block, blockX, blockY, blockX, blockY);
         Span<byte> actual = AstcDecoder.DecompressImage(block, blockX, blockY, footprint);
 
         CompareRgba8(actual, expected, blockX, blockY, "VoidExtent");

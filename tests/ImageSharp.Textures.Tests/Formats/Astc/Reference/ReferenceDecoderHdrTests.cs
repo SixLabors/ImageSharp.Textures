@@ -2,16 +2,14 @@
 // Licensed under the Six Labors Split License.
 
 using System.ComponentModel;
-using SixLabors.ImageSharp.Textures.Astc.Reference.Tests.Utils;
 using SixLabors.ImageSharp.Textures.Compression.Astc;
 using SixLabors.ImageSharp.Textures.Compression.Astc.Core;
 using SixLabors.ImageSharp.Textures.Compression.Astc.IO;
-using SixLabors.ImageSharp.Textures.Tests;
 using SixLabors.ImageSharp.Textures.Tests.Enums;
 using SixLabors.ImageSharp.Textures.Tests.TestUtilities.Attributes;
 using SixLabors.ImageSharp.Textures.Tests.TestUtilities.TextureProviders;
 
-namespace SixLabors.ImageSharp.Textures.Astc.Reference.Tests;
+namespace SixLabors.ImageSharp.Textures.Tests.Formats.Astc.Reference;
 
 /// <summary>
 /// HDR comparison tests between SixLabors.ImageSharp.Textures.Astc and the ARM reference ASTC decoder.
@@ -49,10 +47,10 @@ public class ReferenceDecoderHdrTests
     {
         byte[] bytes = File.ReadAllBytes(provider.InputFile);
         AstcFile astcFile = AstcFile.FromMemory(bytes);
-        (int blockX, int blockY) = ReferenceDecoder.ToBlockDimensions(astcFile.Footprint.Type);
+        (int blockX, int blockY) = AstcReferenceDecoder.ToBlockDimensions(astcFile.Footprint.Type);
         string basename = Path.GetFileNameWithoutExtension(provider.InputFile);
 
-        Half[] expected = ReferenceDecoder.DecompressHdr(
+        Half[] expected = AstcReferenceDecoder.DecompressHdr(
             astcFile.Blocks, astcFile.Width, astcFile.Height, blockX, blockY);
         Span<float> actual = AstcDecoder.DecompressHdrImage(
             astcFile.Blocks, astcFile.Width, astcFile.Height, astcFile.Footprint);
@@ -69,10 +67,10 @@ public class ReferenceDecoderHdrTests
     {
         byte[] bytes = File.ReadAllBytes(provider.InputFile);
         AstcFile astcFile = AstcFile.FromMemory(bytes);
-        (int blockX, int blockY) = ReferenceDecoder.ToBlockDimensions(astcFile.Footprint.Type);
+        (int blockX, int blockY) = AstcReferenceDecoder.ToBlockDimensions(astcFile.Footprint.Type);
         string basename = Path.GetFileNameWithoutExtension(provider.InputFile);
 
-        Half[] expected = ReferenceDecoder.DecompressHdr(
+        Half[] expected = AstcReferenceDecoder.DecompressHdr(
             astcFile.Blocks, astcFile.Width, astcFile.Height, blockX, blockY);
         Span<float> actual = AstcDecoder.DecompressHdrImage(
             astcFile.Blocks, astcFile.Width, astcFile.Height, astcFile.Footprint);
@@ -84,7 +82,7 @@ public class ReferenceDecoderHdrTests
     [MemberData(nameof(AllFootprintTypes))]
     public void DecompressHdr_SolidColor_ShouldMatch(FootprintType footprintType)
     {
-        (int blockX, int blockY) = ReferenceDecoder.ToBlockDimensions(footprintType);
+        (int blockX, int blockY) = AstcReferenceDecoder.ToBlockDimensions(footprintType);
         int width = blockX;
         int height = blockY;
 
@@ -98,10 +96,10 @@ public class ReferenceDecoderHdrTests
             pixels[(index * 4) + 3] = (Half)1.0f;
         }
 
-        byte[] compressed = ReferenceDecoder.CompressHdr(pixels, width, height, blockX, blockY);
+        byte[] compressed = AstcReferenceDecoder.CompressHdr(pixels, width, height, blockX, blockY);
         Footprint footprint = Footprint.FromFootprintType(footprintType);
 
-        Half[] expected = ReferenceDecoder.DecompressHdr(compressed, width, height, blockX, blockY);
+        Half[] expected = AstcReferenceDecoder.DecompressHdr(compressed, width, height, blockX, blockY);
         Span<float> actual = AstcDecoder.DecompressHdrImage(compressed, width, height, footprint);
 
         CompareF16(actual, expected, width, height, $"BrightSolid_{footprintType}");
@@ -111,7 +109,7 @@ public class ReferenceDecoderHdrTests
     [MemberData(nameof(AllFootprintTypes))]
     public void DecompressHdr_Gradient_ShouldMatch(FootprintType footprintType)
     {
-        (int blockX, int blockY) = ReferenceDecoder.ToBlockDimensions(footprintType);
+        (int blockX, int blockY) = AstcReferenceDecoder.ToBlockDimensions(footprintType);
 
         // 2×2 blocks for HDR gradient
         int width = blockX * 2;
@@ -133,10 +131,10 @@ public class ReferenceDecoderHdrTests
             }
         }
 
-        byte[] compressed = ReferenceDecoder.CompressHdr(pixels, width, height, blockX, blockY);
+        byte[] compressed = AstcReferenceDecoder.CompressHdr(pixels, width, height, blockX, blockY);
         Footprint footprint = Footprint.FromFootprintType(footprintType);
 
-        Half[] expected = ReferenceDecoder.DecompressHdr(compressed, width, height, blockX, blockY);
+        Half[] expected = AstcReferenceDecoder.DecompressHdr(compressed, width, height, blockX, blockY);
         Span<float> actual = AstcDecoder.DecompressHdrImage(compressed, width, height, footprint);
 
         CompareF16(actual, expected, width, height, $"HdrGradient_{footprintType}");
@@ -148,7 +146,7 @@ public class ReferenceDecoderHdrTests
         " encoded with LDR modes and others with HDR modes, the encoder optimizes each block independently.")]
     public void DecompressHdr_MixedLdrHdr_ShouldMatch(FootprintType footprintType)
     {
-        (int blockX, int blockY) = ReferenceDecoder.ToBlockDimensions(footprintType);
+        (int blockX, int blockY) = AstcReferenceDecoder.ToBlockDimensions(footprintType);
 
         // 2×2 blocks
         int width = blockX * 2;
@@ -182,10 +180,10 @@ public class ReferenceDecoderHdrTests
             }
         }
 
-        byte[] compressed = ReferenceDecoder.CompressHdr(pixels, width, height, blockX, blockY);
+        byte[] compressed = AstcReferenceDecoder.CompressHdr(pixels, width, height, blockX, blockY);
         Footprint footprint = Footprint.FromFootprintType(footprintType);
 
-        Half[] expected = ReferenceDecoder.DecompressHdr(compressed, width, height, blockX, blockY);
+        Half[] expected = AstcReferenceDecoder.DecompressHdr(compressed, width, height, blockX, blockY);
         Span<float> actual = AstcDecoder.DecompressHdrImage(compressed, width, height, footprint);
 
         CompareF16(actual, expected, width, height, $"MixedLdrHdr_{footprintType}");
