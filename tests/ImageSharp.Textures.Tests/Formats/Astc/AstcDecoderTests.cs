@@ -1,6 +1,7 @@
 // Copyright (c) Six Labors.
 // Licensed under the Six Labors Split License.
 
+using System.Buffers.Binary;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using SixLabors.ImageSharp.Textures.Compression.Astc;
@@ -257,5 +258,147 @@ public class AstcDecoderTests
 
         Assert.Throws<ArgumentOutOfRangeException>(() =>
             AstcDecoder.DecompressHdrImage(data, 4, 4, footprint, buffer));
+    }
+
+    [Fact]
+    public void DecompressImage_WhenCalledFromManyThreads_ShouldProduceIdenticalOutput()
+    {
+        // Smoke test for accidental shared mutable state in the decode pipeline. Each
+        // thread decodes the same input into its own buffer; every buffer must match the
+        // single-threaded reference byte-for-byte.
+        string filePath = TestFile.GetInputFileFullPath(Path.Combine("Astc", TestImages.Astc.Rgba_6x6));
+        byte[] astcBytes = File.ReadAllBytes(filePath);
+        AstcFile file = AstcFile.FromMemory(astcBytes);
+
+        byte[] reference = AstcDecoder.DecompressImage(file).ToArray();
+        Assert.NotEmpty(reference);
+
+        const int threadCount = 8;
+        const int iterationsPerThread = 4;
+        byte[][] results = new byte[threadCount][];
+
+        Parallel.For(0, threadCount, i =>
+        {
+            byte[]? last = null;
+            for (int j = 0; j < iterationsPerThread; j++)
+            {
+                last = AstcDecoder.DecompressImage(file).ToArray();
+            }
+
+            results[i] = last!;
+        });
+
+        foreach (byte[] result in results)
+        {
+            Assert.Equal(reference, result);
+        }
+    }
+
+    [Fact]
+    public void DecompressBlock_AndDecompressImage_ShouldReturnIdenticalBlockShape()
+    {
+        // Cross-validates the per-block (DecompressBlock) and whole-image (DecompressImage)
+        // public APIs on a test file that contains multi-partition, dual-plane, and
+        // void-extent blocks. Both paths must yield identical pixels for every block.
+        string filePath = TestFile.GetInputFileFullPath(Path.Combine("Astc", TestImages.Astc.Rgba_4x4));
+        byte[] astcBytes = File.ReadAllBytes(filePath);
+        AstcFile file = AstcFile.FromMemory(astcBytes);
+
+        byte[] imageBuffer = AstcDecoder.DecompressImage(file).ToArray();
+        Assert.NotEmpty(imageBuffer);
+
+        int blockWidth = file.Footprint.Width;
+        int blockHeight = file.Footprint.Height;
+        int blocksWide = (file.Width + blockWidth - 1) / blockWidth;
+        int blockCount = file.Blocks.Length / BlockInfo.SizeInBytes;
+        int totalValid = 0;
+        int voidExtent = 0;
+        int singlePartition = 0;
+        int twoPartition = 0;
+        int threePartition = 0;
+        int fourPartition = 0;
+        int dualPlane = 0;
+        byte[] singleBlockOut = new byte[blockWidth * blockHeight * BlockInfo.ChannelsPerPixel];
+
+        for (int blockIdx = 0; blockIdx < blockCount; blockIdx++)
+        {
+            ReadOnlySpan<byte> blockSpan = file.Blocks.Slice(blockIdx * BlockInfo.SizeInBytes, BlockInfo.SizeInBytes);
+            UInt128 bits = BinaryPrimitives.ReadUInt128LittleEndian(blockSpan);
+            BlockInfo info = BlockModeDecoder.Decode(bits);
+            Assert.True(info.IsValid, $"Block {blockIdx} of rgba_4x4.astc must decode as a valid block.");
+
+            Array.Clear(singleBlockOut);
+            AstcDecoder.DecompressBlock(blockSpan, file.Footprint, singleBlockOut);
+
+            int blockX = blockIdx % blocksWide;
+            int blockY = blockIdx / blocksWide;
+            AssertBlockMatchesImageSlice(
+                singleBlockOut, imageBuffer, file.Width, file.Height, blockX, blockY, blockWidth, blockHeight);
+
+            totalValid++;
+            if (info.IsVoidExtent)
+            {
+                voidExtent++;
+                continue;
+            }
+
+            _ = info.PartitionCount switch
+            {
+                1 => singlePartition++,
+                2 => twoPartition++,
+                3 => threePartition++,
+                4 => fourPartition++,
+                _ => 0,
+            };
+
+            if (info.DualPlane.Enabled)
+            {
+                dualPlane++;
+            }
+        }
+
+        Assert.Equal(4096, totalValid);
+        Assert.Equal(142, voidExtent);
+        Assert.Equal(2528, singlePartition);
+        Assert.Equal(1184, twoPartition);
+        Assert.Equal(231, threePartition);
+        Assert.Equal(11, fourPartition);
+        Assert.Equal(661, dualPlane);
+    }
+
+    private static void AssertBlockMatchesImageSlice(
+        byte[] block,
+        byte[] image,
+        int imageWidth,
+        int imageHeight,
+        int blockX,
+        int blockY,
+        int blockWidth,
+        int blockHeight)
+    {
+        for (int by = 0; by < blockHeight; by++)
+        {
+            int py = (blockY * blockHeight) + by;
+            if (py >= imageHeight)
+            {
+                continue;
+            }
+
+            for (int bx = 0; bx < blockWidth; bx++)
+            {
+                int px = (blockX * blockWidth) + bx;
+                if (px >= imageWidth)
+                {
+                    continue;
+                }
+
+                int blockOffset = ((by * blockWidth) + bx) * BlockInfo.ChannelsPerPixel;
+                int imageOffset = ((py * imageWidth) + px) * BlockInfo.ChannelsPerPixel;
+                for (int c = 0; c < BlockInfo.ChannelsPerPixel; c++)
+                {
+                    Assert.Equal(block[blockOffset + c], image[imageOffset + c]);
+                }
+            }
+        }
     }
 }
