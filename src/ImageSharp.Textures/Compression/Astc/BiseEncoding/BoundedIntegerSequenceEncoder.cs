@@ -48,7 +48,7 @@ internal sealed class BoundedIntegerSequenceEncoder : BoundedIntegerSequenceCode
                 }
 
                 case BiseEncodingMode.BitEncoding:
-                    bitSink.PutBits((uint)this.values[index++], this.GetEncodedBlockSize());
+                    bitSink.PutBits((uint)this.values[index++], GetEncodedBlockSize(this.Encoding, this.BitCount));
                     break;
             }
         }

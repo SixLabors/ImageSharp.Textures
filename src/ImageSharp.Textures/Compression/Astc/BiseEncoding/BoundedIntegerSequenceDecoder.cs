@@ -25,7 +25,7 @@ internal static class BoundedIntegerSequenceDecoder
     public static void Decode(BiseEncodingMode encoding, int bitCount, int valuesCount, ref BitStream bitSource, Span<int> result)
     {
         int totalBitCount = BoundedIntegerSequenceCodec.GetBitCount(encoding, valuesCount, bitCount);
-        int bitsPerBlock = GetEncodedBlockSize(encoding, bitCount);
+        int bitsPerBlock = BoundedIntegerSequenceCodec.GetEncodedBlockSize(encoding, bitCount);
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(bitsPerBlock, 64);
 
         // Fixed 5 ints (20 bytes) — one BISE block holds at most 5 trits or 3 quints (spec §C.2.22).
@@ -77,24 +77,6 @@ internal static class BoundedIntegerSequenceDecoder
         return mode == BiseEncodingMode.TritEncoding
             ? DecodeTritBlock(encodedBlock, encodedBitCount, mantissaMask, result)
             : DecodeQuintBlock(encodedBlock, encodedBitCount, mantissaMask, result);
-    }
-
-    /// <summary>
-    /// The size of a single ISE block in bits — the inverse of the packing computed by
-    /// <see cref="BoundedIntegerSequenceCodec.GetPackingModeBitCount"/>.
-    /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static int GetEncodedBlockSize(BiseEncodingMode encoding, int bitCount)
-    {
-        (int blockSize, int extraBlockSize) = encoding switch
-        {
-            BiseEncodingMode.TritEncoding => (5, 8),
-            BiseEncodingMode.QuintEncoding => (3, 7),
-            BiseEncodingMode.BitEncoding => (1, 0),
-            _ => (0, 0),
-        };
-
-        return extraBlockSize + (blockSize * bitCount);
     }
 
     /// <summary>

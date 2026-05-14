@@ -188,11 +188,11 @@ internal class BoundedIntegerSequenceCodec
     }
 
     /// <summary>
-    /// The size of a single ISE block in bits
+    /// The size of a single ISE block in bits — the inverse of the packing computed by <see cref="GetPackingModeBitCount"/>.
     /// </summary>
-    protected int GetEncodedBlockSize()
+    public static int GetEncodedBlockSize(BiseEncodingMode mode, int bitCount)
     {
-        (int blockSize, int extraBlockSize) = this.Encoding switch
+        (int blockSize, int extraBlockSize) = mode switch
         {
             BiseEncodingMode.TritEncoding => (5, 8),
             BiseEncodingMode.QuintEncoding => (3, 7),
@@ -200,7 +200,7 @@ internal class BoundedIntegerSequenceCodec
             _ => (0, 0),
         };
 
-        return extraBlockSize + (blockSize * this.BitCount);
+        return extraBlockSize + (blockSize * bitCount);
     }
 
     private static (BiseEncodingMode, int)[] InitPackingModeCache()
