@@ -36,13 +36,11 @@ internal static class LogicalBlock
             return;
         }
 
-        EndpointBuffer endpoints = default;
-
         // Up to 12×12 = 144 ints (576 bytes) for the largest 2D footprint per spec §C.2.4.
         Span<int> weights = stackalloc int[footprint.PixelCount];
-        int[] partitionAssignment = DecodeBlockState(bits, in info, footprint, ref endpoints, weights, default);
+        DecodedBlockState state = DecodeBlockState(bits, in info, footprint, weights, default);
 
-        WritePixelsLdr(footprint, pixels, in endpoints, partitionAssignment, weights, default, dualPlaneChannel: -1);
+        WritePixelsLdr(footprint, pixels, in state);
     }
 
     /// <summary>
@@ -62,68 +60,70 @@ internal static class LogicalBlock
             return;
         }
 
-        EndpointBuffer endpoints = default;
-
         // Up to 12×12 = 144 ints (576 bytes) for the largest 2D footprint per spec §C.2.4.
         Span<int> weights = stackalloc int[footprint.PixelCount];
-        int[] partitionAssignment = DecodeBlockState(bits, in info, footprint, ref endpoints, weights, default);
+        DecodedBlockState state = DecodeBlockState(bits, in info, footprint, weights, default);
 
-        WritePixelsHdr(footprint, pixels, in endpoints, partitionAssignment, weights, default, dualPlaneChannel: -1);
+        WritePixelsHdr(footprint, pixels, in state);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static void DecodeToBytesDualPlane(UInt128 bits, in BlockInfo info, Footprint footprint, Span<byte> pixels)
     {
-        EndpointBuffer endpoints = default;
-
         // Two weight planes for dual-plane blocks (spec §C.2.20). Up to 2 × 144 = 288 ints
         // (1152 bytes) at the largest 12×12 footprint.
         Span<int> weights = stackalloc int[footprint.PixelCount];
         Span<int> secondaryWeights = stackalloc int[footprint.PixelCount];
-        int[] partitionAssignment = DecodeBlockState(bits, in info, footprint, ref endpoints, weights, secondaryWeights);
+        DecodedBlockState state = DecodeBlockState(bits, in info, footprint, weights, secondaryWeights);
 
-        WritePixelsLdr(footprint, pixels, in endpoints, partitionAssignment, weights, secondaryWeights, info.DualPlaneChannel);
+        WritePixelsLdr(footprint, pixels, in state);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static void DecodeToFloatsDualPlane(UInt128 bits, in BlockInfo info, Footprint footprint, Span<float> pixels)
     {
-        EndpointBuffer endpoints = default;
-
         // Two weight planes for dual-plane blocks (spec §C.2.20). Up to 2 × 144 = 288 ints
         // (1152 bytes) at the largest 12×12 footprint.
         Span<int> weights = stackalloc int[footprint.PixelCount];
         Span<int> secondaryWeights = stackalloc int[footprint.PixelCount];
-        int[] partitionAssignment = DecodeBlockState(bits, in info, footprint, ref endpoints, weights, secondaryWeights);
+        DecodedBlockState state = DecodeBlockState(bits, in info, footprint, weights, secondaryWeights);
 
-        WritePixelsHdr(footprint, pixels, in endpoints, partitionAssignment, weights, secondaryWeights, info.DualPlaneChannel);
+        WritePixelsHdr(footprint, pixels, in state);
     }
 
     /// <summary>
-    /// Populates the endpoints, primary weights, and (for dual-plane blocks) secondary weights,
-    /// returning the per-texel partition-subset map. Handles both standard and void-extent
-    /// (spec §C.2.23) blocks. <paramref name="secondaryWeights"/> is ignored for non-dual-plane.
+    /// Builds the <see cref="DecodedBlockState"/> for the block — endpoints, weight buffers,
+    /// and per-texel partition map. Handles both standard and void-extent (spec §C.2.23)
+    /// blocks. <paramref name="secondaryWeights"/> must be empty for non-dual-plane blocks;
+    /// when non-empty it is filled with the secondary plane's per-texel weights and the
+    /// returned state's dual-plane channel is set accordingly.
     /// </summary>
-    private static int[] DecodeBlockState(
+    private static DecodedBlockState DecodeBlockState(
         UInt128 bits,
         in BlockInfo info,
         Footprint footprint,
-        ref EndpointBuffer endpoints,
         Span<int> weights,
         Span<int> secondaryWeights)
     {
+        DecodedBlockState state = default;
+        state.Weights = weights;
+        state.SecondaryWeights = secondaryWeights;
+        state.DualPlaneChannel = secondaryWeights.IsEmpty ? -1 : info.DualPlaneChannel;
+
         if (info.IsVoidExtent)
         {
             // Spec §C.2.23: bit 9 of the block mode flags HDR (set → FP16, clear → UNORM16 LDR).
             bool isHdrVoidExtent = (bits.Low() & (1UL << 9)) != 0;
-            endpoints[0] = DecodeVoidExtentEndpoint(bits, isHdrVoidExtent);
+            state.Endpoints[0] = DecodeVoidExtentEndpoint(bits, isHdrVoidExtent);
             weights.Clear();
-            return Partition.GetSinglePartition(footprint).Assignment;
+            state.PartitionAssignment = Partition.GetSinglePartition(footprint).Assignment;
+            return state;
         }
 
-        DecodeEndpointsFromBits(bits, in info, ref endpoints);
+        DecodeEndpointsFromBits(bits, in info, ref state.Endpoints);
         DecodeAndInfillWeights(bits, in info, footprint, weights, secondaryWeights);
-        return ResolvePartitionAssignment(bits, in info, footprint);
+        state.PartitionAssignment = ResolvePartitionAssignment(bits, in info, footprint);
+        return state;
     }
 
     /// <summary>
@@ -250,22 +250,16 @@ internal static class LogicalBlock
     /// <summary>
     /// Writes UNORM8 RGBA pixels using the decoded block state.
     /// </summary>
-    private static void WritePixelsLdr(
-        Footprint footprint,
-        Span<byte> buffer,
-        in EndpointBuffer endpoints,
-        int[] partitionAssignment,
-        ReadOnlySpan<int> weights,
-        ReadOnlySpan<int> secondaryWeights,
-        int dualPlaneChannel)
+    private static void WritePixelsLdr(Footprint footprint, Span<byte> buffer, in DecodedBlockState state)
     {
-        bool hasDualPlane = !secondaryWeights.IsEmpty;
+        bool hasDualPlane = !state.SecondaryWeights.IsEmpty;
+        int dualPlaneChannel = state.DualPlaneChannel;
         int pixelCount = footprint.PixelCount;
 
         for (int i = 0; i < pixelCount; i++)
         {
-            ref readonly ColorEndpointPair endpoint = ref endpoints[partitionAssignment[i]];
-            int weight = weights[i];
+            ref readonly ColorEndpointPair endpoint = ref state.Endpoints[state.PartitionAssignment[i]];
+            int weight = state.Weights[i];
             int dstOffset = i * 4;
 
             if (hasDualPlane)
@@ -283,7 +277,7 @@ internal static class LogicalBlock
                     endpoint.LdrHigh.A,
                     weight,
                     dualPlaneChannel,
-                    secondaryWeights[i]);
+                    state.SecondaryWeights[i]);
             }
             else
             {
@@ -312,23 +306,17 @@ internal static class LogicalBlock
     /// + LDR Alpha, §C.2.14), the alpha channel is UNORM16 instead of LNS. LDR endpoints
     /// produce UNORM16 values normalised to [0, 1] (§C.2.24).
     /// </remarks>
-    private static void WritePixelsHdr(
-        Footprint footprint,
-        Span<float> buffer,
-        in EndpointBuffer endpoints,
-        int[] partitionAssignment,
-        ReadOnlySpan<int> weights,
-        ReadOnlySpan<int> secondaryWeights,
-        int dualPlaneChannel)
+    private static void WritePixelsHdr(Footprint footprint, Span<float> buffer, in DecodedBlockState state)
     {
-        bool hasDualPlane = !secondaryWeights.IsEmpty;
+        bool hasDualPlane = !state.SecondaryWeights.IsEmpty;
+        int dualPlaneChannel = state.DualPlaneChannel;
         int pixelCount = footprint.PixelCount;
 
         for (int i = 0; i < pixelCount; i++)
         {
-            ref readonly ColorEndpointPair endpoint = ref endpoints[partitionAssignment[i]];
-            int weight = weights[i];
-            int dpWeight = hasDualPlane ? secondaryWeights[i] : weight;
+            ref readonly ColorEndpointPair endpoint = ref state.Endpoints[state.PartitionAssignment[i]];
+            int weight = state.Weights[i];
+            int dpWeight = hasDualPlane ? state.SecondaryWeights[i] : weight;
             Span<float> pixel = buffer.Slice(i * 4, 4);
 
             if (endpoint.IsHdr)
@@ -433,5 +421,20 @@ internal static class LogicalBlock
 #pragma warning disable CS0169, IDE0051, S1144 // Accessed by runtime via [InlineArray]
         private ColorEndpointPair element0;
 #pragma warning restore CS0169, IDE0051, S1144
+    }
+
+    /// <summary>
+    /// All four outputs of <see cref="DecodeBlockState"/> bundled into a single ref-struct so
+    /// the call sites stay readable. Stack-only — holds <see cref="Span{T}"/> fields and a
+    /// stack-local <see cref="EndpointBuffer"/>. <see cref="SecondaryWeights"/> is empty for
+    /// non-dual-plane blocks; <see cref="DualPlaneChannel"/> is then -1.
+    /// </summary>
+    private ref struct DecodedBlockState
+    {
+        public EndpointBuffer Endpoints;
+        public Span<int> Weights;
+        public Span<int> SecondaryWeights;
+        public int[] PartitionAssignment;
+        public int DualPlaneChannel;
     }
 }
