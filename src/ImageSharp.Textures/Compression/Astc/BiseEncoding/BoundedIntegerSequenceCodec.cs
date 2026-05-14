@@ -4,11 +4,28 @@
 namespace SixLabors.ImageSharp.Textures.Compression.Astc.BiseEncoding;
 
 /// <summary>
+/// <para>
 /// The Bounded Integer Sequence Encoding (BISE) allows storage of character sequences using
 /// arbitrary alphabets of up to 256 symbols. Each alphabet size is encoded in the most
-/// space-efficient choice of bits, trits, and quints.
+/// space-efficient choice of bits, trits, and quints (ASTC spec §C.2.12).
+/// </para>
+/// <para>
+/// The resulting bit pattern is a sequence of encoded blocks. All blocks in a sequence are
+/// one of the following encodings:
+/// </para>
+/// <list type="bullet">
+/// <item>Bit encoding: one encoded value of the form 2^k</item>
+/// <item>Trit encoding: five encoded values of the form 3*2^k</item>
+/// <item>Quint encoding: three encoded values of the form 5*2^k</item>
+/// </list>
+/// <para>
+/// The layouts of each block are designed such that the blocks can be truncated during
+/// encoding in order to support variable length input sequences (i.e. a sequence of values
+/// that are encoded using trit encoded blocks does not need to have a multiple-of-five
+/// length).
+/// </para>
 /// </summary>
-internal class BoundedIntegerSequenceCodec
+internal static class BoundedIntegerSequenceCodec
 {
     /// <summary>
     /// The maximum number of bits needed to encode an ISE value.
@@ -23,12 +40,12 @@ internal class BoundedIntegerSequenceCodec
     /// <summary>
     /// The number of bits used after each value to store the interleaved quint block.
     /// </summary>
-    protected static readonly int[] InterleavedQuintBits = [3, 2, 2];
+    internal static readonly int[] InterleavedQuintBits = [3, 2, 2];
 
     /// <summary>
     /// The number of bits used after each value to store the interleaved trit block.
     /// </summary>
-    protected static readonly int[] InterleavedTritBits = [2, 2, 1, 2, 1];
+    internal static readonly int[] InterleavedTritBits = [2, 2, 1, 2, 1];
 
     /// <summary>
     /// Flat trit encodings for BISE blocks (256 rows × 5 trits, row-major).
@@ -114,39 +131,6 @@ internal class BoundedIntegerSequenceCodec
     ];
 
     private static readonly (BiseEncodingMode Mode, int BitCount)[] PackingModeCache = InitPackingModeCache();
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="BoundedIntegerSequenceCodec"/> class.
-    /// operate on sequences of integers and produce bit patterns that pack the
-    /// integers based on the encoding scheme specified in the ASTC specification
-    /// Section C.2.12.
-    /// </summary>
-    /// <remarks>
-    /// <para>
-    /// The resulting bit pattern is a sequence of encoded blocks.
-    /// All blocks in a sequence are one of the following encodings:
-    /// </para>
-    /// <list type="bullet">
-    /// <item>Bit encoding: one encoded value of the form 2^k</item>
-    /// <item>Trit encoding: five encoded values of the form 3*2^k</item>
-    /// <item>Quint encoding: three encoded values of the form 5*2^k</item>
-    /// </list>
-    /// The layouts of each block are designed such that the blocks can be truncated
-    /// during encoding in order to support variable length input sequences (i.e. a
-    /// sequence of values that are encoded using trit encoded blocks does not
-    /// need to have a multiple-of-five length).
-    /// </remarks>
-    /// <param name="range">Creates a decoder that decodes values within [0, <paramref name="range"/>] (inclusive).</param>
-    protected BoundedIntegerSequenceCodec(int range)
-    {
-        (BiseEncodingMode encodingMode, int bitCount) = GetPackingModeBitCount(range);
-        this.Encoding = encodingMode;
-        this.BitCount = bitCount;
-    }
-
-    protected BiseEncodingMode Encoding { get; }
-
-    protected int BitCount { get; }
 
     /// <summary>
     /// The number of bits needed to encode the given number of values with respect to the

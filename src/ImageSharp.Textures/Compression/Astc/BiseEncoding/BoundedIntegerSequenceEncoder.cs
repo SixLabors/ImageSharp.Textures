@@ -3,14 +3,20 @@
 
 namespace SixLabors.ImageSharp.Textures.Compression.Astc.BiseEncoding;
 
-internal sealed class BoundedIntegerSequenceEncoder : BoundedIntegerSequenceCodec
+internal sealed class BoundedIntegerSequenceEncoder
 {
     private readonly List<int> values = [];
 
     public BoundedIntegerSequenceEncoder(int range)
-        : base(range)
     {
+        (BiseEncodingMode encoding, int bitCount) = BoundedIntegerSequenceCodec.GetPackingModeBitCount(range);
+        this.Encoding = encoding;
+        this.BitCount = bitCount;
     }
+
+    private BiseEncodingMode Encoding { get; }
+
+    private int BitCount { get; }
 
     /// <summary>
     /// Adds a value to the encoding sequence.
@@ -22,7 +28,7 @@ internal sealed class BoundedIntegerSequenceEncoder : BoundedIntegerSequenceCode
     /// </summary>
     public void Encode(ref BitStream bitSink)
     {
-        int totalBitCount = GetBitCount(this.Encoding, this.values.Count, this.BitCount);
+        int totalBitCount = BoundedIntegerSequenceCodec.GetBitCount(this.Encoding, this.values.Count, this.BitCount);
 
         int index = 0;
         int bitsWrittenCount = 0;
@@ -48,7 +54,7 @@ internal sealed class BoundedIntegerSequenceEncoder : BoundedIntegerSequenceCode
                 }
 
                 case BiseEncodingMode.BitEncoding:
-                    bitSink.PutBits((uint)this.values[index++], GetEncodedBlockSize(this.Encoding, this.BitCount));
+                    bitSink.PutBits((uint)this.values[index++], BoundedIntegerSequenceCodec.GetEncodedBlockSize(this.Encoding, this.BitCount));
                     break;
             }
         }
@@ -69,7 +75,7 @@ internal sealed class BoundedIntegerSequenceEncoder : BoundedIntegerSequenceCode
     {
         int valueCount = values.Length;
         int valueRange = valueCount == 3 ? 5 : 3;
-        int[] interleavedBits = valueRange == 5 ? InterleavedQuintBits : InterleavedTritBits;
+        int[] interleavedBits = valueRange == 5 ? BoundedIntegerSequenceCodec.InterleavedQuintBits : BoundedIntegerSequenceCodec.InterleavedTritBits;
 
         // Up to 5 ints each (20 bytes) — one BISE block holds 5 trits or 3 quints (spec §C.2.22).
         Span<int> mantissas = stackalloc int[valueCount];
@@ -132,7 +138,7 @@ internal sealed class BoundedIntegerSequenceEncoder : BoundedIntegerSequenceCode
     /// </summary>
     private static int FindEncodingSelector(ReadOnlySpan<int> nonBitComponents, int valueRange, int encodedBitCount)
     {
-        int[] encodings = valueRange == 5 ? FlatQuintEncodings : FlatTritEncodings;
+        int[] encodings = valueRange == 5 ? BoundedIntegerSequenceCodec.FlatQuintEncodings : BoundedIntegerSequenceCodec.FlatTritEncodings;
         int stride = valueRange == 5 ? 3 : 5;
         int valueCount = nonBitComponents.Length;
 
