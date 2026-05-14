@@ -161,6 +161,15 @@ internal class BoundedIntegerSequenceCodec
     }
 
     /// <summary>
+    /// Unchecked variant of <see cref="GetPackingModeBitCount"/> for hot-path use where
+    /// <paramref name="range"/> is known to be in [1, 255] (the ASTC spec-valid range).
+    /// Skips argument validation — about two branches per call, which add up on the ~500K
+    /// BISE-decode calls a typical image requires.
+    /// </summary>
+    internal static (BiseEncodingMode Mode, int BitCount) GetPackingModeBitCountUnchecked(int range)
+        => PackingModeCache[range];
+
+    /// <summary>
     /// Returns the overall bit count for a range of values encoded
     /// </summary>
     public static int GetBitCount(BiseEncodingMode encodingMode, int valuesCount, int bitCount)

@@ -84,7 +84,9 @@ internal static class FusedBlockDecoder
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void DecodeBiseSequence(UInt128 source, int range, int count, Span<int> result)
     {
-        (BiseEncodingMode encMode, int bitsPerValue) = BoundedIntegerSequenceCodec.GetPackingModeBitCount(range);
+        // Range is in [1, 255] by construction — BlockInfo's ColorValuesRange/WeightRange come
+        // from BlockModeDecoder's spec-bound tables, so skip the redundant per-block bounds check.
+        (BiseEncodingMode encMode, int bitsPerValue) = BoundedIntegerSequenceCodec.GetPackingModeBitCountUnchecked(range);
 
         if (encMode != BiseEncodingMode.BitEncoding)
         {
