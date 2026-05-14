@@ -37,4 +37,21 @@ internal static class Interpolation
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float Unorm16ToFloat(int interpolated)
         => Math.Clamp(interpolated, 0, 0xFFFF) / 65535.0f;
+
+    /// <summary>
+    /// <see cref="BlendLdrReplicated"/> followed by clamp-to-UNORM16 — the LDR-channel
+    /// interpolation path used by the HDR output writer (ASTC spec §C.2.24).
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ushort BlendLdrReplicatedAsUnorm16(int p0, int p1, int weight)
+        => (ushort)Math.Clamp(BlendLdrReplicated(p0, p1, weight), 0, 0xFFFF);
+
+    /// <summary>
+    /// <see cref="BlendWeighted"/> followed by clamp-to-UNORM16 — the HDR-channel
+    /// interpolation path. HDR endpoints are already 16-bit values (FP16 bit patterns), so
+    /// no 8→16 expansion is needed.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ushort BlendWeightedAsUnorm16(int p0, int p1, int weight)
+        => (ushort)Math.Clamp(BlendWeighted(p0, p1, weight), 0, 0xFFFF);
 }

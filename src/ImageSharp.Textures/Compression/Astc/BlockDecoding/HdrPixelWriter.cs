@@ -65,7 +65,7 @@ internal readonly struct HdrPixelWriter : IPixelWriter<float>
         for (int channel = 0; channel < 4; ++channel)
         {
             int channelWeight = ChannelWeight(channel, weight, dualPlane);
-            ushort interpolated = InterpolateChannelHdr(
+            ushort interpolated = Interpolation.BlendWeightedAsUnorm16(
                 endpoint.HdrLow.GetChannel(channel),
                 endpoint.HdrHigh.GetChannel(channel),
                 channelWeight);
@@ -101,7 +101,7 @@ internal readonly struct HdrPixelWriter : IPixelWriter<float>
         for (int channel = 0; channel < 4; ++channel)
         {
             int channelWeight = ChannelWeight(channel, weight, dualPlane);
-            ushort unorm16 = InterpolateLdrAsUnorm16(
+            ushort unorm16 = Interpolation.BlendLdrReplicatedAsUnorm16(
                 endpoint.LdrLow.GetChannel(channel),
                 endpoint.LdrHigh.GetChannel(channel),
                 channelWeight);
@@ -117,23 +117,6 @@ internal readonly struct HdrPixelWriter : IPixelWriter<float>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static int ChannelWeight(int channel, int primary, DualPlanePixel? dualPlane)
         => dualPlane is { } dp && channel == dp.Channel ? dp.Weight : primary;
-
-    /// <summary>
-    /// Interpolates an LDR channel value and returns the full 16-bit UNORM result
-    /// (before reduction to byte). Used by the HDR output path for LDR endpoints.
-    /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static ushort InterpolateLdrAsUnorm16(int p0, int p1, int weight)
-        => (ushort)Math.Clamp(Interpolation.BlendLdrReplicated(p0, p1, weight), 0, 0xFFFF);
-
-    /// <summary>
-    /// Interpolates an HDR channel value between two endpoints using the specified weight.
-    /// HDR endpoints are already 16-bit values (FP16 bit patterns), unlike LDR interpolation
-    /// which expands 8-bit to 16-bit first.
-    /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static ushort InterpolateChannelHdr(int p0, int p1, int weight)
-        => (ushort)Math.Clamp(Interpolation.BlendWeighted(p0, p1, weight), 0, 0xFFFF);
 
     /// <summary>
     /// Per-pixel description of the dual-plane override for a single texel: the dual-plane
