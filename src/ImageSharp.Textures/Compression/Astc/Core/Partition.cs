@@ -1,12 +1,14 @@
 // Copyright (c) Six Labors.
 // Licensed under the Six Labors Split License.
 
+using System.Collections.Concurrent;
+
 namespace SixLabors.ImageSharp.Textures.Compression.Astc.Core;
 
 internal sealed class Partition
 {
-    private static readonly System.Collections.Concurrent.ConcurrentDictionary<(Footprint, int, int), Partition> PartitionCache = new();
-    private static readonly System.Collections.Concurrent.ConcurrentDictionary<Footprint, Partition> SinglePartitionCache = new();
+    private static readonly ConcurrentDictionary<(Footprint, int, int), Partition> PartitionCache = new();
+    private static readonly ConcurrentDictionary<Footprint, Partition> SinglePartitionCache = new();
 
     private Partition(int[] assignment) => this.Assignment = assignment;
 
