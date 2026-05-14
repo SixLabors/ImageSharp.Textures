@@ -150,15 +150,14 @@ public static class AstcDecoder
         where T : unmanaged
     {
         TPipeline pipeline = default;
-        bool isFusable = !info.IsVoidExtent && info.PartitionCount == 1 && !info.IsDualPlane;
 
-        if (isFusable && dest.IsFullInteriorBlock)
+        if (info.IsFusable && dest.IsFullInteriorBlock)
         {
             pipeline.FusedToImage(blockBits, in info, footprint, dest.DstBaseX, dest.DstBaseY, imageWidth, imageBuffer);
             return;
         }
 
-        if (isFusable)
+        if (info.IsFusable)
         {
             pipeline.FusedToScratch(blockBits, in info, footprint, decodedPixels);
         }
@@ -193,7 +192,7 @@ public static class AstcDecoder
         TPipeline pipeline = default;
         pipeline.PreDispatchCheck(blockBits, in info);
 
-        if (!info.IsVoidExtent && info.PartitionCount == 1 && !info.IsDualPlane)
+        if (info.IsFusable)
         {
             pipeline.FusedToScratch(blockBits, in info, footprint, buffer);
             return;

@@ -62,6 +62,15 @@ internal struct BlockInfo
         set => this.EndpointModes[0] = value;
     }
 
+    /// <summary>
+    /// Gets a value indicating whether the block can take the fused fast path:
+    /// single-partition, single-plane, non-void-extent (the common shape per ASTC spec
+    /// §C.2.10, §C.2.20, §C.2.23). Multi-partition, dual-plane, and void-extent blocks fall
+    /// through to the general logical-block pipeline.
+    /// </summary>
+    public readonly bool IsFusable
+        => !this.IsVoidExtent && this.PartitionCount == 1 && !this.IsDualPlane;
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly ColorEndpointMode GetEndpointMode(int partition)
         => (uint)partition < 4
