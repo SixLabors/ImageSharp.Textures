@@ -311,26 +311,26 @@ internal static class EndpointEncoder
         Rgba32 invertedBcLow = endpointLowRgba.WithInvertedBlueContract();
         Rgba32 invertedBcHigh = endpointHighRgba.WithInvertedBlueContract();
 
-        // Build four (base, offset) encoded pairs: direct and blue-contract forms, each
-        // with normal (low=base) and swapped (high=base) variants. These feed the
-        // base-offset mode (spec §C.2.14 "RGB/RGBA, base+offset").
+        // Build base-offset candidates. The direct form (no BC) has two variants — normal
+        // (low=base) and swapped (high=base) — which produce different encodings.
+        // The blue-contract form has only one form: pre-swap the args at the call site so
+        // the base-offset math runs against the BC-inverted high endpoint, matching ARM's
+        // try_quantize_rgb_delta_blue_contract (which swaps internally).
         QuantizedEndpointPair offsetQuantized = BuildBaseOffsetPair(endpointLowRgba, endpointHighRgba, swapped: false, maxValue);
         QuantizedEndpointPair bcOffsetQuantized = BuildBaseOffsetPair(invertedBcHigh, invertedBcLow, swapped: false, maxValue);
         QuantizedEndpointPair offsetSwappedQuantized = BuildBaseOffsetPair(endpointLowRgba, endpointHighRgba, swapped: true, maxValue);
-        QuantizedEndpointPair bcOffsetSwappedQuantized = BuildBaseOffsetPair(invertedBcLow, invertedBcHigh, swapped: true, maxValue);
 
         QuantizedEndpointPair directQuantized = new(endpointLowRgba, endpointHighRgba, maxValue);
         QuantizedEndpointPair bcQuantized = new(invertedBcLow, invertedBcHigh, maxValue);
 
-        // Rank six candidate encodings by reconstruction error; pack the first that fits.
+        // Rank five candidate encodings by reconstruction error; pack the first that fits.
         List<CEEncodingOption> candidates =
         [
             ScoreDirect(directQuantized, endpointLowRgba, endpointHighRgba, withAlpha),
             ScoreBlueContract(bcQuantized, endpointLowRgba, endpointHighRgba, withAlpha),
             ScoreBaseOffset(offsetQuantized, endpointLowRgba, endpointHighRgba, swapped: false, withAlpha),
-            ScoreBaseOffsetBlueContract(bcOffsetQuantized, endpointLowRgba, endpointHighRgba, swapped: false, withAlpha),
+            ScoreBaseOffsetBlueContract(bcOffsetQuantized, endpointLowRgba, endpointHighRgba, withAlpha),
             ScoreBaseOffset(offsetSwappedQuantized, endpointLowRgba, endpointHighRgba, swapped: true, withAlpha),
-            ScoreBaseOffsetBlueContract(bcOffsetSwappedQuantized, endpointLowRgba, endpointHighRgba, swapped: true, withAlpha),
         ];
 
         candidates.Sort((a, b) => a.Error.CompareTo(b.Error));
@@ -420,24 +420,23 @@ internal static class EndpointEncoder
 
     /// <summary>
     /// Scores a base-offset encoding combined with blue-contract application on the
-    /// reconstructed decoded endpoints.
+    /// reconstructed decoded endpoints. The caller has already pre-swapped the BC inputs in
+    /// <see cref="BuildBaseOffsetPair"/>'s arg list, so after BC inversion <c>decodedLow</c>
+    /// corresponds to <paramref name="originalHigh"/> and <c>decodedHigh</c> to
+    /// <paramref name="originalLow"/>.
     /// </summary>
     private static CEEncodingOption ScoreBaseOffsetBlueContract(
         QuantizedEndpointPair pair,
         Rgba32 originalLow,
         Rgba32 originalHigh,
-        bool swapped,
         bool withAlpha)
     {
-        (Rgba32 decodedLow, Rgba32 decodedHigh) = ReconstructBaseOffset(pair, swapped);
+        (Rgba32 decodedLow, Rgba32 decodedHigh) = ReconstructBaseOffset(pair, swapped: false);
         decodedLow = decodedLow.WithBlueContract();
         decodedHigh = decodedHigh.WithBlueContract();
 
-        // Note: the swap flag here compares decodedLow to originalHigh (and vice versa).
-        int error = swapped
-            ? ChannelError(decodedLow, originalLow, withAlpha) + ChannelError(decodedHigh, originalHigh, withAlpha)
-            : ChannelError(decodedLow, originalHigh, withAlpha) + ChannelError(decodedHigh, originalLow, withAlpha);
-        return new CEEncodingOption(error, pair, swapEndpoints: swapped, blueContract: true, useOffsetMode: true);
+        int error = ChannelError(decodedLow, originalHigh, withAlpha) + ChannelError(decodedHigh, originalLow, withAlpha);
+        return new CEEncodingOption(error, pair, swapEndpoints: false, blueContract: true, useOffsetMode: true);
     }
 
     /// <summary>
