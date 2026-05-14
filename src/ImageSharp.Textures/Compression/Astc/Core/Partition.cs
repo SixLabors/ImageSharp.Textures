@@ -8,19 +8,7 @@ internal sealed class Partition
     private static readonly System.Collections.Concurrent.ConcurrentDictionary<(Footprint, int, int), Partition> PartitionCache = new();
     private static readonly System.Collections.Concurrent.ConcurrentDictionary<Footprint, Partition> SinglePartitionCache = new();
 
-    private Partition(Footprint footprint, int partitionCount, int? id, int[] assignment)
-    {
-        this.Footprint = footprint;
-        this.PartitionCount = partitionCount;
-        this.PartitionId = id;
-        this.Assignment = assignment;
-    }
-
-    public Footprint Footprint { get; }
-
-    public int PartitionCount { get; }
-
-    public int? PartitionId { get; }
+    private Partition(int[] assignment) => this.Assignment = assignment;
 
     /// <summary>
     /// Gets the per-texel partition-subset map (length <see cref="Footprint.PixelCount"/>).
@@ -35,9 +23,7 @@ internal sealed class Partition
     /// all callers (void-extent blocks and single-partition logical-path blocks).
     /// </summary>
     public static Partition GetSinglePartition(Footprint footprint)
-        => SinglePartitionCache.GetOrAdd(
-            footprint,
-            static fp => new Partition(fp, partitionCount: 1, id: 0, assignment: new int[fp.PixelCount]));
+        => SinglePartitionCache.GetOrAdd(footprint, static fp => new Partition(new int[fp.PixelCount]));
 
     public static Partition GetASTCPartition(Footprint footprint, int partitionCount, int partitionId)
     {
@@ -59,7 +45,7 @@ internal sealed class Partition
             }
         }
 
-        Partition part = new(footprint, partitionCount, partitionId, assignment);
+        Partition part = new(assignment);
         PartitionCache.TryAdd(key, part);
         return part;
     }
