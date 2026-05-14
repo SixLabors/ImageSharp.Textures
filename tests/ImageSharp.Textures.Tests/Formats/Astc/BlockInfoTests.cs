@@ -26,7 +26,7 @@ public class BlockInfoTests
     {
         // Void extent marker: bits[0..9] == 0x1FC AND bits[10..11] == 0x3.
         // Coords all-ones fall-through means not "invalid coords".
-        // Bit layout: low 12 bits = 0xFFC (0x1FC | 0xE00 for the reserved 0x3 at bits 10..11);
+        // Bit layout: low 12 bits = 0xFFC (0x1FC | 0xE00 for the reserved 0x3 at bits 10..11)
         // then 4 × 13-bit coords all set = 0x1FFF.
         UInt128 bits = (UInt128)0xFFFFFFFFFFFFFDFCUL;
         BlockInfo info = BlockModeDecoder.Decode(bits);

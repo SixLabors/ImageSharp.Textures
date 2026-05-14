@@ -45,7 +45,7 @@ internal static class BlockModeDecoder
             return new BlockInfo
             {
                 IsVoidExtent = true,
-                IsValid = !CheckVoidExtentIsIllegal(bits, lowBits)
+                IsValid = IsVoidExtentWellFormed(bits, lowBits)
             };
         }
 
@@ -363,11 +363,11 @@ internal static class BlockModeDecoder
     /// and either the texel coordinates are all-ones (sentinel for "no constraint") or they
     /// form two valid [min, max] pairs with min &lt; max.
     /// </summary>
-    private static bool CheckVoidExtentIsIllegal(UInt128 bits, ulong lowBits)
+    private static bool IsVoidExtentWellFormed(UInt128 bits, ulong lowBits)
     {
         if (BitOperations.GetBits(bits, 10, 2).Low() != 0x3UL)
         {
-            return true;
+            return false;
         }
 
         int c0 = (int)BitOperations.GetBits(lowBits, 12, 13);
@@ -378,6 +378,6 @@ internal static class BlockModeDecoder
         const int all1s = (1 << 13) - 1;
         bool coordsAll1s = c0 == all1s && c1 == all1s && c2 == all1s && c3 == all1s;
 
-        return !coordsAll1s && (c0 >= c1 || c2 >= c3);
+        return coordsAll1s || (c0 < c1 && c2 < c3);
     }
 }
