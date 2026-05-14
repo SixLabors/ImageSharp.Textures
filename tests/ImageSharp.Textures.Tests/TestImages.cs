@@ -54,6 +54,8 @@ public static class TestImages
             public const string Ldr_A_1x1 = "HDR/LDR-A-1x1.astc";
             public const string Hdr_Tile = "HDR/hdr-tile.astc";
             public const string Ldr_Tile = "HDR/ldr-tile.astc";
+            public const string Hdr_Mixed_256_4x4 = "HDR/hdr-mixed-256-4x4.astc";
+            public const string Hdr_Mixed_256_8x8 = "HDR/hdr-mixed-256-8x8.astc";
         }
     }
 
