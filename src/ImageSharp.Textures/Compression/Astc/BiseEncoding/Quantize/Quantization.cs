@@ -84,12 +84,17 @@ internal static class Quantization
     /// Batch unquantize: uses pre-computed flat table for O(1) lookup per value.
     /// No per-call validation, no conditional branch per weight.
     /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// Thrown when <paramref name="range"/> has no associated unquantization table — would
+    /// only happen on a malformed block that escaped <see cref="BlockDecoding.BlockModeDecoder"/>'s
+    /// spec-bound checks.
+    /// </exception>
     internal static void UnquantizeWeightsBatch(Span<int> weights, int range)
     {
         int[]? table = UnquantizeWeightsFlat[range];
         if (table == null)
         {
-            return;
+            throw new ArgumentOutOfRangeException(nameof(range), range, "No weight unquantization table for this range");
         }
 
         for (int i = 0; i < weights.Length; i++)
@@ -102,12 +107,17 @@ internal static class Quantization
     /// Batch unquantize color endpoint values: uses pre-computed flat table.
     /// No per-call validation, single array lookup per value.
     /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// Thrown when <paramref name="rangeMaxValue"/> has no associated unquantization table —
+    /// would only happen on a malformed block that escaped <see cref="BlockDecoding.BlockModeDecoder"/>'s
+    /// spec-bound checks.
+    /// </exception>
     internal static void UnquantizeCEValuesBatch(Span<int> values, int rangeMaxValue)
     {
         int[]? table = UnquantizeEndpointsFlat[rangeMaxValue];
         if (table == null)
         {
-            return;
+            throw new ArgumentOutOfRangeException(nameof(rangeMaxValue), rangeMaxValue, "No endpoint unquantization table for this range");
         }
 
         for (int i = 0; i < values.Length; i++)

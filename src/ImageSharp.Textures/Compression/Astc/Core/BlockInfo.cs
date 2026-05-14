@@ -71,11 +71,22 @@ internal struct BlockInfo
     public readonly bool IsFusable
         => !this.IsVoidExtent && this.PartitionCount == 1 && !this.IsDualPlane;
 
+    /// <summary>
+    /// Gets the colour endpoint mode for the given partition index. Only the first
+    /// <see cref="PartitionCount"/> slots in <see cref="EndpointModes"/> are populated by
+    /// <see cref="BlockDecoding.BlockModeDecoder"/>; the trailing slots retain their
+    /// <c>default(ColorEndpointMode)</c> value and reading them would silently return
+    /// <see cref="ColorEndpointMode.LdrLumaDirect"/>.
+    /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// Thrown when <paramref name="partition"/> is outside
+    /// <c>[0, <see cref="PartitionCount"/>)</c>.
+    /// </exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly ColorEndpointMode GetEndpointMode(int partition)
-        => (uint)partition < 4
+        => (uint)partition < (uint)this.PartitionCount
             ? this.EndpointModes[partition]
-            : this.EndpointModes[0];
+            : throw new ArgumentOutOfRangeException(nameof(partition), partition, $"Must be in [0, PartitionCount={this.PartitionCount}).");
 
     /// <summary>
     /// Returns true if any of this block's active partitions uses an HDR endpoint mode (spec
