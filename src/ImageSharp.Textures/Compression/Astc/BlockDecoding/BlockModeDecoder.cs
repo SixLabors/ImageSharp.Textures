@@ -271,7 +271,7 @@ internal static class BlockModeDecoder
         {
             ColorEndpointMode mode = (ColorEndpointMode)((lowBits >> 13) & 0xF);
             cems[0] = mode;
-            return (((int)mode / 4) + 1) * 2;
+            return mode.GetColorValuesCount();
         }
 
         // Multi-partition: either shared CEM (marker 0) or per-partition (non-zero marker).

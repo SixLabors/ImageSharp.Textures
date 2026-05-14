@@ -52,6 +52,8 @@ internal static class Quantization
         ArgumentOutOfRangeException.ThrowIfLessThan(weight, 0);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(weight, 64);
 
+        // ASTC spec §C.2.18: weight slot 33 is unused; collapse 34..64 to 33..63 before
+        // table lookup. The inverse (dequantized > 32 = +1) lives in UnquantizeWeightsFlat.
         if (weight > 33)
         {
             weight -= 1;
