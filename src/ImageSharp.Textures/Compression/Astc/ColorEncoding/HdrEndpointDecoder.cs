@@ -18,15 +18,21 @@ namespace SixLabors.ImageSharp.Textures.Compression.Astc.ColorEncoding;
 internal static class HdrEndpointDecoder
 {
     /// <summary>
-    /// Target channel of a <see cref="BitPlacement"/> — which decoded field should receive
-    /// the OR'd bit contribution.
+    /// Output slot index for the HdrRgbBaseScale (CEM 7) bit-placement table.
     /// </summary>
-    private enum Target : byte
+    private enum BaseScaleTarget
     {
         Red,
         Green,
         Blue,
         Scale,
+    }
+
+    /// <summary>
+    /// Output slot index for the HdrRgbDirect (CEM 11) bit-placement table.
+    /// </summary>
+    private enum DirectTarget
+    {
         A,
         B0,
         B1,
@@ -36,11 +42,13 @@ internal static class HdrEndpointDecoder
     }
 
     /// <summary>
-    /// One row of an HDR bit-placement table. For each entry, when the current one-hot mode
-    /// matches <see cref="ModeMask"/>, the bit at source index <see cref="SourceBit"/> is
-    /// OR'd into <see cref="Target"/> shifted left by <see cref="TargetShift"/>.
+    /// One row of an HDR bit-placement table. When the current one-hot mode matches
+    /// <see cref="ModeMask"/>, the bit at source index <see cref="SourceBit"/> is OR'd into
+    /// the output slot at index <see cref="Slot"/>, shifted left by <see cref="TargetShift"/>.
+    /// The slot is stored as a plain <c>int</c> so the same row type serves both placement
+    /// tables; callers populate it from <see cref="BaseScaleTarget"/> or <see cref="DirectTarget"/>.
     /// </summary>
-    private readonly record struct BitPlacement(Target Target, int ModeMask, int SourceBit, int TargetShift);
+    private readonly record struct BitPlacement(int Slot, int ModeMask, int SourceBit, int TargetShift);
 
     // Shift amounts for the HdrRgbBaseScale mode, indexed by the mode selector (0..5).
     // See ARM astcenc_color_unquantize.cpp rgb_hdr_unpack.
@@ -48,28 +56,28 @@ internal static class HdrEndpointDecoder
     private static readonly int[] BaseScaleShiftByMode = [1, 1, 2, 3, 4, 5];
 
     // Bit placements for the HdrRgbBaseScale mode (ASTC CEM 7). Each entry represents:
-    // "if the current one-hot mode matches ModeMask, OR sourceBits[SourceBit] into Target at
+    // "if the current one-hot mode matches ModeMask, OR sourceBits[SourceBit] into Slot at
     // position TargetShift." The table reproduces the if-statement ladder from the ARM
     // reference while making the per-mode pattern directly inspectable.
     private static readonly BitPlacement[] BaseScalePlacements =
     [
-        new(Target.Green, ModeMask: 0x30, SourceBit: 0, TargetShift: 6),
-        new(Target.Green, ModeMask: 0x3A, SourceBit: 1, TargetShift: 5),
-        new(Target.Blue, ModeMask: 0x30, SourceBit: 2, TargetShift: 6),
-        new(Target.Blue, ModeMask: 0x3A, SourceBit: 3, TargetShift: 5),
-        new(Target.Scale, ModeMask: 0x3D, SourceBit: 6, TargetShift: 5),
-        new(Target.Scale, ModeMask: 0x2D, SourceBit: 5, TargetShift: 6),
-        new(Target.Scale, ModeMask: 0x04, SourceBit: 4, TargetShift: 7),
-        new(Target.Red, ModeMask: 0x3B, SourceBit: 4, TargetShift: 6),
-        new(Target.Red, ModeMask: 0x04, SourceBit: 3, TargetShift: 6),
-        new(Target.Red, ModeMask: 0x10, SourceBit: 5, TargetShift: 7),
-        new(Target.Red, ModeMask: 0x0F, SourceBit: 2, TargetShift: 7),
-        new(Target.Red, ModeMask: 0x05, SourceBit: 1, TargetShift: 8),
-        new(Target.Red, ModeMask: 0x0A, SourceBit: 0, TargetShift: 8),
-        new(Target.Red, ModeMask: 0x05, SourceBit: 0, TargetShift: 9),
-        new(Target.Red, ModeMask: 0x02, SourceBit: 6, TargetShift: 9),
-        new(Target.Red, ModeMask: 0x01, SourceBit: 3, TargetShift: 10),
-        new(Target.Red, ModeMask: 0x02, SourceBit: 5, TargetShift: 10),
+        new(Slot: (int)BaseScaleTarget.Green, ModeMask: 0x30, SourceBit: 0, TargetShift: 6),
+        new(Slot: (int)BaseScaleTarget.Green, ModeMask: 0x3A, SourceBit: 1, TargetShift: 5),
+        new(Slot: (int)BaseScaleTarget.Blue,  ModeMask: 0x30, SourceBit: 2, TargetShift: 6),
+        new(Slot: (int)BaseScaleTarget.Blue,  ModeMask: 0x3A, SourceBit: 3, TargetShift: 5),
+        new(Slot: (int)BaseScaleTarget.Scale, ModeMask: 0x3D, SourceBit: 6, TargetShift: 5),
+        new(Slot: (int)BaseScaleTarget.Scale, ModeMask: 0x2D, SourceBit: 5, TargetShift: 6),
+        new(Slot: (int)BaseScaleTarget.Scale, ModeMask: 0x04, SourceBit: 4, TargetShift: 7),
+        new(Slot: (int)BaseScaleTarget.Red,   ModeMask: 0x3B, SourceBit: 4, TargetShift: 6),
+        new(Slot: (int)BaseScaleTarget.Red,   ModeMask: 0x04, SourceBit: 3, TargetShift: 6),
+        new(Slot: (int)BaseScaleTarget.Red,   ModeMask: 0x10, SourceBit: 5, TargetShift: 7),
+        new(Slot: (int)BaseScaleTarget.Red,   ModeMask: 0x0F, SourceBit: 2, TargetShift: 7),
+        new(Slot: (int)BaseScaleTarget.Red,   ModeMask: 0x05, SourceBit: 1, TargetShift: 8),
+        new(Slot: (int)BaseScaleTarget.Red,   ModeMask: 0x0A, SourceBit: 0, TargetShift: 8),
+        new(Slot: (int)BaseScaleTarget.Red,   ModeMask: 0x05, SourceBit: 0, TargetShift: 9),
+        new(Slot: (int)BaseScaleTarget.Red,   ModeMask: 0x02, SourceBit: 6, TargetShift: 9),
+        new(Slot: (int)BaseScaleTarget.Red,   ModeMask: 0x01, SourceBit: 3, TargetShift: 10),
+        new(Slot: (int)BaseScaleTarget.Red,   ModeMask: 0x02, SourceBit: 5, TargetShift: 10),
     ];
 
     // Data-bit widths for the HdrRgbDirect mode (ASTC CEM 11), indexed by modeValue (0..7).
@@ -77,57 +85,53 @@ internal static class HdrEndpointDecoder
     private static readonly int[] DirectDataBitsByMode = [7, 6, 7, 6, 5, 6, 5, 6];
 
     // Bit placements for the HdrRgbDirect mode (ASTC CEM 11). Each entry: if the current
-    // one-hot modeValue matches ModeMask, OR sourceBits[SourceBit] into Target at TargetShift.
-    // Entries are grouped by Target (a, c, b0/b1, d0/d1 — see the ARM reference).
-    // Pairs like (b0, b1) or (d0, d1) share a single ModeMask in the ARM reference but
-    // consume different source bits per target, so they appear as two entries here.
+    // one-hot modeValue matches ModeMask, OR sourceBits[SourceBit] into Slot at TargetShift.
+    // Entries are grouped by Slot (A, C, B0/B1, D0/D1 — see the ARM reference).
+    // Pairs like (B0, B1) or (D0, D1) share a single ModeMask in the ARM reference but
+    // consume different source bits per slot, so they appear as two entries here.
     private static readonly BitPlacement[] DirectPlacements =
     [
-        new(Target.A, ModeMask: 0xA4, SourceBit: 0, TargetShift: 9),
-        new(Target.A, ModeMask: 0x08, SourceBit: 2, TargetShift: 9),
-        new(Target.A, ModeMask: 0x50, SourceBit: 4, TargetShift: 9),
-        new(Target.A, ModeMask: 0x50, SourceBit: 5, TargetShift: 10),
-        new(Target.A, ModeMask: 0xA0, SourceBit: 1, TargetShift: 10),
-        new(Target.A, ModeMask: 0xC0, SourceBit: 2, TargetShift: 11),
-        new(Target.C, ModeMask: 0x04, SourceBit: 1, TargetShift: 6),
-        new(Target.C, ModeMask: 0xE8, SourceBit: 3, TargetShift: 6),
-        new(Target.C, ModeMask: 0x20, SourceBit: 2, TargetShift: 7),
-        new(Target.B0, ModeMask: 0x5B, SourceBit: 0, TargetShift: 6),
-        new(Target.B1, ModeMask: 0x5B, SourceBit: 1, TargetShift: 6),
-        new(Target.B0, ModeMask: 0x12, SourceBit: 2, TargetShift: 7),
-        new(Target.B1, ModeMask: 0x12, SourceBit: 3, TargetShift: 7),
-        new(Target.D0, ModeMask: 0xAF, SourceBit: 4, TargetShift: 5),
-        new(Target.D1, ModeMask: 0xAF, SourceBit: 5, TargetShift: 5),
-        new(Target.D0, ModeMask: 0x05, SourceBit: 2, TargetShift: 6),
-        new(Target.D1, ModeMask: 0x05, SourceBit: 3, TargetShift: 6),
+        new(Slot: (int)DirectTarget.A,  ModeMask: 0xA4, SourceBit: 0, TargetShift: 9),
+        new(Slot: (int)DirectTarget.A,  ModeMask: 0x08, SourceBit: 2, TargetShift: 9),
+        new(Slot: (int)DirectTarget.A,  ModeMask: 0x50, SourceBit: 4, TargetShift: 9),
+        new(Slot: (int)DirectTarget.A,  ModeMask: 0x50, SourceBit: 5, TargetShift: 10),
+        new(Slot: (int)DirectTarget.A,  ModeMask: 0xA0, SourceBit: 1, TargetShift: 10),
+        new(Slot: (int)DirectTarget.A,  ModeMask: 0xC0, SourceBit: 2, TargetShift: 11),
+        new(Slot: (int)DirectTarget.C,  ModeMask: 0x04, SourceBit: 1, TargetShift: 6),
+        new(Slot: (int)DirectTarget.C,  ModeMask: 0xE8, SourceBit: 3, TargetShift: 6),
+        new(Slot: (int)DirectTarget.C,  ModeMask: 0x20, SourceBit: 2, TargetShift: 7),
+        new(Slot: (int)DirectTarget.B0, ModeMask: 0x5B, SourceBit: 0, TargetShift: 6),
+        new(Slot: (int)DirectTarget.B1, ModeMask: 0x5B, SourceBit: 1, TargetShift: 6),
+        new(Slot: (int)DirectTarget.B0, ModeMask: 0x12, SourceBit: 2, TargetShift: 7),
+        new(Slot: (int)DirectTarget.B1, ModeMask: 0x12, SourceBit: 3, TargetShift: 7),
+        new(Slot: (int)DirectTarget.D0, ModeMask: 0xAF, SourceBit: 4, TargetShift: 5),
+        new(Slot: (int)DirectTarget.D1, ModeMask: 0xAF, SourceBit: 5, TargetShift: 5),
+        new(Slot: (int)DirectTarget.D0, ModeMask: 0x05, SourceBit: 2, TargetShift: 6),
+        new(Slot: (int)DirectTarget.D1, ModeMask: 0x05, SourceBit: 3, TargetShift: 6),
     ];
 #pragma warning restore SA1201
 
     /// <summary>
     /// Applies a mode-gated bit-placement table. For each row, if the current one-hot mode
     /// matches <see cref="BitPlacement.ModeMask"/>, the bit at the row's source index is
-    /// OR'd into <paramref name="targets"/>[<c>p.Target - firstTargetIndex</c>] at the row's
-    /// target shift.
+    /// OR'd into <paramref name="targets"/>[<c>p.Slot</c>] at the row's target shift.
     /// </summary>
     /// <param name="placements">The table rows to apply (constant per decoder).</param>
     /// <param name="oneHotMode">1 &lt;&lt; modeValue — the one-hot mode selector.</param>
     /// <param name="sourceBits">The per-bit source values extracted from the v-inputs.</param>
     /// <param name="targets">The output slots; each entry is OR'd in place.</param>
-    /// <param name="firstTargetIndex">The <see cref="Target"/> value of <c>targets[0]</c>;
-    /// used to translate enum positions into span indices.</param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void ApplyBitPlacements(
         ReadOnlySpan<BitPlacement> placements,
         int oneHotMode,
         ReadOnlySpan<int> sourceBits,
-        Span<int> targets,
-        int firstTargetIndex)
+        Span<int> targets)
     {
         foreach (BitPlacement p in placements)
         {
             if ((oneHotMode & p.ModeMask) != 0)
             {
-                targets[(int)p.Target - firstTargetIndex] |= sourceBits[p.SourceBit] << p.TargetShift;
+                targets[p.Slot] |= sourceBits[p.SourceBit] << p.TargetShift;
             }
         }
     }
@@ -253,7 +257,7 @@ internal static class HdrEndpointDecoder
             _ => (0, 5)
         };
 
-        // Targets indexed by Target enum positions: [Red, Green, Blue, Scale].
+        // Targets indexed by BaseScaleTarget: [Red, Green, Blue, Scale].
         Span<int> targets =
         [
             v0 & 0x3F,
@@ -273,12 +277,12 @@ internal static class HdrEndpointDecoder
             (v3 >> 5) & 1,
         ];
 
-        ApplyBitPlacements(BaseScalePlacements, oneHotMode: 1 << mode, sourceBits, targets, firstTargetIndex: (int)Target.Red);
+        ApplyBitPlacements(BaseScalePlacements, oneHotMode: 1 << mode, sourceBits, targets);
 
-        int red = targets[(int)Target.Red];
-        int green = targets[(int)Target.Green];
-        int blue = targets[(int)Target.Blue];
-        int scale = targets[(int)Target.Scale];
+        int red = targets[(int)BaseScaleTarget.Red];
+        int green = targets[(int)BaseScaleTarget.Green];
+        int blue = targets[(int)BaseScaleTarget.Blue];
+        int scale = targets[(int)BaseScaleTarget.Scale];
 
         int shiftAmount = BaseScaleShiftByMode[mode];
         red <<= shiftAmount;
@@ -316,7 +320,7 @@ internal static class HdrEndpointDecoder
             return (passthroughLow, passthroughHigh);
         }
 
-        // Targets indexed by offset from Target.A: [A, B0, B1, C, D0, D1].
+        // Targets indexed by DirectTarget: [A, B0, B1, C, D0, D1].
         Span<int> targets =
         [
             v0 | ((v1 & 0x40) << 2),
@@ -337,14 +341,14 @@ internal static class HdrEndpointDecoder
             (v5 >> 5) & 1,
         ];
 
-        ApplyBitPlacements(DirectPlacements, oneHotMode: 1 << modeValue, sourceBits, targets, firstTargetIndex: (int)Target.A);
+        ApplyBitPlacements(DirectPlacements, oneHotMode: 1 << modeValue, sourceBits, targets);
 
-        int a = targets[(int)Target.A - (int)Target.A];
-        int b0 = targets[(int)Target.B0 - (int)Target.A];
-        int b1 = targets[(int)Target.B1 - (int)Target.A];
-        int c = targets[(int)Target.C - (int)Target.A];
-        int d0 = targets[(int)Target.D0 - (int)Target.A];
-        int d1 = targets[(int)Target.D1 - (int)Target.A];
+        int a = targets[(int)DirectTarget.A];
+        int b0 = targets[(int)DirectTarget.B0];
+        int b1 = targets[(int)DirectTarget.B1];
+        int c = targets[(int)DirectTarget.C];
+        int d0 = targets[(int)DirectTarget.D0];
+        int d1 = targets[(int)DirectTarget.D1];
 
         // Sign-extend the signed offsets d0, d1 based on mode-specific data-bit width.
         int dataBits = DirectDataBitsByMode[modeValue];
