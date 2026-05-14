@@ -23,10 +23,6 @@ public static class AstcDecoder
 {
     private static readonly ArrayPool<byte> ArrayPool = ArrayPool<byte>.Shared;
 
-    // ASTC decodes to 4-channel RGBA in both LDR (UNORM8) and HDR (float32) profiles.
-    // For LDR this is bytes-per-pixel; for HDR it's float-elements-per-pixel.
-    private const int ChannelsPerPixel = 4;
-
     /// <summary>
     /// Decompresses ASTC-compressed data to uncompressed RGBA8 format (4 bytes per pixel).
     /// </summary>
@@ -44,9 +40,9 @@ public static class AstcDecoder
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(height);
 
         long totalPixels = (long)width * height;
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(totalPixels, (long)int.MaxValue / ChannelsPerPixel);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(totalPixels, (long)int.MaxValue / BlockInfo.ChannelsPerPixel);
 
-        int totalBytes = (int)(totalPixels * ChannelsPerPixel);
+        int totalBytes = (int)(totalPixels * BlockInfo.ChannelsPerPixel);
         byte[] imageBuffer = new byte[totalBytes];
 
         return DecompressImage(astcData, width, height, footprint, imageBuffer)
@@ -68,7 +64,7 @@ public static class AstcDecoder
     /// </returns>
     public static bool DecompressImage(ReadOnlySpan<byte> astcData, int width, int height, Footprint footprint, Span<byte> imageBuffer)
     {
-        ValidateImageArgs(width, height, imageBuffer.Length, ChannelsPerPixel);
+        ValidateImageArgs(width, height, imageBuffer.Length, BlockInfo.ChannelsPerPixel);
 
         if (!TryGetBlockLayout(astcData, width, height, footprint, out int blocksWide, out int blocksHigh))
         {
@@ -77,7 +73,7 @@ public static class AstcDecoder
 
         // Scratch is rented outside the try/finally so a failing Rent never hands the default
         // sentinel to Return.
-        byte[] decodedBlock = ArrayPool.Rent(footprint.PixelCount * ChannelsPerPixel);
+        byte[] decodedBlock = ArrayPool.Rent(footprint.PixelCount * BlockInfo.ChannelsPerPixel);
         try
         {
             DecodeAllBlocks<LdrPipeline, byte>(astcData, width, height, footprint, blocksWide, blocksHigh, imageBuffer, decodedBlock.AsSpan());
@@ -174,7 +170,7 @@ public static class AstcDecoder
             pipeline.LogicalWrite(blockBits, in info, footprint, decodedPixels);
         }
 
-        CopyBlockRect(decodedPixels, imageBuffer, footprint.Width, dest.CopyWidth, dest.CopyHeight, dest.DstBaseX, dest.DstBaseY, imageWidth, ChannelsPerPixel);
+        CopyBlockRect(decodedPixels, imageBuffer, footprint.Width, dest.CopyWidth, dest.CopyHeight, dest.DstBaseX, dest.DstBaseY, imageWidth, BlockInfo.ChannelsPerPixel);
     }
 
     /// <summary>
@@ -216,7 +212,7 @@ public static class AstcDecoder
     public static void DecompressBlock(ReadOnlySpan<byte> blockData, Footprint footprint, Span<byte> buffer)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(blockData.Length, BlockInfo.SizeInBytes);
-        ArgumentOutOfRangeException.ThrowIfLessThan(buffer.Length, footprint.PixelCount * ChannelsPerPixel);
+        ArgumentOutOfRangeException.ThrowIfLessThan(buffer.Length, footprint.PixelCount * BlockInfo.ChannelsPerPixel);
 
         DecodeSingleBlock<LdrPipeline, byte>(blockData, footprint, buffer);
     }
@@ -263,14 +259,14 @@ public static class AstcDecoder
     /// </returns>
     public static bool DecompressHdrImage(ReadOnlySpan<byte> astcData, int width, int height, Footprint footprint, Span<float> imageBuffer)
     {
-        ValidateImageArgs(width, height, imageBuffer.Length, ChannelsPerPixel);
+        ValidateImageArgs(width, height, imageBuffer.Length, BlockInfo.ChannelsPerPixel);
 
         if (!TryGetBlockLayout(astcData, width, height, footprint, out int blocksWide, out int blocksHigh))
         {
             return false;
         }
 
-        float[] decodedBlock = ArrayPool<float>.Shared.Rent(footprint.PixelCount * ChannelsPerPixel);
+        float[] decodedBlock = ArrayPool<float>.Shared.Rent(footprint.PixelCount * BlockInfo.ChannelsPerPixel);
         try
         {
             DecodeAllBlocks<HdrPipeline, float>(
@@ -309,7 +305,7 @@ public static class AstcDecoder
     public static void DecompressHdrBlock(ReadOnlySpan<byte> blockData, Footprint footprint, Span<float> buffer)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(blockData.Length, BlockInfo.SizeInBytes);
-        ArgumentOutOfRangeException.ThrowIfLessThan(buffer.Length, footprint.PixelCount * ChannelsPerPixel);
+        ArgumentOutOfRangeException.ThrowIfLessThan(buffer.Length, footprint.PixelCount * BlockInfo.ChannelsPerPixel);
 
         DecodeSingleBlock<HdrPipeline, float>(blockData, footprint, buffer);
     }

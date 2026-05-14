@@ -13,8 +13,6 @@ namespace SixLabors.ImageSharp.Textures.Compression.Astc.BlockDecoding;
 /// </summary>
 internal static class FusedHdrBlockDecoder
 {
-    private const int ChannelsPerPixel = 4;
-
     /// <summary>
     /// Fused HDR decode to a contiguous float buffer.
     /// Handles single-partition, non-dual-plane blocks with both LDR and HDR endpoints.
@@ -28,7 +26,7 @@ internal static class FusedHdrBlockDecoder
             buffer,
             dstBaseX: 0,
             dstBaseY: 0,
-            dstRowStride: footprint.Width * ChannelsPerPixel);
+            dstRowStride: footprint.Width * BlockInfo.ChannelsPerPixel);
 
     /// <summary>
     /// Fused HDR decode writing directly to image buffer at strided positions.
@@ -50,7 +48,7 @@ internal static class FusedHdrBlockDecoder
             imageBuffer,
             dstBaseX,
             dstBaseY,
-            dstRowStride: imageWidth * ChannelsPerPixel);
+            dstRowStride: imageWidth * BlockInfo.ChannelsPerPixel);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void DecompressBlock(
@@ -94,13 +92,13 @@ internal static class FusedHdrBlockDecoder
 
         for (int pixelY = 0; pixelY < footprintHeight; pixelY++)
         {
-            int dstRowOffset = ((dstBaseY + pixelY) * dstRowStride) + (dstBaseX * ChannelsPerPixel);
+            int dstRowOffset = ((dstBaseY + pixelY) * dstRowStride) + (dstBaseX * BlockInfo.ChannelsPerPixel);
             int srcRowBase = pixelY * footprintWidth;
 
             for (int pixelX = 0; pixelX < footprintWidth; pixelX++)
             {
                 int weight = texelWeights[srcRowBase + pixelX];
-                int dstOffset = dstRowOffset + (pixelX * ChannelsPerPixel);
+                int dstOffset = dstRowOffset + (pixelX * BlockInfo.ChannelsPerPixel);
                 buffer[dstOffset + 0] = InterpolateLdrAsFloat(lowR, highR, weight);
                 buffer[dstOffset + 1] = InterpolateLdrAsFloat(lowG, highG, weight);
                 buffer[dstOffset + 2] = InterpolateLdrAsFloat(lowB, highB, weight);
@@ -128,13 +126,13 @@ internal static class FusedHdrBlockDecoder
 
         for (int pixelY = 0; pixelY < footprintHeight; pixelY++)
         {
-            int dstRowOffset = ((dstBaseY + pixelY) * dstRowStride) + (dstBaseX * ChannelsPerPixel);
+            int dstRowOffset = ((dstBaseY + pixelY) * dstRowStride) + (dstBaseX * BlockInfo.ChannelsPerPixel);
             int srcRowBase = pixelY * footprintWidth;
 
             for (int pixelX = 0; pixelX < footprintWidth; pixelX++)
             {
                 int weight = texelWeights[srcRowBase + pixelX];
-                int dstOffset = dstRowOffset + (pixelX * ChannelsPerPixel);
+                int dstOffset = dstRowOffset + (pixelX * BlockInfo.ChannelsPerPixel);
                 buffer[dstOffset + 0] = InterpolateHdrAsFloat(lowR, highR, weight);
                 buffer[dstOffset + 1] = InterpolateHdrAsFloat(lowG, highG, weight);
                 buffer[dstOffset + 2] = InterpolateHdrAsFloat(lowB, highB, weight);

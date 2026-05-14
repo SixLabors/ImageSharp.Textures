@@ -24,6 +24,13 @@ internal struct BlockInfo
     /// <summary>Every ASTC compressed block is exactly 128 bits (16 bytes) regardless of footprint (spec §C.2.4).</summary>
     public const int SizeInBytes = 16;
 
+    /// <summary>
+    /// Number of output channels per decoded pixel — RGBA in both the LDR (UNORM8) and HDR
+    /// (float32) profiles. Used as a multiplier on <see cref="Footprint.PixelCount"/> to size
+    /// scratch and image buffers.
+    /// </summary>
+    public const int ChannelsPerPixel = 4;
+
     public bool IsValid;
     public bool IsVoidExtent;
 
