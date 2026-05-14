@@ -4,6 +4,7 @@
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Textures.Common.Exceptions;
 using SixLabors.ImageSharp.Textures.Compression.Astc;
+using SixLabors.ImageSharp.Textures.Compression.Astc.ColorEncoding;
 using SixLabors.ImageSharp.Textures.Compression.Astc.Core;
 using SixLabors.ImageSharp.Textures.Compression.Astc.IO;
 using SixLabors.ImageSharp.Textures.Tests.Enums;

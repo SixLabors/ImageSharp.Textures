@@ -4,7 +4,7 @@
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Textures.Compression.Astc.BiseEncoding.Quantize;
 using SixLabors.ImageSharp.Textures.Compression.Astc.Core;
-using static SixLabors.ImageSharp.Textures.Compression.Astc.Core.Rgba32Extensions;
+using static SixLabors.ImageSharp.Textures.Compression.Astc.ColorEncoding.Rgba32Extensions;
 
 namespace SixLabors.ImageSharp.Textures.Compression.Astc.ColorEncoding;
 

@@ -4,7 +4,7 @@
 using System.Runtime.CompilerServices;
 using SixLabors.ImageSharp.PixelFormats;
 
-namespace SixLabors.ImageSharp.Textures.Compression.Astc.Core;
+namespace SixLabors.ImageSharp.Textures.Compression.Astc.ColorEncoding;
 
 /// <summary>
 /// ASTC-specific extension methods and helpers for <see cref="Rgba64"/>.

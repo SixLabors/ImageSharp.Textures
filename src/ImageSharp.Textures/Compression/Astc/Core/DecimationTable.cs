@@ -2,7 +2,6 @@
 // Licensed under the Six Labors Split License.
 
 using System.Runtime.CompilerServices;
-using System.Threading;
 
 namespace SixLabors.ImageSharp.Textures.Compression.Astc.Core;
 

@@ -2,7 +2,7 @@
 // Licensed under the Six Labors Split License.
 
 using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Textures.Compression.Astc.Core;
+using SixLabors.ImageSharp.Textures.Compression.Astc.ColorEncoding;
 
 namespace SixLabors.ImageSharp.Textures.Tests.Formats.Astc.HDR;
 

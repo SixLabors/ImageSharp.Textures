@@ -4,7 +4,7 @@
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Textures.Compression.Astc.BiseEncoding.Quantize;
 using SixLabors.ImageSharp.Textures.Compression.Astc.Core;
-using static SixLabors.ImageSharp.Textures.Compression.Astc.Core.Rgba32Extensions;
+using static SixLabors.ImageSharp.Textures.Compression.Astc.ColorEncoding.Rgba32Extensions;
 
 namespace SixLabors.ImageSharp.Textures.Compression.Astc.ColorEncoding;
 
@@ -395,8 +395,8 @@ internal static class EndpointEncoder
     {
         int[] decodedLow = pair.UnquantizedLow;
         int[] decodedHigh = pair.UnquantizedHigh;
-        Rgba32 contractedLow = RgbaColorExtensions.WithBlueContract(decodedLow[0], decodedLow[1], decodedLow[2], decodedLow[3]);
-        Rgba32 contractedHigh = RgbaColorExtensions.WithBlueContract(decodedHigh[0], decodedHigh[1], decodedHigh[2], decodedHigh[3]);
+        Rgba32 contractedLow = Rgba32Extensions.WithBlueContract(decodedLow[0], decodedLow[1], decodedLow[2], decodedLow[3]);
+        Rgba32 contractedHigh = Rgba32Extensions.WithBlueContract(decodedHigh[0], decodedHigh[1], decodedHigh[2], decodedHigh[3]);
         int error = ChannelError(contractedLow, originalLow, withAlpha) + ChannelError(contractedHigh, originalHigh, withAlpha);
         return new CEEncodingOption(error, pair, swapEndpoints: false, blueContract: true, useOffsetMode: false);
     }
