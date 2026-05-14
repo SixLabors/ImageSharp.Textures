@@ -166,7 +166,7 @@ public static class AstcDecoder
             pipeline.LogicalWrite(blockBits, in info, footprint, decodedPixels);
         }
 
-        CopyBlockRect(decodedPixels, imageBuffer, footprint.Width, dest.CopyWidth, dest.CopyHeight, dest.DstBaseX, dest.DstBaseY, imageWidth, BlockInfo.ChannelsPerPixel);
+        CopyBlockRect(decodedPixels, imageBuffer, footprint.Width, dest.CopyWidth, dest.CopyHeight, dest.DstBaseX, dest.DstBaseY, imageWidth);
     }
 
     /// <summary>
@@ -420,7 +420,9 @@ public static class AstcDecoder
 
     /// <summary>
     /// Copies a decoded block from its scratch buffer into the image at the block's pixel
-    /// offset, row by row, clamped to the image bounds on right/bottom edges.
+    /// offset, row by row, clamped to the image bounds on right/bottom edges. The
+    /// <c>channels-per-pixel</c> factor is fixed at <see cref="BlockInfo.ChannelsPerPixel"/>
+    /// (RGBA) so the multiplies fold into constants at JIT time.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void CopyBlockRect<T>(
@@ -431,14 +433,13 @@ public static class AstcDecoder
         int copyHeight,
         int dstBaseX,
         int dstBaseY,
-        int imageWidth,
-        int channelsPerPixel)
+        int imageWidth)
     {
-        int copyElements = copyWidth * channelsPerPixel;
+        int copyElements = copyWidth * BlockInfo.ChannelsPerPixel;
         for (int pixelY = 0; pixelY < copyHeight; pixelY++)
         {
-            int srcOffset = pixelY * blockWidth * channelsPerPixel;
-            int dstOffset = (((dstBaseY + pixelY) * imageWidth) + dstBaseX) * channelsPerPixel;
+            int srcOffset = pixelY * blockWidth * BlockInfo.ChannelsPerPixel;
+            int dstOffset = (((dstBaseY + pixelY) * imageWidth) + dstBaseX) * BlockInfo.ChannelsPerPixel;
             source.Slice(srcOffset, copyElements).CopyTo(destination.Slice(dstOffset, copyElements));
         }
     }
