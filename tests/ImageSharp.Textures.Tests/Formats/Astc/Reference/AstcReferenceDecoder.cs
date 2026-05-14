@@ -205,6 +205,70 @@ internal static class AstcReferenceDecoder
     }
 
     /// <summary>
+    /// Allocates a reusable astcenc decode context for the given profile and block size. The
+    /// caller owns the context and must release it via <see cref="FreeContext"/>.
+    /// </summary>
+    public static AstcencContext AllocDecodeContext(AstcencProfile profile, int blockX, int blockY)
+    {
+        AstcencError error = Astcenc.AstcencConfigInit(
+            profile,
+            (uint)blockX,
+            (uint)blockY,
+            1,
+            Astcenc.AstcencPreFastest,
+            AstcencFlags.DecompressOnly,
+            out AstcencConfig config);
+        ThrowOnError(error, $"ConfigInit({profile})");
+
+        error = Astcenc.AstcencContextAlloc(ref config, 1, out AstcencContext context);
+        ThrowOnError(error, $"ContextAlloc({profile})");
+        return context;
+    }
+
+    /// <summary>
+    /// Releases a context previously returned from <see cref="AllocDecodeContext"/>.
+    /// </summary>
+    public static void FreeContext(AstcencContext context) => Astcenc.AstcencContextFree(context);
+
+    /// <summary>
+    /// Decompress LDR ASTC blocks into a caller-supplied <paramref name="output"/> buffer using
+    /// a pre-allocated <paramref name="context"/>. The block buffer is passed straight through
+    /// to the underlying decoder, and the output must be sized to <c>w * h * 4</c> bytes (RGBA8).
+    /// </summary>
+    public static void DecompressLdrInto(AstcencContext context, byte[] blocks, int w, int h, byte[] output)
+    {
+        AstcencImage image = new()
+        {
+            dimX = (uint)w,
+            dimY = (uint)h,
+            dimZ = 1,
+            dataType = AstcencType.AstcencTypeU8,
+            data = output,
+        };
+        AstcencError error = Astcenc.AstcencDecompressImage(context, blocks, ref image, IdentitySwizzle, 0);
+        ThrowOnError(error, "DecompressImage(LDR/Into)");
+    }
+
+    /// <summary>
+    /// Decompress HDR ASTC blocks into a caller-supplied <paramref name="output"/> byte buffer
+    /// (FP16 RGBA bit-pattern, sized to <c>w * h * 4 * sizeof(ushort)</c>) using a pre-allocated
+    /// <paramref name="context"/>.
+    /// </summary>
+    public static void DecompressHdrInto(AstcencContext context, byte[] blocks, int w, int h, byte[] output)
+    {
+        AstcencImage image = new()
+        {
+            dimX = (uint)w,
+            dimY = (uint)h,
+            dimZ = 1,
+            dataType = AstcencType.AstcencTypeF16,
+            data = output,
+        };
+        AstcencError error = Astcenc.AstcencDecompressImage(context, blocks, ref image, IdentitySwizzle, 0);
+        ThrowOnError(error, "DecompressImage(HDR/Into)");
+    }
+
+    /// <summary>
     /// Map a FootprintType to its (blockX, blockY) dimensions.
     /// </summary>
     public static (int BlockX, int BlockY) ToBlockDimensions(FootprintType footprint) => footprint switch
