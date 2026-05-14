@@ -9,39 +9,119 @@ using SixLabors.ImageSharp.Textures.Compression.Astc.Core;
 
 namespace SixLabors.ImageSharp.Textures.Compression.Astc.BlockDecoding;
 
-internal sealed class LogicalBlock
+/// <summary>
+/// General-purpose ASTC block decoder for blocks the fused fast paths cannot handle —
+/// void-extent (spec §C.2.23), multi-partition (spec §C.2.21), and dual-plane (spec §C.2.20).
+/// </summary>
+internal static class LogicalBlock
 {
-    private readonly ColorEndpointPair[] endpoints;
-    private readonly int[] weights;
-    private readonly Partition partition;
-    private readonly DualPlaneData? dualPlane;
-
-    private LogicalBlock(Footprint footprint, UInt128 bits, bool isHdrVoidExtent)
+    /// <summary>
+    /// Decodes a block to its UNORM8 RGBA pixels. HDR-endpoint blocks must not reach this
+    /// method: the LDR entry points in <see cref="AstcDecoder"/> reject HDR content per
+    /// ASTC spec §C.2.19, so every partition's endpoint here is LDR.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void DecodeToBytes(UInt128 bits, in BlockInfo info, Footprint footprint, Span<byte> pixels)
     {
-        this.endpoints = [DecodeVoidExtentEndpoint(bits, isHdrVoidExtent)];
-        this.partition = Partition.GetSinglePartition(footprint);
-        this.weights = new int[footprint.PixelCount];
+        if (!info.IsValid)
+        {
+            return;
+        }
+
+        // Conditional stackalloc isn't legal inside an expression; split the dual-plane case
+        // into a separate frame so the secondary-plane buffer is only stackalloc'd when needed.
+        if (info.IsDualPlane && !info.IsVoidExtent)
+        {
+            DecodeToBytesDualPlane(bits, in info, footprint, pixels);
+            return;
+        }
+
+        EndpointBuffer endpoints = default;
+        Span<int> weights = stackalloc int[footprint.PixelCount];
+        int[] partitionAssignment = DecodeBlockState(bits, in info, footprint, ref endpoints, weights, default);
+
+        WritePixelsLdr(footprint, pixels, in endpoints, partitionAssignment, weights, default, dualPlaneChannel: -1);
     }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="LogicalBlock"/> class.
-    /// Decodes directly from raw bits + BlockInfo,
-    /// bypassing IntermediateBlock and using batch unquantize operations.
+    /// Decodes a block to its float RGBA pixels. Accepts both LDR and HDR endpoint modes.
     /// </summary>
-    private LogicalBlock(Footprint footprint, UInt128 bits, in BlockInfo info)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void DecodeToFloats(UInt128 bits, in BlockInfo info, Footprint footprint, Span<float> pixels)
     {
-        this.endpoints = DecodeEndpointsFromBits(bits, in info);
-        this.partition = ResolvePartition(bits, in info, footprint);
-        this.weights = new int[footprint.PixelCount];
-        this.dualPlane = DecodeAndInfillWeights(bits, in info, footprint, this.weights);
+        if (!info.IsValid)
+        {
+            return;
+        }
+
+        if (info.IsDualPlane && !info.IsVoidExtent)
+        {
+            DecodeToFloatsDualPlane(bits, in info, footprint, pixels);
+            return;
+        }
+
+        EndpointBuffer endpoints = default;
+        Span<int> weights = stackalloc int[footprint.PixelCount];
+        int[] partitionAssignment = DecodeBlockState(bits, in info, footprint, ref endpoints, weights, default);
+
+        WritePixelsHdr(footprint, pixels, in endpoints, partitionAssignment, weights, default, dualPlaneChannel: -1);
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static void DecodeToBytesDualPlane(UInt128 bits, in BlockInfo info, Footprint footprint, Span<byte> pixels)
+    {
+        EndpointBuffer endpoints = default;
+        Span<int> weights = stackalloc int[footprint.PixelCount];
+        Span<int> secondaryWeights = stackalloc int[footprint.PixelCount];
+        int[] partitionAssignment = DecodeBlockState(bits, in info, footprint, ref endpoints, weights, secondaryWeights);
+
+        WritePixelsLdr(footprint, pixels, in endpoints, partitionAssignment, weights, secondaryWeights, info.DualPlaneChannel);
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static void DecodeToFloatsDualPlane(UInt128 bits, in BlockInfo info, Footprint footprint, Span<float> pixels)
+    {
+        EndpointBuffer endpoints = default;
+        Span<int> weights = stackalloc int[footprint.PixelCount];
+        Span<int> secondaryWeights = stackalloc int[footprint.PixelCount];
+        int[] partitionAssignment = DecodeBlockState(bits, in info, footprint, ref endpoints, weights, secondaryWeights);
+
+        WritePixelsHdr(footprint, pixels, in endpoints, partitionAssignment, weights, secondaryWeights, info.DualPlaneChannel);
+    }
+
+    /// <summary>
+    /// Populates the endpoints, primary weights, and (for dual-plane blocks) secondary weights,
+    /// returning the per-texel partition-subset map. Handles both standard and void-extent
+    /// (spec §C.2.23) blocks. <paramref name="secondaryWeights"/> is ignored for non-dual-plane.
+    /// </summary>
+    private static int[] DecodeBlockState(
+        UInt128 bits,
+        in BlockInfo info,
+        Footprint footprint,
+        ref EndpointBuffer endpoints,
+        Span<int> weights,
+        Span<int> secondaryWeights)
+    {
+        if (info.IsVoidExtent)
+        {
+            // Spec §C.2.23: bit 9 of the block mode flags HDR (set → FP16, clear → UNORM16 LDR).
+            bool isHdrVoidExtent = (bits.Low() & (1UL << 9)) != 0;
+            endpoints[0] = DecodeVoidExtentEndpoint(bits, isHdrVoidExtent);
+            weights.Clear();
+            return Partition.GetSinglePartition(footprint).Assignment;
+        }
+
+        DecodeEndpointsFromBits(bits, in info, ref endpoints);
+        DecodeAndInfillWeights(bits, in info, footprint, weights, secondaryWeights);
+        return ResolvePartitionAssignment(bits, in info, footprint);
     }
 
     /// <summary>
     /// BISE-decodes (spec §C.2.22) + unquantises (spec §C.2.18) the per-partition color
-    /// endpoint values and returns the decoded <see cref="ColorEndpointPair"/> array (one
-    /// entry per partition, colour value count per mode from §C.2.14).
+    /// endpoint values into <paramref name="endpoints"/> (one entry per partition, colour
+    /// value count per mode from §C.2.14).
     /// </summary>
-    private static ColorEndpointPair[] DecodeEndpointsFromBits(UInt128 bits, in BlockInfo info)
+    private static void DecodeEndpointsFromBits(UInt128 bits, in BlockInfo info, ref EndpointBuffer endpoints)
     {
         Span<int> colors = stackalloc int[info.ColorValuesCount];
         FusedBlockDecoder.DecodeBiseValues(
@@ -53,7 +133,6 @@ internal sealed class LogicalBlock
             colors);
         Quantization.UnquantizeCEValuesBatch(colors, info.ColorValuesCount, info.ColorValuesRange);
 
-        ColorEndpointPair[] endpoints = new ColorEndpointPair[info.PartitionCount];
         int colorIndex = 0;
         for (int i = 0; i < info.PartitionCount; i++)
         {
@@ -63,34 +142,34 @@ internal sealed class LogicalBlock
             endpoints[i] = EndpointCodec.Decode(slice, mode);
             colorIndex += colorCount;
         }
-
-        return endpoints;
     }
 
     /// <summary>
-    /// Returns the cached partition-assignment map for this block. Multi-partition blocks
-    /// use the 10-bit partition id from bits [13..22] (spec §C.2.10) to look up the partition
-    /// hash result (spec §C.2.21); single-partition blocks get a synthetic all-zero map.
+    /// Returns the cached partition-assignment map. Multi-partition blocks use the 10-bit
+    /// partition id from bits [13..22] (spec §C.2.10) and the partition hash function
+    /// (spec §C.2.21); single-partition blocks share an all-zero map per footprint.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static Partition ResolvePartition(UInt128 bits, in BlockInfo info, Footprint footprint)
+    private static int[] ResolvePartitionAssignment(UInt128 bits, in BlockInfo info, Footprint footprint)
         => info.PartitionCount > 1
             ? Partition.GetASTCPartition(
                 footprint,
                 info.PartitionCount,
-                (int)BitOperations.GetBits(bits.Low(), 13, 10))
-            : Partition.GetSinglePartition(footprint);
+                (int)BitOperations.GetBits(bits.Low(), 13, 10)).Assignment
+            : Partition.GetSinglePartition(footprint).Assignment;
 
     /// <summary>
     /// BISE-decodes (spec §C.2.22), unquantises (spec §C.2.18), and infills the weight grid
-    /// (spec §C.2.17). Fills <paramref name="texelWeights"/> in place and returns the
-    /// <see cref="DualPlaneData"/> if the block uses a dual plane (spec §C.2.20), otherwise null.
+    /// (spec §C.2.17) into <paramref name="primaryWeights"/>. For dual-plane blocks
+    /// (spec §C.2.20) the secondary plane is decoded into <paramref name="secondaryWeights"/>;
+    /// otherwise <paramref name="secondaryWeights"/> is ignored.
     /// </summary>
-    private static DualPlaneData? DecodeAndInfillWeights(
+    private static void DecodeAndInfillWeights(
         UInt128 bits,
         in BlockInfo info,
         Footprint footprint,
-        int[] texelWeights)
+        Span<int> primaryWeights,
+        Span<int> secondaryWeights)
     {
         int gridSize = info.GridWidth * info.GridHeight;
         bool isDualPlane = info.IsDualPlane;
@@ -109,8 +188,8 @@ internal sealed class LogicalBlock
         if (!isDualPlane)
         {
             Quantization.UnquantizeWeightsBatch(rawWeights, gridSize, info.WeightRange);
-            DecimationTable.InfillWeights(rawWeights[..gridSize], decimationInfo, texelWeights);
-            return null;
+            DecimationTable.InfillWeights(rawWeights[..gridSize], decimationInfo, primaryWeights);
+            return;
         }
 
         // Spec §C.2.20: the two planes' weights are interleaved — even indices drive the
@@ -126,33 +205,116 @@ internal sealed class LogicalBlock
         Quantization.UnquantizeWeightsBatch(plane0, gridSize, info.WeightRange);
         Quantization.UnquantizeWeightsBatch(plane1, gridSize, info.WeightRange);
 
-        DecimationTable.InfillWeights(plane0, decimationInfo, texelWeights);
-
-        int[] secondaryWeights = new int[footprint.PixelCount];
+        DecimationTable.InfillWeights(plane0, decimationInfo, primaryWeights);
         DecimationTable.InfillWeights(plane1, decimationInfo, secondaryWeights);
-        return new DualPlaneData(info.DualPlaneChannel, secondaryWeights);
     }
 
     /// <summary>
-    /// Writes all pixels in the block as RGBA floats into <paramref name="buffer"/>.
+    /// Reads the four 16-bit RGBA channels from the high half of a void-extent block
+    /// (ASTC spec §C.2.23) and wraps them in a <see cref="ColorEndpointPair"/>. LDR void-extent
+    /// channels are UNORM16 (reduced to byte range for the LDR output path); HDR channels are
+    /// FP16 bit patterns.
     /// </summary>
-    /// <remarks>
-    /// Per ASTC spec §C.2.15: HDR endpoints are interpolated in LNS (Log-Normalised Space),
-    /// then the result is converted to FP16 via <see cref="Fp16.FromLns"/> and widened to float.
-    /// For mode 14 (HDR RGB + LDR Alpha, §C.2.14), the alpha channel is UNORM16 instead of LNS.
-    /// LDR endpoints produce UNORM16 values that are normalised to 0.0-1.0 (§C.2.24).
-    /// </remarks>
-    public void WriteAllPixelsHdr(Footprint footprint, Span<float> buffer)
+    private static ColorEndpointPair DecodeVoidExtentEndpoint(UInt128 bits, bool isHdr)
     {
-        int dualPlaneChannel = this.dualPlane?.Channel ?? -1;
-        int[]? dualPlaneWeights = this.dualPlane?.Weights;
+        ulong high = bits.High();
+        ushort r = (ushort)(high & 0xFFFF);
+        ushort g = (ushort)((high >> 16) & 0xFFFF);
+        ushort b = (ushort)((high >> 32) & 0xFFFF);
+        ushort a = (ushort)((high >> 48) & 0xFFFF);
+
+        if (isHdr)
+        {
+            Rgba64 hdrColor = new(r, g, b, a);
+            return ColorEndpointPair.Hdr(hdrColor, hdrColor, valuesAreLns: false);
+        }
+
+        Rgba32 ldrColor = new((byte)(r >> 8), (byte)(g >> 8), (byte)(b >> 8), (byte)(a >> 8));
+        return ColorEndpointPair.Ldr(ldrColor, ldrColor);
+    }
+
+    /// <summary>
+    /// Writes UNORM8 RGBA pixels using the decoded block state.
+    /// </summary>
+    private static void WritePixelsLdr(
+        Footprint footprint,
+        Span<byte> buffer,
+        in EndpointBuffer endpoints,
+        int[] partitionAssignment,
+        ReadOnlySpan<int> weights,
+        ReadOnlySpan<int> secondaryWeights,
+        int dualPlaneChannel)
+    {
+        bool hasDualPlane = !secondaryWeights.IsEmpty;
         int pixelCount = footprint.PixelCount;
 
         for (int i = 0; i < pixelCount; i++)
         {
-            ref ColorEndpointPair endpoint = ref this.endpoints[this.partition.Assignment[i]];
-            int weight = this.weights[i];
-            int dpWeight = dualPlaneWeights?[i] ?? weight;
+            ref readonly ColorEndpointPair endpoint = ref endpoints[partitionAssignment[i]];
+            int weight = weights[i];
+            int dstOffset = i * 4;
+
+            if (hasDualPlane)
+            {
+                SimdHelpers.WriteSinglePixelLdrDualPlane(
+                    buffer,
+                    dstOffset,
+                    endpoint.LdrLow.R,
+                    endpoint.LdrLow.G,
+                    endpoint.LdrLow.B,
+                    endpoint.LdrLow.A,
+                    endpoint.LdrHigh.R,
+                    endpoint.LdrHigh.G,
+                    endpoint.LdrHigh.B,
+                    endpoint.LdrHigh.A,
+                    weight,
+                    dualPlaneChannel,
+                    secondaryWeights[i]);
+            }
+            else
+            {
+                SimdHelpers.WriteSinglePixelLdr(
+                    buffer,
+                    dstOffset,
+                    endpoint.LdrLow.R,
+                    endpoint.LdrLow.G,
+                    endpoint.LdrLow.B,
+                    endpoint.LdrLow.A,
+                    endpoint.LdrHigh.R,
+                    endpoint.LdrHigh.G,
+                    endpoint.LdrHigh.B,
+                    endpoint.LdrHigh.A,
+                    weight);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Writes float RGBA pixels using the decoded block state.
+    /// </summary>
+    /// <remarks>
+    /// Per ASTC spec §C.2.15: HDR endpoints are interpolated in LNS, then converted to FP16
+    /// via <see cref="Fp16.FromLns"/> and widened to <see cref="float"/>. For mode 14 (HDR RGB
+    /// + LDR Alpha, §C.2.14), the alpha channel is UNORM16 instead of LNS. LDR endpoints
+    /// produce UNORM16 values normalised to [0, 1] (§C.2.24).
+    /// </remarks>
+    private static void WritePixelsHdr(
+        Footprint footprint,
+        Span<float> buffer,
+        in EndpointBuffer endpoints,
+        int[] partitionAssignment,
+        ReadOnlySpan<int> weights,
+        ReadOnlySpan<int> secondaryWeights,
+        int dualPlaneChannel)
+    {
+        bool hasDualPlane = !secondaryWeights.IsEmpty;
+        int pixelCount = footprint.PixelCount;
+
+        for (int i = 0; i < pixelCount; i++)
+        {
+            ref readonly ColorEndpointPair endpoint = ref endpoints[partitionAssignment[i]];
+            int weight = weights[i];
+            int dpWeight = hasDualPlane ? secondaryWeights[i] : weight;
             Span<float> pixel = buffer.Slice(i * 4, 4);
 
             if (endpoint.IsHdr)
@@ -230,136 +392,10 @@ internal sealed class LogicalBlock
     }
 
     /// <summary>
-    /// Writes all pixels in the block directly to the output buffer in RGBA byte format.
-    /// Avoids per-pixel method call overhead, type dispatch, and Rgba32 allocation.
-    /// </summary>
-    public void WriteAllPixelsLdr(Footprint footprint, Span<byte> buffer)
-    {
-        ref ColorEndpointPair endpoint0 = ref this.endpoints[0];
-        bool isSinglePartitionLdr = !endpoint0.IsHdr && this.partition.PartitionCount == 1;
-
-        if (!isSinglePartitionLdr)
-        {
-            this.WriteAllPixelsGeneral(footprint, buffer);
-            return;
-        }
-
-        if (this.dualPlane is null)
-        {
-            this.WriteLdrSinglePartitionSinglePlane(footprint, buffer, in endpoint0);
-        }
-        else
-        {
-            this.WriteLdrSinglePartitionDualPlane(footprint, buffer, in endpoint0, this.dualPlane.Value);
-        }
-    }
-
-    /// <summary>
-    /// Hot-path writer: single-partition LDR block, one weight plane. Every pixel
-    /// interpolates the same <paramref name="endpoint"/>.
-    /// </summary>
-    private void WriteLdrSinglePartitionSinglePlane(Footprint footprint, Span<byte> buffer, in ColorEndpointPair endpoint)
-    {
-        Rgba32 low = endpoint.LdrLow;
-        Rgba32 high = endpoint.LdrHigh;
-        int pixelCount = footprint.PixelCount;
-        for (int i = 0; i < pixelCount; i++)
-        {
-            SimdHelpers.WriteSinglePixelLdr(
-                buffer,
-                i * 4,
-                low.R,
-                low.G,
-                low.B,
-                low.A,
-                high.R,
-                high.G,
-                high.B,
-                high.A,
-                this.weights[i]);
-        }
-    }
-
-    /// <summary>
-    /// Single-partition LDR block with a secondary weight plane (ASTC spec §C.2.20): the
-    /// channel identified by <see cref="DualPlaneData.Channel"/> uses the second plane's
-    /// weights; the others use the primary plane.
-    /// </summary>
-    private void WriteLdrSinglePartitionDualPlane(
-        Footprint footprint,
-        Span<byte> buffer,
-        in ColorEndpointPair endpoint,
-        DualPlaneData dualPlane)
-    {
-        Rgba32 low = endpoint.LdrLow;
-        Rgba32 high = endpoint.LdrHigh;
-        int dpChannel = dualPlane.Channel;
-        int[] dpWeights = dualPlane.Weights;
-        int pixelCount = footprint.PixelCount;
-        for (int i = 0; i < pixelCount; i++)
-        {
-            SimdHelpers.WriteSinglePixelLdrDualPlane(
-                buffer,
-                i * 4,
-                low.R,
-                low.G,
-                low.B,
-                low.A,
-                high.R,
-                high.G,
-                high.B,
-                high.A,
-                this.weights[i],
-                dpChannel,
-                dpWeights[i]);
-        }
-    }
-
-    public static LogicalBlock? UnpackLogicalBlock(Footprint footprint, UInt128 bits, in BlockInfo info)
-    {
-        if (!info.IsValid)
-        {
-            return null;
-        }
-
-        if (info.IsVoidExtent)
-        {
-            // ASTC spec §C.2.23: bit 9 of the block mode is the HDR flag for void-extent
-            // (set → FP16, clear → UNORM16 LDR). Matches ARM's astcenc reference decoder.
-            bool isHdrVoidExtent = (bits.Low() & (1UL << 9)) != 0;
-            return new LogicalBlock(footprint, bits, isHdrVoidExtent);
-        }
-
-        return new LogicalBlock(footprint, bits, in info);
-    }
-
-    /// <summary>
-    /// Reads the four 16-bit RGBA channels from the high half of a void-extent block (ASTC spec §C.2.23)
-    /// and wraps them in a <see cref="ColorEndpointPair"/>. LDR void-extent channels are UNORM16
-    /// (reduced to the byte range for the LDR output path); HDR channels are FP16 bit patterns.
-    /// </summary>
-    private static ColorEndpointPair DecodeVoidExtentEndpoint(UInt128 bits, bool isHdr)
-    {
-        ulong high = bits.High();
-        ushort r = (ushort)(high & 0xFFFF);
-        ushort g = (ushort)((high >> 16) & 0xFFFF);
-        ushort b = (ushort)((high >> 32) & 0xFFFF);
-        ushort a = (ushort)((high >> 48) & 0xFFFF);
-
-        if (isHdr)
-        {
-            Rgba64 hdrColor = new(r, g, b, a);
-            return ColorEndpointPair.Hdr(hdrColor, hdrColor, valuesAreLns: false);
-        }
-
-        Rgba32 ldrColor = new((byte)(r >> 8), (byte)(g >> 8), (byte)(b >> 8), (byte)(a >> 8));
-        return ColorEndpointPair.Ldr(ldrColor, ldrColor);
-    }
-
-    /// <summary>
     /// Interpolates an LDR channel value and returns the full 16-bit UNORM result
     /// (before reduction to byte). Used by the HDR output path for LDR endpoints.
     /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static ushort InterpolateLdrAsUnorm16(int p0, int p1, int weight)
         => (ushort)Math.Clamp(Interpolation.BlendLdrReplicated(p0, p1, weight), 0, 0xFFFF);
 
@@ -368,60 +404,20 @@ internal sealed class LogicalBlock
     /// HDR endpoints are already 16-bit values (FP16 bit patterns), unlike LDR interpolation
     /// which expands 8-bit to 16-bit first.
     /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static ushort InterpolateChannelHdr(int p0, int p1, int weight)
         => (ushort)Math.Clamp(Interpolation.BlendWeighted(p0, p1, weight), 0, 0xFFFF);
 
     /// <summary>
-    /// General writer for the LDR output pipeline. Handles multi-partition blocks and
-    /// single-partition dual-plane blocks. HDR-endpoint blocks never reach this method: the
-    /// LDR entry points in <see cref="AstcDecoder"/> throw on any block with an HDR endpoint
-    /// mode or HDR void-extent, so every partition's endpoint is LDR by the time we get here.
+    /// Inline storage for up to 4 per-partition <see cref="ColorEndpointPair"/> values
+    /// (spec §C.2.10 caps partition count at 4). Used as a stack-local buffer to hold the
+    /// decoded endpoints during a single <see cref="DecodeToBytes"/>/<see cref="DecodeToFloats"/> call.
     /// </summary>
-    private void WriteAllPixelsGeneral(Footprint footprint, Span<byte> buffer)
+    [InlineArray(4)]
+    private struct EndpointBuffer
     {
-        int dualPlaneChannel = this.dualPlane?.Channel ?? -1;
-        int[]? dualPlaneWeights = this.dualPlane?.Weights;
-        int pixelCount = footprint.PixelCount;
-
-        for (int i = 0; i < pixelCount; i++)
-        {
-            int part = this.partition.Assignment[i];
-            ref ColorEndpointPair endpoint = ref this.endpoints[part];
-            int weight = this.weights[i];
-            int dstOffset = i * 4;
-
-            if (dualPlaneWeights is not null)
-            {
-                SimdHelpers.WriteSinglePixelLdrDualPlane(
-                    buffer,
-                    dstOffset,
-                    endpoint.LdrLow.R,
-                    endpoint.LdrLow.G,
-                    endpoint.LdrLow.B,
-                    endpoint.LdrLow.A,
-                    endpoint.LdrHigh.R,
-                    endpoint.LdrHigh.G,
-                    endpoint.LdrHigh.B,
-                    endpoint.LdrHigh.A,
-                    weight,
-                    dualPlaneChannel,
-                    dualPlaneWeights[i]);
-            }
-            else
-            {
-                SimdHelpers.WriteSinglePixelLdr(
-                    buffer,
-                    dstOffset,
-                    endpoint.LdrLow.R,
-                    endpoint.LdrLow.G,
-                    endpoint.LdrLow.B,
-                    endpoint.LdrLow.A,
-                    endpoint.LdrHigh.R,
-                    endpoint.LdrHigh.G,
-                    endpoint.LdrHigh.B,
-                    endpoint.LdrHigh.A,
-                    weight);
-            }
-        }
+#pragma warning disable CS0169, IDE0051, S1144 // Accessed by runtime via [InlineArray]
+        private ColorEndpointPair element0;
+#pragma warning restore CS0169, IDE0051, S1144
     }
 }

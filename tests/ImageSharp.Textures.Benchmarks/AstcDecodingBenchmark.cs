@@ -37,7 +37,7 @@ public class AstcDecodingBenchmark
     }
 
     [Benchmark]
-    public bool Partitioning()
+    public int Partitioning()
     {
         ReadOnlySpan<byte> blocks = this.astcFile!.Blocks;
         Span<byte> blockBytes = stackalloc byte[16];
@@ -46,9 +46,9 @@ public class AstcDecodingBenchmark
         ulong high = BitConverter.ToUInt64(blockBytes[8..]);
         UInt128 bits = (UInt128)low | ((UInt128)high << 64);
         BlockInfo info = BlockModeDecoder.Decode(bits);
-        LogicalBlock? logicalBlock = LogicalBlock.UnpackLogicalBlock(Footprint.Get4x4(), bits, in info)
-            ?? throw new InvalidOperationException("Failed to unpack block");
-
-        return logicalBlock is not null;
+        Footprint footprint = Footprint.Get4x4();
+        Span<byte> pixels = stackalloc byte[footprint.PixelCount * 4];
+        LogicalBlock.DecodeToBytes(bits, in info, footprint, pixels);
+        return pixels[0];
     }
 }

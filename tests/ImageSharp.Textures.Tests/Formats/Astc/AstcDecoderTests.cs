@@ -115,15 +115,14 @@ public class AstcDecoderTests
         Assert.Equal(0, astcData.Length % BlockInfo.SizeInBytes);
         Assert.Equal(expectedBlockCount, astcData.Length / BlockInfo.SizeInBytes);
 
-        // Verify all blocks can be unpacked
+        // Verify every block has a valid block-mode encoding.
         for (int i = 0; i < astcData.Length; i += BlockInfo.SizeInBytes)
         {
             byte[] block = astcData.AsSpan(i, BlockInfo.SizeInBytes).ToArray();
             UInt128 bits = new(BitConverter.ToUInt64(block, 8), BitConverter.ToUInt64(block, 0));
             BlockInfo info = BlockModeDecoder.Decode(bits);
-            LogicalBlock? logicalBlock = LogicalBlock.UnpackLogicalBlock(footprint, bits, in info);
 
-            Assert.NotNull(logicalBlock);
+            Assert.True(info.IsValid);
         }
     }
 

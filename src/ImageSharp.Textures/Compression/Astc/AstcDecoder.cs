@@ -171,13 +171,7 @@ public static class AstcDecoder
         }
         else
         {
-            LogicalBlock? logicalBlock = LogicalBlock.UnpackLogicalBlock(footprint, blockBits, in info);
-            if (logicalBlock is null)
-            {
-                return;
-            }
-
-            pipeline.LogicalWrite(logicalBlock, footprint, decodedPixels);
+            pipeline.LogicalWrite(blockBits, in info, footprint, decodedPixels);
         }
 
         CopyBlockRect(decodedPixels, imageBuffer, footprint.Width, dest.CopyWidth, dest.CopyHeight, dest.DstBaseX, dest.DstBaseY, imageWidth, ChannelsPerPixel);
@@ -210,13 +204,7 @@ public static class AstcDecoder
             return;
         }
 
-        LogicalBlock? logicalBlock = LogicalBlock.UnpackLogicalBlock(footprint, blockBits, in info);
-        if (logicalBlock is null)
-        {
-            return;
-        }
-
-        pipeline.LogicalWrite(logicalBlock, footprint, buffer);
+        pipeline.LogicalWrite(blockBits, in info, footprint, buffer);
     }
 
     /// <summary>

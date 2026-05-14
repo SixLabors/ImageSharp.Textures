@@ -32,6 +32,6 @@ internal readonly struct HdrPipeline : IBlockPipeline<float>
 
     /// <inheritdoc />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void LogicalWrite(LogicalBlock logicalBlock, Footprint footprint, Span<float> decodedPixels)
-        => logicalBlock.WriteAllPixelsHdr(footprint, decodedPixels);
+    public void LogicalWrite(UInt128 blockBits, in BlockInfo info, Footprint footprint, Span<float> decodedPixels)
+        => LogicalBlock.DecodeToFloats(blockBits, in info, footprint, decodedPixels);
 }

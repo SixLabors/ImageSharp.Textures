@@ -51,9 +51,11 @@ internal interface IBlockPipeline<T>
     /// <summary>
     /// General pipeline writer for blocks the fused path cannot handle:
     /// void-extent (spec §C.2.23), multi-partition (spec §C.2.21), and dual-plane (spec §C.2.20).
+    /// Implementations forward to the appropriate <see cref="LogicalBlock"/> decode entry.
     /// </summary>
-    /// <param name="logicalBlock">Unpacked logical block.</param>
+    /// <param name="blockBits">Raw 128-bit ASTC block.</param>
+    /// <param name="info">Decoded block info.</param>
     /// <param name="footprint">Block footprint.</param>
     /// <param name="decodedPixels">Scratch buffer sized for one full block.</param>
-    public void LogicalWrite(LogicalBlock logicalBlock, Footprint footprint, Span<T> decodedPixels);
+    public void LogicalWrite(UInt128 blockBits, in BlockInfo info, Footprint footprint, Span<T> decodedPixels);
 }

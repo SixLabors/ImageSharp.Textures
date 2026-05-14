@@ -20,36 +20,47 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.Astc;
 public class LogicalAstcBlockTests
 {
     [Fact]
-    public void UnpackLogicalBlock_WithErrorBlock_ShouldReturnNull()
+    public void DecodeToBytes_WithErrorBlock_ShouldLeaveBufferUntouched()
     {
         UInt128 bits = UInt128.Zero;
         BlockInfo info = BlockModeDecoder.Decode(bits);
+        Footprint footprint = Footprint.Get8x8();
+        byte[] pixels = new byte[footprint.PixelCount * 4];
+        Array.Fill(pixels, (byte)0xCC);
 
-        LogicalBlock? result = LogicalBlock.UnpackLogicalBlock(Footprint.Get8x8(), bits, in info);
+        LogicalBlock.DecodeToBytes(bits, in info, footprint, pixels);
 
-        Assert.Null(result);
+        // Invalid blocks short-circuit without touching the output buffer.
+        Assert.All(pixels, b => Assert.Equal(0xCC, b));
     }
 
     [Fact]
-    public void UnpackLogicalBlock_WithVoidExtentBlock_ShouldSucceed()
+    public void DecodeToBytes_WithVoidExtentBlock_ShouldFillUniformPixels()
     {
+        // 0xFFFFFFFFFFFFFDFCUL is the canonical "all-ones" void-extent block (zero RGBA).
         UInt128 bits = (UInt128)0xFFFFFFFFFFFFFDFCUL;
         BlockInfo info = BlockModeDecoder.Decode(bits);
+        Footprint footprint = Footprint.Get8x8();
+        byte[] pixels = new byte[footprint.PixelCount * 4];
 
-        LogicalBlock? result = LogicalBlock.UnpackLogicalBlock(Footprint.Get8x8(), bits, in info);
+        LogicalBlock.DecodeToBytes(bits, in info, footprint, pixels);
 
-        Assert.NotNull(result);
+        Assert.All(pixels, b => Assert.Equal(0, b));
     }
 
     [Fact]
-    public void UnpackLogicalBlock_WithStandardBlock_ShouldSucceed()
+    public void DecodeToBytes_WithStandardBlock_Succeeds()
     {
         UInt128 bits = (UInt128)0x0000000001FE000173UL;
         BlockInfo info = BlockModeDecoder.Decode(bits);
+        Footprint footprint = Footprint.Get6x5();
+        byte[] pixels = new byte[footprint.PixelCount * 4];
 
-        LogicalBlock? result = LogicalBlock.UnpackLogicalBlock(Footprint.Get6x5(), bits, in info);
+        LogicalBlock.DecodeToBytes(bits, in info, footprint, pixels);
 
-        Assert.NotNull(result);
+        // Block carries valid LDR data and decodes without throwing; we don't pin specific
+        // pixel values here — those are covered by the image roundtrip tests below.
+        Assert.True(info.IsValid);
     }
 
     [Theory]
@@ -102,10 +113,9 @@ public class LogicalAstcBlockTests
                 BitConverter.ToUInt64(blockSpan[8..]),
                 BitConverter.ToUInt64(blockSpan));
             BlockInfo info = BlockModeDecoder.Decode(bits);
-            LogicalBlock? logicalBlock = LogicalBlock.UnpackLogicalBlock(footprint, bits, in info);
-            Assert.NotNull(logicalBlock);
+            Assert.True(info.IsValid);
 
-            logicalBlock!.WriteAllPixelsLdr(footprint, blockPixels);
+            LogicalBlock.DecodeToBytes(bits, in info, footprint, blockPixels);
 
             for (int y = 0; y < blockHeight; ++y)
             {

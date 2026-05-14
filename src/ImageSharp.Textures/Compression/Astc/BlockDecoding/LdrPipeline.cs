@@ -39,6 +39,6 @@ internal readonly struct LdrPipeline : IBlockPipeline<byte>
 
     /// <inheritdoc />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void LogicalWrite(LogicalBlock logicalBlock, Footprint footprint, Span<byte> decodedPixels)
-        => logicalBlock.WriteAllPixelsLdr(footprint, decodedPixels);
+    public void LogicalWrite(UInt128 blockBits, in BlockInfo info, Footprint footprint, Span<byte> decodedPixels)
+        => LogicalBlock.DecodeToBytes(blockBits, in info, footprint, decodedPixels);
 }
