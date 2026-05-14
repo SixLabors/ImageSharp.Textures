@@ -26,13 +26,11 @@ internal sealed class Partition
         => SinglePartitionCache.GetOrAdd(footprint, static fp => new Partition(new int[fp.PixelCount]));
 
     public static Partition GetASTCPartition(Footprint footprint, int partitionCount, int partitionId)
-    {
-        (Footprint Footprint, int PartitionCount, int PartitionId) key = (footprint, partitionCount, partitionId);
-        if (PartitionCache.TryGetValue(key, out Partition? cached))
-        {
-            return cached;
-        }
+        => PartitionCache.GetOrAdd((footprint, partitionCount, partitionId), static key => Build(key));
 
+    private static Partition Build((Footprint Footprint, int PartitionCount, int PartitionId) key)
+    {
+        Footprint footprint = key.Footprint;
         int w = footprint.Width;
         int h = footprint.Height;
         int[] assignment = new int[w * h];
@@ -41,13 +39,11 @@ internal sealed class Partition
         {
             for (int x = 0; x < w; ++x)
             {
-                assignment[idx++] = SelectASTCPartition(partitionId, x, y, 0, partitionCount, footprint.PixelCount);
+                assignment[idx++] = SelectASTCPartition(key.PartitionId, x, y, 0, key.PartitionCount, footprint.PixelCount);
             }
         }
 
-        Partition part = new(assignment);
-        PartitionCache.TryAdd(key, part);
-        return part;
+        return new Partition(assignment);
     }
 
     /// <summary>
