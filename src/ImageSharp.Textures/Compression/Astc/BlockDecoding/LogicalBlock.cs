@@ -38,9 +38,9 @@ internal static class LogicalBlock
 
         // Up to 12×12 = 144 ints (576 bytes) for the largest 2D footprint per spec §C.2.4.
         Span<int> weights = stackalloc int[footprint.PixelCount];
-        DecodedBlockState state = DecodeBlockState(bits, in info, footprint, weights, default);
+        DecodedBlockState state = DecodeSinglePlane(bits, in info, footprint, weights);
 
-        WritePixelsLdr(footprint, pixels, in state);
+        WriteAllPixels<LdrPixelWriter, byte>(footprint, pixels, in state);
     }
 
     /// <summary>
@@ -62,9 +62,9 @@ internal static class LogicalBlock
 
         // Up to 12×12 = 144 ints (576 bytes) for the largest 2D footprint per spec §C.2.4.
         Span<int> weights = stackalloc int[footprint.PixelCount];
-        DecodedBlockState state = DecodeBlockState(bits, in info, footprint, weights, default);
+        DecodedBlockState state = DecodeSinglePlane(bits, in info, footprint, weights);
 
-        WritePixelsHdr(footprint, pixels, in state);
+        WriteAllPixels<HdrPixelWriter, float>(footprint, pixels, in state);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
@@ -74,9 +74,10 @@ internal static class LogicalBlock
         // (1152 bytes) at the largest 12×12 footprint.
         Span<int> weights = stackalloc int[footprint.PixelCount];
         Span<int> secondaryWeights = stackalloc int[footprint.PixelCount];
-        DecodedBlockState state = DecodeBlockState(bits, in info, footprint, weights, secondaryWeights);
+        DecodedBlockState state = DecodeDualPlane(bits, in info, footprint, weights, secondaryWeights);
+        DualPlane dualPlane = new() { Weights = secondaryWeights, Channel = info.DualPlaneChannel };
 
-        WritePixelsLdr(footprint, pixels, in state);
+        WriteAllPixelsDualPlane<LdrPixelWriter, byte>(footprint, pixels, in state, in dualPlane);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
@@ -86,29 +87,23 @@ internal static class LogicalBlock
         // (1152 bytes) at the largest 12×12 footprint.
         Span<int> weights = stackalloc int[footprint.PixelCount];
         Span<int> secondaryWeights = stackalloc int[footprint.PixelCount];
-        DecodedBlockState state = DecodeBlockState(bits, in info, footprint, weights, secondaryWeights);
+        DecodedBlockState state = DecodeDualPlane(bits, in info, footprint, weights, secondaryWeights);
+        DualPlane dualPlane = new() { Weights = secondaryWeights, Channel = info.DualPlaneChannel };
 
-        WritePixelsHdr(footprint, pixels, in state);
+        WriteAllPixelsDualPlane<HdrPixelWriter, float>(footprint, pixels, in state, in dualPlane);
     }
 
     /// <summary>
-    /// Builds the <see cref="DecodedBlockState"/> for the block — endpoints, weight buffers,
-    /// and per-texel partition map. Handles both standard and void-extent (spec §C.2.23)
-    /// blocks. <paramref name="secondaryWeights"/> must be empty for non-dual-plane blocks;
-    /// when non-empty it is filled with the secondary plane's per-texel weights and the
-    /// returned state's dual-plane channel is set accordingly.
+    /// Builds the <see cref="DecodedBlockState"/> for a single-plane or void-extent block.
     /// </summary>
-    private static DecodedBlockState DecodeBlockState(
+    private static DecodedBlockState DecodeSinglePlane(
         UInt128 bits,
         in BlockInfo info,
         Footprint footprint,
-        Span<int> weights,
-        Span<int> secondaryWeights)
+        Span<int> weights)
     {
         DecodedBlockState state = default;
         state.Weights = weights;
-        state.SecondaryWeights = secondaryWeights;
-        state.DualPlaneChannel = secondaryWeights.IsEmpty ? -1 : info.DualPlaneChannel;
 
         if (info.IsVoidExtent)
         {
@@ -120,6 +115,25 @@ internal static class LogicalBlock
             return state;
         }
 
+        DecodeEndpointsFromBits(bits, in info, ref state.Endpoints);
+        DecodeAndInfillWeights(bits, in info, footprint, weights, default);
+        state.PartitionAssignment = ResolvePartitionAssignment(bits, in info, footprint);
+        return state;
+    }
+
+    /// <summary>
+    /// Builds the <see cref="DecodedBlockState"/> for a dual-plane block (spec §C.2.20),
+    /// filling <paramref name="secondaryWeights"/> with the second plane's per-texel weights.
+    /// </summary>
+    private static DecodedBlockState DecodeDualPlane(
+        UInt128 bits,
+        in BlockInfo info,
+        Footprint footprint,
+        Span<int> weights,
+        Span<int> secondaryWeights)
+    {
+        DecodedBlockState state = default;
+        state.Weights = weights;
         DecodeEndpointsFromBits(bits, in info, ref state.Endpoints);
         DecodeAndInfillWeights(bits, in info, footprint, weights, secondaryWeights);
         state.PartitionAssignment = ResolvePartitionAssignment(bits, in info, footprint);
@@ -248,167 +262,46 @@ internal static class LogicalBlock
     }
 
     /// <summary>
-    /// Writes UNORM8 RGBA pixels using the decoded block state.
+    /// Generic single-plane pixel-write loop. Each iteration looks up the partition's
+    /// endpoint and dispatches to <typeparamref name="TWriter"/> for the actual write.
+    /// Constraining <typeparamref name="TWriter"/> to a struct allows the JIT to specialise
+    /// and inline the per-pixel call.
     /// </summary>
-    private static void WritePixelsLdr(Footprint footprint, Span<byte> buffer, in DecodedBlockState state)
+    private static void WriteAllPixels<TWriter, T>(Footprint footprint, Span<T> buffer, in DecodedBlockState state)
+        where TWriter : struct, IPixelWriter<T>
+        where T : unmanaged
     {
-        bool hasDualPlane = !state.SecondaryWeights.IsEmpty;
-        int dualPlaneChannel = state.DualPlaneChannel;
+        TWriter writer = default;
         int pixelCount = footprint.PixelCount;
-
         for (int i = 0; i < pixelCount; i++)
         {
             ref readonly ColorEndpointPair endpoint = ref state.Endpoints[state.PartitionAssignment[i]];
-            int weight = state.Weights[i];
-            int dstOffset = i * 4;
-
-            if (hasDualPlane)
-            {
-                SimdHelpers.WriteSinglePixelLdrDualPlane(
-                    buffer,
-                    dstOffset,
-                    endpoint.LdrLow.R,
-                    endpoint.LdrLow.G,
-                    endpoint.LdrLow.B,
-                    endpoint.LdrLow.A,
-                    endpoint.LdrHigh.R,
-                    endpoint.LdrHigh.G,
-                    endpoint.LdrHigh.B,
-                    endpoint.LdrHigh.A,
-                    weight,
-                    dualPlaneChannel,
-                    state.SecondaryWeights[i]);
-            }
-            else
-            {
-                SimdHelpers.WriteSinglePixelLdr(
-                    buffer,
-                    dstOffset,
-                    endpoint.LdrLow.R,
-                    endpoint.LdrLow.G,
-                    endpoint.LdrLow.B,
-                    endpoint.LdrLow.A,
-                    endpoint.LdrHigh.R,
-                    endpoint.LdrHigh.G,
-                    endpoint.LdrHigh.B,
-                    endpoint.LdrHigh.A,
-                    weight);
-            }
+            writer.WritePixel(buffer, i * 4, in endpoint, state.Weights[i]);
         }
     }
 
     /// <summary>
-    /// Writes float RGBA pixels using the decoded block state.
+    /// Generic dual-plane pixel-write loop (ASTC spec §C.2.20). Same shape as
+    /// <see cref="WriteAllPixels{TWriter,T}"/> but the channel named by
+    /// <paramref name="dualPlane"/> uses the secondary plane's per-texel weight.
     /// </summary>
-    /// <remarks>
-    /// Per ASTC spec §C.2.15: HDR endpoints are interpolated in LNS, then converted to FP16
-    /// via <see cref="Fp16.FromLns"/> and widened to <see cref="float"/>. For mode 14 (HDR RGB
-    /// + LDR Alpha, §C.2.14), the alpha channel is UNORM16 instead of LNS. LDR endpoints
-    /// produce UNORM16 values normalised to [0, 1] (§C.2.24).
-    /// </remarks>
-    private static void WritePixelsHdr(Footprint footprint, Span<float> buffer, in DecodedBlockState state)
+    private static void WriteAllPixelsDualPlane<TWriter, T>(
+        Footprint footprint,
+        Span<T> buffer,
+        in DecodedBlockState state,
+        in DualPlane dualPlane)
+        where TWriter : struct, IPixelWriter<T>
+        where T : unmanaged
     {
-        bool hasDualPlane = !state.SecondaryWeights.IsEmpty;
-        int dualPlaneChannel = state.DualPlaneChannel;
+        TWriter writer = default;
+        int dpChannel = dualPlane.Channel;
         int pixelCount = footprint.PixelCount;
-
         for (int i = 0; i < pixelCount; i++)
         {
             ref readonly ColorEndpointPair endpoint = ref state.Endpoints[state.PartitionAssignment[i]];
-            int weight = state.Weights[i];
-            int dpWeight = hasDualPlane ? state.SecondaryWeights[i] : weight;
-            Span<float> pixel = buffer.Slice(i * 4, 4);
-
-            if (endpoint.IsHdr)
-            {
-                WriteHdrPixelChannels(pixel, in endpoint, weight, dpWeight, dualPlaneChannel);
-            }
-            else
-            {
-                WriteLdrAsHdrPixelChannels(pixel, in endpoint, weight, dpWeight, dualPlaneChannel);
-            }
+            writer.WritePixelDualPlane(buffer, i * 4, in endpoint, state.Weights[i], dpChannel, dualPlane.Weights[i]);
         }
     }
-
-    /// <summary>
-    /// Writes the four HDR-endpoint channels for a single pixel per ASTC spec §C.2.15: LNS →
-    /// FP16 → float. Mode 14 alpha is LDR-as-UNORM16 (§C.2.14); HDR void-extent values are
-    /// already FP16 bit patterns (§C.2.23) and skip the LNS conversion.
-    /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void WriteHdrPixelChannels(
-        Span<float> pixel,
-        in ColorEndpointPair endpoint,
-        int weight,
-        int dpWeight,
-        int dualPlaneChannel)
-    {
-        bool alphaIsLdr = endpoint.AlphaIsLdr;
-        bool valuesAreLns = endpoint.ValuesAreLns;
-        for (int channel = 0; channel < 4; ++channel)
-        {
-            int channelWeight = channel == dualPlaneChannel ? dpWeight : weight;
-            ushort interpolated = InterpolateChannelHdr(
-                endpoint.HdrLow.GetChannel(channel),
-                endpoint.HdrHigh.GetChannel(channel),
-                channelWeight);
-
-            if (channel == 3 && alphaIsLdr)
-            {
-                // Mode 14 (spec §C.2.14): alpha is UNORM16, normalise directly.
-                pixel[channel] = interpolated / 65535.0f;
-            }
-            else if (valuesAreLns)
-            {
-                // Normal HDR block (spec §C.2.15): LNS → FP16 → float.
-                pixel[channel] = Fp16.LnsToFloat(interpolated);
-            }
-            else
-            {
-                // Void-extent HDR (spec §C.2.23): values are already FP16 bit patterns.
-                pixel[channel] = Fp16.Fp16ToFloat(interpolated);
-            }
-        }
-    }
-
-    /// <summary>
-    /// Writes the four LDR-endpoint channels for a single pixel as HDR floats: UNORM16 → [0,1].
-    /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void WriteLdrAsHdrPixelChannels(
-        Span<float> pixel,
-        in ColorEndpointPair endpoint,
-        int weight,
-        int dpWeight,
-        int dualPlaneChannel)
-    {
-        for (int channel = 0; channel < 4; ++channel)
-        {
-            int channelWeight = channel == dualPlaneChannel ? dpWeight : weight;
-            ushort unorm16 = InterpolateLdrAsUnorm16(
-                endpoint.LdrLow.GetChannel(channel),
-                endpoint.LdrHigh.GetChannel(channel),
-                channelWeight);
-            pixel[channel] = unorm16 / 65535.0f;
-        }
-    }
-
-    /// <summary>
-    /// Interpolates an LDR channel value and returns the full 16-bit UNORM result
-    /// (before reduction to byte). Used by the HDR output path for LDR endpoints.
-    /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static ushort InterpolateLdrAsUnorm16(int p0, int p1, int weight)
-        => (ushort)Math.Clamp(Interpolation.BlendLdrReplicated(p0, p1, weight), 0, 0xFFFF);
-
-    /// <summary>
-    /// Interpolates an HDR channel value between two endpoints using the specified weight.
-    /// HDR endpoints are already 16-bit values (FP16 bit patterns), unlike LDR interpolation
-    /// which expands 8-bit to 16-bit first.
-    /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static ushort InterpolateChannelHdr(int p0, int p1, int weight)
-        => (ushort)Math.Clamp(Interpolation.BlendWeighted(p0, p1, weight), 0, 0xFFFF);
 
     /// <summary>
     /// Inline storage for up to 4 per-partition <see cref="ColorEndpointPair"/> values
@@ -424,17 +317,25 @@ internal static class LogicalBlock
     }
 
     /// <summary>
-    /// All four outputs of <see cref="DecodeBlockState"/> bundled into a single ref-struct so
-    /// the call sites stay readable. Stack-only — holds <see cref="Span{T}"/> fields and a
-    /// stack-local <see cref="EndpointBuffer"/>. <see cref="SecondaryWeights"/> is empty for
-    /// non-dual-plane blocks; <see cref="DualPlaneChannel"/> is then -1.
+    /// State common to single-plane and dual-plane blocks: per-partition endpoints, primary
+    /// per-texel weights, and the partition-assignment map. Stack-only — holds a stack-local
+    /// <see cref="EndpointBuffer"/> and a <see cref="Span{T}"/>.
     /// </summary>
     private ref struct DecodedBlockState
     {
         public EndpointBuffer Endpoints;
         public Span<int> Weights;
-        public Span<int> SecondaryWeights;
         public int[] PartitionAssignment;
-        public int DualPlaneChannel;
+    }
+
+    /// <summary>
+    /// Secondary weight plane for dual-plane blocks (ASTC spec §C.2.20). The channel
+    /// identified by <see cref="Channel"/> uses these per-texel weights instead of the
+    /// primary plane's.
+    /// </summary>
+    private ref struct DualPlane
+    {
+        public Span<int> Weights;
+        public int Channel;
     }
 }
