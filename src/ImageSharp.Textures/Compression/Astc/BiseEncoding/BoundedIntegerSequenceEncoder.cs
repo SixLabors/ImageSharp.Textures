@@ -12,11 +12,14 @@ internal sealed class BoundedIntegerSequenceEncoder
         (BiseEncodingMode encoding, int bitCount) = BoundedIntegerSequenceCodec.GetPackingModeBitCount(range);
         this.Encoding = encoding;
         this.BitCount = bitCount;
+        this.EncodedBlockSize = BoundedIntegerSequenceCodec.GetEncodedBlockSize(encoding, bitCount);
     }
 
     private BiseEncodingMode Encoding { get; }
 
     private int BitCount { get; }
+
+    private int EncodedBlockSize { get; }
 
     /// <summary>
     /// Adds a value to the encoding sequence.
@@ -49,12 +52,12 @@ internal sealed class BoundedIntegerSequenceEncoder
                         slice[i] = index < this.values.Count ? this.values[index++] : 0;
                     }
 
-                    EncodeISEBlock(slice, this.BitCount, ref bitSink, ref bitsWrittenCount, totalBitCount);
+                    EncodeISEBlock(this.Encoding, slice, this.BitCount, ref bitSink, ref bitsWrittenCount, totalBitCount);
                     break;
                 }
 
                 case BiseEncodingMode.BitEncoding:
-                    bitSink.PutBits((uint)this.values[index++], BoundedIntegerSequenceCodec.GetEncodedBlockSize(this.Encoding, this.BitCount));
+                    bitSink.PutBits((uint)this.values[index++], this.EncodedBlockSize);
                     break;
             }
         }
@@ -71,11 +74,12 @@ internal sealed class BoundedIntegerSequenceEncoder
     /// selector for the combined trit/quint tuple, and interleaves the selector bits with
     /// the mantissas into the output stream.
     /// </summary>
-    private static void EncodeISEBlock(ReadOnlySpan<int> values, int bitsPerValue, ref BitStream bitSink, ref int bitsWritten, int totalBitCount)
+    private static void EncodeISEBlock(BiseEncodingMode mode, ReadOnlySpan<int> values, int bitsPerValue, ref BitStream bitSink, ref int bitsWritten, int totalBitCount)
     {
         int valueCount = values.Length;
-        int valueRange = valueCount == 3 ? 5 : 3;
-        int[] interleavedBits = valueRange == 5 ? BoundedIntegerSequenceCodec.InterleavedQuintBits : BoundedIntegerSequenceCodec.InterleavedTritBits;
+        int[] interleavedBits = mode == BiseEncodingMode.QuintEncoding
+            ? BoundedIntegerSequenceCodec.InterleavedQuintBits
+            : BoundedIntegerSequenceCodec.InterleavedTritBits;
 
         // Up to 5 ints each (20 bytes) — one BISE block holds 5 trits or 3 quints (spec §C.2.22).
         Span<int> mantissas = stackalloc int[valueCount];
@@ -83,7 +87,7 @@ internal sealed class BoundedIntegerSequenceEncoder
         SplitComponents(values, bitsPerValue, mantissas, nonBitComponents);
 
         int encodedBitCount = ComputeEncodedBitCount(valueCount, bitsPerValue, interleavedBits, bitsWritten, totalBitCount);
-        int selector = FindEncodingSelector(nonBitComponents, valueRange, encodedBitCount);
+        int selector = FindEncodingSelector(mode, nonBitComponents, encodedBitCount);
         if (selector < 0)
         {
             throw new InvalidOperationException("No BISE encoding found for the supplied trit/quint values");
@@ -136,10 +140,11 @@ internal sealed class BoundedIntegerSequenceEncoder
     /// first row whose entries match <paramref name="nonBitComponents"/>. -1 if no row
     /// matches within the selector budget.
     /// </summary>
-    private static int FindEncodingSelector(ReadOnlySpan<int> nonBitComponents, int valueRange, int encodedBitCount)
+    private static int FindEncodingSelector(BiseEncodingMode mode, ReadOnlySpan<int> nonBitComponents, int encodedBitCount)
     {
-        int[] encodings = valueRange == 5 ? BoundedIntegerSequenceCodec.FlatQuintEncodings : BoundedIntegerSequenceCodec.FlatTritEncodings;
-        int stride = valueRange == 5 ? 3 : 5;
+        bool isQuint = mode == BiseEncodingMode.QuintEncoding;
+        int[] encodings = isQuint ? BoundedIntegerSequenceCodec.FlatQuintEncodings : BoundedIntegerSequenceCodec.FlatTritEncodings;
+        int stride = isQuint ? 3 : 5;
         int valueCount = nonBitComponents.Length;
 
         for (int selector = (1 << encodedBitCount) - 1; selector >= 0; --selector)
