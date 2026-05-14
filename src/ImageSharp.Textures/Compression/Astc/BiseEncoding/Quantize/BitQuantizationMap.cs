@@ -3,15 +3,24 @@
 
 namespace SixLabors.ImageSharp.Textures.Compression.Astc.BiseEncoding.Quantize;
 
-internal sealed class BitQuantizationMap : QuantizationMap
+/// <summary>
+/// Builds <see cref="QuantizationMap"/> instances for the pure-bit BISE encoding mode
+/// (no trits/quints). Bit-replicates each quantized value up to <c>totalUnquantizedBits</c>
+/// width to derive its unquantized form (ASTC spec §C.2.18).
+/// </summary>
+internal static class BitQuantizationMap
 {
-    // TotalUnquantizedBits is 8 for endpoint values and 6 for weights
-    public BitQuantizationMap(int range, int totalUnquantizedBits)
+    /// <param name="range">Inclusive upper bound of the quantized slot index. <c>range + 1</c>
+    /// must be a power of two.</param>
+    /// <param name="totalUnquantizedBits">Bit width of the unquantized output: 8 for endpoint
+    /// values, 6 for weights.</param>
+    public static QuantizationMap Create(int range, int totalUnquantizedBits)
     {
-        // ensure range+1 is power of two
         ArgumentOutOfRangeException.ThrowIfNotEqual(CountOnes(range + 1), 1);
 
-        int bitCount = Log2Floor(range + 1);
+        int bitCount = QuantizationMap.Log2Floor(range + 1);
+        List<int> unquantization = [];
+        List<int> quantization = [];
 
         for (int bits = 0; bits <= range; bits++)
         {
@@ -31,24 +40,24 @@ internal sealed class BitQuantizationMap : QuantizationMap
                 throw new InvalidOperationException();
             }
 
-            this.UnquantizationMapBuilder.Add(unquantized);
+            unquantization.Add(unquantized);
 
             if (bits > 0)
             {
-                int previousUnquantized = this.UnquantizationMapBuilder[bits - 1];
-                while (this.QuantizationMapBuilder.Count <= (previousUnquantized + unquantized) / 2)
+                int previousUnquantized = unquantization[bits - 1];
+                while (quantization.Count <= (previousUnquantized + unquantized) / 2)
                 {
-                    this.QuantizationMapBuilder.Add(bits - 1);
+                    quantization.Add(bits - 1);
                 }
             }
 
-            while (this.QuantizationMapBuilder.Count <= unquantized)
+            while (quantization.Count <= unquantized)
             {
-                this.QuantizationMapBuilder.Add(bits);
+                quantization.Add(bits);
             }
         }
 
-        this.Freeze();
+        return new QuantizationMap([.. quantization], [.. unquantization]);
     }
 
     private static int CountOnes(int value)

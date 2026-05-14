@@ -3,15 +3,25 @@
 
 namespace SixLabors.ImageSharp.Textures.Compression.Astc.BiseEncoding.Quantize;
 
-internal class QuantizationMap
+/// <summary>
+/// Pre-computed quantize/unquantize lookup tables for a single ASTC quantization range.
+/// Both arrays are constructed once and the instance is immutable thereafter, built via
+/// <see cref="BitQuantizationMap"/>, <see cref="TritQuantizationMap"/>, or <see cref="QuintQuantizationMap"/>.
+/// </summary>
+internal sealed class QuantizationMap
 {
-    // Flat arrays for O(1) lookup on the hot path (set by Freeze)
-    private int[] quantizationMap = [];
-    private int[] unquantizationMap = [];
+    private readonly int[] quantizationMap;
+    private readonly int[] unquantizationMap;
 
-    protected List<int> QuantizationMapBuilder { get; set; } = [];
-
-    protected List<int> UnquantizationMapBuilder { get; set; } = [];
+    /// <param name="quantizationMap">Length 256 (or shorter); maps an unquantized value to its
+    /// nearest quantized slot.</param>
+    /// <param name="unquantizationMap">Length <c>range + 1</c>; maps a quantized slot back to
+    /// its unquantized value.</param>
+    public QuantizationMap(int[] quantizationMap, int[] unquantizationMap)
+    {
+        this.quantizationMap = quantizationMap;
+        this.unquantizationMap = unquantizationMap;
+    }
 
     public int Quantize(int x)
         => (uint)x < (uint)this.quantizationMap.Length
@@ -35,31 +45,23 @@ internal class QuantizationMap
     }
 
     /// <summary>
-    /// Converts builder lists to flat arrays. Called after construction is complete.
+    /// Builds a quantize-table from an already-populated unquantize-table by, for every
+    /// unquantized value in [0, 255], picking the index in <paramref name="unquantized"/>
+    /// whose value is closest. Used by <see cref="TritQuantizationMap"/> and
+    /// <see cref="QuintQuantizationMap"/>; <see cref="BitQuantizationMap"/> builds its
+    /// quantize table inline because the structure of bit-replication makes the closest
+    /// match analytically derivable without a search.
     /// </summary>
-    protected void Freeze()
+    internal static int[] BuildQuantizationMapFromUnquantized(int[] unquantized)
     {
-        this.unquantizationMap = [.. this.UnquantizationMapBuilder];
-        this.quantizationMap = [.. this.QuantizationMapBuilder];
-        this.UnquantizationMapBuilder = [];
-        this.QuantizationMapBuilder = [];
-    }
-
-    protected void GenerateQuantizationMap()
-    {
-        if (this.UnquantizationMapBuilder.Count <= 1)
-        {
-            return;
-        }
-
-        this.QuantizationMapBuilder.Clear();
+        int[] quantization = new int[256];
         for (int i = 0; i < 256; ++i)
         {
             int bestIndex = 0;
             int bestScore = int.MaxValue;
-            for (int index = 0; index < this.UnquantizationMapBuilder.Count; ++index)
+            for (int index = 0; index < unquantized.Length; ++index)
             {
-                int diff = i - this.UnquantizationMapBuilder[index];
+                int diff = i - unquantized[index];
                 int score = diff * diff;
                 if (score < bestScore)
                 {
@@ -68,7 +70,9 @@ internal class QuantizationMap
                 }
             }
 
-            this.QuantizationMapBuilder.Add(bestIndex);
+            quantization[i] = bestIndex;
         }
+
+        return quantization;
     }
 }

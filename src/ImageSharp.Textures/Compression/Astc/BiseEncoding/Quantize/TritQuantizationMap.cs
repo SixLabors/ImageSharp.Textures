@@ -3,25 +3,35 @@
 
 namespace SixLabors.ImageSharp.Textures.Compression.Astc.BiseEncoding.Quantize;
 
-internal sealed class TritQuantizationMap : QuantizationMap
+/// <summary>
+/// Builds <see cref="QuantizationMap"/> instances for the trit BISE encoding mode plus the
+/// per-trit unquantization tables for endpoint values and weights (ASTC spec §C.2.18).
+/// </summary>
+internal static class TritQuantizationMap
 {
-    public TritQuantizationMap(int range, Func<int, int, int, int> unquantFunc)
+    /// <param name="range">Inclusive upper bound of the quantized slot index. <c>range + 1</c>
+    /// must be divisible by 3.</param>
+    /// <param name="unquantFunc">Per-trit unquantization function — typically
+    /// <see cref="GetUnquantizedValue"/> or <see cref="GetUnquantizedWeight"/>.</param>
+    public static QuantizationMap Create(int range, Func<int, int, int, int> unquantFunc)
     {
         ArgumentOutOfRangeException.ThrowIfNotEqual((range + 1) % 3, 0);
 
         int bitsPowerOfTwo = (range + 1) / 3;
-        int bitCount = bitsPowerOfTwo == 0 ? 0 : Log2Floor(bitsPowerOfTwo);
+        int bitCount = bitsPowerOfTwo == 0 ? 0 : QuantizationMap.Log2Floor(bitsPowerOfTwo);
 
+        int[] unquantization = new int[3 * (1 << bitCount)];
+        int idx = 0;
         for (int trit = 0; trit < 3; ++trit)
         {
             for (int bits = 0; bits < (1 << bitCount); ++bits)
             {
-                this.UnquantizationMapBuilder.Add(unquantFunc(trit, bits, range));
+                unquantization[idx++] = unquantFunc(trit, bits, range);
             }
         }
 
-        this.GenerateQuantizationMap();
-        this.Freeze();
+        int[] quantization = QuantizationMap.BuildQuantizationMapFromUnquantized(unquantization);
+        return new QuantizationMap(quantization, unquantization);
     }
 
     internal static int GetUnquantizedValue(int trit, int bits, int range)

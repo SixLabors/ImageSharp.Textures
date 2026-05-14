@@ -117,49 +117,43 @@ internal static class Quantization
     }
 
     private static SortedDictionary<int, QuantizationMap> InitEndpointMaps()
-    {
-        SortedDictionary<int, QuantizationMap> d = new()
+        => new()
         {
-            { 5, new TritQuantizationMap(5, TritQuantizationMap.GetUnquantizedValue) },
-            { 7, new BitQuantizationMap(7, 8) },
-            { 9, new QuintQuantizationMap(9, QuintQuantizationMap.GetUnquantizedValue) },
-            { 11, new TritQuantizationMap(11, TritQuantizationMap.GetUnquantizedValue) },
-            { 15, new BitQuantizationMap(15, 8) },
-            { 19, new QuintQuantizationMap(19, QuintQuantizationMap.GetUnquantizedValue) },
-            { 23, new TritQuantizationMap(23, TritQuantizationMap.GetUnquantizedValue) },
-            { 31, new BitQuantizationMap(31, 8) },
-            { 39, new QuintQuantizationMap(39, QuintQuantizationMap.GetUnquantizedValue) },
-            { 47, new TritQuantizationMap(47, TritQuantizationMap.GetUnquantizedValue) },
-            { 63, new BitQuantizationMap(63, 8) },
-            { 79, new QuintQuantizationMap(79, QuintQuantizationMap.GetUnquantizedValue) },
-            { 95, new TritQuantizationMap(95, TritQuantizationMap.GetUnquantizedValue) },
-            { 127, new BitQuantizationMap(127, 8) },
-            { 159, new QuintQuantizationMap(159, QuintQuantizationMap.GetUnquantizedValue) },
-            { 191, new TritQuantizationMap(191, TritQuantizationMap.GetUnquantizedValue) },
-            { 255, new BitQuantizationMap(255, 8) }
+            { 5, TritQuantizationMap.Create(5, TritQuantizationMap.GetUnquantizedValue) },
+            { 7, BitQuantizationMap.Create(7, 8) },
+            { 9, QuintQuantizationMap.Create(9, QuintQuantizationMap.GetUnquantizedValue) },
+            { 11, TritQuantizationMap.Create(11, TritQuantizationMap.GetUnquantizedValue) },
+            { 15, BitQuantizationMap.Create(15, 8) },
+            { 19, QuintQuantizationMap.Create(19, QuintQuantizationMap.GetUnquantizedValue) },
+            { 23, TritQuantizationMap.Create(23, TritQuantizationMap.GetUnquantizedValue) },
+            { 31, BitQuantizationMap.Create(31, 8) },
+            { 39, QuintQuantizationMap.Create(39, QuintQuantizationMap.GetUnquantizedValue) },
+            { 47, TritQuantizationMap.Create(47, TritQuantizationMap.GetUnquantizedValue) },
+            { 63, BitQuantizationMap.Create(63, 8) },
+            { 79, QuintQuantizationMap.Create(79, QuintQuantizationMap.GetUnquantizedValue) },
+            { 95, TritQuantizationMap.Create(95, TritQuantizationMap.GetUnquantizedValue) },
+            { 127, BitQuantizationMap.Create(127, 8) },
+            { 159, QuintQuantizationMap.Create(159, QuintQuantizationMap.GetUnquantizedValue) },
+            { 191, TritQuantizationMap.Create(191, TritQuantizationMap.GetUnquantizedValue) },
+            { 255, BitQuantizationMap.Create(255, 8) },
         };
-        return d;
-    }
 
     private static SortedDictionary<int, QuantizationMap> InitWeightMaps()
-    {
-        SortedDictionary<int, QuantizationMap> d = new()
+        => new()
         {
-            { 1, new BitQuantizationMap(1, 6) },
-            { 2, new TritQuantizationMap(2, TritQuantizationMap.GetUnquantizedWeight) },
-            { 3, new BitQuantizationMap(3, 6) },
-            { 4, new QuintQuantizationMap(4, QuintQuantizationMap.GetUnquantizedWeight) },
-            { 5, new TritQuantizationMap(5, TritQuantizationMap.GetUnquantizedWeight) },
-            { 7, new BitQuantizationMap(7, 6) },
-            { 9, new QuintQuantizationMap(9, QuintQuantizationMap.GetUnquantizedWeight) },
-            { 11, new TritQuantizationMap(11, TritQuantizationMap.GetUnquantizedWeight) },
-            { 15, new BitQuantizationMap(15, 6) },
-            { 19, new QuintQuantizationMap(19, QuintQuantizationMap.GetUnquantizedWeight) },
-            { 23, new TritQuantizationMap(23, TritQuantizationMap.GetUnquantizedWeight) },
-            { 31, new BitQuantizationMap(31, 6) }
+            { 1, BitQuantizationMap.Create(1, 6) },
+            { 2, TritQuantizationMap.Create(2, TritQuantizationMap.GetUnquantizedWeight) },
+            { 3, BitQuantizationMap.Create(3, 6) },
+            { 4, QuintQuantizationMap.Create(4, QuintQuantizationMap.GetUnquantizedWeight) },
+            { 5, TritQuantizationMap.Create(5, TritQuantizationMap.GetUnquantizedWeight) },
+            { 7, BitQuantizationMap.Create(7, 6) },
+            { 9, QuintQuantizationMap.Create(9, QuintQuantizationMap.GetUnquantizedWeight) },
+            { 11, TritQuantizationMap.Create(11, TritQuantizationMap.GetUnquantizedWeight) },
+            { 15, BitQuantizationMap.Create(15, 6) },
+            { 19, QuintQuantizationMap.Create(19, QuintQuantizationMap.GetUnquantizedWeight) },
+            { 23, TritQuantizationMap.Create(23, TritQuantizationMap.GetUnquantizedWeight) },
+            { 31, BitQuantizationMap.Create(31, 6) },
         };
-        return d;
-    }
 
     private static QuantizationMap?[] BuildFlatLookup(SortedDictionary<int, QuantizationMap> maps, int size)
     {

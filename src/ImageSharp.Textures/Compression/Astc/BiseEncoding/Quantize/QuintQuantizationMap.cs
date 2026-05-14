@@ -3,25 +3,35 @@
 
 namespace SixLabors.ImageSharp.Textures.Compression.Astc.BiseEncoding.Quantize;
 
-internal sealed class QuintQuantizationMap : QuantizationMap
+/// <summary>
+/// Builds <see cref="QuantizationMap"/> instances for the quint BISE encoding mode plus the
+/// per-quint unquantization tables for endpoint values and weights (ASTC spec §C.2.18).
+/// </summary>
+internal static class QuintQuantizationMap
 {
-    public QuintQuantizationMap(int range, Func<int, int, int, int> unquantFunc)
+    /// <param name="range">Inclusive upper bound of the quantized slot index. <c>range + 1</c>
+    /// must be divisible by 5.</param>
+    /// <param name="unquantFunc">Per-quint unquantization function — typically
+    /// <see cref="GetUnquantizedValue"/> or <see cref="GetUnquantizedWeight"/>.</param>
+    public static QuantizationMap Create(int range, Func<int, int, int, int> unquantFunc)
     {
         ArgumentOutOfRangeException.ThrowIfNotEqual((range + 1) % 5, 0);
 
         int bitsPowerOfTwo = (range + 1) / 5;
-        int bitCount = bitsPowerOfTwo == 0 ? 0 : Log2Floor(bitsPowerOfTwo);
+        int bitCount = bitsPowerOfTwo == 0 ? 0 : QuantizationMap.Log2Floor(bitsPowerOfTwo);
 
+        int[] unquantization = new int[5 * (1 << bitCount)];
+        int idx = 0;
         for (int quint = 0; quint < 5; ++quint)
         {
             for (int bits = 0; bits < (1 << bitCount); ++bits)
             {
-                this.UnquantizationMapBuilder.Add(unquantFunc(quint, bits, range));
+                unquantization[idx++] = unquantFunc(quint, bits, range);
             }
         }
 
-        this.GenerateQuantizationMap();
-        this.Freeze();
+        int[] quantization = QuantizationMap.BuildQuantizationMapFromUnquantized(unquantization);
+        return new QuantizationMap(quantization, unquantization);
     }
 
     internal static int GetUnquantizedValue(int quint, int bits, int range)
