@@ -36,7 +36,7 @@ public class WeightInfillTests
         int[] weights = [1, 3, 5, 3, 5, 7, 5, 7, 9];
         int[] expected = [1, 2, 3, 4, 5, 2, 3, 4, 5, 6, 3, 4, 5, 6, 7, 4, 5, 6, 7, 8, 5, 6, 7, 8, 9];
 
-        Footprint footprint = Footprint.Get5x5();
+        Footprint footprint = Footprint.FromFootprintType(FootprintType.Footprint5x5);
         DecimationInfo di = DecimationTable.Get(footprint, 3, 3);
         int[] result = new int[footprint.PixelCount];
         DecimationTable.InfillWeights(weights, di, result);

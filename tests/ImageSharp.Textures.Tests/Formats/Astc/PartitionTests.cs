@@ -21,7 +21,7 @@ public class PartitionTests
             0, 0, 0, 0, 1, 1, 1, 2, 2, 2
         ];
 
-        Partition partition = Partition.GetASTCPartition(Footprint.Get10x6(), 3, 557);
+        Partition partition = Partition.GetASTCPartition(Footprint.FromFootprintType(FootprintType.Footprint10x6), 3, 557);
 
         Assert.Equal(expected, partition.Assignment);
     }
@@ -29,8 +29,8 @@ public class PartitionTests
     [Fact]
     public void GetASTCPartition_WithDifferentIds_ShouldProduceUniqueAssignments()
     {
-        Partition partition0 = Partition.GetASTCPartition(Footprint.Get6x6(), 2, 0);
-        Partition partition1 = Partition.GetASTCPartition(Footprint.Get6x6(), 2, 1);
+        Partition partition0 = Partition.GetASTCPartition(Footprint.FromFootprintType(FootprintType.Footprint6x6), 2, 0);
+        Partition partition1 = Partition.GetASTCPartition(Footprint.FromFootprintType(FootprintType.Footprint6x6), 2, 1);
 
         Assert.NotEqual(partition1.Assignment, partition0.Assignment);
     }

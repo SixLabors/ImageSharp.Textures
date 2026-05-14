@@ -84,7 +84,7 @@ internal static class Quantization
     /// Batch unquantize: uses pre-computed flat table for O(1) lookup per value.
     /// No per-call validation, no conditional branch per weight.
     /// </summary>
-    internal static void UnquantizeWeightsBatch(Span<int> weights, int count, int range)
+    internal static void UnquantizeWeightsBatch(Span<int> weights, int range)
     {
         int[]? table = UnquantizeWeightsFlat[range];
         if (table == null)
@@ -92,7 +92,7 @@ internal static class Quantization
             return;
         }
 
-        for (int i = 0; i < count; i++)
+        for (int i = 0; i < weights.Length; i++)
         {
             weights[i] = table[weights[i]];
         }
@@ -102,7 +102,7 @@ internal static class Quantization
     /// Batch unquantize color endpoint values: uses pre-computed flat table.
     /// No per-call validation, single array lookup per value.
     /// </summary>
-    internal static void UnquantizeCEValuesBatch(Span<int> values, int count, int rangeMaxValue)
+    internal static void UnquantizeCEValuesBatch(Span<int> values, int rangeMaxValue)
     {
         int[]? table = UnquantizeEndpointsFlat[rangeMaxValue];
         if (table == null)
@@ -110,7 +110,7 @@ internal static class Quantization
             return;
         }
 
-        for (int i = 0; i < count; i++)
+        for (int i = 0; i < values.Length; i++)
         {
             values[i] = table[values[i]];
         }

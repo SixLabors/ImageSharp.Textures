@@ -24,7 +24,7 @@ public class LogicalAstcBlockTests
     {
         UInt128 bits = UInt128.Zero;
         BlockInfo info = BlockModeDecoder.Decode(bits);
-        Footprint footprint = Footprint.Get8x8();
+        Footprint footprint = Footprint.FromFootprintType(FootprintType.Footprint8x8);
         byte[] pixels = new byte[footprint.PixelCount * 4];
         Array.Fill(pixels, (byte)0xCC);
 
@@ -40,7 +40,7 @@ public class LogicalAstcBlockTests
         // 0xFFFFFFFFFFFFFDFCUL is the canonical "all-ones" void-extent block (zero RGBA).
         UInt128 bits = (UInt128)0xFFFFFFFFFFFFFDFCUL;
         BlockInfo info = BlockModeDecoder.Decode(bits);
-        Footprint footprint = Footprint.Get8x8();
+        Footprint footprint = Footprint.FromFootprintType(FootprintType.Footprint8x8);
         byte[] pixels = new byte[footprint.PixelCount * 4];
 
         LogicalBlock.DecodeToBytes(bits, in info, footprint, pixels);
@@ -53,7 +53,7 @@ public class LogicalAstcBlockTests
     {
         UInt128 bits = (UInt128)0x0000000001FE000173UL;
         BlockInfo info = BlockModeDecoder.Decode(bits);
-        Footprint footprint = Footprint.Get6x5();
+        Footprint footprint = Footprint.FromFootprintType(FootprintType.Footprint6x5);
         byte[] pixels = new byte[footprint.PixelCount * 4];
 
         LogicalBlock.DecodeToBytes(bits, in info, footprint, pixels);

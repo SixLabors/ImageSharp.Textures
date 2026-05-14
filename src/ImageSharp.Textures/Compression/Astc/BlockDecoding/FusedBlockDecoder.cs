@@ -30,7 +30,7 @@ internal static class FusedBlockDecoder
         DecodeBiseValues(bits, info.ColorStartBit, info.ColorBitCount, info.ColorValuesRange, colorCount, colors);
 
         // 2. Batch unquantize color values, then decode endpoint pair
-        Quantization.UnquantizeCEValuesBatch(colors, colorCount, info.ColorValuesRange);
+        Quantization.UnquantizeCEValuesBatch(colors, info.ColorValuesRange);
         ColorEndpointPair endpointPair = EndpointCodec.Decode(colors, info.EndpointMode0);
 
         // 3. BISE decode weights.
@@ -40,7 +40,7 @@ internal static class FusedBlockDecoder
         DecodeBiseWeights(bits, info.WeightBitCount, info.WeightRange, gridSize, gridWeights);
 
         // 4. Batch unquantize weights
-        Quantization.UnquantizeWeightsBatch(gridWeights, gridSize, info.WeightRange);
+        Quantization.UnquantizeWeightsBatch(gridWeights, info.WeightRange);
 
         // 5. Infill weights from grid to texels (or pass through if identity mapping)
         if (info.GridWidth == footprint.Width && info.GridHeight == footprint.Height)

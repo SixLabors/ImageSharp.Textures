@@ -55,32 +55,4 @@ public readonly record struct Footprint
         => (uint)type < (uint)All.Length
             ? All[(int)type]
             : throw new ArgumentOutOfRangeException(nameof(type), $"Invalid FootprintType: {type}");
-
-    internal static Footprint Get4x4() => All[(int)FootprintType.Footprint4x4];
-
-    internal static Footprint Get5x4() => All[(int)FootprintType.Footprint5x4];
-
-    internal static Footprint Get5x5() => All[(int)FootprintType.Footprint5x5];
-
-    internal static Footprint Get6x5() => All[(int)FootprintType.Footprint6x5];
-
-    internal static Footprint Get6x6() => All[(int)FootprintType.Footprint6x6];
-
-    internal static Footprint Get8x5() => All[(int)FootprintType.Footprint8x5];
-
-    internal static Footprint Get8x6() => All[(int)FootprintType.Footprint8x6];
-
-    internal static Footprint Get8x8() => All[(int)FootprintType.Footprint8x8];
-
-    internal static Footprint Get10x5() => All[(int)FootprintType.Footprint10x5];
-
-    internal static Footprint Get10x6() => All[(int)FootprintType.Footprint10x6];
-
-    internal static Footprint Get10x8() => All[(int)FootprintType.Footprint10x8];
-
-    internal static Footprint Get10x10() => All[(int)FootprintType.Footprint10x10];
-
-    internal static Footprint Get12x10() => All[(int)FootprintType.Footprint12x10];
-
-    internal static Footprint Get12x12() => All[(int)FootprintType.Footprint12x12];
 }

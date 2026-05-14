@@ -46,7 +46,7 @@ public class AstcDecodingBenchmark
         ulong high = BitConverter.ToUInt64(blockBytes[8..]);
         UInt128 bits = (UInt128)low | ((UInt128)high << 64);
         BlockInfo info = BlockModeDecoder.Decode(bits);
-        Footprint footprint = Footprint.Get4x4();
+        Footprint footprint = Footprint.FromFootprintType(FootprintType.Footprint4x4);
         Span<byte> pixels = stackalloc byte[footprint.PixelCount * 4];
         LogicalBlock.DecodeToBytes(bits, in info, footprint, pixels);
         return pixels[0];

@@ -347,7 +347,7 @@ public class EndpointCodecTests
                 info.ColorValuesRange,
                 info.ColorValuesCount,
                 colors);
-            Quantization.UnquantizeCEValuesBatch(colors, info.ColorValuesCount, info.ColorValuesRange);
+            Quantization.UnquantizeCEValuesBatch(colors, info.ColorValuesRange);
 
             // The checkerboard content is LDR but the encoder happens to emit HDR luma
             // endpoint modes for it, so the test must go through the polymorphic decoder

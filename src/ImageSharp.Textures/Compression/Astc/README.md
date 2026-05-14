@@ -65,7 +65,7 @@ HDR mode 14 (`HdrRgbDirectLdrAlpha`) is a hybrid — RGB is HDR but alpha is LDR
 Everything else goes here. That includes:
 
 - **Multi-partition blocks** (2, 3, or 4 partitions). The partition index for each texel is computed from a 10-bit seed plus the block position via the spec's hash function (`ColorEncoding/Partition.cs`, spec §C.2.21). Each partition has its own endpoint pair, so interpolation picks the endpoints based on the assigned partition per texel.
-- **Dual-plane blocks.** A second weight grid drives one channel independently (spec §C.2.20). The dual-plane channel index and the second weight grid both live in `LogicalBlock.DualPlaneData`. Interpolation uses the dual-plane weight for the designated channel and the regular weight for the other three.
+- **Dual-plane blocks.** A second weight grid drives one channel independently (spec §C.2.20). `LogicalBlock` stack-allocates a secondary-weight span and passes it (with the dual-plane channel index) to a dedicated dual-plane writer. Interpolation uses the dual-plane weight for the designated channel and the regular weight for the other three.
 - **Void-extent blocks.** The entire block is a single constant colour (LDR UNORM16 or HDR FP16, distinguished by bit 9 — see design decisions below). Handled by a short-circuit path in `LogicalBlock.UnpackLogicalBlock` that skips BISE decode entirely.
 - **Mixed LDR/HDR blocks.** Any block where individual partitions use different LDR/HDR endpoint modes (legal per spec).
 

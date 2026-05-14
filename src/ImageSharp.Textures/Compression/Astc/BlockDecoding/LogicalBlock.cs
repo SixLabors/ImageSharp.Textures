@@ -156,7 +156,7 @@ internal static class LogicalBlock
             info.ColorValuesRange,
             info.ColorValuesCount,
             colors);
-        Quantization.UnquantizeCEValuesBatch(colors, info.ColorValuesCount, info.ColorValuesRange);
+        Quantization.UnquantizeCEValuesBatch(colors, info.ColorValuesRange);
 
         int colorIndex = 0;
         for (int i = 0; i < info.PartitionCount; i++)
@@ -214,7 +214,7 @@ internal static class LogicalBlock
 
         if (!isDualPlane)
         {
-            Quantization.UnquantizeWeightsBatch(rawWeights, gridSize, info.WeightRange);
+            Quantization.UnquantizeWeightsBatch(rawWeights, info.WeightRange);
             DecimationTable.InfillWeights(rawWeights[..gridSize], decimationInfo, primaryWeights);
             return;
         }
@@ -230,8 +230,8 @@ internal static class LogicalBlock
             plane1[i] = rawWeights[(i * 2) + 1];
         }
 
-        Quantization.UnquantizeWeightsBatch(plane0, gridSize, info.WeightRange);
-        Quantization.UnquantizeWeightsBatch(plane1, gridSize, info.WeightRange);
+        Quantization.UnquantizeWeightsBatch(plane0, info.WeightRange);
+        Quantization.UnquantizeWeightsBatch(plane1, info.WeightRange);
 
         DecimationTable.InfillWeights(plane0, decimationInfo, primaryWeights);
         DecimationTable.InfillWeights(plane1, decimationInfo, secondaryWeights);

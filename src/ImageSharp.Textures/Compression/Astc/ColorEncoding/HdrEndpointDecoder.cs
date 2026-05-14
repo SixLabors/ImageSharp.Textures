@@ -3,7 +3,6 @@
 
 using System.Runtime.CompilerServices;
 using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Textures.Compression.Astc.BiseEncoding.Quantize;
 using SixLabors.ImageSharp.Textures.Compression.Astc.Core;
 
 namespace SixLabors.ImageSharp.Textures.Compression.Astc.ColorEncoding;
@@ -164,26 +163,9 @@ internal static class HdrEndpointDecoder
         return (low, high);
     }
 
-    public static (Rgba64 Low, Rgba64 High) DecodeHdrMode(ReadOnlySpan<int> values, int maxValue, ColorEndpointMode mode)
-    {
-        int count = mode.GetColorValuesCount();
-
-        // Up to 8 ints (32 bytes) — HDR endpoint modes (2, 3, 7, 11, 14, 15 per spec §C.2.14)
-        // emit at most 8 colour values (mode 14: 6 RGB + 2 LDR-alpha).
-        Span<int> unquantizedValues = stackalloc int[count];
-        int copyLength = Math.Min(count, values.Length);
-        for (int i = 0; i < copyLength; i++)
-        {
-            unquantizedValues[i] = Quantization.UnquantizeCEValueFromRange(values[i], maxValue);
-        }
-
-        return DecodeHdrModeUnquantized(unquantizedValues, mode);
-    }
-
     /// <summary>
-    /// Decodes HDR endpoints from already-unquantized values.
-    /// Called from the fused decode path where BISE decode + batch unquantize
-    /// have already been performed.
+    /// Decodes HDR endpoints from already-unquantized values. Called from the fused decode
+    /// path where BISE decode + batch unquantize have already been performed.
     /// </summary>
     public static (Rgba64 Low, Rgba64 High) DecodeHdrModeUnquantized(ReadOnlySpan<int> value, ColorEndpointMode mode) => mode switch
     {
