@@ -270,7 +270,7 @@ public class EndpointCodecTests
         Rgba32 expectedLow, Rgba32 expectedHigh)
     {
         int[] quantized = EncodeRgbBaseOffset(expectedLow, expectedHigh);
-        int[] unquantized = EndpointCodec.UnquantizeArray(quantized, 255);
+        int[] unquantized = Quantization.UnquantizeCEValuesArray(quantized, 255);
         ColorEndpointPair decoded = EndpointCodec.Decode(unquantized, ColorEndpointMode.LdrRgbBaseOffset);
 
         Assert.True(decoded.LdrLow == expectedLow);
@@ -296,7 +296,7 @@ public class EndpointCodecTests
 
             Rgba32 color = new((byte)r, (byte)g, (byte)b, 255);
             int[] quantized = EncodeRgbBaseOffset(color, color);
-            int[] unquantized = EndpointCodec.UnquantizeArray(quantized, 255);
+            int[] unquantized = Quantization.UnquantizeCEValuesArray(quantized, 255);
             ColorEndpointPair decoded = EndpointCodec.Decode(unquantized, ColorEndpointMode.LdrRgbBaseOffset);
 
             Assert.True(decoded.LdrLow == color);
@@ -391,7 +391,7 @@ public class EndpointCodecTests
     {
         List<int> values = [];
         bool needsSwap = EndpointEncoder.EncodeColorsForMode(low, high, quantRange, mode, out ColorEndpointMode astcMode, values);
-        int[] unquantized = EndpointCodec.UnquantizeArray(values.ToArray(), quantRange);
+        int[] unquantized = Quantization.UnquantizeCEValuesArray(values.ToArray(), quantRange);
         ColorEndpointPair decoded = EndpointCodec.Decode(unquantized, astcMode);
 
         return needsSwap ? (decoded.LdrHigh, decoded.LdrLow) : (decoded.LdrLow, decoded.LdrHigh);

@@ -46,5 +46,5 @@ internal sealed class QuantizedEndpointPair
     }
 
     private static int[] Unquantize(int[] quantized, int maxValue)
-        => EndpointCodec.UnquantizeArray(quantized, maxValue);
+        => Quantization.UnquantizeCEValuesArray(quantized, maxValue);
 }

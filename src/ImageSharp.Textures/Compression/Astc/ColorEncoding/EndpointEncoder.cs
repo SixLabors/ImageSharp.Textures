@@ -27,7 +27,7 @@ internal static class EndpointEncoder
                     v[i] = i < values.Count ? values[i] : 0;
                 }
 
-                int[] unquantizedValues = EndpointCodec.UnquantizeArray(v, maxValue);
+                int[] unquantizedValues = Quantization.UnquantizeCEValuesArray(v, maxValue);
                 int s0 = unquantizedValues[0] + unquantizedValues[2] + unquantizedValues[4];
                 int s1 = unquantizedValues[1] + unquantizedValues[3] + unquantizedValues[5];
                 return s0 > s1;
@@ -43,7 +43,7 @@ internal static class EndpointEncoder
                     v[i] = i < values.Count ? values[i] : 0;
                 }
 
-                int[] unquantizedValues = EndpointCodec.UnquantizeArray(v, maxValue);
+                int[] unquantizedValues = Quantization.UnquantizeCEValuesArray(v, maxValue);
                 (int b0, int a0) = BitOperations.TransferPrecision(unquantizedValues[1], unquantizedValues[0]);
                 (int b1, int a1) = BitOperations.TransferPrecision(unquantizedValues[3], unquantizedValues[2]);
                 (int b2, int a2) = BitOperations.TransferPrecision(unquantizedValues[5], unquantizedValues[4]);
@@ -130,7 +130,7 @@ internal static class EndpointEncoder
         }
 
         int[] quantizedBase = QuantizeColorArray(baseColor, maxValue);
-        int[] unquantizedBase = EndpointCodec.UnquantizeArray(quantizedBase, maxValue);
+        int[] unquantizedBase = Quantization.UnquantizeCEValuesArray(quantizedBase, maxValue);
 
         values[0] = quantizedBase[0];
         values[1] = quantizedBase[1];
@@ -296,7 +296,7 @@ internal static class EndpointEncoder
     {
         values[0] = v0;
         values[1] = v1;
-        int[] unquantized = EndpointCodec.UnquantizeArray(values.ToArray(), maxValue);
+        int[] unquantized = Quantization.UnquantizeCEValuesArray(values.ToArray(), maxValue);
         ColorEndpointPair decoded = EndpointCodec.Decode(unquantized, mode);
         return SquaredError(decoded.LdrLow, referenceLow) + SquaredError(decoded.LdrHigh, referenceHigh);
     }

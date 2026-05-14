@@ -15,8 +15,8 @@ internal static class EndpointCodec
     /// Handles both LDR and HDR endpoint modes (ASTC spec §C.2.14).
     /// </summary>
     /// <remarks>
-    /// Quantized input should be run through <see cref="UnquantizeArray"/>
-    /// (or <see cref="Quantization.UnquantizeCEValuesBatch"/>) first.
+    /// Quantized input should be run through <see cref="Quantization.UnquantizeCEValuesBatch"/>
+    /// (or <see cref="Quantization.UnquantizeCEValuesArray"/>) first.
     /// </remarks>
     public static ColorEndpointPair Decode(ReadOnlySpan<int> unquantizedValues, ColorEndpointMode mode)
     {
@@ -173,14 +173,4 @@ internal static class EndpointCodec
                 ClampedRgba32(aR + bR, aG + bG, aB + bB, aA + bA));
     }
 
-    internal static int[] UnquantizeArray(int[] values, int maxValue)
-    {
-        int[] result = new int[values.Length];
-        for (int i = 0; i < values.Length; ++i)
-        {
-            result[i] = Quantization.UnquantizeCEValueFromRange(values[i], maxValue);
-        }
-
-        return result;
-    }
 }
