@@ -42,11 +42,15 @@ internal static class BlockModeDecoder
         // Void extent: bits[0:9] == 0x1FC (9 bits). See ASTC spec §C.2.23.
         if ((lowBits & 0x1FF) == 0x1FC)
         {
-            return new BlockInfo
-            {
-                IsVoidExtent = true,
-                IsValid = IsVoidExtentWellFormed(bits, lowBits)
-            };
+            return IsVoidExtentWellFormed(bits, lowBits)
+                ? new BlockInfo(
+                    isVoidExtent: true,
+                    weights: default,
+                    partitionCount: 0,
+                    dualPlane: default,
+                    colors: default,
+                    endpointModes: default)
+                : BlockInfo.MalformedVoidExtent;
         }
 
         if (!TryDecodeWeightGrid(lowBits, out int gridWidth, out int gridHeight, out uint rBits, out bool isWidthA6HeightB6))
@@ -95,27 +99,19 @@ internal static class BlockModeDecoder
             return default;
         }
 
-        BlockInfo result = new()
-        {
-            IsValid = true,
-            IsVoidExtent = false,
-            GridWidth = gridWidth,
-            GridHeight = gridHeight,
-            WeightRange = weightRange,
-            WeightBitCount = weightBitCount,
-            PartitionCount = partitionCount,
-            IsDualPlane = isDualPlane,
-            DualPlaneChannel = dualPlaneChannel,
-            ColorStartBit = colorStartBit,
-            ColorBitCount = colorBitCount,
-            ColorValuesRange = colorValuesRange,
-            ColorValuesCount = colorValuesCount,
-        };
-        result.EndpointModes[0] = cems[0];
-        result.EndpointModes[1] = cems[1];
-        result.EndpointModes[2] = cems[2];
-        result.EndpointModes[3] = cems[3];
-        return result;
+        BlockInfo.EndpointModeBuffer modes = default;
+        modes[0] = cems[0];
+        modes[1] = cems[1];
+        modes[2] = cems[2];
+        modes[3] = cems[3];
+
+        return new BlockInfo(
+            isVoidExtent: false,
+            weights: new WeightGrid(gridWidth, gridHeight, weightRange, weightBitCount),
+            partitionCount,
+            dualPlane: new DualPlaneInfo(isDualPlane, dualPlaneChannel),
+            colors: new ColorEndpoints(colorStartBit, colorBitCount, colorValuesRange, colorValuesCount),
+            endpointModes: modes);
     }
 
     /// <summary>

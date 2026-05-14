@@ -352,15 +352,15 @@ public class EndpointCodecTests
             Assert.False(info.IsVoidExtent);
             Assert.True(info.PartitionCount > 0, "block should have endpoints");
 
-            Span<int> colors = stackalloc int[info.ColorValuesCount];
+            Span<int> colors = stackalloc int[info.Colors.Count];
             FusedBlockDecoder.DecodeBiseValues(
                 blockBits,
-                info.ColorStartBit,
-                info.ColorBitCount,
-                info.ColorValuesRange,
-                info.ColorValuesCount,
+                info.Colors.StartBit,
+                info.Colors.BitCount,
+                info.Colors.Range,
+                info.Colors.Count,
                 colors);
-            Quantization.UnquantizeCEValuesBatch(colors, info.ColorValuesRange);
+            Quantization.UnquantizeCEValuesBatch(colors, info.Colors.Range);
 
             // The checkerboard content is LDR but the encoder happens to emit HDR luma
             // endpoint modes for it, so the test must go through the polymorphic decoder

@@ -27,29 +27,29 @@ internal static class FusedBlockDecoder
         // Single-partition fused path: up to 8 ints (32 bytes) — single-mode CEM caps values at 8.
         int colorCount = info.EndpointMode0.GetColorValuesCount();
         Span<int> colors = stackalloc int[colorCount];
-        DecodeBiseValues(bits, info.ColorStartBit, info.ColorBitCount, info.ColorValuesRange, colorCount, colors);
+        DecodeBiseValues(bits, info.Colors.StartBit, info.Colors.BitCount, info.Colors.Range, colorCount, colors);
 
         // 2. Batch unquantize color values, then decode endpoint pair
-        Quantization.UnquantizeCEValuesBatch(colors, info.ColorValuesRange);
+        Quantization.UnquantizeCEValuesBatch(colors, info.Colors.Range);
         ColorEndpointPair endpointPair = EndpointCodec.Decode(colors, info.EndpointMode0);
 
         // 3. BISE decode weights.
         // Up to 64 ints (256 bytes) — spec §C.2.11 caps single-plane gridSize at 64.
-        int gridSize = info.GridWidth * info.GridHeight;
+        int gridSize = info.Weights.Width * info.Weights.Height;
         Span<int> gridWeights = stackalloc int[gridSize];
-        DecodeBiseWeights(bits, info.WeightBitCount, info.WeightRange, gridSize, gridWeights);
+        DecodeBiseWeights(bits, info.Weights.BitCount, info.Weights.Range, gridSize, gridWeights);
 
         // 4. Batch unquantize weights
-        Quantization.UnquantizeWeightsBatch(gridWeights, info.WeightRange);
+        Quantization.UnquantizeWeightsBatch(gridWeights, info.Weights.Range);
 
         // 5. Infill weights from grid to texels (or pass through if identity mapping)
-        if (info.GridWidth == footprint.Width && info.GridHeight == footprint.Height)
+        if (info.Weights.Width == footprint.Width && info.Weights.Height == footprint.Height)
         {
             gridWeights[..footprint.PixelCount].CopyTo(texelWeights);
         }
         else
         {
-            DecimationInfo decimationInfo = DecimationTable.Get(footprint, info.GridWidth, info.GridHeight);
+            DecimationInfo decimationInfo = DecimationTable.Get(footprint, info.Weights.Width, info.Weights.Height);
             DecimationTable.InfillWeights(gridWeights, decimationInfo, texelWeights);
         }
 

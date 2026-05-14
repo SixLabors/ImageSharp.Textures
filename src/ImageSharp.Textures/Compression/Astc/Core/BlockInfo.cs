@@ -11,15 +11,15 @@ namespace SixLabors.ImageSharp.Textures.Compression.Astc.Core;
 /// parser (produces an instance via <c>BlockModeDecoder.Decode</c>); every field maps to a
 /// spec concept:
 /// <list type="bullet">
-/// <item><description><see cref="GridWidth"/>, <see cref="GridHeight"/>, <see cref="WeightRange"/>, <see cref="WeightBitCount"/> — spec §C.2.7, §C.2.8.</description></item>
+/// <item><description><see cref="Weights"/> — spec §C.2.7, §C.2.8.</description></item>
 /// <item><description><see cref="PartitionCount"/> — spec §C.2.10.</description></item>
-/// <item><description><see cref="IsDualPlane"/>, <see cref="DualPlaneChannel"/> — spec §C.2.20.</description></item>
-/// <item><description><see cref="ColorStartBit"/>, <see cref="ColorBitCount"/>, <see cref="ColorValuesRange"/>, <see cref="ColorValuesCount"/> — spec §C.2.16.</description></item>
+/// <item><description><see cref="DualPlane"/> — spec §C.2.20.</description></item>
+/// <item><description><see cref="Colors"/> — spec §C.2.16.</description></item>
 /// <item><description><see cref="EndpointModes"/> — spec §C.2.11, §C.2.14.</description></item>
 /// <item><description><see cref="IsVoidExtent"/> — spec §C.2.23.</description></item>
 /// </list>
 /// </summary>
-internal struct BlockInfo
+internal readonly struct BlockInfo
 {
     /// <summary>Every ASTC compressed block is exactly 128 bits (16 bytes) regardless of footprint (spec §C.2.4).</summary>
     public const int SizeInBytes = 16;
@@ -31,36 +31,50 @@ internal struct BlockInfo
     /// </summary>
     public const int ChannelsPerPixel = 4;
 
-    public bool IsValid;
-    public bool IsVoidExtent;
-
-    // Weight grid
-    public int GridWidth;
-    public int GridHeight;
-    public int WeightRange;
-    public int WeightBitCount;
-
-    // Partitions
-    public int PartitionCount;
-
-    // Dual plane
-    public bool IsDualPlane;
-    public int DualPlaneChannel; // only valid if IsDualPlane
-
-    // Color endpoints
-    public int ColorStartBit;
-    public int ColorBitCount;
-    public int ColorValuesRange;
-    public int ColorValuesCount;
-
-    // Endpoint modes (up to 4 partitions). Indexed via GetEndpointMode.
-    public EndpointModeBuffer EndpointModes;
-
-    public ColorEndpointMode EndpointMode0
+    public BlockInfo(
+        bool isVoidExtent,
+        WeightGrid weights,
+        int partitionCount,
+        DualPlaneInfo dualPlane,
+        ColorEndpoints colors,
+        EndpointModeBuffer endpointModes)
     {
-        readonly get => this.EndpointModes[0];
-        set => this.EndpointModes[0] = value;
+        this.IsValid = true;
+        this.IsVoidExtent = isVoidExtent;
+        this.Weights = weights;
+        this.PartitionCount = partitionCount;
+        this.DualPlane = dualPlane;
+        this.Colors = colors;
+        this.EndpointModes = endpointModes;
     }
+
+    private BlockInfo(bool isMalformedVoidExtent)
+    {
+        this.IsValid = false;
+        this.IsVoidExtent = isMalformedVoidExtent;
+    }
+
+    /// <summary>
+    /// Gets a malformed void-extent block (spec §C.2.23 — reserved bits or coordinates
+    /// invalid). <see cref="IsVoidExtent"/> is true, all other properties are <c>default</c>.
+    /// </summary>
+    public static BlockInfo MalformedVoidExtent { get; } = new(isMalformedVoidExtent: true);
+
+    public bool IsValid { get; }
+
+    public bool IsVoidExtent { get; }
+
+    public WeightGrid Weights { get; }
+
+    public int PartitionCount { get; }
+
+    public DualPlaneInfo DualPlane { get; }
+
+    public ColorEndpoints Colors { get; }
+
+    public EndpointModeBuffer EndpointModes { get; }
+
+    public ColorEndpointMode EndpointMode0 => this.EndpointModes[0];
 
     /// <summary>
     /// Gets a value indicating whether the block can take the fused fast path:
@@ -68,8 +82,8 @@ internal struct BlockInfo
     /// §C.2.10, §C.2.20, §C.2.23). Multi-partition, dual-plane, and void-extent blocks fall
     /// through to the general logical-block pipeline.
     /// </summary>
-    public readonly bool IsFusable
-        => !this.IsVoidExtent && this.PartitionCount == 1 && !this.IsDualPlane;
+    public bool IsFusable
+        => !this.IsVoidExtent && this.PartitionCount == 1 && !this.DualPlane.Enabled;
 
     /// <summary>
     /// Gets the colour endpoint mode for the given partition index. Only the first
@@ -83,7 +97,7 @@ internal struct BlockInfo
     /// <c>[0, <see cref="PartitionCount"/>)</c>.
     /// </exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly ColorEndpointMode GetEndpointMode(int partition)
+    public ColorEndpointMode GetEndpointMode(int partition)
         => (uint)partition < (uint)this.PartitionCount
             ? this.EndpointModes[partition]
             : throw new ArgumentOutOfRangeException(nameof(partition), partition, $"Must be in [0, PartitionCount={this.PartitionCount}).");
@@ -96,7 +110,7 @@ internal struct BlockInfo
     /// in the raw bits.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly bool HasHdrEndpoints()
+    public bool HasHdrEndpoints()
     {
         for (int i = 0; i < this.PartitionCount; i++)
         {

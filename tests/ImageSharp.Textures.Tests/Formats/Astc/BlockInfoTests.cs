@@ -57,10 +57,10 @@ public class BlockInfoTests
         Assert.True(info.IsValid);
         Assert.False(info.IsVoidExtent);
         Assert.Equal(1, info.PartitionCount);
-        Assert.Equal(6, info.GridWidth);
-        Assert.Equal(5, info.GridHeight);
-        Assert.Equal(7, info.WeightRange);
-        Assert.False(info.IsDualPlane);
+        Assert.Equal(6, info.Weights.Width);
+        Assert.Equal(5, info.Weights.Height);
+        Assert.Equal(7, info.Weights.Range);
+        Assert.False(info.DualPlane.Enabled);
         Assert.Equal(ColorEndpointMode.LdrLumaDirect, info.EndpointMode0);
     }
 
@@ -124,9 +124,9 @@ public class BlockInfoTests
         BlockInfo info = BlockModeDecoder.Decode(bits);
 
         Assert.True(info.IsValid);
-        Assert.True(info.IsDualPlane);
-        Assert.Equal(3, info.GridWidth);
-        Assert.Equal(5, info.GridHeight);
+        Assert.True(info.DualPlane.Enabled);
+        Assert.Equal(3, info.Weights.Width);
+        Assert.Equal(5, info.Weights.Height);
     }
 
     [Fact]
@@ -138,10 +138,10 @@ public class BlockInfoTests
 
         Assert.True(info.IsValid);
         Assert.Equal(2, info.PartitionCount);
-        Assert.Equal(8, info.GridWidth);
-        Assert.Equal(8, info.GridHeight);
-        Assert.Equal(1, info.WeightRange);
-        Assert.Equal(29, info.ColorStartBit);
+        Assert.Equal(8, info.Weights.Width);
+        Assert.Equal(8, info.Weights.Height);
+        Assert.Equal(1, info.Weights.Range);
+        Assert.Equal(29, info.Colors.StartBit);
         Assert.Equal(ColorEndpointMode.LdrLumaDirect, info.GetEndpointMode(0));
         Assert.Equal(ColorEndpointMode.LdrLumaBaseOffset, info.GetEndpointMode(1));
     }
@@ -151,7 +151,7 @@ public class BlockInfoTests
     {
         BlockInfo info = BlockModeDecoder.Decode((UInt128)0x4000000000800D44UL);
 
-        Assert.Equal(1, info.WeightRange);
+        Assert.Equal(1, info.Weights.Range);
     }
 
     [Fact]
@@ -179,7 +179,7 @@ public class BlockInfoTests
         BlockInfo info = BlockModeDecoder.Decode((UInt128)blockBits);
 
         Assert.True(info.IsValid);
-        Assert.Equal(expectedStartBit, info.ColorStartBit);
+        Assert.Equal(expectedStartBit, info.Colors.StartBit);
     }
 
     [Theory]
@@ -190,7 +190,7 @@ public class BlockInfoTests
         BlockInfo info = BlockModeDecoder.Decode((UInt128)blockBits);
 
         Assert.True(info.IsValid);
-        Assert.Equal(expectedCount, info.ColorValuesCount);
+        Assert.Equal(expectedCount, info.Colors.Count);
     }
 
     [Fact]
@@ -199,7 +199,7 @@ public class BlockInfoTests
         BlockInfo info = BlockModeDecoder.Decode((UInt128)0x0000000001FE000173UL);
 
         Assert.True(info.IsValid);
-        Assert.Equal(255, info.ColorValuesRange);
+        Assert.Equal(255, info.Colors.Range);
     }
 
     [Fact]
@@ -208,6 +208,6 @@ public class BlockInfoTests
         BlockInfo info = BlockModeDecoder.Decode((UInt128)0x0000000001FE000173UL);
 
         Assert.True(info.IsValid);
-        Assert.Equal(90, info.WeightBitCount);
+        Assert.Equal(90, info.Weights.BitCount);
     }
 }

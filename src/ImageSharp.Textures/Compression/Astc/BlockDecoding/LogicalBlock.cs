@@ -30,7 +30,7 @@ internal static class LogicalBlock
 
         // Conditional stackalloc isn't legal inside an expression; split the dual-plane case
         // into a separate frame so the secondary-plane buffer is only stackalloc'd when needed.
-        if (info.IsDualPlane && !info.IsVoidExtent)
+        if (info.DualPlane.Enabled && !info.IsVoidExtent)
         {
             DecodeToBytesDualPlane(bits, in info, footprint, pixels);
             return;
@@ -54,7 +54,7 @@ internal static class LogicalBlock
             return;
         }
 
-        if (info.IsDualPlane && !info.IsVoidExtent)
+        if (info.DualPlane.Enabled && !info.IsVoidExtent)
         {
             DecodeToFloatsDualPlane(bits, in info, footprint, pixels);
             return;
@@ -75,7 +75,7 @@ internal static class LogicalBlock
         Span<int> weights = stackalloc int[footprint.PixelCount];
         Span<int> secondaryWeights = stackalloc int[footprint.PixelCount];
         DecodedBlockState state = DecodeDualPlane(bits, in info, footprint, weights, secondaryWeights);
-        DualPlane dualPlane = new() { Weights = secondaryWeights, Channel = info.DualPlaneChannel };
+        DualPlane dualPlane = new() { Weights = secondaryWeights, Channel = info.DualPlane.Channel };
 
         WriteAllPixelsDualPlane<LdrPixelWriter, byte>(footprint, pixels, in state, in dualPlane);
     }
@@ -88,7 +88,7 @@ internal static class LogicalBlock
         Span<int> weights = stackalloc int[footprint.PixelCount];
         Span<int> secondaryWeights = stackalloc int[footprint.PixelCount];
         DecodedBlockState state = DecodeDualPlane(bits, in info, footprint, weights, secondaryWeights);
-        DualPlane dualPlane = new() { Weights = secondaryWeights, Channel = info.DualPlaneChannel };
+        DualPlane dualPlane = new() { Weights = secondaryWeights, Channel = info.DualPlane.Channel };
 
         WriteAllPixelsDualPlane<HdrPixelWriter, float>(footprint, pixels, in state, in dualPlane);
     }
@@ -147,16 +147,16 @@ internal static class LogicalBlock
     /// </summary>
     private static void DecodeEndpointsFromBits(UInt128 bits, in BlockInfo info, ref EndpointBuffer endpoints)
     {
-        // Up to 18 ints (72 bytes) — BlockModeDecoder rejects blocks with ColorValuesCount > 18.
-        Span<int> colors = stackalloc int[info.ColorValuesCount];
+        // Up to 18 ints (72 bytes) — BlockModeDecoder rejects blocks with Colors.Count > 18.
+        Span<int> colors = stackalloc int[info.Colors.Count];
         FusedBlockDecoder.DecodeBiseValues(
             bits,
-            info.ColorStartBit,
-            info.ColorBitCount,
-            info.ColorValuesRange,
-            info.ColorValuesCount,
+            info.Colors.StartBit,
+            info.Colors.BitCount,
+            info.Colors.Range,
+            info.Colors.Count,
             colors);
-        Quantization.UnquantizeCEValuesBatch(colors, info.ColorValuesRange);
+        Quantization.UnquantizeCEValuesBatch(colors, info.Colors.Range);
 
         int colorIndex = 0;
         for (int i = 0; i < info.PartitionCount; i++)
@@ -196,8 +196,8 @@ internal static class LogicalBlock
         Span<int> primaryWeights,
         Span<int> secondaryWeights)
     {
-        int gridSize = info.GridWidth * info.GridHeight;
-        bool isDualPlane = info.IsDualPlane;
+        int gridSize = info.Weights.Width * info.Weights.Height;
+        bool isDualPlane = info.DualPlane.Enabled;
         int totalWeights = isDualPlane ? gridSize * 2 : gridSize;
 
         // Up to 128 ints (512 bytes) — spec §C.2.11 caps total weights (gridSize × planes) at 64
@@ -205,16 +205,16 @@ internal static class LogicalBlock
         Span<int> rawWeights = stackalloc int[totalWeights];
         FusedBlockDecoder.DecodeBiseWeights(
             bits,
-            info.WeightBitCount,
-            info.WeightRange,
+            info.Weights.BitCount,
+            info.Weights.Range,
             totalWeights,
             rawWeights);
 
-        DecimationInfo decimationInfo = DecimationTable.Get(footprint, info.GridWidth, info.GridHeight);
+        DecimationInfo decimationInfo = DecimationTable.Get(footprint, info.Weights.Width, info.Weights.Height);
 
         if (!isDualPlane)
         {
-            Quantization.UnquantizeWeightsBatch(rawWeights, info.WeightRange);
+            Quantization.UnquantizeWeightsBatch(rawWeights, info.Weights.Range);
             DecimationTable.InfillWeights(rawWeights[..gridSize], decimationInfo, primaryWeights);
             return;
         }
@@ -230,8 +230,8 @@ internal static class LogicalBlock
             plane1[i] = rawWeights[(i * 2) + 1];
         }
 
-        Quantization.UnquantizeWeightsBatch(plane0, info.WeightRange);
-        Quantization.UnquantizeWeightsBatch(plane1, info.WeightRange);
+        Quantization.UnquantizeWeightsBatch(plane0, info.Weights.Range);
+        Quantization.UnquantizeWeightsBatch(plane1, info.Weights.Range);
 
         DecimationTable.InfillWeights(plane0, decimationInfo, primaryWeights);
         DecimationTable.InfillWeights(plane1, decimationInfo, secondaryWeights);
