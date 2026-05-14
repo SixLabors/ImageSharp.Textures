@@ -76,6 +76,9 @@ internal static class EndpointEncoder
             case EndpointEncodingMode.DirectLumaAlpha:
                 astcMode = ColorEndpointMode.LdrLumaAlphaDirect;
                 EncodeLumaAlphaDirect(endpointLowRgba, endpointHighRgba, maxValue, values);
+
+                // Spec §C.2.14 mode 4: v0/v1 = low/high luma, v2/v3 = low/high alpha — emitted
+                // in fixed order with no swap branch
                 return false;
             case EndpointEncodingMode.BaseScaleRgb:
             case EndpointEncodingMode.BaseScaleRgba:
