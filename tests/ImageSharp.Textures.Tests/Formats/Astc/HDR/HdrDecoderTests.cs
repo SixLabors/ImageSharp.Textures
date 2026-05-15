@@ -5,7 +5,7 @@ using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Textures.Compression.Astc;
 using SixLabors.ImageSharp.Textures.Compression.Astc.Core;
 
-namespace SixLabors.ImageSharp.Textures.Tests.Formats.Astc.HDR;
+namespace SixLabors.ImageSharp.Textures.Tests.Formats.Astc.Hdr;
 
 public class HdrDecoderTests
 {

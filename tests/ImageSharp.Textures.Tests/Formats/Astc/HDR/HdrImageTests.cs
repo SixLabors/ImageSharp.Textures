@@ -10,7 +10,7 @@ using SixLabors.ImageSharp.Textures.Tests.Enums;
 using SixLabors.ImageSharp.Textures.Tests.TestUtilities.Attributes;
 using SixLabors.ImageSharp.Textures.Tests.TestUtilities.TextureProviders;
 
-namespace SixLabors.ImageSharp.Textures.Tests.Formats.Astc.HDR;
+namespace SixLabors.ImageSharp.Textures.Tests.Formats.Astc.Hdr;
 
 /// <summary>
 /// Tests using real HDR ASTC files from the ARM astc-encoder reference repository.

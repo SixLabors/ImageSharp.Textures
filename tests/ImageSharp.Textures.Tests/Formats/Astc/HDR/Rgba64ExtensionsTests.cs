@@ -4,7 +4,7 @@
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Textures.Compression.Astc.ColorEncoding;
 
-namespace SixLabors.ImageSharp.Textures.Tests.Formats.Astc.HDR;
+namespace SixLabors.ImageSharp.Textures.Tests.Formats.Astc.Hdr;
 
 public class Rgba64ExtensionsTests
 {

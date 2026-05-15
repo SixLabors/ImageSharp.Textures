@@ -11,7 +11,7 @@ using SixLabors.ImageSharp.Textures.Tests.Enums;
 using SixLabors.ImageSharp.Textures.Tests.TestUtilities.Attributes;
 using SixLabors.ImageSharp.Textures.Tests.TestUtilities.TextureProviders;
 
-namespace SixLabors.ImageSharp.Textures.Tests.Formats.Astc.HDR;
+namespace SixLabors.ImageSharp.Textures.Tests.Formats.Astc.Hdr;
 
 /// <summary>
 /// Comparing HDR and LDR ASTC decoding behavior using real reference files.
