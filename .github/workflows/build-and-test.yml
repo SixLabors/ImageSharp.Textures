@@ -38,7 +38,7 @@ jobs:
                 git config --global core.longpaths true
 
             - name: Git Checkout
-              uses: actions/checkout@v4
+              uses: actions/checkout@v6
               with:
                 fetch-depth: 0
                 submodules: recursive
@@ -48,7 +48,7 @@ jobs:
               run: git lfs ls-files -l | cut -d' ' -f1 | sort > .lfs-assets-id
 
             - name: Restore LFS cache
-              uses: actions/cache@v4
+              uses: actions/cache@v5
               id: lfs-cache
               with:
                 path: .git/lfs
@@ -58,10 +58,10 @@ jobs:
               run: git lfs pull
 
             - name: Install NuGet
-              uses: NuGet/setup-nuget@v2
+              uses: NuGet/setup-nuget@v4
 
             - name: Setup NuGet Cache
-              uses: actions/cache@v4
+              uses: actions/cache@v5
               id: nuget-cache
               with:
                   path: ~/.nuget
@@ -69,7 +69,7 @@ jobs:
                   restore-keys: ${{ runner.os }}-nuget-
 
             - name: DotNet Setup
-              uses: actions/setup-dotnet@v4
+              uses: actions/setup-dotnet@v5
               with:
                 dotnet-version: |
                   8.0.x
@@ -88,14 +88,14 @@ jobs:
                   XUNIT_PATH: .\tests\ImageSharp.Textures.Tests # Required for xunit
 
             - name: Export Failed Output
-              uses: actions/upload-artifact@v4
+              uses: actions/upload-artifact@v7
               if: failure()
               with:
                   name: actual_output_${{ runner.os }}_${{ matrix.options.framework }}${{ matrix.options.runtime }}.zip
                   path: tests/Images/ActualOutput/
 
             - name: Update Codecov
-              uses: codecov/codecov-action@v5
+              uses: codecov/codecov-action@v6
               if: matrix.options.codecov == true && startsWith(github.repository, 'SixLabors')
               with:
                   flags: unittests
@@ -108,10 +108,10 @@ jobs:
         if: (github.event_name == 'push')
 
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v6
 
             - name: Install NuGet
-              uses: NuGet/setup-nuget@v2
+              uses: NuGet/setup-nuget@v4
 
             - name: Setup Git
               shell: bash

@@ -185,5 +185,10 @@ public static class TestImages
                 public const string Astc10x5_Sfloat = "Cubemap/HDR-Compressed/astc_hdr_10x5_sfloat_cube.ktx2";
             }
         }
+
+        public static class Ktx2
+        {
+            public const string Rgba32SrgbMips = "rgba32-srgb-mips.ktx2";
+        }
     }
 }
