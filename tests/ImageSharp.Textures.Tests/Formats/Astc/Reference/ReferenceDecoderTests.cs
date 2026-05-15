@@ -17,13 +17,6 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.Astc.Reference;
 [Trait("Format", "Astc")]
 public class ReferenceDecoderTests
 {
-    // Per-channel tolerance for RGBA32 comparisons.
-    // The ASTC spec (Khronos Data Format §C.2.18–§C.2.19) defines endpoint/weight
-    // unquantization, weight infill, and the 13-bit interpolation step bit-exactly. The
-    // final float → UNORM8 quantization is not pinned by the spec, so there may
-    // be slight variance between implementations.
-    private const int Ldr8BitTolerance = 1;
-
     public static TheoryData<FootprintType> AllFootprintTypes =>
         new()
         {

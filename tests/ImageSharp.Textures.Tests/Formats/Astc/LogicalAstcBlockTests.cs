@@ -122,10 +122,7 @@ public class LogicalAstcBlockTests
 
         using Image<Rgba32> decodedImage = DecodeAstcBlocksToImage(file.Footprint, file.Blocks.ToArray(), file.Width, file.Height);
 
-        decodedImage.CompareToReferenceOutput(
-            ImageComparer.TolerantPercentage(0.03f),
-            provider,
-            testOutputDetails: blockSize);
+        decodedImage.CompareToReferenceOutput(ImageComparer.Exact, provider, testOutputDetails: blockSize);
     }
 
     private static Image<Rgba32> DecodeAstcBlocksToImage(Footprint footprint, byte[] astcData, int width, int height)

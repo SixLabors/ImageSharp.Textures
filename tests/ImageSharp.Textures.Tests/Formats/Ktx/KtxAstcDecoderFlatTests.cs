@@ -70,10 +70,7 @@ public class KtxAstcDecoderFlatTests
         Assert.Equal(16, firstMipMap.Height);
         Assert.Equal(32, firstMipMap.PixelType.BitsPerPixel);
 
-        // Same tolerance as the KTX2 sibling test — the underlying ASTC block stream is byte-
-        // identical, so we expect bit-equal output, but allow a small tolerance for incidental
-        // float→UNORM rounding differences in the LDR pipeline (see ASTC spec §C.2.18).
-        (firstMipMap as Image<Rgba32>).CompareToReferenceOutput(ImageComparer.TolerantPercentage(0.05f), provider, testOutputDetails: $"{blockSize}");
+        (firstMipMap as Image<Rgba32>).CompareToReferenceOutput(ImageComparer.Exact, provider, testOutputDetails: $"{blockSize}");
     }
 
     [Theory]
@@ -106,6 +103,6 @@ public class KtxAstcDecoderFlatTests
         Assert.Equal(16, firstMipMap.Height);
         Assert.Equal(32, firstMipMap.PixelType.BitsPerPixel);
 
-        (firstMipMap as Image<Rgba32>).CompareToReferenceOutput(ImageComparer.TolerantPercentage(0.05f), provider, testOutputDetails: $"{blockSize}");
+        (firstMipMap as Image<Rgba32>).CompareToReferenceOutput(ImageComparer.Exact, provider, testOutputDetails: $"{blockSize}");
     }
 }

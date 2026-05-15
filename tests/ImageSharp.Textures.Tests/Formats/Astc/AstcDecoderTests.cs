@@ -144,10 +144,7 @@ public class AstcDecoderTests
         using Image<Rgba32> actualImage = Image.LoadPixelData<Rgba32>(decodedPixels, file.Width, file.Height);
         actualImage.Mutate(x => x.Flip(FlipMode.Vertical));
 
-        actualImage.CompareToReferenceOutput(
-            ImageComparer.TolerantPercentage(0.03f),
-            provider,
-            testOutputDetails: blockSize);
+        actualImage.CompareToReferenceOutput(ImageComparer.Exact, provider, testOutputDetails: blockSize);
     }
 
     [Theory]
@@ -166,10 +163,7 @@ public class AstcDecoderTests
         using Image<Rgba32> actualImage = Image.LoadPixelData<Rgba32>(decodedPixels, file.Width, file.Height);
         actualImage.Mutate(x => x.Flip(FlipMode.Vertical));
 
-        actualImage.CompareToReferenceOutput(
-            ImageComparer.TolerantPercentage(0.03f),
-            provider,
-            testOutputDetails: blockSize);
+        actualImage.CompareToReferenceOutput(ImageComparer.Exact, provider, testOutputDetails: blockSize);
     }
 
     [Theory]

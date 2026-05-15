@@ -11,7 +11,6 @@ internal static class SimdHelpers
     private static readonly Vector128<int> Vec32 = Vector128.Create(32);
     private static readonly Vector128<int> Vec64 = Vector128.Create(64);
     private static readonly Vector128<int> Vec255 = Vector128.Create(255);
-    private static readonly Vector128<int> Vec32767 = Vector128.Create(32767);
 
     /// <summary>
     /// Interpolates one channel for 4 pixels simultaneously.
@@ -31,9 +30,11 @@ internal static class SimdHelpers
         Vector128<int> w64 = Vec64 - weights;
         Vector128<int> c = ((c0 * w64) + (c1 * weights) + Vec32) >> 6;
 
-        // Quantize: (c * 255 + 32767) >> 16, clamped to [0, 255]
-        Vector128<int> result = ((c * Vec255) + Vec32767) >>> 16;
-        return Vector128.Min(Vector128.Max(result, Vector128<int>.Zero), Vec255);
+        // Spec §C.2.19 (Weight Application): for decode_unorm8 the final
+        // 8-bit result is the top 8 bits of the UNORM16 interpolation. Mask
+        // to [0, 255] to defend against malformed endpoints producing c outside
+        // [0, 0xFFFF]; well-formed input is already in range.
+        return (c >>> 8) & Vec255;
     }
 
     /// <summary>
@@ -131,8 +132,9 @@ internal static class SimdHelpers
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static int InterpolateChannelScalar(int p0, int p1, int weight)
     {
+        // Spec §C.2.19 (Weight Application): for decode_unorm8 the final
+        // 8-bit result is the top 8 bits of the UNORM16 interpolation.
         int c = Interpolation.BlendLdrReplicated(p0, p1, weight);
-        int quantized = ((c * 255) + 32767) / 65536;
-        return Math.Clamp(quantized, 0, 255);
+        return (c >> 8) & 0xFF;
     }
 }

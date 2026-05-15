@@ -84,7 +84,7 @@ public class Ktx2AstcDecoderFlatTests
         Assert.Equal(16, firstMipMap.Height);
         Assert.Equal(32, firstMipMap.PixelType.BitsPerPixel);
 
-        (firstMipMap as Image<Rgba32>).CompareToReferenceOutput(ImageComparer.TolerantPercentage(0.05f), provider, testOutputDetails: $"{blockSize}");
+        (firstMipMap as Image<Rgba32>).CompareToReferenceOutput(ImageComparer.Exact, provider, testOutputDetails: $"{blockSize}");
     }
 
     [Theory]
@@ -117,8 +117,7 @@ public class Ktx2AstcDecoderFlatTests
         Assert.Equal(16, firstMipMap.Height);
         Assert.Equal(32, firstMipMap.PixelType.BitsPerPixel);
 
-        // See CanDecode_Rgba32_Unorm for the rationale behind this threshold.
-        (firstMipMap as Image<Rgba32>).CompareToReferenceOutput(ImageComparer.TolerantPercentage(0.05f), provider, testOutputDetails: $"{blockSize}");
+        (firstMipMap as Image<Rgba32>).CompareToReferenceOutput(ImageComparer.Exact, provider, testOutputDetails: $"{blockSize}");
     }
 
     [Theory]
