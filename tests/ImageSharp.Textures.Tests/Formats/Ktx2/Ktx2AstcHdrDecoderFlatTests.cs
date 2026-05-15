@@ -27,9 +27,9 @@ public class Ktx2AstcHdrDecoderFlatTests
     private static readonly ImageComparer Comparer = ImageComparer.TolerantPercentage(0.15f);
 
     [Theory]
-    [WithFile(TestTextureFormat.Ktx2, TestTextureType.Flat, TestTextureTool.ToKtx, TestImages.Ktx2.Astc.Astc4x4_Sfloat)]
-    [WithFile(TestTextureFormat.Ktx2, TestTextureType.Flat, TestTextureTool.ToKtx, TestImages.Ktx2.Astc.Astc6x6_Sfloat)]
-    [WithFile(TestTextureFormat.Ktx2, TestTextureType.Flat, TestTextureTool.ToKtx, TestImages.Ktx2.Astc.Astc10x5_Sfloat)]
+    [WithFile(TestTextureFormat.Ktx2, TestTextureType.Flat, TestTextureTool.ToKtx, TestImages.Ktx2.Astc.Rgba64_Sfloat_4x4)]
+    [WithFile(TestTextureFormat.Ktx2, TestTextureType.Flat, TestTextureTool.ToKtx, TestImages.Ktx2.Astc.Rgba64_Sfloat_6x6)]
+    [WithFile(TestTextureFormat.Ktx2, TestTextureType.Flat, TestTextureTool.ToKtx, TestImages.Ktx2.Astc.Rgba64_Sfloat_10x5)]
     public void CanDecode_Astc_Sfloat_Blocksizes(TestTextureProvider provider)
     {
         string blockSize = BlockSizeExtractor.FromFileName(provider.InputFile);

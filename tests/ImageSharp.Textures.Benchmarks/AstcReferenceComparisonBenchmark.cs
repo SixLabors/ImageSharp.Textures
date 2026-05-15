@@ -20,19 +20,19 @@ public class AstcReferenceComparisonBenchmark
     /// <summary>
     /// Gets LDR test files. The set covers a range of footprints and content shapes:
     /// <list type="bullet">
-    /// <item><description><c>rgba_4x4.astc</c> — high-quality 4×4 LDR; logical-block-heavy.</description></item>
-    /// <item><description><c>rgba_6x6.astc</c> — mid-range LDR.</description></item>
-    /// <item><description><c>rgba_8x8.astc</c> — large-footprint LDR; fewer blocks per image.</description></item>
-    /// <item><description><c>rgb_4x4.astc</c> — dual-plane-heavy LDR.</description></item>
+    /// <item><description><c>rgba-4x4.astc</c> — high-quality 4×4 LDR; logical-block-heavy.</description></item>
+    /// <item><description><c>rgba-6x6.astc</c> — mid-range LDR.</description></item>
+    /// <item><description><c>rgba-8x8.astc</c> — large-footprint LDR; fewer blocks per image.</description></item>
+    /// <item><description><c>rgb-4x4.astc</c> — dual-plane-heavy LDR.</description></item>
     /// </list>
     /// </summary>
-    public static IEnumerable<string> LdrFiles => ["rgba_4x4.astc", "rgba_6x6.astc", "rgba_8x8.astc", "rgb_4x4.astc"];
+    public static IEnumerable<string> LdrFiles => ["rgba-4x4.astc", "rgba-6x6.astc", "rgba-8x8.astc", "rgb-4x4.astc"];
 
     /// <summary>
     /// Gets HDR test files
     /// </summary>
     public static IEnumerable<string> HdrFiles =>
-        ["HDR/hdr-tile.astc", "HDR/ldr-tile.astc", "HDR/hdr-mixed-256-4x4.astc", "HDR/hdr-mixed-256-8x8.astc"];
+        ["HdrPipeline/hdr-tile.astc", "HdrPipeline/ldr-tile.astc", "HdrPipeline/mixed-256-4x4.astc", "HdrPipeline/mixed-256-8x8.astc"];
 
     private readonly Dictionary<string, LdrInputs> ldrCache = [];
     private readonly Dictionary<string, HdrInputs> hdrCache = [];

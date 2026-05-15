@@ -26,7 +26,7 @@ public class AstcFullDecodeBenchmark
     [GlobalSetup]
     public void Setup()
     {
-        string ldrPath = Path.Combine(TestEnvironment.InputImagesDirectoryFullPath, "Astc", "rgba_4x4.astc");
+        string ldrPath = Path.Combine(TestEnvironment.InputImagesDirectoryFullPath, "Astc", "rgba-4x4.astc");
         AstcFile ldr = AstcFile.FromMemory(File.ReadAllBytes(ldrPath));
         this.ldrBlocks = ldr.Blocks.ToArray();
         this.ldrWidth = ldr.Width;

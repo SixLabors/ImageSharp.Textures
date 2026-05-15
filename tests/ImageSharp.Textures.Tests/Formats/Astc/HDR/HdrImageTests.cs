@@ -21,21 +21,21 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.Astc.Hdr;
 public class HdrImageTests
 {
     [Theory]
-    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Hdr.Hdr_A_1x1)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestData.Astc.Hdr.Hdr_A_1x1)]
     [Description("Verify that the ASTC file header is correctly parsed for HDR content, including footprint detection")]
     public void DecodeHdrFile_VerifyFootprintDetection(TestTextureProvider provider)
     {
         byte[] astcData = File.ReadAllBytes(provider.InputFile);
         AstcFile astcFile = AstcFile.FromMemory(astcData);
 
-        // The HDR-A-1x1.astc file has a 6x6 footprint based on the header
+        // The hdr-a-1x1.astc file has a 6x6 footprint based on the header
         Assert.Equal(6, astcFile.Footprint.Width);
         Assert.Equal(6, astcFile.Footprint.Height);
         Assert.Equal(FootprintType.Footprint6x6, astcFile.Footprint.Type);
     }
 
     [Theory]
-    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Hdr.Hdr_A_1x1)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestData.Astc.Hdr.Hdr_A_1x1)]
     public void DecodeHdrAstcFile_1x1Pixel_ShouldProduceExpectedHdrValues(TestTextureProvider provider)
     {
         byte[] astcData = File.ReadAllBytes(provider.InputFile);
@@ -57,7 +57,7 @@ public class HdrImageTests
     }
 
     [Theory]
-    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Hdr.Hdr_Tile)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestData.Astc.Hdr.Hdr_Tile)]
     public void DecodeHdrAstcFile_Tile_ShouldProduceValidHdrOutput(TestTextureProvider provider)
     {
         byte[] astcData = File.ReadAllBytes(provider.InputFile);
@@ -86,7 +86,7 @@ public class HdrImageTests
     }
 
     [Theory]
-    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Hdr.Hdr_A_1x1)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestData.Astc.Hdr.Hdr_A_1x1)]
     [Description("The LDR decoder must reject HDR-encoded blocks per ASTC spec §C.2.19 (matches astcenc's ASTCENC_ERR_BAD_DECODE_MODE).")]
     public void DecodeHdrAstcFile_WithLdrApi_ShouldThrow(TestTextureProvider provider)
     {
@@ -97,7 +97,7 @@ public class HdrImageTests
     }
 
     [Theory]
-    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Hdr.Hdr_A_1x1)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestData.Astc.Hdr.Hdr_A_1x1)]
     [Description("The HDR API decodes HDR content correctly; the LDR API rejects it.")]
     public void HdrApi_DecodesHdrContent_LdrApi_Rejects(TestTextureProvider provider)
     {

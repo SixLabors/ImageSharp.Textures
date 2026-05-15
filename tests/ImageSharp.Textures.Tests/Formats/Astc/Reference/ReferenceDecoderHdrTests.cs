@@ -39,10 +39,10 @@ public class ReferenceDecoderHdrTests
         };
 
     [Theory]
-    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Hdr.Hdr_A_1x1)]
-    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Hdr.Hdr_Tile)]
-    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Hdr.Ldr_A_1x1)]
-    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Hdr.Ldr_Tile)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestData.Astc.Hdr.Hdr_A_1x1)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestData.Astc.Hdr.Hdr_Tile)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestData.Astc.Hdr.Ldr_A_1x1)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestData.Astc.Hdr.Ldr_Tile)]
     public void DecompressHdr_WithHdrImage_ShouldMatch(TestTextureProvider provider)
     {
         byte[] bytes = File.ReadAllBytes(provider.InputFile);
@@ -59,10 +59,10 @@ public class ReferenceDecoderHdrTests
     }
 
     [Theory]
-    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Rgba_4x4)]
-    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Rgba_5x5)]
-    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Rgba_6x6)]
-    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Rgba_8x8)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestData.Astc.Rgba_4x4)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestData.Astc.Rgba_5x5)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestData.Astc.Rgba_6x6)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestData.Astc.Rgba_8x8)]
     public void DecompressHdr_WithLdrImage_ShouldMatch(TestTextureProvider provider)
     {
         byte[] bytes = File.ReadAllBytes(provider.InputFile);

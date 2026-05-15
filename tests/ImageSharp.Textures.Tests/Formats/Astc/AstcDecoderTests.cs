@@ -49,39 +49,39 @@ public class AstcDecoderTests
     }
 
     [Theory]
-    [InlineData(TestImages.Astc.Rgba_4x4)]
-    [InlineData(TestImages.Astc.Rgba_5x5)]
-    [InlineData(TestImages.Astc.Rgba_6x6)]
-    [InlineData(TestImages.Astc.Rgba_8x8)]
-    [InlineData(TestImages.Astc.Checkerboard)]
-    [InlineData(TestImages.Astc.Checkered_4)]
-    [InlineData(TestImages.Astc.Checkered_5)]
-    [InlineData(TestImages.Astc.Checkered_6)]
-    [InlineData(TestImages.Astc.Checkered_7)]
-    [InlineData(TestImages.Astc.Checkered_8)]
-    [InlineData(TestImages.Astc.Checkered_9)]
-    [InlineData(TestImages.Astc.Checkered_10)]
-    [InlineData(TestImages.Astc.Checkered_11)]
-    [InlineData(TestImages.Astc.Checkered_12)]
-    [InlineData(TestImages.Astc.Footprint_4x4)]
-    [InlineData(TestImages.Astc.Footprint_5x4)]
-    [InlineData(TestImages.Astc.Footprint_5x5)]
-    [InlineData(TestImages.Astc.Footprint_6x5)]
-    [InlineData(TestImages.Astc.Footprint_6x6)]
-    [InlineData(TestImages.Astc.Footprint_8x5)]
-    [InlineData(TestImages.Astc.Footprint_8x6)]
-    [InlineData(TestImages.Astc.Footprint_8x8)]
-    [InlineData(TestImages.Astc.Footprint_10x5)]
-    [InlineData(TestImages.Astc.Footprint_10x6)]
-    [InlineData(TestImages.Astc.Footprint_10x8)]
-    [InlineData(TestImages.Astc.Footprint_10x10)]
-    [InlineData(TestImages.Astc.Footprint_12x10)]
-    [InlineData(TestImages.Astc.Footprint_12x12)]
-    [InlineData(TestImages.Astc.Rgb_4x4)]
-    [InlineData(TestImages.Astc.Rgb_5x4)]
-    [InlineData(TestImages.Astc.Rgb_6x6)]
-    [InlineData(TestImages.Astc.Rgb_8x8)]
-    [InlineData(TestImages.Astc.Rgb_12x12)]
+    [InlineData(TestData.Astc.Rgba_4x4)]
+    [InlineData(TestData.Astc.Rgba_5x5)]
+    [InlineData(TestData.Astc.Rgba_6x6)]
+    [InlineData(TestData.Astc.Rgba_8x8)]
+    [InlineData(TestData.Astc.Checkerboard)]
+    [InlineData(TestData.Astc.Checkered_4)]
+    [InlineData(TestData.Astc.Checkered_5)]
+    [InlineData(TestData.Astc.Checkered_6)]
+    [InlineData(TestData.Astc.Checkered_7)]
+    [InlineData(TestData.Astc.Checkered_8)]
+    [InlineData(TestData.Astc.Checkered_9)]
+    [InlineData(TestData.Astc.Checkered_10)]
+    [InlineData(TestData.Astc.Checkered_11)]
+    [InlineData(TestData.Astc.Checkered_12)]
+    [InlineData(TestData.Astc.Footprint_4x4)]
+    [InlineData(TestData.Astc.Footprint_5x4)]
+    [InlineData(TestData.Astc.Footprint_5x5)]
+    [InlineData(TestData.Astc.Footprint_6x5)]
+    [InlineData(TestData.Astc.Footprint_6x6)]
+    [InlineData(TestData.Astc.Footprint_8x5)]
+    [InlineData(TestData.Astc.Footprint_8x6)]
+    [InlineData(TestData.Astc.Footprint_8x8)]
+    [InlineData(TestData.Astc.Footprint_10x5)]
+    [InlineData(TestData.Astc.Footprint_10x6)]
+    [InlineData(TestData.Astc.Footprint_10x8)]
+    [InlineData(TestData.Astc.Footprint_10x10)]
+    [InlineData(TestData.Astc.Footprint_12x10)]
+    [InlineData(TestData.Astc.Footprint_12x12)]
+    [InlineData(TestData.Astc.Rgb_4x4)]
+    [InlineData(TestData.Astc.Rgb_5x4)]
+    [InlineData(TestData.Astc.Rgb_6x6)]
+    [InlineData(TestData.Astc.Rgb_8x8)]
+    [InlineData(TestData.Astc.Rgb_12x12)]
     public void DecompressImage_WithTestdataFile_ShouldReturnExpectedByteCount(string inputFile)
     {
         string filePath = TestFile.GetInputFileFullPath(Path.Combine("Astc", inputFile));
@@ -94,10 +94,10 @@ public class AstcDecoderTests
     }
 
     [Theory]
-    [InlineData(TestImages.Astc.Rgba_4x4, FootprintType.Footprint4x4, 256, 256)]
-    [InlineData(TestImages.Astc.Rgba_5x5, FootprintType.Footprint5x5, 256, 256)]
-    [InlineData(TestImages.Astc.Rgba_6x6, FootprintType.Footprint6x6, 256, 256)]
-    [InlineData(TestImages.Astc.Rgba_8x8, FootprintType.Footprint8x8, 256, 256)]
+    [InlineData(TestData.Astc.Rgba_4x4, FootprintType.Footprint4x4, 256, 256)]
+    [InlineData(TestData.Astc.Rgba_5x5, FootprintType.Footprint5x5, 256, 256)]
+    [InlineData(TestData.Astc.Rgba_6x6, FootprintType.Footprint6x6, 256, 256)]
+    [InlineData(TestData.Astc.Rgba_8x8, FootprintType.Footprint8x8, 256, 256)]
     public void DecompressImage_WithValidData_ShouldDecodeAllBlocks(
         string inputFile,
         FootprintType footprintType,
@@ -128,11 +128,11 @@ public class AstcDecoderTests
     }
 
     [Theory]
-    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Rgb_4x4)]
-    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Rgb_5x4)]
-    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Rgb_6x6)]
-    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Rgb_8x8)]
-    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Rgb_12x12)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestData.Astc.Rgb_4x4)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestData.Astc.Rgb_5x4)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestData.Astc.Rgb_6x6)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestData.Astc.Rgb_8x8)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestData.Astc.Rgb_12x12)]
     public void DecompressImage_WithAstcRgbFile_ShouldMatchExpected(TestTextureProvider provider)
     {
         byte[] astcBytes = File.ReadAllBytes(provider.InputFile);
@@ -151,10 +151,10 @@ public class AstcDecoderTests
     }
 
     [Theory]
-    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Rgba_4x4)]
-    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Rgba_5x5)]
-    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Rgba_6x6)]
-    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Rgba_8x8)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestData.Astc.Rgba_4x4)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestData.Astc.Rgba_5x5)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestData.Astc.Rgba_6x6)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestData.Astc.Rgba_8x8)]
     public void DecompressImage_WithAstcRgbaFile_ShouldMatchExpected(TestTextureProvider provider)
     {
         byte[] astcBytes = File.ReadAllBytes(provider.InputFile);
@@ -266,7 +266,7 @@ public class AstcDecoderTests
         // Smoke test for accidental shared mutable state in the decode pipeline. Each
         // thread decodes the same input into its own buffer; every buffer must match the
         // single-threaded reference byte-for-byte.
-        string filePath = TestFile.GetInputFileFullPath(Path.Combine("Astc", TestImages.Astc.Rgba_6x6));
+        string filePath = TestFile.GetInputFileFullPath(Path.Combine("Astc", TestData.Astc.Rgba_6x6));
         byte[] astcBytes = File.ReadAllBytes(filePath);
         AstcFile file = AstcFile.FromMemory(astcBytes);
 
@@ -300,7 +300,7 @@ public class AstcDecoderTests
         // Cross-validates the per-block (DecompressBlock) and whole-image (DecompressImage)
         // public APIs on a test file that contains multi-partition, dual-plane, and
         // void-extent blocks. Both paths must yield identical pixels for every block.
-        string filePath = TestFile.GetInputFileFullPath(Path.Combine("Astc", TestImages.Astc.Rgba_4x4));
+        string filePath = TestFile.GetInputFileFullPath(Path.Combine("Astc", TestData.Astc.Rgba_4x4));
         byte[] astcBytes = File.ReadAllBytes(filePath);
         AstcFile file = AstcFile.FromMemory(astcBytes);
 

@@ -15,10 +15,10 @@ namespace SixLabors.ImageSharp.Textures.Benchmarks;
 /// </summary>
 /// <remarks>
 /// Block path distribution per file:
-/// rgb_12x12.astc — 90% fused / 10% logical (best case)
-/// rgba_8x8.astc  — 63% fused / 37% logical
-/// rgba_4x4.astc  — 46% fused / 54% logical
-/// rgb_4x4.astc   — 25% fused / 75% logical (worst case)
+/// rgb-12x12.astc — 90% fused / 10% logical (best case)
+/// rgba-8x8.astc  — 63% fused / 37% logical
+/// rgba-4x4.astc  — 46% fused / 54% logical
+/// rgb-4x4.astc   — 25% fused / 75% logical (worst case)
 /// </remarks>
 [MemoryDiagnoser]
 public class AstcLogicalDecodeBenchmark
@@ -28,10 +28,10 @@ public class AstcLogicalDecodeBenchmark
 
     public static IEnumerable<string> Files =>
     [
-        "rgb_12x12.astc",
-        "rgba_8x8.astc",
-        "rgba_4x4.astc",
-        "rgb_4x4.astc",
+        "rgb-12x12.astc",
+        "rgba-8x8.astc",
+        "rgba-4x4.astc",
+        "rgb-4x4.astc",
     ];
 
     private byte[] blocks = [];

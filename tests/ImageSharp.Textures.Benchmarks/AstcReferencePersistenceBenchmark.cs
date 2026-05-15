@@ -19,10 +19,10 @@ namespace SixLabors.ImageSharp.Textures.Benchmarks;
 [GroupBenchmarksBy(BenchmarkDotNet.Configs.BenchmarkLogicalGroupRule.ByCategory)]
 public class AstcReferencePersistenceBenchmark
 {
-    public static IEnumerable<string> LdrFiles => ["rgba_4x4.astc", "rgba_6x6.astc", "rgba_8x8.astc", "rgb_4x4.astc"];
+    public static IEnumerable<string> LdrFiles => ["rgba-4x4.astc", "rgba-6x6.astc", "rgba-8x8.astc", "rgb-4x4.astc"];
 
     public static IEnumerable<string> HdrFiles =>
-        ["HDR/hdr-tile.astc", "HDR/ldr-tile.astc", "HDR/hdr-mixed-256-4x4.astc", "HDR/hdr-mixed-256-8x8.astc"];
+        ["HdrPipeline/hdr-tile.astc", "HdrPipeline/ldr-tile.astc", "HdrPipeline/mixed-256-4x4.astc", "HdrPipeline/mixed-256-8x8.astc"];
 
     private readonly Dictionary<string, LdrInputs> ldrCache = [];
     private readonly Dictionary<string, HdrInputs> hdrCache = [];

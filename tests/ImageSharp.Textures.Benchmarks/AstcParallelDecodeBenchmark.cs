@@ -23,9 +23,9 @@ public class AstcParallelDecodeBenchmark
     [Params(1, 4, 8, 16)]
     public int Parallelism { get; set; }
 
-    // rgb_4x4.astc is ~75% logical-path per the BlockPathProfiler, so any per-block
+    // rgb-4x4.astc is ~75% logical-path per the BlockPathProfiler, so any per-block
     // allocation pressure shows up clearly here.
-    private const string TestFile = "rgb_4x4.astc";
+    private const string TestFile = "rgb-4x4.astc";
 
     private byte[] blocks = [];
     private int width;

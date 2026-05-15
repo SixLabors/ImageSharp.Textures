@@ -4,6 +4,7 @@
 using System.Buffers;
 using System.Buffers.Binary;
 using System.Runtime.CompilerServices;
+using SixLabors.ImageSharp.Memory;
 using SixLabors.ImageSharp.Textures.Compression.Astc.BlockDecoding;
 using SixLabors.ImageSharp.Textures.Compression.Astc.Core;
 using SixLabors.ImageSharp.Textures.Compression.Astc.IO;
@@ -21,8 +22,6 @@ namespace SixLabors.ImageSharp.Textures.Compression.Astc;
 /// </remarks>
 public static class AstcDecoder
 {
-    private static readonly ArrayPool<byte> ArrayPool = ArrayPool<byte>.Shared;
-
     /// <summary>
     /// Decompresses ASTC-compressed data to uncompressed RGBA8 format (4 bytes per pixel).
     /// </summary>
@@ -71,18 +70,8 @@ public static class AstcDecoder
             return false;
         }
 
-        // Scratch is rented outside the try/finally so a failing Rent never hands the default
-        // sentinel to Return.
-        byte[] decodedBlock = ArrayPool.Rent(footprint.PixelCount * BlockInfo.ChannelsPerPixel);
-        try
-        {
-            DecodeAllBlocks<LdrPipeline, byte>(astcData, width, height, footprint, blocksWide, blocksHigh, imageBuffer, decodedBlock.AsSpan());
-        }
-        finally
-        {
-            ArrayPool.Return(decodedBlock);
-        }
-
+        using IMemoryOwner<byte> decodedBlock = MemoryAllocator.Default.Allocate<byte>(footprint.PixelCount * BlockInfo.ChannelsPerPixel);
+        DecodeAllBlocks<LdrPipeline, byte>(astcData, width, height, footprint, blocksWide, blocksHigh, imageBuffer, decodedBlock.Memory.Span);
         return true;
     }
 
@@ -264,17 +253,9 @@ public static class AstcDecoder
             return false;
         }
 
-        float[] decodedBlock = ArrayPool<float>.Shared.Rent(footprint.PixelCount * BlockInfo.ChannelsPerPixel);
-        try
-        {
-            DecodeAllBlocks<HdrPipeline, float>(
-                astcData, width, height, footprint, blocksWide, blocksHigh, imageBuffer, decodedBlock.AsSpan());
-        }
-        finally
-        {
-            ArrayPool<float>.Shared.Return(decodedBlock);
-        }
-
+        using IMemoryOwner<float> decodedBlock = MemoryAllocator.Default.Allocate<float>(footprint.PixelCount * BlockInfo.ChannelsPerPixel);
+        DecodeAllBlocks<HdrPipeline, float>(
+            astcData, width, height, footprint, blocksWide, blocksHigh, imageBuffer, decodedBlock.Memory.Span);
         return true;
     }
 

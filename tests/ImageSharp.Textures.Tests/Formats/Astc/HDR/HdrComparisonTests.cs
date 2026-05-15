@@ -20,7 +20,7 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.Astc.Hdr;
 public class HdrComparisonTests
 {
     [Theory]
-    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Hdr.Hdr_A_1x1)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestData.Astc.Hdr.Hdr_A_1x1)]
     public void HdrFile_DecodedWithHdrApi_ShouldPreserveExtendedRange(TestTextureProvider provider)
     {
         byte[] astcData = File.ReadAllBytes(provider.InputFile);
@@ -39,7 +39,7 @@ public class HdrComparisonTests
     }
 
     [Theory]
-    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Hdr.Ldr_A_1x1)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestData.Astc.Hdr.Ldr_A_1x1)]
     public void LdrFile_DecodedWithHdrApi_ShouldProduceExpectedNormalizedValues(TestTextureProvider provider)
     {
         byte[] astcData = File.ReadAllBytes(provider.InputFile);
@@ -58,7 +58,7 @@ public class HdrComparisonTests
     }
 
     [Theory]
-    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Hdr.Hdr_A_1x1)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestData.Astc.Hdr.Hdr_A_1x1)]
     public void HdrFile_DecodedWithLdrApi_ShouldThrow(TestTextureProvider provider)
     {
         // Per ASTC spec §C.2.19 the LDR (decode_unorm8) profile cannot decode HDR-mode
@@ -70,7 +70,7 @@ public class HdrComparisonTests
     }
 
     [Theory]
-    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Hdr.Ldr_A_1x1)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestData.Astc.Hdr.Ldr_A_1x1)]
     public void LdrFile_DecodedWithBothApis_ShouldProduceConsistentValues(TestTextureProvider provider)
     {
         byte[] astcData = File.ReadAllBytes(provider.InputFile);
@@ -94,7 +94,7 @@ public class HdrComparisonTests
     }
 
     [Theory]
-    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Hdr.Hdr_Tile)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestData.Astc.Hdr.Hdr_Tile)]
     public void HdrTile_ShouldDecodeSuccessfully(TestTextureProvider provider)
     {
         byte[] astcData = File.ReadAllBytes(provider.InputFile);
@@ -114,7 +114,7 @@ public class HdrComparisonTests
     }
 
     [Theory]
-    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Hdr.Ldr_Tile)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestData.Astc.Hdr.Ldr_Tile)]
     public void LdrTile_ShouldDecodeSuccessfully(TestTextureProvider provider)
     {
         byte[] astcData = File.ReadAllBytes(provider.InputFile);
@@ -133,8 +133,8 @@ public class HdrComparisonTests
     [Fact]
     public void SameFootprint_HdrVsLdr_ShouldBothDecode()
     {
-        string hdrPath = TestFile.GetInputFileFullPath(Path.Combine("Astc", TestImages.Astc.Hdr.Hdr_A_1x1));
-        string ldrPath = TestFile.GetInputFileFullPath(Path.Combine("Astc", TestImages.Astc.Hdr.Ldr_A_1x1));
+        string hdrPath = TestFile.GetInputFileFullPath(Path.Combine("Astc", TestData.Astc.Hdr.Hdr_A_1x1));
+        string ldrPath = TestFile.GetInputFileFullPath(Path.Combine("Astc", TestData.Astc.Hdr.Ldr_A_1x1));
 
         AstcFile hdrFile = AstcFile.FromMemory(File.ReadAllBytes(hdrPath));
         AstcFile ldrFile = AstcFile.FromMemory(File.ReadAllBytes(ldrPath));
@@ -158,7 +158,7 @@ public class HdrComparisonTests
     }
 
     [Theory]
-    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestImages.Astc.Hdr.Ldr_A_1x1)]
+    [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestData.Astc.Hdr.Ldr_A_1x1)]
     public void HdrColor_FromLdr_ShouldMatchLdrToHdrApiConversion(TestTextureProvider provider)
     {
         byte[] astcData = File.ReadAllBytes(provider.InputFile);
