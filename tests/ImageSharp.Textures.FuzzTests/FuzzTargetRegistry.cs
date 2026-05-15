@@ -14,6 +14,7 @@ internal static class FuzzTargetRegistry
         new Targets.DecompressBlockTarget(),
         new Targets.DecompressHdrBlockTarget(),
         new Targets.DecompressImageTarget(),
+        new Targets.DecompressHdrImageTarget(),
     ];
 
     /// <summary>

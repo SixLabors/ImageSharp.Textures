@@ -7,9 +7,10 @@ using SixLabors.ImageSharp.Textures.Compression.Astc.Core;
 namespace SixLabors.ImageSharp.Textures.FuzzTests.Targets;
 
 /// <summary>
-/// Fuzzes <see cref="AstcDecoder.DecompressHdrBlock"/>: same shape as
-/// <see cref="DecompressBlockTarget"/> but exercises the HDR pipeline including LNS conversion,
-/// the mode-14 LDR-alpha hybrid, and HDR void-extent FP16 handling.
+/// Fuzzes <see cref="AstcDecoder.DecompressHdrBlock"/>. Footprint is selected from the first
+/// fuzz byte; the next 16 bytes drive a single HDR block decode. Exercises the HDR pipeline
+/// (LNS conversion, mode-14 LDR-alpha hybrid, HDR void-extent FP16) across all 14 footprint
+/// sizes.
 /// </summary>
 internal sealed class DecompressHdrBlockTarget : IFuzzTarget
 {
@@ -17,13 +18,15 @@ internal sealed class DecompressHdrBlockTarget : IFuzzTarget
 
     public void Run(ReadOnlySpan<byte> data)
     {
-        if (data.Length < 16)
+        if (data.Length < 1 + BlockInfo.SizeInBytes)
         {
             return;
         }
 
-        Footprint footprint = Footprint.FromFootprintType(FootprintType.Footprint4x4);
+        Footprint footprint = Footprint.FromFootprintType((FootprintType)(data[0] % 14));
+
+        // Worst-case 12×12 footprint = 144 pixels × 4 channels = 576 floats = 2,304 bytes.
         Span<float> output = stackalloc float[footprint.PixelCount * BlockInfo.ChannelsPerPixel];
-        AstcDecoder.DecompressHdrBlock(data[..16], footprint, output);
+        AstcDecoder.DecompressHdrBlock(data.Slice(1, BlockInfo.SizeInBytes), footprint, output);
     }
 }

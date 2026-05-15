@@ -10,7 +10,7 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory)]
-    [ValidateSet('block-mode', 'decompress-block', 'decompress-hdr-block', 'decompress-image')]
+    [ValidateSet('block-mode', 'decompress-block', 'decompress-hdr-block', 'decompress-image', 'decompress-hdr-image')]
     [string]$Target,
 
     [string]$Driver,
