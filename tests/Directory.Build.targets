@@ -18,6 +18,7 @@
 
   <ItemGroup>
     <PackageReference Update="AstcEncoderCSharp" Version="5.4.3" />
+    <PackageReference Update="SharpFuzz" Version="2.2.0" />
     <PackageReference Update="BenchmarkDotNet" Version="0.15.8" />
     <PackageReference Update="Magick.NET-Q16-AnyCPU" Version="14.10.3" />
     <PackageReference Update="Moq" Version="4.20.72" />
