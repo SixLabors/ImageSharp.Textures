@@ -1,0 +1,4 @@
+# Fuzz seed binaries are arbitrary opaque bytes; track them through git LFS so the repo
+# root .gitattributes (which is overwritten on every build by the shared-infrastructure
+# config-copy target) doesn't need to be touched.
+*.bin    filter=lfs diff=lfs merge=lfs -text
