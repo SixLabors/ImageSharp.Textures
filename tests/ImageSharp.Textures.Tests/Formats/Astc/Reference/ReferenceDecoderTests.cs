@@ -17,7 +17,7 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.Astc.Reference;
 [Trait("Format", "Astc")]
 public class ReferenceDecoderTests
 {
-    // Per-channel tolerance for RGBA8 comparisons.
+    // Per-channel tolerance for RGBA32 comparisons.
     // The ASTC spec (Khronos Data Format §C.2.18–§C.2.19) defines endpoint/weight
     // unquantization, weight infill, and the 13-bit interpolation step bit-exactly. The
     // final float → UNORM8 quantization is not pinned by the spec, so there may
@@ -236,7 +236,7 @@ public class ReferenceDecoderTests
     }
 
     /// <summary>
-    /// Compare RGBA8 output from both decoders with per-channel tolerance.
+    /// Compare RGBA32 output from both decoders with per-channel tolerance.
     /// </summary>
     private static void CompareRgba8(Span<byte> actual, byte[] expected, int width, int height, string label)
     {

@@ -64,7 +64,7 @@ internal readonly record struct AstcFileHeader(byte BlockWidth, byte BlockHeight
         Guard.MustBeGreaterThan(imageHeight, 0, nameof(imageHeight));
         Guard.MustBeGreaterThan(imageDepth, 0, nameof(imageDepth));
 
-        // Guard against callers that compute a 4-byte-per-pixel RGBA8 output buffer.
+        // Guard against callers that compute a 4-byte-per-pixel RGBA32 output buffer.
         const int bytesPerPixel = 4;
         long totalPixels = (long)imageWidth * imageHeight;
         if (totalPixels > int.MaxValue / bytesPerPixel)

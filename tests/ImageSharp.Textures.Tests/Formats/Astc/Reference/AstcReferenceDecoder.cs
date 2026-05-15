@@ -21,7 +21,7 @@ internal static class AstcReferenceDecoder
     };
 
     /// <summary>
-    /// Decompress ASTC blocks to RGBA8 (LDR) using the ARM reference decoder.
+    /// Decompress ASTC blocks to RGBA32 (LDR) using the ARM reference decoder.
     /// </summary>
     public static byte[] DecompressLdr(ReadOnlySpan<byte> blocks, int w, int h, int blockX, int blockY)
     {
@@ -41,7 +41,7 @@ internal static class AstcReferenceDecoder
         try
         {
             int pixelCount = w * h;
-            byte[] outputBytes = new byte[pixelCount * 4]; // RGBA8
+            byte[] outputBytes = new byte[pixelCount * 4]; // RGBA32
 
             AstcencImage image = new()
             {
@@ -115,7 +115,7 @@ internal static class AstcReferenceDecoder
     }
 
     /// <summary>
-    /// Compress RGBA8 pixel data to ASTC using the ARM reference encoder (LDR).
+    /// Compress RGBA32 pixel data to ASTC using the ARM reference encoder (LDR).
     /// </summary>
     public static byte[] CompressLdr(byte[] pixels, int w, int h, int blockX, int blockY)
     {
@@ -233,7 +233,7 @@ internal static class AstcReferenceDecoder
     /// <summary>
     /// Decompress LDR ASTC blocks into a caller-supplied <paramref name="output"/> buffer using
     /// a pre-allocated <paramref name="context"/>. The block buffer is passed straight through
-    /// to the underlying decoder, and the output must be sized to <c>w * h * 4</c> bytes (RGBA8).
+    /// to the underlying decoder, and the output must be sized to <c>w * h * 4</c> bytes (RGBA32).
     /// </summary>
     public static void DecompressLdrInto(AstcencContext context, byte[] blocks, int w, int h, byte[] output)
     {
