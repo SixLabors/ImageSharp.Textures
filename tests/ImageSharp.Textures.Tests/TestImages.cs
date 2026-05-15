@@ -15,6 +15,36 @@ public static class TestImages
         public static class Astc
         {
             public const string Rgb32_8x8 = "Flat/Astc/rgba32-srgb-8x8.ktx";
+
+            public const string Rgb32_sRgb_4x4 = "Flat/Astc/rgba32-srgb-4x4-valid.ktx";
+            public const string Rgb32_sRgb_5x4 = "Flat/Astc/rgba32-srgb-5x4-valid.ktx";
+            public const string Rgb32_sRgb_5x5 = "Flat/Astc/rgba32-srgb-5x5-valid.ktx";
+            public const string Rgb32_sRgb_6x5 = "Flat/Astc/rgba32-srgb-6x5-valid.ktx";
+            public const string Rgb32_sRgb_6x6 = "Flat/Astc/rgba32-srgb-6x6-valid.ktx";
+            public const string Rgb32_sRgb_8x5 = "Flat/Astc/rgba32-srgb-8x5-valid.ktx";
+            public const string Rgb32_sRgb_8x6 = "Flat/Astc/rgba32-srgb-8x6-valid.ktx";
+            public const string Rgb32_sRgb_8x8 = "Flat/Astc/rgba32-srgb-8x8-valid.ktx";
+            public const string Rgb32_sRgb_10x5 = "Flat/Astc/rgba32-srgb-10x5-valid.ktx";
+            public const string Rgb32_sRgb_10x6 = "Flat/Astc/rgba32-srgb-10x6-valid.ktx";
+            public const string Rgb32_sRgb_10x8 = "Flat/Astc/rgba32-srgb-10x8-valid.ktx";
+            public const string Rgb32_sRgb_10x10 = "Flat/Astc/rgba32-srgb-10x10-valid.ktx";
+            public const string Rgb32_sRgb_12x10 = "Flat/Astc/rgba32-srgb-12x10-valid.ktx";
+            public const string Rgb32_sRgb_12x12 = "Flat/Astc/rgba32-srgb-12x12-valid.ktx";
+
+            public const string Rgb32_Unorm_4x4 = "Flat/Astc/rgba32-unorm-4x4-valid.ktx";
+            public const string Rgb32_Unorm_5x4 = "Flat/Astc/rgba32-unorm-5x4-valid.ktx";
+            public const string Rgb32_Unorm_5x5 = "Flat/Astc/rgba32-unorm-5x5-valid.ktx";
+            public const string Rgb32_Unorm_6x5 = "Flat/Astc/rgba32-unorm-6x5-valid.ktx";
+            public const string Rgb32_Unorm_6x6 = "Flat/Astc/rgba32-unorm-6x6-valid.ktx";
+            public const string Rgb32_Unorm_8x5 = "Flat/Astc/rgba32-unorm-8x5-valid.ktx";
+            public const string Rgb32_Unorm_8x6 = "Flat/Astc/rgba32-unorm-8x6-valid.ktx";
+            public const string Rgb32_Unorm_8x8 = "Flat/Astc/rgba32-unorm-8x8-valid.ktx";
+            public const string Rgb32_Unorm_10x5 = "Flat/Astc/rgba32-unorm-10x5-valid.ktx";
+            public const string Rgb32_Unorm_10x6 = "Flat/Astc/rgba32-unorm-10x6-valid.ktx";
+            public const string Rgb32_Unorm_10x8 = "Flat/Astc/rgba32-unorm-10x8-valid.ktx";
+            public const string Rgb32_Unorm_10x10 = "Flat/Astc/rgba32-unorm-10x10-valid.ktx";
+            public const string Rgb32_Unorm_12x10 = "Flat/Astc/rgba32-unorm-12x10-valid.ktx";
+            public const string Rgb32_Unorm_12x12 = "Flat/Astc/rgba32-unorm-12x12-valid.ktx";
         }
 
         public static class Hdr
