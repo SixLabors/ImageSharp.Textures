@@ -13,7 +13,7 @@ internal static class EndpointEncoder
     public static bool UsesBlueContract(int maxValue, ColorEndpointMode mode, List<int> values)
     {
         int valueCount = mode.GetColorValuesCount();
-        ArgumentOutOfRangeException.ThrowIfLessThan(values.Count, valueCount);
+        Guard.MustBeGreaterThanOrEqualTo(values.Count, valueCount, nameof(values));
 
         switch (mode)
         {
@@ -219,7 +219,7 @@ internal static class EndpointEncoder
     private static bool EncodeColorsLuma(Rgba32 endpointLow, Rgba32 endpointHigh, int maxValue, out ColorEndpointMode astcMode, List<int> values)
     {
         astcMode = ColorEndpointMode.LdrLumaDirect;
-        ArgumentOutOfRangeException.ThrowIfLessThan(values.Count, 2);
+        Guard.MustBeGreaterThanOrEqualTo(values.Count, 2, nameof(values));
 
         (int avgLow, int avgHigh, bool needsWeightSwap) = SortedLumaAverages(endpointLow, endpointHigh);
 

@@ -16,7 +16,7 @@ internal static class BitQuantizationMap
     /// values, 6 for weights.</param>
     public static QuantizationMap Create(int range, int totalUnquantizedBits)
     {
-        ArgumentOutOfRangeException.ThrowIfNotEqual(CountOnes(range + 1), 1);
+        Guard.IsTrue(CountOnes(range + 1) == 1, nameof(range), "range + 1 must be a power of two.");
 
         int bitCount = QuantizationMap.Log2Floor(range + 1);
         List<int> unquantization = [];

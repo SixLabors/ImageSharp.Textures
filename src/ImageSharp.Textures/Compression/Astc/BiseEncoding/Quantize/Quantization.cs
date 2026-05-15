@@ -27,30 +27,24 @@ internal static class Quantization
 
     public static int QuantizeCEValueToRange(int value, int rangeMaxValue)
     {
-        ArgumentOutOfRangeException.ThrowIfLessThan(rangeMaxValue, EndpointRangeMinValue);
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(rangeMaxValue, byte.MaxValue);
-        ArgumentOutOfRangeException.ThrowIfLessThan(value, 0);
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(value, byte.MaxValue);
+        Guard.MustBeBetweenOrEqualTo(rangeMaxValue, EndpointRangeMinValue, byte.MaxValue, nameof(rangeMaxValue));
+        Guard.MustBeBetweenOrEqualTo(value, 0, byte.MaxValue, nameof(value));
 
         return GetQuantMapForValueRange(rangeMaxValue).Quantize(value);
     }
 
     public static int UnquantizeCEValueFromRange(int value, int rangeMaxValue)
     {
-        ArgumentOutOfRangeException.ThrowIfLessThan(rangeMaxValue, EndpointRangeMinValue);
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(rangeMaxValue, byte.MaxValue);
-        ArgumentOutOfRangeException.ThrowIfLessThan(value, 0);
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(value, rangeMaxValue);
+        Guard.MustBeBetweenOrEqualTo(rangeMaxValue, EndpointRangeMinValue, byte.MaxValue, nameof(rangeMaxValue));
+        Guard.MustBeBetweenOrEqualTo(value, 0, rangeMaxValue, nameof(value));
 
         return GetQuantMapForValueRange(rangeMaxValue).Unquantize(value);
     }
 
     public static int QuantizeWeightToRange(int weight, int rangeMaxValue)
     {
-        ArgumentOutOfRangeException.ThrowIfLessThan(rangeMaxValue, 1);
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(rangeMaxValue, WeightRangeMaxValue);
-        ArgumentOutOfRangeException.ThrowIfLessThan(weight, 0);
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(weight, 64);
+        Guard.MustBeBetweenOrEqualTo(rangeMaxValue, 1, WeightRangeMaxValue, nameof(rangeMaxValue));
+        Guard.MustBeBetweenOrEqualTo(weight, 0, 64, nameof(weight));
 
         // ASTC spec §C.2.18: weight slot 33 is unused; collapse 34..64 to 33..63 before
         // table lookup. The inverse (dequantized > 32 = +1) lives in UnquantizeWeightsFlat.
@@ -64,10 +58,8 @@ internal static class Quantization
 
     public static int UnquantizeWeightFromRange(int weight, int rangeMaxValue)
     {
-        ArgumentOutOfRangeException.ThrowIfLessThan(rangeMaxValue, 1);
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(rangeMaxValue, WeightRangeMaxValue);
-        ArgumentOutOfRangeException.ThrowIfLessThan(weight, 0);
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(weight, rangeMaxValue);
+        Guard.MustBeBetweenOrEqualTo(rangeMaxValue, 1, WeightRangeMaxValue, nameof(rangeMaxValue));
+        Guard.MustBeBetweenOrEqualTo(weight, 0, rangeMaxValue, nameof(weight));
 
         int dequantized = GetQuantMapForWeightRange(rangeMaxValue).Unquantize(weight);
         if (dequantized > 32)
@@ -90,10 +82,7 @@ internal static class Quantization
     internal static void UnquantizeWeightsBatch(Span<int> weights, int range)
     {
         int[]? table = UnquantizeWeightsFlat[range];
-        if (table == null)
-        {
-            throw new ArgumentOutOfRangeException(nameof(range), range, "No weight unquantization table for this range");
-        }
+        Guard.NotNull(table, nameof(range));
 
         for (int i = 0; i < weights.Length; i++)
         {
@@ -113,10 +102,7 @@ internal static class Quantization
     internal static void UnquantizeCEValuesBatch(Span<int> values, int rangeMaxValue)
     {
         int[]? table = UnquantizeEndpointsFlat[rangeMaxValue];
-        if (table == null)
-        {
-            throw new ArgumentOutOfRangeException(nameof(rangeMaxValue), rangeMaxValue, "No endpoint unquantization table for this range");
-        }
+        Guard.NotNull(table, nameof(rangeMaxValue));
 
         for (int i = 0; i < values.Length; i++)
         {

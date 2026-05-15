@@ -218,7 +218,7 @@ public class AstcDecoderTests
         byte[] buffer = new byte[bufferSize];
         Footprint footprint = Footprint.FromFootprintType(FootprintType.Footprint4x4);
 
-        Assert.Throws<ArgumentOutOfRangeException>(() =>
+        Assert.Throws<ArgumentException>(() =>
             AstcDecoder.DecompressBlock(data, footprint, buffer));
     }
 
@@ -231,7 +231,7 @@ public class AstcDecoderTests
         float[] buffer = new float[bufferSize];
         Footprint footprint = Footprint.FromFootprintType(FootprintType.Footprint4x4);
 
-        Assert.Throws<ArgumentOutOfRangeException>(() =>
+        Assert.Throws<ArgumentException>(() =>
             AstcDecoder.DecompressHdrBlock(data, footprint, buffer));
     }
 

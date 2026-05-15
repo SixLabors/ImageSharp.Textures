@@ -59,7 +59,7 @@ public class AstcFileTests
         byte[] padded = new byte[data.Length + extraPayloadBytes];
         data.CopyTo(padded, 0);
 
-        Assert.Throws<ArgumentOutOfRangeException>(() => AstcFile.FromMemory(padded));
+        Assert.Throws<ArgumentException>(() => AstcFile.FromMemory(padded));
     }
 
     [Theory]

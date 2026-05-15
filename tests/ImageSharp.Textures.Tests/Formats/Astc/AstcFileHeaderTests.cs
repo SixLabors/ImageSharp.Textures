@@ -39,7 +39,7 @@ public class AstcFileHeaderTests
         byte[] data = BuildHeader();
         BinaryPrimitives.WriteUInt32LittleEndian(data, 0xDEADBEEF);
 
-        Assert.Throws<ArgumentOutOfRangeException>(() => AstcFileHeader.FromMemory(data));
+        Assert.Throws<ArgumentException>(() => AstcFileHeader.FromMemory(data));
     }
 
     [Theory]
@@ -51,7 +51,7 @@ public class AstcFileHeaderTests
     {
         byte[] data = new byte[length];
 
-        Assert.Throws<ArgumentOutOfRangeException>(() => AstcFileHeader.FromMemory(data));
+        Assert.Throws<ArgumentException>(() => AstcFileHeader.FromMemory(data));
     }
 
     [Theory]

@@ -32,14 +32,14 @@ internal readonly record struct AstcFileHeader(byte BlockWidth, byte BlockHeight
 
     public static AstcFileHeader FromMemory(Span<byte> data)
     {
-        ArgumentOutOfRangeException.ThrowIfLessThan(data.Length, SizeInBytes);
+        Guard.MustBeSizedAtLeast(data, SizeInBytes, nameof(data));
 
         // ASTC header is 16 bytes:
         // - magic (4),
         // - blockdim (3),
         // - xsize,y,z (each 3 little-endian bytes)
         uint magic = BinaryPrimitives.ReadUInt32LittleEndian(data);
-        ArgumentOutOfRangeException.ThrowIfNotEqual(magic, Magic);
+        Guard.IsTrue(magic == Magic, nameof(data), $"Invalid ASTC file magic: expected 0x{Magic:X8}.");
 
         byte blockWidth = data[4];
         byte blockHeight = data[5];
@@ -60,9 +60,9 @@ internal readonly record struct AstcFileHeader(byte BlockWidth, byte BlockHeight
         int imageHeight = data[10] | (data[11] << 8) | (data[12] << 16);
         int imageDepth = data[13] | (data[14] << 8) | (data[15] << 16);
 
-        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(imageWidth, 0);
-        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(imageHeight, 0);
-        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(imageDepth, 0);
+        Guard.MustBeGreaterThan(imageWidth, 0, nameof(imageWidth));
+        Guard.MustBeGreaterThan(imageHeight, 0, nameof(imageHeight));
+        Guard.MustBeGreaterThan(imageDepth, 0, nameof(imageDepth));
 
         // Guard against callers that compute a 4-byte-per-pixel RGBA8 output buffer.
         const int bytesPerPixel = 4;

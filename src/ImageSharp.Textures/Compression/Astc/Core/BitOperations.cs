@@ -53,10 +53,8 @@ internal static class BitOperations
     /// </summary>
     public static (int A, int B) TransferPrecisionInverse(int a, int b)
     {
-        ArgumentOutOfRangeException.ThrowIfLessThan(a, -32);
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(a, 31);
-        ArgumentOutOfRangeException.ThrowIfLessThan(b, byte.MinValue);
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(b, byte.MaxValue);
+        Guard.MustBeBetweenOrEqualTo(a, -32, 31, nameof(a));
+        Guard.MustBeBetweenOrEqualTo(b, byte.MinValue, byte.MaxValue, nameof(b));
 
         if (a < 0)
         {

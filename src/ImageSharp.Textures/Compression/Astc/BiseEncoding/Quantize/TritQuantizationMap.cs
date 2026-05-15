@@ -15,7 +15,7 @@ internal static class TritQuantizationMap
     /// <see cref="GetUnquantizedValue"/> or <see cref="GetUnquantizedWeight"/>.</param>
     public static QuantizationMap Create(int range, Func<int, int, int, int> unquantFunc)
     {
-        ArgumentOutOfRangeException.ThrowIfNotEqual((range + 1) % 3, 0);
+        Guard.IsTrue((range + 1) % 3 == 0, nameof(range), "range + 1 must be a multiple of 3.");
 
         int bitsPowerOfTwo = (range + 1) / 3;
         int bitCount = bitsPowerOfTwo == 0 ? 0 : QuantizationMap.Log2Floor(bitsPowerOfTwo);

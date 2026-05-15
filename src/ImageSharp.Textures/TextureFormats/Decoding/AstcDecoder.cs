@@ -33,16 +33,16 @@ internal static class AstcDecoder
         int blockHeight,
         byte compressedBytesPerBlock)
     {
-        ArgumentNullException.ThrowIfNull(blockData);
-        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(width, 0);
-        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(height, 0);
-        ArgumentOutOfRangeException.ThrowIfNotEqual(compressedBytesPerBlock, AstcBlockSize);
+        Guard.NotNull(blockData, nameof(blockData));
+        Guard.MustBeGreaterThan(width, 0, nameof(width));
+        Guard.MustBeGreaterThan(height, 0, nameof(height));
+        Guard.IsTrue(compressedBytesPerBlock == AstcBlockSize, nameof(compressedBytesPerBlock), $"ASTC blocks must be {AstcBlockSize} bytes.");
 
         Footprint footprint = Footprint.FromFootprintType(FootprintFromDimensions(blockWidth, blockHeight));
 
         // Guard: total pixel count fits in int after multiplying by 16 bytes/pixel.
         long totalPixels = (long)width * height;
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(totalPixels, (long)int.MaxValue / RgbaHdrPixelDepthBytes);
+        Guard.MustBeLessThanOrEqualTo(totalPixels, (long)int.MaxValue / RgbaHdrPixelDepthBytes, nameof(totalPixels));
 
         float[] floatBuffer = new float[totalPixels * 4];
         if (!Compression.Astc.AstcDecoder.DecompressHdrImage(blockData, width, height, footprint, floatBuffer))
@@ -70,8 +70,8 @@ internal static class AstcDecoder
     /// </remarks>
     public static void DecodeBlock(ReadOnlySpan<byte> blockData, int blockWidth, int blockHeight, Span<byte> decodedPixels)
     {
-        ArgumentOutOfRangeException.ThrowIfNotEqual(blockData.Length, AstcBlockSize);
-        ArgumentOutOfRangeException.ThrowIfLessThan(decodedPixels.Length, blockWidth * blockHeight * RgbaPixelDepthBytes);
+        Guard.IsTrue(blockData.Length == AstcBlockSize, nameof(blockData), $"ASTC blocks must be {AstcBlockSize} bytes.");
+        Guard.MustBeSizedAtLeast(decodedPixels, blockWidth * blockHeight * RgbaPixelDepthBytes, nameof(decodedPixels));
 
         Footprint footprint = Footprint.FromFootprintType(FootprintFromDimensions(blockWidth, blockHeight));
 
@@ -99,11 +99,11 @@ internal static class AstcDecoder
         int blockHeight,
         byte compressedBytesPerBlock)
     {
-        ArgumentNullException.ThrowIfNull(blockData);
-        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(width, 0);
-        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(height, 0);
+        Guard.NotNull(blockData, nameof(blockData));
+        Guard.MustBeGreaterThan(width, 0, nameof(width));
+        Guard.MustBeGreaterThan(height, 0, nameof(height));
 
-        ArgumentOutOfRangeException.ThrowIfNotEqual(compressedBytesPerBlock, AstcBlockSize);
+        Guard.IsTrue(compressedBytesPerBlock == AstcBlockSize, nameof(compressedBytesPerBlock), $"ASTC blocks must be {AstcBlockSize} bytes.");
 
         // Validate block dimensions (will throw if invalid)
         _ = FootprintFromDimensions(blockWidth, blockHeight);
@@ -113,11 +113,11 @@ internal static class AstcDecoder
         long totalBlocks = (long)blocksWide * blocksHigh;
         long expectedDataLength = totalBlocks * compressedBytesPerBlock;
 
-        ArgumentOutOfRangeException.ThrowIfLessThan(blockData.Length, expectedDataLength);
+        Guard.MustBeGreaterThanOrEqualTo(blockData.Length, expectedDataLength, nameof(blockData));
 
         // Check pixel count first to avoid potential overflow in byte count calculation
         long totalPixels = (long)width * height;
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(totalPixels, (long)int.MaxValue / RgbaPixelDepthBytes);
+        Guard.MustBeLessThanOrEqualTo(totalPixels, (long)int.MaxValue / RgbaPixelDepthBytes, nameof(totalPixels));
 
         long totalBytes = totalPixels * RgbaPixelDepthBytes;
         byte[] decompressedData = new byte[totalBytes];

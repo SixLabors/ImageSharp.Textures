@@ -43,7 +43,7 @@ public class AstcDecoderTests
         byte[] blockData = new byte[dataSize];
         byte[] decodedPixels = new byte[outputSize];
 
-        Assert.Throws<ArgumentOutOfRangeException>(() =>
+        Assert.Throws<ArgumentException>(() =>
             AstcDecoder.DecodeBlock(blockData, 4, 4, decodedPixels));
     }
 
@@ -64,7 +64,10 @@ public class AstcDecoderTests
         byte[] blockData = new byte[AstcDecoder.AstcBlockSize];
         byte[] decodedPixels = new byte[64];
 
-        Assert.Throws<ArgumentOutOfRangeException>(() =>
+        // Either ArgumentOutOfRangeException (invalid block dims hit FootprintFromDimensions
+        // first) or ArgumentException (oversized footprint exceeds the output buffer first via
+        // Guard.MustBeSizedAtLeast). Both derive from ArgumentException.
+        Assert.ThrowsAny<ArgumentException>(() =>
             AstcDecoder.DecodeBlock(blockData, blockWidth, blockHeight, decodedPixels));
     }
 
@@ -114,7 +117,7 @@ public class AstcDecoderTests
     {
         byte[] blockData = new byte[invalidBytes * 64]; // 8x8 blocks for 256x256
 
-        Assert.Throws<ArgumentOutOfRangeException>(() =>
+        Assert.Throws<ArgumentException>(() =>
             AstcDecoder.DecompressImage(blockData, 256, 256, 4, 4, invalidBytes));
     }
 

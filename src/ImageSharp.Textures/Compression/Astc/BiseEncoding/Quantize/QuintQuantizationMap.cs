@@ -15,7 +15,7 @@ internal static class QuintQuantizationMap
     /// <see cref="GetUnquantizedValue"/> or <see cref="GetUnquantizedWeight"/>.</param>
     public static QuantizationMap Create(int range, Func<int, int, int, int> unquantFunc)
     {
-        ArgumentOutOfRangeException.ThrowIfNotEqual((range + 1) % 5, 0);
+        Guard.IsTrue((range + 1) % 5 == 0, nameof(range), "range + 1 must be a multiple of 5.");
 
         int bitsPowerOfTwo = (range + 1) / 5;
         int bitCount = bitsPowerOfTwo == 0 ? 0 : QuantizationMap.Log2Floor(bitsPowerOfTwo);

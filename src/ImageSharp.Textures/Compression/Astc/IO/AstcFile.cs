@@ -36,13 +36,13 @@ internal record AstcFile
 
     public static AstcFile FromMemory(byte[] data)
     {
-        ArgumentNullException.ThrowIfNull(data);
-        ArgumentOutOfRangeException.ThrowIfLessThan(data.Length, AstcFileHeader.SizeInBytes);
+        Guard.NotNull(data, nameof(data));
+        Guard.MustBeGreaterThanOrEqualTo(data.Length, AstcFileHeader.SizeInBytes, nameof(data));
 
         AstcFileHeader header = AstcFileHeader.FromMemory(data.AsSpan(0, AstcFileHeader.SizeInBytes));
 
         int blockDataLength = data.Length - AstcFileHeader.SizeInBytes;
-        ArgumentOutOfRangeException.ThrowIfNotEqual(blockDataLength % BlockInfo.SizeInBytes, 0);
+        Guard.IsTrue(blockDataLength % BlockInfo.SizeInBytes == 0, nameof(data), "ASTC block data length must be a multiple of the block size.");
 
         int blocksWide = (header.ImageWidth + header.BlockWidth - 1) / header.BlockWidth;
         int blocksHigh = (header.ImageHeight + header.BlockHeight - 1) / header.BlockHeight;

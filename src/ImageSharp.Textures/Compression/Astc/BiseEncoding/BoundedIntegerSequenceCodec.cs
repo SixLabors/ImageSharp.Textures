@@ -138,8 +138,8 @@ internal static class BoundedIntegerSequenceCodec
     /// </summary>
     public static (BiseEncodingMode Mode, int BitCount) GetPackingModeBitCount(int range)
     {
-        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(range, 0);
-        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(range, 1 << Log2MaxRangeForBits);
+        Guard.MustBeGreaterThan(range, 0, nameof(range));
+        Guard.MustBeLessThan(range, 1 << Log2MaxRangeForBits, nameof(range));
 
         return PackingModeCache[range];
     }

@@ -36,11 +36,11 @@ public static class AstcDecoder
     /// </returns>
     public static Span<byte> DecompressImage(ReadOnlySpan<byte> astcData, int width, int height, Footprint footprint)
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(width);
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(height);
+        Guard.MustBeGreaterThan(width, 0, nameof(width));
+        Guard.MustBeGreaterThan(height, 0, nameof(height));
 
         long totalPixels = (long)width * height;
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(totalPixels, (long)int.MaxValue / BlockInfo.ChannelsPerPixel);
+        Guard.MustBeLessThanOrEqualTo(totalPixels, (long)int.MaxValue / BlockInfo.ChannelsPerPixel, nameof(totalPixels));
 
         int totalBytes = (int)(totalPixels * BlockInfo.ChannelsPerPixel);
         byte[] imageBuffer = new byte[totalBytes];
@@ -209,8 +209,8 @@ public static class AstcDecoder
     /// <param name="buffer">The buffer to write the decoded pixels into</param>
     public static void DecompressBlock(ReadOnlySpan<byte> blockData, Footprint footprint, Span<byte> buffer)
     {
-        ArgumentOutOfRangeException.ThrowIfLessThan(blockData.Length, BlockInfo.SizeInBytes);
-        ArgumentOutOfRangeException.ThrowIfLessThan(buffer.Length, footprint.PixelCount * BlockInfo.ChannelsPerPixel);
+        Guard.MustBeSizedAtLeast(blockData, BlockInfo.SizeInBytes, nameof(blockData));
+        Guard.MustBeSizedAtLeast(buffer, footprint.PixelCount * BlockInfo.ChannelsPerPixel, nameof(buffer));
 
         DecodeSingleBlock<LdrPipeline, byte>(blockData, footprint, buffer);
     }
@@ -227,11 +227,11 @@ public static class AstcDecoder
     /// </returns>
     public static Span<float> DecompressHdrImage(ReadOnlySpan<byte> astcData, int width, int height, Footprint footprint)
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(width);
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(height);
+        Guard.MustBeGreaterThan(width, 0, nameof(width));
+        Guard.MustBeGreaterThan(height, 0, nameof(height));
 
         long totalPixels = (long)width * height;
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(totalPixels, (long)int.MaxValue / 4);
+        Guard.MustBeLessThanOrEqualTo(totalPixels, (long)int.MaxValue / 4, nameof(totalPixels));
 
         int totalFloats = (int)(totalPixels * 4);
         float[] imageBuffer = new float[totalFloats];
@@ -302,15 +302,15 @@ public static class AstcDecoder
     /// <param name="buffer">The buffer to write decoded values into (must be at least footprint.Width * footprint.Height * 4 elements)</param>
     public static void DecompressHdrBlock(ReadOnlySpan<byte> blockData, Footprint footprint, Span<float> buffer)
     {
-        ArgumentOutOfRangeException.ThrowIfLessThan(blockData.Length, BlockInfo.SizeInBytes);
-        ArgumentOutOfRangeException.ThrowIfLessThan(buffer.Length, footprint.PixelCount * BlockInfo.ChannelsPerPixel);
+        Guard.MustBeSizedAtLeast(blockData, BlockInfo.SizeInBytes, nameof(blockData));
+        Guard.MustBeSizedAtLeast(buffer, footprint.PixelCount * BlockInfo.ChannelsPerPixel, nameof(buffer));
 
         DecodeSingleBlock<HdrPipeline, float>(blockData, footprint, buffer);
     }
 
     internal static Span<byte> DecompressImage(AstcFile file)
     {
-        ArgumentNullException.ThrowIfNull(file);
+        Guard.NotNull(file, nameof(file));
 
         return DecompressImage(file.Blocks, file.Width, file.Height, file.Footprint);
     }
@@ -379,14 +379,14 @@ public static class AstcDecoder
     /// </summary>
     private static void ValidateImageArgs(int width, int height, int bufferLength, int bytesPerPixel)
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(width);
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(height);
+        Guard.MustBeGreaterThan(width, 0, nameof(width));
+        Guard.MustBeGreaterThan(height, 0, nameof(height));
 
         long totalPixels = (long)width * height;
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(totalPixels, (long)int.MaxValue / bytesPerPixel);
+        Guard.MustBeLessThanOrEqualTo(totalPixels, (long)int.MaxValue / bytesPerPixel, nameof(totalPixels));
 
         long totalElements = totalPixels * bytesPerPixel;
-        ArgumentOutOfRangeException.ThrowIfLessThan(bufferLength, totalElements);
+        Guard.MustBeGreaterThanOrEqualTo(bufferLength, totalElements, nameof(bufferLength));
     }
 
     /// <summary>
