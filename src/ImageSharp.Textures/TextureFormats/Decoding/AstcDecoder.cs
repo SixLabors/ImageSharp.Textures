@@ -1,7 +1,9 @@
 // Copyright (c) Six Labors.
 // Licensed under the Six Labors Split License.
 
+using System.Buffers;
 using System.Runtime.InteropServices;
+using SixLabors.ImageSharp.Memory;
 using SixLabors.ImageSharp.Textures.Compression.Astc.Core;
 
 namespace SixLabors.ImageSharp.Textures.TextureFormats.Decoding;
@@ -33,7 +35,7 @@ internal static class AstcDecoder
         int blockHeight,
         byte compressedBytesPerBlock)
     {
-        Guard.NotNull(blockData, nameof(blockData));
+        Guard.NotNull(blockData);
         Guard.MustBeGreaterThan(width, 0, nameof(width));
         Guard.MustBeGreaterThan(height, 0, nameof(height));
         Guard.IsTrue(compressedBytesPerBlock == AstcBlockSize, nameof(compressedBytesPerBlock), $"ASTC blocks must be {AstcBlockSize} bytes.");
@@ -44,15 +46,17 @@ internal static class AstcDecoder
         long totalPixels = (long)width * height;
         Guard.MustBeLessThanOrEqualTo(totalPixels, (long)int.MaxValue / RgbaHdrPixelDepthBytes, nameof(totalPixels));
 
-        float[] floatBuffer = new float[totalPixels * 4];
-        if (!Compression.Astc.AstcDecoder.DecompressHdrImage(blockData, width, height, footprint, floatBuffer))
+        int floatCount = (int)(totalPixels * 4);
+        using IMemoryOwner<float> floatBuffer = MemoryAllocator.Default.Allocate<float>(floatCount);
+        Span<float> floatSpan = floatBuffer.Memory.Span[..floatCount];
+        if (!Compression.Astc.AstcDecoder.DecompressHdrImage(blockData, width, height, footprint, floatSpan))
         {
             // Structural validation failed; return zero-filled output so the caller gets a usable image.
             return new byte[totalPixels * RgbaHdrPixelDepthBytes];
         }
 
         byte[] bytes = new byte[totalPixels * RgbaHdrPixelDepthBytes];
-        MemoryMarshal.AsBytes<float>(floatBuffer).CopyTo(bytes);
+        MemoryMarshal.AsBytes(floatSpan).CopyTo(bytes);
         return bytes;
     }
 
