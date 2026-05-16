@@ -55,13 +55,15 @@ public class AstcReferenceComparisonBenchmark
         {
             string path = Path.Combine(TestEnvironment.InputImagesDirectoryFullPath, "Astc", file);
             AstcFile astc = AstcFile.FromMemory(File.ReadAllBytes(path));
+            int pixelCount = astc.Width * astc.Height;
             return new HdrInputs(
                 astc.Blocks.ToArray(),
                 astc.Width,
                 astc.Height,
                 astc.Footprint,
                 AstcReferenceDecoder.ToBlockDimensions(astc.Footprint.Type),
-                new float[astc.Width * astc.Height * 4]);
+                new float[pixelCount * 4],
+                new byte[pixelCount * 4 * sizeof(ushort)]);
         })];
     }
 
@@ -80,15 +82,12 @@ public class AstcReferenceComparisonBenchmark
 
     [Benchmark]
     [BenchmarkCategory("LDR")]
-    public int Reference_Ldr()
+    public void Reference_Ldr()
     {
-        int total = 0;
         foreach (LdrInputs i in this.ldrInputs)
         {
-            total += AstcReferenceDecoder.DecompressLdr(i.Blocks, i.Width, i.Height, i.BlockDims.X, i.BlockDims.Y).Length;
+            AstcReferenceDecoder.DecompressLdrOneShot(i.Blocks, i.Width, i.Height, i.BlockDims.X, i.BlockDims.Y, i.Output);
         }
-
-        return total;
     }
 
     [Benchmark(Baseline = true)]
@@ -106,18 +105,15 @@ public class AstcReferenceComparisonBenchmark
 
     [Benchmark]
     [BenchmarkCategory("HDR")]
-    public int Reference_Hdr()
+    public void Reference_Hdr()
     {
-        int total = 0;
         foreach (HdrInputs i in this.hdrInputs)
         {
-            total += AstcReferenceDecoder.DecompressHdr(i.Blocks, i.Width, i.Height, i.BlockDims.X, i.BlockDims.Y).Length;
+            AstcReferenceDecoder.DecompressHdrOneShot(i.Blocks, i.Width, i.Height, i.BlockDims.X, i.BlockDims.Y, i.OutputBytes);
         }
-
-        return total;
     }
 
     private sealed record LdrInputs(byte[] Blocks, int Width, int Height, Footprint Footprint, (int X, int Y) BlockDims, byte[] Output);
 
-    private sealed record HdrInputs(byte[] Blocks, int Width, int Height, Footprint Footprint, (int X, int Y) BlockDims, float[] Output);
+    private sealed record HdrInputs(byte[] Blocks, int Width, int Height, Footprint Footprint, (int X, int Y) BlockDims, float[] Output, byte[] OutputBytes);
 }

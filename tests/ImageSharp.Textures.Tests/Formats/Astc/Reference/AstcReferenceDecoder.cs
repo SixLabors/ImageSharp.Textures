@@ -205,6 +205,41 @@ internal static class AstcReferenceDecoder
     }
 
     /// <summary>
+    /// Allocates a fresh decode context, decodes into <paramref name="output"/>, and frees the
+    /// context. Mirrors <see cref="DecompressLdr"/>'s lifecycle but writes into a caller-owned
+    /// buffer so wrapper allocations don't dominate one-shot benchmarks.
+    /// </summary>
+    public static void DecompressLdrOneShot(byte[] blocks, int w, int h, int blockX, int blockY, byte[] output)
+    {
+        AstcencContext context = AllocDecodeContext(AstcencProfile.AstcencPrfLdr, blockX, blockY);
+        try
+        {
+            DecompressLdrInto(context, blocks, w, h, output);
+        }
+        finally
+        {
+            FreeContext(context);
+        }
+    }
+
+    /// <summary>
+    /// HDR counterpart to <see cref="DecompressLdrOneShot"/>. Output is the FP16 RGBA byte
+    /// buffer (sized to <c>w * h * 4 * sizeof(ushort)</c>).
+    /// </summary>
+    public static void DecompressHdrOneShot(byte[] blocks, int w, int h, int blockX, int blockY, byte[] output)
+    {
+        AstcencContext context = AllocDecodeContext(AstcencProfile.AstcencPrfHdr, blockX, blockY);
+        try
+        {
+            DecompressHdrInto(context, blocks, w, h, output);
+        }
+        finally
+        {
+            FreeContext(context);
+        }
+    }
+
+    /// <summary>
     /// Allocates a reusable astcenc decode context for the given profile and block size. The
     /// caller owns the context and must release it via <see cref="FreeContext"/>.
     /// </summary>
