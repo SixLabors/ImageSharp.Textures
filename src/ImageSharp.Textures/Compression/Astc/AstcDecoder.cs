@@ -165,14 +165,17 @@ public static class AstcDecoder
                 UInt128 blockBits = ReadBlockBits(astcData, index);
 
                 BlockInfo info = BlockModeDecoder.Decode(blockBits);
-                if (!info.IsValid)
+                BlockDestination dest = ComputeBlockDestination(blockX, blockY, footprint, width, height);
+
+                // Spec §C.2.19, §C.2.24, §C.2.25: illegal block encodings, and HDR endpoint modes
+                // in the LDR profile, must produce the error colour (magenta) for every texel.
+                if (!info.IsValid || !pipeline.IsBlockLegal(in info))
                 {
+                    pipeline.WriteErrorColorClipped(
+                        footprint, dest.DstBaseX, dest.DstBaseY, dest.CopyWidth, dest.CopyHeight, width, imageBuffer);
                     continue;
                 }
 
-                pipeline.PreDispatchCheck(blockBits, in info);
-
-                BlockDestination dest = ComputeBlockDestination(blockX, blockY, footprint, width, height);
                 DecodeBlock<TPipeline, T>(blockBits, in info, footprint, dest, width, imageBuffer, decodedPixels);
             }
         }
@@ -233,13 +236,14 @@ public static class AstcDecoder
     {
         UInt128 blockBits = BinaryPrimitives.ReadUInt128LittleEndian(blockData);
         BlockInfo info = BlockModeDecoder.Decode(blockBits);
-        if (!info.IsValid)
+        TPipeline pipeline = default;
+
+        // Spec §C.2.19, §C.2.24, §C.2.25: illegal blocks and HDR-in-LDR emit magenta.
+        if (!info.IsValid || !pipeline.IsBlockLegal(in info))
         {
+            pipeline.WriteErrorColor(footprint, buffer);
             return;
         }
-
-        TPipeline pipeline = default;
-        pipeline.PreDispatchCheck(blockBits, in info);
 
         if (info.IsFusable)
         {

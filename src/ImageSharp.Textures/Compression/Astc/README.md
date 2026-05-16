@@ -75,13 +75,18 @@ This path still decodes BISE, unquantises, computes partition assignments, and u
 
 `AstcDecoder.DecompressImage` and `DecompressBlock` read each 128-bit block, parse its mode via `BlockModeDecoder.Decode` (`BlockDecoding/BlockModeDecoder.cs`), check the fast-path gate, and route. The parser is a single pass over spec Tables 17–24: block mode classification, weight grid dimensions, partition count, CEM (colour endpoint mode) extraction, dual-plane flag, colour value count, reserved-configuration rejection — all in one pass with no allocations. It returns a `BlockInfo` (`Core/BlockInfo.cs`) struct the caller inspects for dispatch.
 
-`BlockInfo.IsValid == false` means the block is reserved or illegal per spec; both the fast and general paths skip it (the block contributes zeros to the output, matching ARM's behaviour). `BlockInfo.IsHdr` is the precondition check that raises `TextureFormatException` at the LDR entry points when an HDR-mode block appears in an LDR context — it covers both HDR endpoint modes (§C.2.14) and HDR void-extent blocks (§C.2.23, dynamic-range flag set). See design decisions below.
+`BlockInfo.IsValid == false` means the block is reserved or illegal per spec. The decoder writes the spec-mandated error colour (magenta) into the corresponding image region rather than throwing or leaving zeros. `BlockInfo.IsHdr` covers both HDR endpoint modes (§C.2.14) and HDR void-extent blocks (§C.2.23, dynamic-range flag set); `IBlockPipeline.IsBlockLegal` returns false for HDR-mode blocks in the LDR pipeline so they get the same magenta treatment per §C.2.25.
 
 ## Design decisions
 
-### HDR blocks through the LDR API throw
+### Illegal blocks emit the spec-mandated error colour
 
-Per spec §C.2.19, in LDR mode an HDR endpoint mode returns the error colour (magenta `0xFFFF00FF`) for every texel of the block. ARM `astcenc` instead returns `ASTCENC_ERR_BAD_DECODE_MODE` before decoding begins. We match ARM's behaviour: `AstcDecoder.DecompressImage` and `DecompressBlock` throw `TextureFormatException` on the first HDR block they see. The pre-decode profile check maps cleanly onto a precondition in the block loop (the relevant fields are already read by `BlockModeDecoder.Decode`) so there's no extra cost on the happy path. Callers who want HDR values use `DecompressHdrImage` / `DecompressHdrBlock`.
+Per spec §C.2.19, §C.2.24, §C.2.25 a decoder must emit the error colour (magenta `0xFFFF00FF` in LDR; `(1, 0, 1, 1)` floats in HDR) for every texel of:
+
+* a reserved or illegal block encoding (e.g. reserved block-mode bits, weight count > 64, weight bits outside [24, 96], malformed void-extent);
+* an HDR endpoint-mode block when decoded under the LDR profile.
+
+This decoder emits magenta for both cases. ARM `astcenc` differs in two ways: it returns `ASTCENC_ERR_BAD_DECODE_MODE` from the API on the first HDR block in LDR mode (we don't — the spec describes per-texel behaviour, and a single bad block shouldn't fail the whole image), and its current build emits `(0, 0, 0, 1)` for some illegal-encoding cases. The spec text prescribes the error colour for both, which is what we do — so a real-world scenario like "one corrupt block in a 100MB texture" produces a mostly-correct image with visible magenta artefacts where the bad block lives, rather than a thrown exception or silent zeroes. Callers who need HDR values use `DecompressHdrImage` / `DecompressHdrBlock`; the same illegal-block rule applies, with the float error colour.
 
 ### LDR UNORM8 reduction takes the top 8 bits
 

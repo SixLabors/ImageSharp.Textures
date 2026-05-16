@@ -2,7 +2,6 @@
 // Licensed under the Six Labors Split License.
 
 using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Textures.Common.Exceptions;
 using SixLabors.ImageSharp.Textures.Compression.Astc;
 using SixLabors.ImageSharp.Textures.Compression.Astc.ColorEncoding;
 using SixLabors.ImageSharp.Textures.Compression.Astc.Core;
@@ -59,14 +58,18 @@ public class HdrComparisonTests
 
     [Theory]
     [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestData.Astc.Hdr.Hdr_A_1x1)]
-    public void HdrFile_DecodedWithLdrApi_ShouldThrow(TestTextureProvider provider)
+    public void HdrFile_DecodedWithLdrApi_EmitsErrorColor(TestTextureProvider provider)
     {
-        // Per ASTC spec §C.2.19 the LDR (decode_unorm8) profile cannot decode HDR-mode
-        // blocks; matches ARM astcenc's ASTCENC_ERR_BAD_DECODE_MODE.
+        // Per ASTC spec §C.2.19, §C.2.25 the LDR profile treats HDR-mode blocks as reserved
+        // and produces the error colour (magenta) for every texel.
         byte[] astcData = File.ReadAllBytes(provider.InputFile);
         AstcFile astcFile = AstcFile.FromMemory(astcData);
 
-        Assert.Throws<TextureFormatException>(() => AstcDecoder.DecompressImage(astcFile));
+        Span<byte> ldrResult = AstcDecoder.DecompressImage(astcFile);
+        Assert.Equal(0xFF, ldrResult[0]);
+        Assert.Equal(0x00, ldrResult[1]);
+        Assert.Equal(0xFF, ldrResult[2]);
+        Assert.Equal(0xFF, ldrResult[3]);
     }
 
     [Theory]

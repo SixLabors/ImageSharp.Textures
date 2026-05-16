@@ -16,8 +16,29 @@ internal readonly struct HdrPipeline : IBlockPipeline<float>
 {
     /// <inheritdoc />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void PreDispatchCheck(UInt128 blockBits, in BlockInfo info)
+    public bool IsBlockLegal(in BlockInfo info) => true;
+
+    /// <inheritdoc />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void WriteErrorColor(Footprint footprint, Span<float> buffer)
+        => FillMagenta(buffer[..(footprint.PixelCount * BlockInfo.ChannelsPerPixel)]);
+
+    /// <inheritdoc />
+    public void WriteErrorColorClipped(
+        Footprint footprint,
+        int dstBaseX,
+        int dstBaseY,
+        int copyWidth,
+        int copyHeight,
+        int imageWidth,
+        Span<float> imageBuffer)
     {
+        int rowElements = copyWidth * BlockInfo.ChannelsPerPixel;
+        for (int pixelY = 0; pixelY < copyHeight; pixelY++)
+        {
+            int dstOffset = (((dstBaseY + pixelY) * imageWidth) + dstBaseX) * BlockInfo.ChannelsPerPixel;
+            FillMagenta(imageBuffer.Slice(dstOffset, rowElements));
+        }
     }
 
     /// <inheritdoc />
@@ -34,4 +55,18 @@ internal readonly struct HdrPipeline : IBlockPipeline<float>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void LogicalWrite(UInt128 blockBits, in BlockInfo info, Footprint footprint, Span<float> decodedPixels)
         => LogicalBlock.DecodeToFloats(blockBits, in info, footprint, decodedPixels);
+
+    /// <summary>
+    /// Spec §C.2.19 error colour: opaque magenta in the float profile — <c>(1, 0, 1, 1)</c>.
+    /// </summary>
+    private static void FillMagenta(Span<float> buffer)
+    {
+        for (int i = 0; i < buffer.Length; i += BlockInfo.ChannelsPerPixel)
+        {
+            buffer[i] = 1f;
+            buffer[i + 1] = 0f;
+            buffer[i + 2] = 1f;
+            buffer[i + 3] = 1f;
+        }
+    }
 }

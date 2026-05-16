@@ -2,7 +2,6 @@
 // Licensed under the Six Labors Split License.
 
 using System.ComponentModel;
-using SixLabors.ImageSharp.Textures.Common.Exceptions;
 using SixLabors.ImageSharp.Textures.Compression.Astc;
 using SixLabors.ImageSharp.Textures.Compression.Astc.Core;
 using SixLabors.ImageSharp.Textures.Compression.Astc.IO;
@@ -87,19 +86,28 @@ public class HdrImageTests
 
     [Theory]
     [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestData.Astc.Hdr.Hdr_A_1x1)]
-    [Description("The LDR decoder must reject HDR-encoded blocks per ASTC spec §C.2.19 (matches astcenc's ASTCENC_ERR_BAD_DECODE_MODE).")]
-    public void DecodeHdrAstcFile_WithLdrApi_ShouldThrow(TestTextureProvider provider)
+    [Description("LDR decoder emits the spec-mandated error colour (magenta) for HDR-encoded blocks per ASTC spec §C.2.19, §C.2.25.")]
+    public void DecodeHdrAstcFile_WithLdrApi_EmitsErrorColor(TestTextureProvider provider)
     {
         byte[] astcData = File.ReadAllBytes(provider.InputFile);
         AstcFile astcFile = AstcFile.FromMemory(astcData);
 
-        Assert.Throws<TextureFormatException>(() => AstcDecoder.DecompressImage(astcFile));
+        Span<byte> ldrResult = AstcDecoder.DecompressImage(astcFile);
+
+        // Spec §C.2.19 error colour: opaque magenta (0xFF, 0x00, 0xFF, 0xFF) per texel.
+        for (int i = 0; i < ldrResult.Length; i += 4)
+        {
+            Assert.Equal(0xFF, ldrResult[i]);
+            Assert.Equal(0x00, ldrResult[i + 1]);
+            Assert.Equal(0xFF, ldrResult[i + 2]);
+            Assert.Equal(0xFF, ldrResult[i + 3]);
+        }
     }
 
     [Theory]
     [WithFile(TestTextureFormat.Astc, TestTextureType.Flat, TestTextureTool.AstcEnc, TestData.Astc.Hdr.Hdr_A_1x1)]
-    [Description("The HDR API decodes HDR content correctly; the LDR API rejects it.")]
-    public void HdrApi_DecodesHdrContent_LdrApi_Rejects(TestTextureProvider provider)
+    [Description("The HDR API decodes HDR content correctly; the LDR API emits magenta for it (spec §C.2.19).")]
+    public void HdrApi_DecodesHdrContent_LdrApi_EmitsErrorColor(TestTextureProvider provider)
     {
         byte[] astcData = File.ReadAllBytes(provider.InputFile);
         AstcFile astcFile = AstcFile.FromMemory(astcData);
@@ -114,7 +122,11 @@ public class HdrImageTests
         Assert.True(hdrResult[0] < hdrResult[1]);
         Assert.True(hdrResult[1] < hdrResult[2]);
 
-        // LDR API refuses the same HDR content.
-        Assert.Throws<TextureFormatException>(() => AstcDecoder.DecompressImage(astcFile));
+        // LDR API emits the spec-mandated error colour for the same HDR content.
+        Span<byte> ldrResult = AstcDecoder.DecompressImage(astcFile);
+        Assert.Equal(0xFF, ldrResult[0]);
+        Assert.Equal(0x00, ldrResult[1]);
+        Assert.Equal(0xFF, ldrResult[2]);
+        Assert.Equal(0xFF, ldrResult[3]);
     }
 }
