@@ -7,8 +7,8 @@ namespace SixLabors.ImageSharp.Textures.Compression.Astc.Core;
 
 internal sealed class Partition
 {
-    private static readonly ConcurrentDictionary<(Footprint, int, int), Partition> PartitionCache = new();
-    private static readonly ConcurrentDictionary<Footprint, Partition> SinglePartitionCache = new();
+    private static readonly ConcurrentDictionary<(FootprintType, int, int), Partition> PartitionCache = new();
+    private static readonly ConcurrentDictionary<FootprintType, Partition> SinglePartitionCache = new();
 
     private Partition(int[] assignment) => this.Assignment = assignment;
 
@@ -25,14 +25,19 @@ internal sealed class Partition
     /// all callers (void-extent blocks and single-partition logical-path blocks).
     /// </summary>
     public static Partition GetSinglePartition(Footprint footprint)
-        => SinglePartitionCache.GetOrAdd(footprint, static fp => new Partition(new int[fp.PixelCount]));
+        => SinglePartitionCache.GetOrAdd(
+            footprint.Type,
+            static (_, fp) => new Partition(new int[fp.PixelCount]),
+            footprint);
 
     public static Partition GetASTCPartition(Footprint footprint, int partitionCount, int partitionId)
-        => PartitionCache.GetOrAdd((footprint, partitionCount, partitionId), static key => Build(key));
+        => PartitionCache.GetOrAdd(
+            (footprint.Type, partitionCount, partitionId),
+            static (key, fp) => Build(fp, key.Item2, key.Item3),
+            footprint);
 
-    private static Partition Build((Footprint Footprint, int PartitionCount, int PartitionId) key)
+    private static Partition Build(Footprint footprint, int partitionCount, int partitionId)
     {
-        Footprint footprint = key.Footprint;
         int w = footprint.Width;
         int h = footprint.Height;
         int[] assignment = new int[w * h];
@@ -41,7 +46,7 @@ internal sealed class Partition
         {
             for (int x = 0; x < w; ++x)
             {
-                assignment[idx++] = SelectASTCPartition(key.PartitionId, x, y, 0, key.PartitionCount, footprint.PixelCount);
+                assignment[idx++] = SelectASTCPartition(partitionId, x, y, 0, partitionCount, footprint.PixelCount);
             }
         }
 
