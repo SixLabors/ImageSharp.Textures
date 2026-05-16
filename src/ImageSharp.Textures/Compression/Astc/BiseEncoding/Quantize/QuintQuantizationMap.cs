@@ -5,7 +5,8 @@ namespace SixLabors.ImageSharp.Textures.Compression.Astc.BiseEncoding.Quantize;
 
 /// <summary>
 /// Builds <see cref="QuantizationMap"/> instances for the quint BISE encoding mode plus the
-/// per-quint unquantization tables for endpoint values and weights (ASTC spec §C.2.18).
+/// per-quint unquantization tables for endpoint colour values (ASTC spec §C.2.13) and
+/// weights (§C.2.17).
 /// </summary>
 internal static class QuintQuantizationMap
 {

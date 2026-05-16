@@ -28,7 +28,10 @@ internal static class UInt128Extensions
     };
 
     /// <summary>
-    /// Reverse bits across the full 128-bit value
+    /// Reverses bits across the full 128-bit value. Used by the BISE weight decoder
+    /// (ASTC spec §C.2.12) — weight data is encoded most-significant-bit-first into the
+    /// high end of the block, so callers reverse the block before reading weights as
+    /// a normal little-endian sequence.
     /// </summary>
     public static UInt128 ReverseBits(this UInt128 value)
     {

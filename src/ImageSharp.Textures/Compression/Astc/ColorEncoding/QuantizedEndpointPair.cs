@@ -10,7 +10,7 @@ namespace SixLabors.ImageSharp.Textures.Compression.Astc.ColorEncoding;
 /// <summary>
 /// Quantizes an RGBA endpoint pair to a given BISE range and pre-computes the dequantized
 /// values. Used by the endpoint encoder to score candidate encodings against the original
-/// input (ASTC spec §C.2.16).
+/// input. Quantization tables come from ASTC spec §C.2.13; valid ranges from §C.2.22.
 /// </summary>
 internal sealed class QuantizedEndpointPair
 {

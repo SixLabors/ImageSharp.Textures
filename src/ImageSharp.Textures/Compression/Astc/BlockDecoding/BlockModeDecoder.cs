@@ -9,23 +9,24 @@ using SixLabors.ImageSharp.Textures.Compression.Astc.Core;
 namespace SixLabors.ImageSharp.Textures.Compression.Astc.BlockDecoding;
 
 /// <summary>
-/// Single-pass parser for the 128-bit ASTC block mode (spec §C.2.7–§C.2.16). Produces a
+/// Single-pass parser for the 128-bit ASTC block mode (spec §C.2.9–§C.2.11, §C.2.16). Produces a
 /// populated <see cref="BlockInfo"/> record describing the block's weight grid, partition
 /// count, colour endpoint modes, dual-plane flag, and the bit-range metadata the per-block
 /// decoders need. Reserved and illegal encodings are rejected inline (IsValid = false).
 /// </summary>
 internal static class BlockModeDecoder
 {
-    // Spec §C.2.7 Table 23: weight range table indexed by r[2:0] + h. Entries marked -1 are
-    // reserved and reject the block. Two six-entry groups (low precision, high precision).
+    // Spec §C.2.10 Table C.2.7: weight range table indexed by r[2:0] + h. Entries marked -1
+    // are reserved and reject the block. Two six-entry groups (low precision, high precision).
     private static readonly int[] WeightRanges =
         [-1, -1, 1, 2, 3, 4, 5, 7, -1, -1, 9, 11, 15, 19, 23, 31];
 
     // Spec §C.2.11: extra-CEM bit count by partition count. Indexed [partitionCount - 1].
     private static readonly int[] ExtraCemBitsForPartition = [0, 2, 5, 8];
 
-    // Spec §C.2.16: valid BISE endpoint ranges in descending order. Only these produce valid
-    // quantisation encodings; the parser picks the largest that fits in the colour bit budget.
+    // Spec §C.2.22: valid BISE endpoint ranges in descending order. The parser picks the
+    // largest that fits in the colour bit budget computed by the §C.2.22 remaining-bits
+    // procedure.
     private static readonly int[] ValidEndpointRanges =
         [255, 191, 159, 127, 95, 79, 63, 47, 39, 31, 23, 19, 15, 11, 9, 7, 5];
 
@@ -319,7 +320,7 @@ internal static class BlockModeDecoder
 
     /// <summary>
     /// Finds the greatest valid BISE endpoint range whose encoding fits within
-    /// <paramref name="maxColorBits"/> per ASTC spec §C.2.16. Returns false if the minimum
+    /// <paramref name="maxColorBits"/> per ASTC spec §C.2.22. Returns false if the minimum
     /// encoding already exceeds the budget.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -329,7 +330,9 @@ internal static class BlockModeDecoder
         out int colorValuesRange,
         out int colorBitCount)
     {
-        // Spec §C.2.16 minimum: 13 bits per 5 color values, rounded up.
+        // Spec §C.2.22 minimum: 13 bits per 5 color values, rounded up — derived from
+        // the smallest valid BISE encoding (range 5 = 1 trit + 1 bit, i.e. 8/5 + 1 ≈ 13/5
+        // bits per value).
         int requiredColorBits = ((13 * colorValuesCount) + 4) / 5;
         if (maxColorBits < requiredColorBits)
         {

@@ -30,7 +30,7 @@ internal static class SimdHelpers
         Vector128<int> w64 = Vec64 - weights;
         Vector128<int> c = ((c0 * w64) + (c1 * weights) + Vec32) >> 6;
 
-        // Spec §C.2.19 (Weight Application): for decode_unorm8 the final
+        // Spec §C.2.19 (Weight Application): for LDR-mode UNORM8 output the final
         // 8-bit result is the top 8 bits of the UNORM16 interpolation. Mask
         // to [0, 255] to defend against malformed endpoints producing c outside
         // [0, 0xFFFF]; well-formed input is already in range.
@@ -132,7 +132,7 @@ internal static class SimdHelpers
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static int InterpolateChannelScalar(int p0, int p1, int weight)
     {
-        // Spec §C.2.19 (Weight Application): for decode_unorm8 the final
+        // Spec §C.2.19 (Weight Application): for LDR-mode UNORM8 output the final
         // 8-bit result is the top 8 bits of the UNORM16 interpolation.
         int c = Interpolation.BlendLdrReplicated(p0, p1, weight);
         return (c >> 8) & 0xFF;

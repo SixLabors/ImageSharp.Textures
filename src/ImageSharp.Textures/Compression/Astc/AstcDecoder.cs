@@ -135,7 +135,8 @@ public static class AstcDecoder
     }
 
     /// <summary>
-    /// Shared image-decode loop for both LDR and HDR profiles (ASTC spec §C.2.25). Iterates
+    /// Shared image-decode loop for both LDR and HDR profiles (ASTC spec §C.2.7 decode
+    /// procedure, §C.2.5 LDR/HDR modes). Iterates
     /// the compressed block array in raster order, parses each block via
     /// <see cref="BlockModeDecoder.Decode"/>, runs the pipeline's profile check, and dispatches to
     /// the appropriate per-block decoder.

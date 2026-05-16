@@ -141,7 +141,7 @@ internal static class LogicalBlock
     }
 
     /// <summary>
-    /// BISE-decodes (spec §C.2.22) + unquantises (spec §C.2.18) the per-partition color
+    /// BISE-decodes (spec §C.2.12) + unquantises (spec §C.2.13) the per-partition color
     /// endpoint values into <paramref name="endpoints"/> (one entry per partition, colour
     /// value count per mode from §C.2.14).
     /// </summary>
@@ -184,8 +184,8 @@ internal static class LogicalBlock
             : Partition.GetSinglePartition(footprint).Assignment;
 
     /// <summary>
-    /// BISE-decodes (spec §C.2.22), unquantises (spec §C.2.18), and infills the weight grid
-    /// (spec §C.2.17) into <paramref name="primaryWeights"/>. For dual-plane blocks
+    /// BISE-decodes (spec §C.2.12), unquantises (spec §C.2.17), and infills the weight grid
+    /// (spec §C.2.18) into <paramref name="primaryWeights"/>. For dual-plane blocks
     /// (spec §C.2.20) the secondary plane is decoded into <paramref name="secondaryWeights"/>;
     /// otherwise <paramref name="secondaryWeights"/> is ignored.
     /// </summary>

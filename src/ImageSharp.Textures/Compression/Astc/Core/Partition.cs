@@ -103,8 +103,9 @@ internal sealed class Partition
     }
 
     /// <summary>
-    /// Extracts the 12 4-bit sub-seeds from the scrambled number and squares each. The squaring
-    /// biases the distribution so small values stay small and large values become dominant.
+    /// Extracts the 12 4-bit sub-seeds from the scrambled number per ASTC spec §C.2.21
+    /// and squares each. The squaring biases the distribution so small values stay small
+    /// and large values become dominant.
     /// </summary>
     private static void ExtractSubSeeds(uint random, Span<uint> subseeds)
     {
@@ -165,7 +166,7 @@ internal sealed class Partition
     /// <summary>
     /// Computes the four candidate values a, b, c, d as weighted combinations of the texel
     /// coordinates with sub-seeds as weights, plus the scrambled-number shifted by a
-    /// candidate-specific amount. Low six bits are retained to match the spec.
+    /// candidate-specific amount. Low six bits are retained per ASTC spec §C.2.21.
     /// </summary>
     private static (int A, int B, int C, int D) MixSubSeedsWithCoords(ReadOnlySpan<uint> subseeds, uint random, int x, int y, int z)
     {
@@ -178,8 +179,8 @@ internal sealed class Partition
 
     /// <summary>
     /// Returns the index of the largest of a, b, c, d after zeroing the unused ones based on
-    /// <paramref name="partitionCount"/>. Ties prefer the lower index (matches the spec's
-    /// cascade of ≥ comparisons).
+    /// <paramref name="partitionCount"/>. Ties prefer the lower index (matches ASTC spec
+    /// §C.2.21's cascade of ≥ comparisons).
     /// </summary>
     private static int SelectPartitionFromCandidates(int a, int b, int c, int d, int partitionCount)
     {

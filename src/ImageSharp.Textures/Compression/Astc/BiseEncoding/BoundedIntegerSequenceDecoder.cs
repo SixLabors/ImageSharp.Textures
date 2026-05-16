@@ -6,7 +6,7 @@ using System.Runtime.CompilerServices;
 namespace SixLabors.ImageSharp.Textures.Compression.Astc.BiseEncoding;
 
 /// <summary>
-/// BISE decoder (ASTC spec §C.2.22) for bounded integer sequences. Stateless: callers pass
+/// BISE decoder (ASTC spec §C.2.12) for bounded integer sequences. Stateless: callers pass
 /// the BISE encoding mode and mantissa bit count directly (both typically already on hand
 /// from <see cref="BoundedIntegerSequenceCodec.GetPackingModeBitCount"/>).
 /// </summary>
@@ -28,7 +28,7 @@ internal static class BoundedIntegerSequenceDecoder
         int bitsPerBlock = BoundedIntegerSequenceCodec.GetEncodedBlockSize(encoding, bitCount);
         Guard.MustBeLessThan(bitsPerBlock, 64, nameof(bitsPerBlock));
 
-        // Fixed 5 ints (20 bytes) — one BISE block holds at most 5 trits or 3 quints (spec §C.2.22).
+        // Fixed 5 ints (20 bytes) — one BISE block holds at most 5 trits or 3 quints (spec §C.2.12).
         Span<int> blockResult = stackalloc int[5];
         int resultIndex = 0;
         int bitsRemaining = totalBitCount;

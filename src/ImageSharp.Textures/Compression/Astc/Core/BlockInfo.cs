@@ -11,10 +11,10 @@ namespace SixLabors.ImageSharp.Textures.Compression.Astc.Core;
 /// parser (produces an instance via <c>BlockModeDecoder.Decode</c>); every field maps to a
 /// spec concept:
 /// <list type="bullet">
-/// <item><description><see cref="Weights"/> — spec §C.2.7, §C.2.8.</description></item>
+/// <item><description><see cref="Weights"/> — spec §C.2.10, §C.2.16.</description></item>
 /// <item><description><see cref="PartitionCount"/> — spec §C.2.10.</description></item>
 /// <item><description><see cref="DualPlane"/> — spec §C.2.20.</description></item>
-/// <item><description><see cref="Colors"/> — spec §C.2.16.</description></item>
+/// <item><description><see cref="Colors"/> — spec §C.2.22.</description></item>
 /// <item><description><see cref="EndpointModes"/> — spec §C.2.11, §C.2.14.</description></item>
 /// <item><description><see cref="IsVoidExtent"/> — spec §C.2.23.</description></item>
 /// </list>

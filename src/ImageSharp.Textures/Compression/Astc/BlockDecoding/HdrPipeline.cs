@@ -7,10 +7,10 @@ using SixLabors.ImageSharp.Textures.Compression.Astc.Core;
 namespace SixLabors.ImageSharp.Textures.Compression.Astc.BlockDecoding;
 
 /// <summary>
-/// <see cref="IBlockPipeline{T}"/> implementation for the HDR (float RGBA) <c>decode_fp16</c>
-/// profile (ASTC spec §C.2.25). Accepts both HDR and LDR endpoint modes — LDR endpoints widen
-/// to the [0,1] float range; HDR endpoint modes (2, 3, 7, 11, 14, 15 per §C.2.14) decode
-/// through LNS → FP16 per §C.2.15.
+/// <see cref="IBlockPipeline{T}"/> implementation for the HDR (float RGBA) decode profile
+/// (ASTC spec §C.2.5 "HDR Mode"). Accepts both HDR and LDR endpoint modes — LDR endpoints
+/// widen to the [0,1] float range; HDR endpoint modes (2, 3, 7, 11, 14, 15 per §C.2.14)
+/// decode through LNS → FP16 per §C.2.15.
 /// </summary>
 internal readonly struct HdrPipeline : IBlockPipeline<float>
 {

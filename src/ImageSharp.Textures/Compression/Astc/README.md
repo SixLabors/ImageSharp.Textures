@@ -13,7 +13,7 @@ ASTC was designed by ARM and standardised by Khronos as a single replacement for
 - **LDR / HDR content lives in the same container.** The container format (`VK_FORMAT_ASTC_*_UNORM_BLOCK`, `_SRGB_BLOCK`, `_SFLOAT_BLOCK`) declares the decode profile. HDR blocks use different endpoint encoding modes (2, 3, 7, 11, 14, 15) and emit UNORM16 rather than UNORM8 endpoints.
 - **Up to four partitions.** A single block can contain up to four partitions, each with its own pair of colour endpoints. Partition assignment per texel is computed from a 10-bit seed via the spec's hash function (§C.2.21).
 - **Dual plane.** Blocks can carry a second weight plane for one channel, useful when a channel varies independently (alpha, normal-map components). Spec §C.2.20.
-- **Bounded Integer Sequence Encoding (BISE).** Weights and colour endpoint values are packed with a mixed-radix encoding that combines plain bits with trits (base 3) or quints (base 5), to fit more values in the 128-bit budget than plain binary encoding would allow. Spec §C.2.22.
+- **Bounded Integer Sequence Encoding (BISE).** Weights and colour endpoint values are packed with a mixed-radix encoding that combines plain bits with trits (base 3) or quints (base 5), to fit more values in the 128-bit budget than plain binary encoding would allow. Spec §C.2.12.
 
 ## Code organisation
 
@@ -43,7 +43,7 @@ Used when all three gate conditions hold and the endpoint mode is LDR (modes 0, 
 
 Instead of building a `LogicalBlock`, the fused path does this in one sweep per block:
 
-1. **BISE-decode the colour endpoint values and weight values.** The shared helper `FusedBlockDecoder.DecodeBiseValues` / `DecodeBiseWeights` handles three BISE encoding modes (pure bits / trits / quints — spec §C.2.22) by extracting directly from the 128-bit block as a `UInt128`, bypassing the general `BitStream`. Pure-bit ranges that fit in 64 bits skip a `BitStream` entirely.
+1. **BISE-decode the colour endpoint values and weight values.** The shared helper `FusedBlockDecoder.DecodeBiseValues` / `DecodeBiseWeights` handles three BISE encoding modes (pure bits / trits / quints — spec §C.2.12) by extracting directly from the 128-bit block as a `UInt128`, bypassing the general `BitStream`. Pure-bit ranges that fit in 64 bits skip a `BitStream` entirely.
 2. **Batch-unquantise both sequences.** Precomputed per-range maps (`BiseEncoding/Quantize/TritQuantizationMap.cs`, `QuintQuantizationMap.cs`, `BitQuantizationMap.cs`) convert the raw BISE values to endpoint/weight values in a single pass. These tables are built once at type-load time.
 3. **Infill weights from the grid to the texel array** using the precomputed `DecimationTable.Get(footprint, gridW, gridH)` entry. For full-grid blocks (weight grid matches footprint), this is an identity pass.
 4. **Write pixels directly into the destination image buffer.** No intermediate per-block scratch allocation. A `Vector128` SIMD path (`Core/SimdHelpers.cs`) interpolates and writes four pixels at a time when hardware acceleration is available; the scalar fallback produces byte-identical output.
@@ -60,16 +60,16 @@ Same structural shape as the LDR fast path: same gate, same `DecodeFusedCore`, s
 
 HDR mode 14 (`HdrRgbDirectLdrAlpha`) is a hybrid — RGB is HDR but alpha is LDR. `FusedHdrBlockDecoder` handles that by branching on `endpointPair.AlphaIsLdr` and doing an LDR-style alpha interpolation with an 8-bit-to-float conversion, alongside the HDR RGB interpolation.
 
-### 3. General (logical-block) path — `TexelBlock/LogicalBlock.cs`
+### 3. General (logical-block) path — `BlockDecoding/LogicalBlock.cs`
 
 Everything else goes here. That includes:
 
 - **Multi-partition blocks** (2, 3, or 4 partitions). The partition index for each texel is computed from a 10-bit seed plus the block position via the spec's hash function (`ColorEncoding/Partition.cs`, spec §C.2.21). Each partition has its own endpoint pair, so interpolation picks the endpoints based on the assigned partition per texel.
 - **Dual-plane blocks.** A second weight grid drives one channel independently (spec §C.2.20). `LogicalBlock` stack-allocates a secondary-weight span and passes it (with the dual-plane channel index) to a dedicated dual-plane writer. Interpolation uses the dual-plane weight for the designated channel and the regular weight for the other three.
-- **Void-extent blocks.** The entire block is a single constant colour (LDR UNORM16 or HDR FP16, distinguished by bit 9 — see design decisions below). Handled by a short-circuit path in `LogicalBlock.UnpackLogicalBlock` that skips BISE decode entirely.
+- **Void-extent blocks.** The entire block is a single constant colour (LDR UNORM16 or HDR FP16, distinguished by bit 9 — see design decisions below). Handled by a short-circuit branch in `LogicalBlock.DecodeSinglePlane` that reads the constant from the high half of the block and skips BISE decode entirely.
 - **Mixed LDR/HDR blocks.** Any block where individual partitions use different LDR/HDR endpoint modes (legal per spec).
 
-This path still decodes BISE, unquantises, computes partition assignments, and upsamples weights — the same work the fast paths fuse. The difference is that every intermediate result materialises as instance state on `LogicalBlock`, and pixel-write is a separate iteration that reads back from that state. The generic `WriteAllPixelsLdr` / `WriteAllPixelsGeneral` paths branch per pixel on endpoint kind, partition, and dual-plane channel. More branches, more memory traffic, more allocations; but it handles every ASTC feature the spec defines without hundreds of lines of specialised code per feature combination.
+This path still decodes BISE, unquantises, computes partition assignments, and upsamples weights — the same work the fast paths fuse. The difference is that every intermediate result materialises in a stack-local `DecodedBlockState` (per-partition endpoint pairs + weight span + partition-assignment map), and the pixel write is a separate iteration that reads back from that state. The generic `WriteAllPixels<TWriter,T>` / `WriteAllPixelsDualPlane<TWriter,T>` loops dispatch through an `IPixelWriter<T>` (`LdrPixelWriter`/`HdrPixelWriter`) so the JIT specialises per output type, but per-pixel they still pay for partition lookup and (in the dual-plane variant) per-channel weight selection. More branches and more memory traffic than the fused paths; but it handles every ASTC feature the spec defines without hundreds of lines of specialised code per feature combination.
 
 ### Dispatching
 
@@ -81,7 +81,11 @@ This path still decodes BISE, unquantises, computes partition assignments, and u
 
 ### HDR blocks through the LDR API throw
 
-Per spec §C.2.19, the `decode_unorm8` profile (LDR containers) must emit magenta `0xFFFF00FF` for every texel of an HDR-mode block. ARM `astcenc` instead returns `ASTCENC_ERR_BAD_DECODE_MODE` before decoding begins. We match ARM's behaviour: `AstcDecoder.DecompressImage` and `DecompressBlock` throw `TextureFormatException` on the first HDR block they see. The pre-decode profile check maps cleanly onto a precondition in the block loop (the relevant fields are already read by `BlockModeDecoder.Decode`) so there's no extra cost on the happy path. Callers who want HDR values use `DecompressHdrImage` / `DecompressHdrBlock`.
+Per spec §C.2.19, in LDR mode an HDR endpoint mode returns the error colour (magenta `0xFFFF00FF`) for every texel of the block. ARM `astcenc` instead returns `ASTCENC_ERR_BAD_DECODE_MODE` before decoding begins. We match ARM's behaviour: `AstcDecoder.DecompressImage` and `DecompressBlock` throw `TextureFormatException` on the first HDR block they see. The pre-decode profile check maps cleanly onto a precondition in the block loop (the relevant fields are already read by `BlockModeDecoder.Decode`) so there's no extra cost on the happy path. Callers who want HDR values use `DecompressHdrImage` / `DecompressHdrBlock`.
+
+### LDR UNORM8 reduction takes the top 8 bits
+
+Per spec §C.2.19 (Weight Application), the LDR-mode UNORM8 output for each channel is the **top 8 bits** of the UNORM16 interpolation result `C = floor((C0*(64-i) + C1*i + 32)/64)` — i.e. `byte = (C >> 8) & 0xFF`, not a "fair" UNORM16→UNORM8 round like `((C * 255) + 32767) / 65536`. The two formulas differ by 1 LSB at many `C` values, so the spec-mandated truncation is what `SimdHelpers.InterpolateChannelScalar` and `Interpolate4ChannelPixels` use. This matches ARM's `astcenc` (`lerp_color_int` in `astcenc_decompress_symbolic.cpp`) bit-exactly, which is what the comparison tests in `tests/.../Astc/Reference/` enforce.
 
 ### sRGB is not applied at decode time
 
@@ -95,9 +99,9 @@ Bit 9 of the block-mode low bits distinguishes LDR (`= 1`, stored as UNORM16) fr
 
 `DecimationTable.Table` (14 footprints × 11 × 11 grid cells) is lazy-initialised on first access and shared across threads. Publication uses `Volatile.Read` + `Interlocked.CompareExchange`. The cached objects are immutable, so a losing CAS race just drops the duplicate and returns the winner. No lock is held during `Compute`, so concurrent decoders don't serialise on first-use.
 
-### ArrayPool discipline
+### Scratch buffers via `MemoryAllocator`
 
-The LDR and HDR image-level decoders rent a per-block scratch buffer from `ArrayPool<T>.Shared`. The rent happens *before* the `try` so a failing `Rent` doesn't hand a sentinel to `Return` in the `finally`.
+The image-level LDR and HDR entry points allocate their per-block scratch (and, for the `Stream` overloads, the staging buffer for the compressed payload) through `MemoryAllocator.Default.Allocate<T>`, returned as `IMemoryOwner<T>` and disposed with `using`. This routes through the same allocator ImageSharp uses elsewhere, gives us pool reuse without manual rent/return discipline, and removes the need for a `try`/`finally` to avoid leaking a rented buffer on exception. Inside individual block decoders, weight grids and per-partition endpoint buffers are `stackalloc`'d — the spec caps both at sizes (≤ 144 ints for weights, 4 endpoint pairs) that comfortably fit in a stack frame.
 
 ### `BitStream` shift boundaries
 
@@ -118,6 +122,9 @@ A weight grid can be smaller than the texel grid (e.g. a 4×4 weight grid drivin
 
 ## Useful links
 
-- [ASTC specification (Khronos Data Format Specification)](https://registry.khronos.org/DataFormat/specs/1.3/dataformat.1.3.html#ASTC)
+The `§C.2.X` spec citations throughout the source code (e.g. `§C.2.19` for Weight Application) are section numbers from the **OpenGL `KHR_texture_compression_astc_hdr` extension**. A copy of that document is kept alongside this README at [`KHR_texture_compression_astc_hdr.txt`](./KHR_texture_compression_astc_hdr.txt) for reference; the canonical source is at [registry.khronos.org](https://registry.khronos.org/OpenGL/extensions/KHR/KHR_texture_compression_astc_hdr.txt).
+
+A secondary reference is the **Khronos Data Format Specification** (chapter 23), which covers the same ASTC content with a different numbering system. The PDF is committed at [`dataformat.1.3.pdf`](./dataformat.1.3.pdf) the HTML version is at [registry.khronos.org/DataFormat/specs/1.3](https://registry.khronos.org/DataFormat/specs/1.3/dataformat.1.3.html#ASTC). Section numbers do **not** match between the two documents — `§C.2.X` references in the code map to the OpenGL extension only.
+
 - [ARM ASTC Encoder](https://github.com/ARM-software/astc-encoder) — the reference implementation; `astcenc_symbolic_physical.cpp` and `astcenc_decompress_symbolic.cpp` are the canonical read for decoder behaviour.
 - [Google astc-codec](https://github.com/google/astc-codec) — a second reference; useful cross-check for bit-layout corner cases.

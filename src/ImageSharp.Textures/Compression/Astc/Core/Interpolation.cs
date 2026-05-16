@@ -6,14 +6,14 @@ using System.Runtime.CompilerServices;
 namespace SixLabors.ImageSharp.Textures.Compression.Astc.Core;
 
 /// <summary>
-/// Scalar weighted-blend primitives from ASTC spec §C.2.24 (texel selection and
-/// interpolation), shared by the fused fast paths and the general <c>LogicalBlock</c>
-/// pipeline. The weight is in the 6-bit range [0, 64]; callers pre-unquantise per §C.2.18.
+/// Scalar weighted-blend primitives from ASTC spec §C.2.19 (Weight Application),
+/// shared by the fused fast paths and the general <c>LogicalBlock</c> pipeline.
+/// The weight is in the 6-bit range [0, 64]; callers pre-unquantise per §C.2.17.
 /// </summary>
 internal static class Interpolation
 {
     /// <summary>
-    /// Weighted blend of two values with the ASTC rounding convention from §C.2.24:
+    /// Weighted blend of two values with the ASTC rounding convention from §C.2.19:
     /// <c>(p0 * (64 - weight) + p1 * weight + 32) / 64</c>.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -22,7 +22,7 @@ internal static class Interpolation
 
     /// <summary>
     /// LDR-to-UNORM16 blend: each 8-bit endpoint is bit-replicated to 16 bits
-    /// (<c>(p &lt;&lt; 8) | p</c>) per §C.2.24 before the weighted blend. Every LDR decode
+    /// (<c>(p &lt;&lt; 8) | p</c>) per §C.2.19 before the weighted blend. Every LDR decode
     /// path that produces 16-bit intermediate values goes through this primitive.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -40,7 +40,7 @@ internal static class Interpolation
 
     /// <summary>
     /// <see cref="BlendLdrReplicated"/> followed by clamp-to-UNORM16 — the LDR-channel
-    /// interpolation path used by the HDR output writer (ASTC spec §C.2.24).
+    /// interpolation path used by the HDR output writer (ASTC spec §C.2.19).
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ushort BlendLdrReplicatedAsUnorm16(int p0, int p1, int weight)

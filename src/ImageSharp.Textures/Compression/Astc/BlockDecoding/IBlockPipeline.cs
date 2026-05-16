@@ -7,8 +7,7 @@ namespace SixLabors.ImageSharp.Textures.Compression.Astc.BlockDecoding;
 
 /// <summary>
 /// Pipeline strategy for the shared image-decode loop in <see cref="AstcDecoder"/>. Each
-/// ASTC decode profile (spec §C.2.25 — <c>decode_unorm8</c>, <c>decode_fp16</c>) provides a
-/// concrete implementation.
+/// ASTC decode profile (spec §C.2.5 — LDR or HDR mode) provides a concrete implementation.
 /// </summary>
 /// <typeparam name="T">Pixel element type — <see cref="byte"/> for LDR, <see cref="float"/> for HDR.</typeparam>
 internal interface IBlockPipeline<T>
@@ -16,8 +15,8 @@ internal interface IBlockPipeline<T>
 {
     /// <summary>
     /// Validates the block's profile matches the pipeline.
-    /// The LDR (<c>decode_unorm8</c>) profile rejects HDR-mode
-    /// blocks per spec §C.2.19; the HDR pipeline accepts both.</summary>
+    /// The LDR profile rejects HDR-mode blocks per spec §C.2.19;
+    /// the HDR pipeline accepts both.</summary>
     /// <param name="blockBits">Raw 128-bit ASTC block.</param>
     /// <param name="info">Decoded block info.</param>
     public void PreDispatchCheck(UInt128 blockBits, in BlockInfo info);

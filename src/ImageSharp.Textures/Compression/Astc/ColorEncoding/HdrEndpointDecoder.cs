@@ -184,6 +184,9 @@ internal static class HdrEndpointDecoder
     /// </summary>
     private static int SafeSignedLeftShift(int value, int shift) => (int)((uint)value << shift);
 
+    /// <summary>
+    /// Decodes the HDR luminance large-range endpoint pair (CEM 2) per ASTC spec §C.2.14.
+    /// </summary>
     private static (Rgba64 Low, Rgba64 High) UnpackHdrLuminanceLargeRangeCore(int v0, int v1)
     {
         int y0, y1;
@@ -203,6 +206,9 @@ internal static class HdrEndpointDecoder
         return (low, high);
     }
 
+    /// <summary>
+    /// Decodes the HDR luminance small-range endpoint pair (CEM 3) per ASTC spec §C.2.14.
+    /// </summary>
     private static (Rgba64 Low, Rgba64 High) UnpackHdrLuminanceSmallRangeCore(int v0, int v1)
     {
         int y0, y1;
@@ -228,6 +234,12 @@ internal static class HdrEndpointDecoder
         return (low, high);
     }
 
+    /// <summary>
+    /// Decodes the HDR RGB base+scale endpoint pair (CEM 7) per ASTC spec §C.2.14. Selects
+    /// one of six sub-modes from the high bits of v0/v1/v2, then re-routes individual bits
+    /// into the four 12-bit output slots via <see cref="BaseScalePlacements"/> and applies
+    /// the major-component channel swap.
+    /// </summary>
     private static (Rgba64 Low, Rgba64 High) UnpackHdrRgbBaseScaleCore(int v0, int v1, int v2, int v3)
     {
         int modeValue = ((v0 & 0xC0) >> 6) | (((v1 & 0x80) >> 7) << 2) | (((v2 & 0x80) >> 7) << 3);
@@ -289,6 +301,12 @@ internal static class HdrEndpointDecoder
         return PackHdrRgbPairWithSwap(red0, green0, blue0, red1, green1, blue1, majorComponent);
     }
 
+    /// <summary>
+    /// Decodes the HDR RGB direct endpoint pair (CEM 11) per ASTC spec §C.2.14. Selects
+    /// one of eight sub-modes (5 + 3 reserved) from high bits of the v-inputs, then routes
+    /// per-bit data through <see cref="DirectPlacements"/>, decodes deltas and majorness,
+    /// and produces the channel-swapped 12-bit endpoint pair.
+    /// </summary>
     private static (Rgba64 Low, Rgba64 High) UnpackHdrRgbDirectCore(int v0, int v1, int v2, int v3, int v4, int v5)
     {
         int modeValue = ((v1 & 0x80) >> 7) | (((v2 & 0x80) >> 7) << 1) | (((v3 & 0x80) >> 7) << 2);
@@ -358,6 +376,11 @@ internal static class HdrEndpointDecoder
         return PackHdrRgbPairWithSwap(red0, green0, blue0, red1, green1, blue1, majorComponent);
     }
 
+    /// <summary>
+    /// Decodes the CEM 14 endpoint pair (HDR RGB + LDR alpha) per ASTC spec §C.2.14.
+    /// RGB is decoded as for CEM 11; alpha is bit-replicated UNORM16 (the same expansion
+    /// LDR endpoints use, so the HDR pipeline can blend it as if it were HDR).
+    /// </summary>
     private static (Rgba64 Low, Rgba64 High) UnpackHdrRgbDirectLdrAlphaCore(ReadOnlySpan<int> unquantizedValues)
     {
         (Rgba64 rgbLow, Rgba64 rgbHigh) = UnpackHdrRgbDirectCore(unquantizedValues[0], unquantizedValues[1], unquantizedValues[2], unquantizedValues[3], unquantizedValues[4], unquantizedValues[5]);
@@ -370,6 +393,9 @@ internal static class HdrEndpointDecoder
         return (low, high);
     }
 
+    /// <summary>
+    /// Decodes the CEM 15 endpoint pair (HDR RGB + HDR alpha) per ASTC spec §C.2.14.
+    /// </summary>
     private static (Rgba64 Low, Rgba64 High) UnpackHdrRgbDirectHdrAlphaCore(ReadOnlySpan<int> unquantizedValues)
     {
         (Rgba64 rgbLow, Rgba64 rgbHigh) = UnpackHdrRgbDirectCore(unquantizedValues[0], unquantizedValues[1], unquantizedValues[2], unquantizedValues[3], unquantizedValues[4], unquantizedValues[5]);
@@ -382,7 +408,9 @@ internal static class HdrEndpointDecoder
     }
 
     /// <summary>
-    /// Decodes HDR alpha values
+    /// Decodes the HDR alpha pair shared by CEM 15 per ASTC spec §C.2.14: a 2-bit selector
+    /// from the high bits of v6/v7 picks one of four sub-modes that determine how the low
+    /// 7 bits of each input map to the 12-bit alpha endpoints (a0, a1).
     /// </summary>
     private static (ushort Low, ushort High) UnpackHdrAlpha(int v6, int v7)
     {

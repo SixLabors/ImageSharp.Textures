@@ -36,7 +36,7 @@ internal sealed class BoundedIntegerSequenceEncoder
         int index = 0;
         int bitsWrittenCount = 0;
 
-        // Fixed 5 ints (20 bytes) — one BISE block holds at most 5 trits or 3 quints (spec §C.2.22).
+        // Fixed 5 ints (20 bytes) — one BISE block holds at most 5 trits or 3 quints (spec §C.2.12).
         Span<int> block = stackalloc int[5];
         while (index < this.values.Count)
         {
@@ -81,7 +81,7 @@ internal sealed class BoundedIntegerSequenceEncoder
             ? BoundedIntegerSequenceCodec.InterleavedQuintBits
             : BoundedIntegerSequenceCodec.InterleavedTritBits;
 
-        // Up to 5 ints each (20 bytes) — one BISE block holds 5 trits or 3 quints (spec §C.2.22).
+        // Up to 5 ints each (20 bytes) — one BISE block holds 5 trits or 3 quints (spec §C.2.12).
         Span<int> mantissas = stackalloc int[valueCount];
         Span<int> nonBitComponents = stackalloc int[valueCount];
         SplitComponents(values, bitsPerValue, mantissas, nonBitComponents);

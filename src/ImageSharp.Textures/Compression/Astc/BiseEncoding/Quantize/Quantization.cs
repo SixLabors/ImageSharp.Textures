@@ -46,7 +46,7 @@ internal static class Quantization
         Guard.MustBeBetweenOrEqualTo(rangeMaxValue, 1, WeightRangeMaxValue, nameof(rangeMaxValue));
         Guard.MustBeBetweenOrEqualTo(weight, 0, 64, nameof(weight));
 
-        // ASTC spec §C.2.18: weight slot 33 is unused; collapse 34..64 to 33..63 before
+        // ASTC spec §C.2.17: weight slot 33 is unused; collapse 34..64 to 33..63 before
         // table lookup. The inverse (dequantized > 32 = +1) lives in UnquantizeWeightsFlat.
         if (weight > 33)
         {

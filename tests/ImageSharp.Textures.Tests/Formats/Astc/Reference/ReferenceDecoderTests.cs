@@ -229,7 +229,11 @@ public class ReferenceDecoderTests
     }
 
     /// <summary>
-    /// Compare RGBA32 output from both decoders with per-channel tolerance.
+    /// Compare RGBA32 output from both decoders. The ASTC spec (Khronos Data Format
+    /// §C.2.18–§C.2.19) defines the entire LDR pipeline bit-exactly — endpoint and
+    /// weight unquantization, infill, the 13-bit interpolation, and the UNORM8
+    /// reduction (top 8 bits of the UNORM16 interpolation) — so we expect a bit-equal
+    /// match against the ARM reference.
     /// </summary>
     private static void CompareRgba8(Span<byte> actual, byte[] expected, int width, int height, string label)
     {
@@ -245,7 +249,7 @@ public class ReferenceDecoderTests
         for (int index = 0; index < pixelCount; index++)
         {
             int diff = Math.Abs(actual[index] - expected[index]);
-            if (diff > Ldr8BitTolerance)
+            if (diff > 0)
             {
                 mismatches++;
                 if (diff > worstDiff)
@@ -263,7 +267,7 @@ public class ReferenceDecoderTests
             int pixelX = worstPixel % width;
             int pixelY = worstPixel / width;
             Assert.Fail(
-                $"[{label}] {mismatches} channel mismatches exceed tolerance ±{Ldr8BitTolerance}. " +
+                $"[{label}] {mismatches} channel mismatches against ARM reference. " +
                 $"Worst: pixel ({pixelX},{pixelY}) channel {channelName}, " +
                 $"actual={actual[(worstPixel * 4) + worstChannel]} vs expected={expected[(worstPixel * 4) + worstChannel]} (diff={worstDiff})");
         }

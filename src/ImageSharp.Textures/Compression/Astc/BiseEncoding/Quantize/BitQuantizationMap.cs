@@ -6,7 +6,8 @@ namespace SixLabors.ImageSharp.Textures.Compression.Astc.BiseEncoding.Quantize;
 /// <summary>
 /// Builds <see cref="QuantizationMap"/> instances for the pure-bit BISE encoding mode
 /// (no trits/quints). Bit-replicates each quantized value up to <c>totalUnquantizedBits</c>
-/// width to derive its unquantized form (ASTC spec §C.2.18).
+/// width to derive its unquantized form. Used for both endpoint colour unquantization
+/// (ASTC spec §C.2.13) and weight unquantization (§C.2.17).
 /// </summary>
 internal static class BitQuantizationMap
 {

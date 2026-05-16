@@ -16,8 +16,12 @@ namespace SixLabors.ImageSharp.Textures.Compression.Astc.BlockDecoding;
 internal static class FusedBlockDecoder
 {
     /// <summary>
-    /// Shared decode core: BISE decode, unquantize, and infill.
-    /// Populates <paramref name="texelWeights"/> and returns the decoded endpoint pair.
+    /// Shared decode core for the fused fast paths. Performs the per-block stages described
+    /// in ASTC spec §C.2.7 (overall block decode procedure) in one inlined sweep:
+    /// BISE decode the colour values (§C.2.12) and unquantize them (§C.2.13), decode the
+    /// endpoint pair (§C.2.14), BISE decode the weights (§C.2.12), unquantize them (§C.2.17),
+    /// and infill from the weight grid to the texel grid (§C.2.18). Populates
+    /// <paramref name="texelWeights"/> and returns the decoded endpoint pair.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     internal static ColorEndpointPair DecodeFusedCore(
@@ -57,7 +61,8 @@ internal static class FusedBlockDecoder
     }
 
     /// <summary>
-    /// Decodes BISE-encoded color values from the specified bit region of the block.
+    /// Decodes BISE-encoded (ASTC spec §C.2.12) colour endpoint values from the specified
+    /// bit region of the block.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void DecodeBiseValues(UInt128 bits, int startBit, int bitCount, int range, int valuesCount, Span<int> result)
@@ -67,7 +72,10 @@ internal static class FusedBlockDecoder
     }
 
     /// <summary>
-    /// Decodes BISE-encoded weight values from the reversed high-end of the block.
+    /// Decodes BISE-encoded (ASTC spec §C.2.12) weights from the reversed high-end of the
+    /// block. Weight data is stored MSB-first at the top of the 128-bit block, so the bits
+    /// are reversed before decode so the BISE reader can consume them in normal LSB-first
+    /// order.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void DecodeBiseWeights(UInt128 bits, int weightBitCount, int weightRange, int count, Span<int> result)

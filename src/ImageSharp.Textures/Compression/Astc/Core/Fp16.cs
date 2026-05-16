@@ -17,18 +17,21 @@ internal static class Fp16
     public const ushort MaxFinite = 0x7BFF;
 
     /// <summary>
-    /// Converts a 16-bit LNS (Log-Normalized Space) value to a 16-bit SF16 (FP16) bit pattern.
+    /// Converts a 16-bit LNS (Log-Normalized Space) value to a 16-bit SF16 (FP16) bit pattern
+    /// per ASTC spec §C.2.15.
     /// </summary>
     /// <remarks>
     /// The LNS value encodes a 5-bit exponent in the upper bits and an 11-bit mantissa
-    /// in the lower bits. The mantissa is transformed using a piecewise linear function
-    /// before being combined with the exponent to form the FP16 result.
+    /// in the lower bits. The piecewise-linear mantissa transform (slope 3 / 4 / 5 across
+    /// the [0, 512), [512, 1536), [1536, 2048) intervals) and the +Inf/NaN clamp to
+    /// <see cref="MaxFinite"/> are taken verbatim from §C.2.15.
     /// </remarks>
     public static ushort FromLns(int lns)
     {
         int mantissaComponent = lns & 0x7FF;       // Lower 11 bits: mantissa component
         int exponentComponent = (lns >> 11) & 0x1F; // Upper 5 bits: exponent component
 
+        // Spec §C.2.15: piecewise-linear log approximation, inflection at M = 512 and M = 1536.
         int mantissaTransformed;
         if (mantissaComponent < 512)
         {
