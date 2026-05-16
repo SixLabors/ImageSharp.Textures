@@ -335,7 +335,7 @@ public static class AstcDecoder
     /// </exception>
     public static Span<float> DecompressHdrImage(Stream stream, int width, int height, Footprint footprint)
     {
-        Guard.NotNull(stream, nameof(stream));
+        Guard.NotNull(stream);
         Guard.MustBeGreaterThan(width, 0, nameof(width));
         Guard.MustBeGreaterThan(height, 0, nameof(height));
 
@@ -365,7 +365,7 @@ public static class AstcDecoder
     /// </exception>
     public static bool DecompressHdrImage(Stream stream, int width, int height, Footprint footprint, Span<float> imageBuffer)
     {
-        Guard.NotNull(stream, nameof(stream));
+        Guard.NotNull(stream);
         ValidateImageArgs(width, height, imageBuffer.Length, BlockInfo.ChannelsPerPixel);
 
         int expectedBytes = ComputeExpectedBlockStreamSize(width, height, footprint);
@@ -408,7 +408,7 @@ public static class AstcDecoder
 
     internal static Span<byte> DecompressImage(AstcFile file)
     {
-        Guard.NotNull(file, nameof(file));
+        Guard.NotNull(file);
 
         return DecompressImage(file.Blocks, file.Width, file.Height, file.Footprint);
     }

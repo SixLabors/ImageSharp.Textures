@@ -103,7 +103,7 @@ internal static class AstcDecoder
         int blockHeight,
         byte compressedBytesPerBlock)
     {
-        Guard.NotNull(blockData, nameof(blockData));
+        Guard.NotNull(blockData);
         Guard.MustBeGreaterThan(width, 0, nameof(width));
         Guard.MustBeGreaterThan(height, 0, nameof(height));
         Guard.IsTrue(compressedBytesPerBlock == AstcBlockSize, nameof(compressedBytesPerBlock), $"ASTC blocks must be {AstcBlockSize} bytes.");

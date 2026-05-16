@@ -36,7 +36,7 @@ internal record AstcFile
 
     public static AstcFile FromMemory(byte[] data)
     {
-        Guard.NotNull(data, nameof(data));
+        Guard.NotNull(data);
         Guard.MustBeGreaterThanOrEqualTo(data.Length, AstcFileHeader.SizeInBytes, nameof(data));
 
         AstcFileHeader header = AstcFileHeader.FromMemory(data.AsSpan(0, AstcFileHeader.SizeInBytes));
