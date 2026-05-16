@@ -106,63 +106,25 @@ internal static class AstcDecoder
         Guard.NotNull(blockData, nameof(blockData));
         Guard.MustBeGreaterThan(width, 0, nameof(width));
         Guard.MustBeGreaterThan(height, 0, nameof(height));
-
         Guard.IsTrue(compressedBytesPerBlock == AstcBlockSize, nameof(compressedBytesPerBlock), $"ASTC blocks must be {AstcBlockSize} bytes.");
 
-        // Validate block dimensions (will throw if invalid)
-        _ = FootprintFromDimensions(blockWidth, blockHeight);
+        Footprint footprint = Footprint.FromFootprintType(FootprintFromDimensions(blockWidth, blockHeight));
 
         int blocksWide = (width + blockWidth - 1) / blockWidth;
         int blocksHigh = (height + blockHeight - 1) / blockHeight;
-        long totalBlocks = (long)blocksWide * blocksHigh;
-        long expectedDataLength = totalBlocks * compressedBytesPerBlock;
-
+        long expectedDataLength = (long)blocksWide * blocksHigh * compressedBytesPerBlock;
         Guard.MustBeGreaterThanOrEqualTo(blockData.Length, expectedDataLength, nameof(blockData));
 
-        // Check pixel count first to avoid potential overflow in byte count calculation
         long totalPixels = (long)width * height;
         Guard.MustBeLessThanOrEqualTo(totalPixels, (long)int.MaxValue / RgbaPixelDepthBytes, nameof(totalPixels));
 
-        long totalBytes = totalPixels * RgbaPixelDepthBytes;
-        byte[] decompressedData = new byte[totalBytes];
-        byte[] decodedBlock = new byte[blockWidth * blockHeight * RgbaPixelDepthBytes];
+        byte[] decompressedData = new byte[totalPixels * RgbaPixelDepthBytes];
 
-        int blockIndex = 0;
-
-        for (int by = 0; by < blocksHigh; by++)
-        {
-            for (int bx = 0; bx < blocksWide; bx++)
-            {
-                int blockDataOffset = blockIndex * compressedBytesPerBlock;
-                if (blockDataOffset + compressedBytesPerBlock <= blockData.Length)
-                {
-                    DecodeBlock(
-                        blockData.AsSpan(blockDataOffset, compressedBytesPerBlock),
-                        blockWidth,
-                        blockHeight,
-                        decodedBlock);
-
-                    for (int py = 0; py < blockHeight && ((by * blockHeight) + py) < height; py++)
-                    {
-                        for (int px = 0; px < blockWidth && ((bx * blockWidth) + px) < width; px++)
-                        {
-                            int srcIndex = ((py * blockWidth) + px) * RgbaPixelDepthBytes;
-                            int dstX = (bx * blockWidth) + px;
-                            int dstY = (by * blockHeight) + py;
-                            int dstIndex = ((dstY * width) + dstX) * RgbaPixelDepthBytes;
-
-                            decompressedData[dstIndex] = decodedBlock[srcIndex];
-                            decompressedData[dstIndex + 1] = decodedBlock[srcIndex + 1];
-                            decompressedData[dstIndex + 2] = decodedBlock[srcIndex + 2];
-                            decompressedData[dstIndex + 3] = decodedBlock[srcIndex + 3];
-                        }
-                    }
-                }
-
-                blockIndex++;
-            }
-        }
-
+        // KTX/KTX2 mip-level slices may be over-sized; trim to the exact block stream the
+        // real decoder expects. The slice length is now what TryGetBlockLayout requires, so
+        // the bool return is always true — no need to check.
+        ReadOnlySpan<byte> exact = blockData.AsSpan(0, (int)expectedDataLength);
+        _ = Compression.Astc.AstcDecoder.DecompressImage(exact, width, height, footprint, decompressedData);
         return decompressedData;
     }
 
