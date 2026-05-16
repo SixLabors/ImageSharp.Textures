@@ -69,6 +69,16 @@ public class AstcReferenceComparisonBenchmark
 
     [Benchmark(Baseline = true)]
     [BenchmarkCategory("LDR")]
+    public void Reference_Ldr()
+    {
+        foreach (LdrInputs i in this.ldrInputs)
+        {
+            AstcReferenceDecoder.DecompressLdrOneShot(i.Blocks, i.Width, i.Height, i.BlockDims.X, i.BlockDims.Y, i.Output);
+        }
+    }
+
+    [Benchmark]
+    [BenchmarkCategory("LDR")]
     public bool ImageSharp_Ldr()
     {
         bool ok = true;
@@ -80,17 +90,17 @@ public class AstcReferenceComparisonBenchmark
         return ok;
     }
 
-    [Benchmark]
-    [BenchmarkCategory("LDR")]
-    public void Reference_Ldr()
+    [Benchmark(Baseline = true)]
+    [BenchmarkCategory("HDR")]
+    public void Reference_Hdr()
     {
-        foreach (LdrInputs i in this.ldrInputs)
+        foreach (HdrInputs i in this.hdrInputs)
         {
-            AstcReferenceDecoder.DecompressLdrOneShot(i.Blocks, i.Width, i.Height, i.BlockDims.X, i.BlockDims.Y, i.Output);
+            AstcReferenceDecoder.DecompressHdrOneShot(i.Blocks, i.Width, i.Height, i.BlockDims.X, i.BlockDims.Y, i.OutputBytes);
         }
     }
 
-    [Benchmark(Baseline = true)]
+    [Benchmark]
     [BenchmarkCategory("HDR")]
     public bool ImageSharp_Hdr()
     {
@@ -101,16 +111,6 @@ public class AstcReferenceComparisonBenchmark
         }
 
         return ok;
-    }
-
-    [Benchmark]
-    [BenchmarkCategory("HDR")]
-    public void Reference_Hdr()
-    {
-        foreach (HdrInputs i in this.hdrInputs)
-        {
-            AstcReferenceDecoder.DecompressHdrOneShot(i.Blocks, i.Width, i.Height, i.BlockDims.X, i.BlockDims.Y, i.OutputBytes);
-        }
     }
 
     private sealed record LdrInputs(byte[] Blocks, int Width, int Height, Footprint Footprint, (int X, int Y) BlockDims, byte[] Output);
