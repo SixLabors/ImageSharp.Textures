@@ -11,53 +11,54 @@ using SixLabors.ImageSharp.Textures.Tests.Formats.Astc.Reference;
 namespace SixLabors.ImageSharp.Textures.Benchmarks;
 
 /// <summary>
-/// Similar to <see cref="AstcReferenceComparisonBenchmark"/>, however this allocates a reference context
-/// outside the benchmarked method and reuses it for all invocations with the same profile
+/// Steady-state counterpart to <see cref="AstcReferenceComparisonBenchmark"/>. The ARM
+/// reference's per-call context allocation is hoisted into <see cref="GlobalSetup"/>, so the
+/// per-invocation cost is just the decode.
 /// </summary>
 [MemoryDiagnoser]
 [CategoriesColumn]
 [GroupBenchmarksBy(BenchmarkDotNet.Configs.BenchmarkLogicalGroupRule.ByCategory)]
 public class AstcReferencePersistenceBenchmark
 {
-    public static IEnumerable<string> LdrFiles => ["rgba-4x4.astc", "rgba-6x6.astc", "rgba-8x8.astc", "rgb-4x4.astc"];
+    private static readonly string[] LdrFiles = ["rgba-4x4.astc", "rgba-6x6.astc", "rgba-8x8.astc", "rgb-4x4.astc"];
 
-    public static IEnumerable<string> HdrFiles =>
-        ["HdrPipeline/hdr-tile.astc", "HdrPipeline/ldr-tile.astc", "HdrPipeline/mixed-256-4x4.astc", "HdrPipeline/mixed-256-8x8.astc"];
+    private static readonly string[] HdrFiles =
+        ["HdrPipeline/hdr-tile.astc", "HdrPipeline/mixed-256-4x4.astc", "HdrPipeline/mixed-256-8x8.astc"];
 
-    private readonly Dictionary<string, LdrInputs> ldrCache = [];
-    private readonly Dictionary<string, HdrInputs> hdrCache = [];
+    private LdrInputs[] ldrInputs = [];
+    private HdrInputs[] hdrInputs = [];
 
-    // One reference context per (profile, block-size) pair per input. Allocated in
-    // GlobalSetup and freed in GlobalCleanup so the per-invocation cost is just the decode.
+    // One reference context per (profile, block-size) pair. Allocated in GlobalSetup and freed
+    // in GlobalCleanup so the per-invocation cost is just the decode.
     private readonly Dictionary<(int X, int Y), AstcencContext> ldrContexts = [];
     private readonly Dictionary<(int X, int Y), AstcencContext> hdrContexts = [];
 
     [GlobalSetup]
     public void Setup()
     {
-        foreach (string file in LdrFiles)
+        this.ldrInputs = [.. LdrFiles.Select(file =>
         {
             string path = Path.Combine(TestEnvironment.InputImagesDirectoryFullPath, "Astc", file);
             AstcFile astc = AstcFile.FromMemory(File.ReadAllBytes(path));
             (int X, int Y) blockDims = AstcReferenceDecoder.ToBlockDimensions(astc.Footprint.Type);
-            this.ldrCache[file] = new LdrInputs(
+            this.ldrContexts.TryAdd(blockDims, AstcReferenceDecoder.AllocDecodeContext(AstcencProfile.AstcencPrfLdr, blockDims.X, blockDims.Y));
+            return new LdrInputs(
                 astc.Blocks.ToArray(),
                 astc.Width,
                 astc.Height,
                 astc.Footprint,
                 blockDims,
                 new byte[astc.Width * astc.Height * 4]);
+        })];
 
-            this.ldrContexts.TryAdd(blockDims, AstcReferenceDecoder.AllocDecodeContext(AstcencProfile.AstcencPrfLdr, blockDims.X, blockDims.Y));
-        }
-
-        foreach (string file in HdrFiles)
+        this.hdrInputs = [.. HdrFiles.Select(file =>
         {
             string path = Path.Combine(TestEnvironment.InputImagesDirectoryFullPath, "Astc", file);
             AstcFile astc = AstcFile.FromMemory(File.ReadAllBytes(path));
             (int X, int Y) blockDims = AstcReferenceDecoder.ToBlockDimensions(astc.Footprint.Type);
             int pixelCount = astc.Width * astc.Height;
-            this.hdrCache[file] = new HdrInputs(
+            this.hdrContexts.TryAdd(blockDims, AstcReferenceDecoder.AllocDecodeContext(AstcencProfile.AstcencPrfHdr, blockDims.X, blockDims.Y));
+            return new HdrInputs(
                 astc.Blocks.ToArray(),
                 astc.Width,
                 astc.Height,
@@ -65,9 +66,7 @@ public class AstcReferencePersistenceBenchmark
                 blockDims,
                 new float[pixelCount * 4],
                 new byte[pixelCount * 4 * sizeof(ushort)]);
-
-            this.hdrContexts.TryAdd(blockDims, AstcReferenceDecoder.AllocDecodeContext(AstcencProfile.AstcencPrfHdr, blockDims.X, blockDims.Y));
-        }
+        })];
     }
 
     [GlobalCleanup]
@@ -89,38 +88,48 @@ public class AstcReferencePersistenceBenchmark
 
     [Benchmark(Baseline = true)]
     [BenchmarkCategory("LDR")]
-    [ArgumentsSource(nameof(LdrFiles))]
-    public bool Ours_Ldr(string file)
+    public bool ImageSharp_Ldr()
     {
-        LdrInputs i = this.ldrCache[file];
-        return AstcDecoder.DecompressImage(i.Blocks, i.Width, i.Height, i.Footprint, i.Output);
+        bool ok = true;
+        foreach (LdrInputs i in this.ldrInputs)
+        {
+            ok &= AstcDecoder.DecompressImage(i.Blocks, i.Width, i.Height, i.Footprint, i.Output);
+        }
+
+        return ok;
     }
 
     [Benchmark]
     [BenchmarkCategory("LDR")]
-    [ArgumentsSource(nameof(LdrFiles))]
-    public void Reference_Ldr(string file)
+    public void Reference_Ldr()
     {
-        LdrInputs i = this.ldrCache[file];
-        AstcReferenceDecoder.DecompressLdrInto(this.ldrContexts[i.BlockDims], i.Blocks, i.Width, i.Height, i.Output);
+        foreach (LdrInputs i in this.ldrInputs)
+        {
+            AstcReferenceDecoder.DecompressLdrInto(this.ldrContexts[i.BlockDims], i.Blocks, i.Width, i.Height, i.Output);
+        }
     }
 
     [Benchmark(Baseline = true)]
     [BenchmarkCategory("HDR")]
-    [ArgumentsSource(nameof(HdrFiles))]
-    public bool Ours_Hdr(string file)
+    public bool ImageSharp_Hdr()
     {
-        HdrInputs i = this.hdrCache[file];
-        return AstcDecoder.DecompressHdrImage(i.Blocks, i.Width, i.Height, i.Footprint, i.Output);
+        bool ok = true;
+        foreach (HdrInputs i in this.hdrInputs)
+        {
+            ok &= AstcDecoder.DecompressHdrImage(i.Blocks, i.Width, i.Height, i.Footprint, i.Output);
+        }
+
+        return ok;
     }
 
     [Benchmark]
     [BenchmarkCategory("HDR")]
-    [ArgumentsSource(nameof(HdrFiles))]
-    public void Reference_Hdr(string file)
+    public void Reference_Hdr()
     {
-        HdrInputs i = this.hdrCache[file];
-        AstcReferenceDecoder.DecompressHdrInto(this.hdrContexts[i.BlockDims], i.Blocks, i.Width, i.Height, i.OutputBytes);
+        foreach (HdrInputs i in this.hdrInputs)
+        {
+            AstcReferenceDecoder.DecompressHdrInto(this.hdrContexts[i.BlockDims], i.Blocks, i.Width, i.Height, i.OutputBytes);
+        }
     }
 
     private sealed record LdrInputs(byte[] Blocks, int Width, int Height, Footprint Footprint, (int X, int Y) BlockDims, byte[] Output);

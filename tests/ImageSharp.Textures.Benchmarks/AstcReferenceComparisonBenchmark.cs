@@ -10,7 +10,10 @@ using SixLabors.ImageSharp.Textures.Tests.Formats.Astc.Reference;
 namespace SixLabors.ImageSharp.Textures.Benchmarks;
 
 /// <summary>
-/// Compares whole-image decode performance between this library and the ARM reference
+/// Compares whole-image decode performance between this library and the ARM reference,
+/// summed across an LDR file set and an HDR file set. One-shot framing: the ARM reference
+/// allocates its decode context per invocation. See <see cref="AstcReferencePersistenceBenchmark"/>
+/// for the steady-state comparison where ARM's context is hoisted out of the measured path.
 /// </summary>
 [MemoryDiagnoser]
 [CategoriesColumn]
@@ -18,87 +21,100 @@ namespace SixLabors.ImageSharp.Textures.Benchmarks;
 public class AstcReferenceComparisonBenchmark
 {
     /// <summary>
-    /// Gets LDR test files. The set covers a range of footprints and content shapes:
-    /// <list type="bullet">
-    /// <item><description><c>rgba-4x4.astc</c> — high-quality 4×4 LDR; logical-block-heavy.</description></item>
-    /// <item><description><c>rgba-6x6.astc</c> — mid-range LDR.</description></item>
-    /// <item><description><c>rgba-8x8.astc</c> — large-footprint LDR; fewer blocks per image.</description></item>
-    /// <item><description><c>rgb-4x4.astc</c> — dual-plane-heavy LDR.</description></item>
-    /// </list>
+    /// LDR test files spanning a range of footprints and content shapes:
+    /// 4×4 RGB / 4×4 RGBA / 6×6 / 8×8.
     /// </summary>
-    public static IEnumerable<string> LdrFiles => ["rgba-4x4.astc", "rgba-6x6.astc", "rgba-8x8.astc", "rgb-4x4.astc"];
+    private static readonly string[] LdrFiles = ["rgba-4x4.astc", "rgba-6x6.astc", "rgba-8x8.astc", "rgb-4x4.astc"];
 
     /// <summary>
-    /// Gets HDR test files
+    /// HDR test files: pure-HDR mid-size, mixed LDR/HDR at 4×4, and mixed LDR/HDR at 8×8.
     /// </summary>
-    public static IEnumerable<string> HdrFiles =>
-        ["HdrPipeline/hdr-tile.astc", "HdrPipeline/ldr-tile.astc", "HdrPipeline/mixed-256-4x4.astc", "HdrPipeline/mixed-256-8x8.astc"];
+    private static readonly string[] HdrFiles =
+        ["HdrPipeline/hdr-tile.astc", "HdrPipeline/mixed-256-4x4.astc", "HdrPipeline/mixed-256-8x8.astc"];
 
-    private readonly Dictionary<string, LdrInputs> ldrCache = [];
-    private readonly Dictionary<string, HdrInputs> hdrCache = [];
+    private LdrInputs[] ldrInputs = [];
+    private HdrInputs[] hdrInputs = [];
 
     [GlobalSetup]
     public void Setup()
     {
-        foreach (string file in LdrFiles)
+        this.ldrInputs = [.. LdrFiles.Select(file =>
         {
             string path = Path.Combine(TestEnvironment.InputImagesDirectoryFullPath, "Astc", file);
             AstcFile astc = AstcFile.FromMemory(File.ReadAllBytes(path));
-            this.ldrCache[file] = new LdrInputs(
+            return new LdrInputs(
                 astc.Blocks.ToArray(),
                 astc.Width,
                 astc.Height,
                 astc.Footprint,
                 AstcReferenceDecoder.ToBlockDimensions(astc.Footprint.Type),
                 new byte[astc.Width * astc.Height * 4]);
-        }
+        })];
 
-        foreach (string file in HdrFiles)
+        this.hdrInputs = [.. HdrFiles.Select(file =>
         {
             string path = Path.Combine(TestEnvironment.InputImagesDirectoryFullPath, "Astc", file);
             AstcFile astc = AstcFile.FromMemory(File.ReadAllBytes(path));
-            this.hdrCache[file] = new HdrInputs(
+            return new HdrInputs(
                 astc.Blocks.ToArray(),
                 astc.Width,
                 astc.Height,
                 astc.Footprint,
                 AstcReferenceDecoder.ToBlockDimensions(astc.Footprint.Type),
                 new float[astc.Width * astc.Height * 4]);
+        })];
+    }
+
+    [Benchmark(Baseline = true)]
+    [BenchmarkCategory("LDR")]
+    public bool ImageSharp_Ldr()
+    {
+        bool ok = true;
+        foreach (LdrInputs i in this.ldrInputs)
+        {
+            ok &= AstcDecoder.DecompressImage(i.Blocks, i.Width, i.Height, i.Footprint, i.Output);
         }
+
+        return ok;
     }
 
-    [Benchmark(Baseline = true), BenchmarkCategory("LDR")]
-    [ArgumentsSource(nameof(LdrFiles))]
-    public bool Ours_Ldr(string file)
+    [Benchmark]
+    [BenchmarkCategory("LDR")]
+    public int Reference_Ldr()
     {
-        LdrInputs i = this.ldrCache[file];
-        return AstcDecoder.DecompressImage(i.Blocks, i.Width, i.Height, i.Footprint, i.Output);
-    }
+        int total = 0;
+        foreach (LdrInputs i in this.ldrInputs)
+        {
+            total += AstcReferenceDecoder.DecompressLdr(i.Blocks, i.Width, i.Height, i.BlockDims.X, i.BlockDims.Y).Length;
+        }
 
-    [Benchmark, BenchmarkCategory("LDR")]
-    [ArgumentsSource(nameof(LdrFiles))]
-    public byte[] Reference_Ldr(string file)
-    {
-        LdrInputs i = this.ldrCache[file];
-        return AstcReferenceDecoder.DecompressLdr(i.Blocks, i.Width, i.Height, i.BlockDims.X, i.BlockDims.Y);
+        return total;
     }
 
     [Benchmark(Baseline = true)]
     [BenchmarkCategory("HDR")]
-    [ArgumentsSource(nameof(HdrFiles))]
-    public bool Ours_Hdr(string file)
+    public bool ImageSharp_Hdr()
     {
-        HdrInputs i = this.hdrCache[file];
-        return AstcDecoder.DecompressHdrImage(i.Blocks, i.Width, i.Height, i.Footprint, i.Output);
+        bool ok = true;
+        foreach (HdrInputs i in this.hdrInputs)
+        {
+            ok &= AstcDecoder.DecompressHdrImage(i.Blocks, i.Width, i.Height, i.Footprint, i.Output);
+        }
+
+        return ok;
     }
 
     [Benchmark]
     [BenchmarkCategory("HDR")]
-    [ArgumentsSource(nameof(HdrFiles))]
-    public Half[] Reference_Hdr(string file)
+    public int Reference_Hdr()
     {
-        HdrInputs i = this.hdrCache[file];
-        return AstcReferenceDecoder.DecompressHdr(i.Blocks, i.Width, i.Height, i.BlockDims.X, i.BlockDims.Y);
+        int total = 0;
+        foreach (HdrInputs i in this.hdrInputs)
+        {
+            total += AstcReferenceDecoder.DecompressHdr(i.Blocks, i.Width, i.Height, i.BlockDims.X, i.BlockDims.Y).Length;
+        }
+
+        return total;
     }
 
     private sealed record LdrInputs(byte[] Blocks, int Width, int Height, Footprint Footprint, (int X, int Y) BlockDims, byte[] Output);
