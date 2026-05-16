@@ -18,17 +18,17 @@ internal static class BlockModeDecoder
 {
     // Spec §C.2.10 Table C.2.7: weight range table indexed by r[2:0] + h. Entries marked -1
     // are reserved and reject the block. Two six-entry groups (low precision, high precision).
-    private static readonly int[] WeightRanges =
-        [-1, -1, 1, 2, 3, 4, 5, 7, -1, -1, 9, 11, 15, 19, 23, 31];
+    private static ReadOnlySpan<int> WeightRanges
+        => [-1, -1, 1, 2, 3, 4, 5, 7, -1, -1, 9, 11, 15, 19, 23, 31];
 
     // Spec §C.2.11: extra-CEM bit count by partition count. Indexed [partitionCount - 1].
-    private static readonly int[] ExtraCemBitsForPartition = [0, 2, 5, 8];
+    private static ReadOnlySpan<int> ExtraCemBitsForPartition => [0, 2, 5, 8];
 
     // Spec §C.2.22: valid BISE endpoint ranges in descending order. The parser picks the
     // largest that fits in the colour bit budget computed by the §C.2.22 remaining-bits
     // procedure.
-    private static readonly int[] ValidEndpointRanges =
-        [255, 191, 159, 127, 95, 79, 63, 47, 39, 31, 23, 19, 15, 11, 9, 7, 5];
+    private static ReadOnlySpan<int> ValidEndpointRanges
+        => [255, 191, 159, 127, 95, 79, 63, 47, 39, 31, 23, 19, 15, 11, 9, 7, 5];
 
     /// <summary>
     /// Decodes all block-mode info from raw 128-bit ASTC block data in a single pass.
