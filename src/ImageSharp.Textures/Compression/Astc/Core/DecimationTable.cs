@@ -61,9 +61,9 @@ internal static class DecimationTable
     }
 
     /// <summary>
-    /// Scale factor for mapping texel index to grid position (ASTC spec §C.2.18).
+    /// Scale factor for mapping texel index to grid position (ASTC spec §C.2.18)
     /// </summary>
-    private static int GetScaleFactorD(int blockDimensions) => (int)((1024f + (blockDimensions >> 1)) / (blockDimensions - 1));
+    private static int GetScaleFactorD(int blockDimensions) => (1024 + (blockDimensions >> 1)) / (blockDimensions - 1);
 
     /// <summary>
     /// Builds the weight-infill lookup for one (footprint, weight-grid) combination.
