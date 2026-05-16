@@ -74,48 +74,4 @@ public class BitOperationsTests
         }
     }
 
-    [Theory]
-    [InlineData(0, 0)]
-    [InlineData(5, 10)]
-    [InlineData(10, 255)]
-    [InlineData(31, 128)]
-    [InlineData(-32, 200)]
-    [InlineData(-1, 100)]
-    public void TransferPrecisionInverse_WithSameInput_ShouldBeDeterministic(int inputA, int inputB)
-    {
-        (int a1, int b1) = BitOperations.TransferPrecisionInverse(inputA, inputB);
-        (int a2, int b2) = BitOperations.TransferPrecisionInverse(inputA, inputB);
-
-        Assert.Equal(a2, a1);
-        Assert.Equal(b2, b1);
-    }
-
-    [Theory]
-    [InlineData(-33, 128)] // a too small
-    [InlineData(32, 128)] // a too large
-    [InlineData(0, -1)] // b too small
-    [InlineData(0, 256)] // b too large
-    public void TransferPrecisionInverse_WithInvalidInput_ShouldThrowArgumentOutOfRangeException(int a, int b)
-    {
-        Action action = () => BitOperations.TransferPrecisionInverse(a, b);
-
-        Assert.Throws<ArgumentOutOfRangeException>(action);
-    }
-
-    [Theory]
-    [InlineData(0, 0)]
-    [InlineData(10, 20)]
-    [InlineData(31, 255)]
-    [InlineData(-32, 128)]
-    [InlineData(-1, 200)]
-    public void TransferPrecision_AfterInverse_ShouldReturnOriginalValues(int originalA, int originalB)
-    {
-        (int encodedA, int encodedB) = BitOperations.TransferPrecisionInverse(originalA, originalB);
-
-        // Apply regular to decode
-        (int decodedA, int decodedB) = BitOperations.TransferPrecision(encodedA, encodedB);
-
-        Assert.Equal(originalA, decodedA);
-        Assert.Equal(originalB, decodedB);
-    }
 }

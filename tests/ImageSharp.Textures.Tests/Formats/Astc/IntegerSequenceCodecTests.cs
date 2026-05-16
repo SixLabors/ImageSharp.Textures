@@ -163,166 +163,57 @@ public class IntegerSequenceCodecTests
     }
 
     [Fact]
-    public void EncodeDecode_WithQuintValues_ShouldEncodeAndDecodeExpectedValues()
+    public void Decode_WithKnownQuintEncoding_ShouldProduceExpectedValues()
     {
         const int valueRange = 79;
-        BoundedIntegerSequenceEncoder encoder = new(valueRange);
-        int[] values = [3, 79, 37];
+        const ulong encoding = 0x4A7D3UL;
+        int[] expectedValues = [3, 79, 37];
 
-        foreach (int value in values)
-        {
-            encoder.AddValue(value);
-        }
+        BitStream bitSrc = new(encoding, 19);
+        int[] decoded = Decode(valueRange, expectedValues.Length, ref bitSrc);
 
-        // Encode
-        BitStream bitSink = default;
-        encoder.Encode(ref bitSink);
-
-        // Verify encoded data
-        Assert.Equal(19u, bitSink.Bits);
-        Assert.True(bitSink.TryGetBits(19, out ulong encoded));
-        Assert.Equal(0x4A7D3UL, encoded);
-
-        // Decode
-        BitStream bitSrc = new(encoded, 19);
-        int[] decoded = Decode(valueRange, 3, ref bitSrc);
-
-        Assert.Equal(values, decoded);
+        Assert.Equal(expectedValues, decoded);
     }
 
     [Fact]
-    public void DecodeThenEncode_WithQuintValues_ShouldPreserveEncoding()
+    public void Decode_WithKnownQuintEncodingMultiBlock_ShouldProduceExpectedValues()
     {
         int[] expectedValues = [16, 18, 17, 4, 7, 14, 10, 0];
         const ulong encoding = 0x2b9c83dc;
         const int range = 19;
 
-        // Decode
         BitStream bitSrc = new(encoding, 64);
         int[] decoded = Decode(range, expectedValues.Length, ref bitSrc);
 
-        // Check decoded values
         Assert.Equal(expectedValues.Length, decoded.Length);
         Assert.Equal(expectedValues, decoded);
-
-        // Re-encode
-        BitStream bitSink = default;
-        BoundedIntegerSequenceEncoder encoder = new(range);
-        foreach (int value in expectedValues)
-        {
-            encoder.AddValue(value);
-        }
-
-        encoder.Encode(ref bitSink);
-
-        // Re-encoded should match original
-        Assert.Equal(35u, bitSink.Bits);
-        Assert.True(bitSink.TryGetBits(35, out ulong reencoded));
-        Assert.Equal(encoding, reencoded);
     }
 
     [Fact]
-    public void EncodeDecode_WithTritValues_ShouldEncodeAndDecodeExpectedValues()
+    public void Decode_WithKnownTritEncoding_ShouldProduceExpectedValues()
     {
         const int valueRange = 11;
-        BoundedIntegerSequenceEncoder encoder = new(valueRange);
-        int[] values = [7, 5, 3, 6, 10];
+        const ulong encoding = 0x37357UL;
+        int[] expectedValues = [7, 5, 3, 6, 10];
 
-        foreach (int value in values)
-        {
-            encoder.AddValue(value);
-        }
+        BitStream bitSrc = new(encoding, 19);
+        int[] decoded = Decode(valueRange, expectedValues.Length, ref bitSrc);
 
-        // Encode
-        BitStream bitSink = default;
-        encoder.Encode(ref bitSink);
-
-        // Verify encoded data
-        Assert.Equal(18u, bitSink.Bits);
-        Assert.True(bitSink.TryGetBits(18, out ulong encoded));
-        Assert.Equal(0x37357UL, encoded);
-
-        // Decode
-        BitStream bitSrc = new(encoded, 19);
-        int[] decoded = Decode(valueRange, 5, ref bitSrc);
-
-        Assert.Equal(values, decoded);
+        Assert.Equal(expectedValues, decoded);
     }
 
     [Fact]
-    public void DecodeThenEncode_WithTritValues_ShouldPreserveEncoding()
+    public void Decode_WithKnownTritEncodingMultiBlock_ShouldProduceExpectedValues()
     {
         int[] expectedValues = [6, 0, 0, 2, 0, 0, 0, 0, 8, 0, 0, 0, 0, 8, 8, 0];
         const ulong encoding = 0x0004c0100001006UL;
         const int range = 11;
 
-        // Decode
         BitStream bitSrc = new(encoding, 64);
         int[] decoded = Decode(range, expectedValues.Length, ref bitSrc);
 
-        // Check decoded values
         Assert.Equal(expectedValues.Length, decoded.Length);
         Assert.Equal(expectedValues, decoded);
-
-        // Re-encode
-        BitStream bitSink = default;
-        BoundedIntegerSequenceEncoder encoder = new(range);
-        foreach (int value in expectedValues)
-        {
-            encoder.AddValue(value);
-        }
-
-        encoder.Encode(ref bitSink);
-
-        // Assert re-encoded matches original
-        Assert.Equal(58u, bitSink.Bits);
-        Assert.True(bitSink.TryGetBits(58, out ulong reencoded));
-        Assert.Equal(encoding, reencoded);
-    }
-
-    [Fact]
-    public void EncodeDecode_WithRandomValues_ShouldAlwaysRoundTripCorrectly()
-    {
-        Random random = new(unchecked(0xbad7357));
-        const int testCount = 1600;
-
-        for (int test = 0; test < testCount; test++)
-        {
-            int valueCount = 4 + (random.Next(0, 256) % 44);
-            int range = 1 + (random.Next(0, 256) % 63);
-
-            int bitCount = BoundedIntegerSequenceCodec.GetBitCountForRange(valueCount, range);
-            if (bitCount >= 64)
-            {
-                continue;
-            }
-
-            // Generate random values
-            List<int> generated = new(valueCount);
-            for (int i = 0; i < valueCount; i++)
-            {
-                generated.Add(random.Next(range + 1));
-            }
-
-            // Encode
-            BitStream bitSink = default;
-            BoundedIntegerSequenceEncoder encoder = new(range);
-            foreach (int value in generated)
-            {
-                encoder.AddValue(value);
-            }
-
-            encoder.Encode(ref bitSink);
-
-            Assert.True(bitSink.TryGetBits((int)bitSink.Bits, out ulong encoded));
-
-            // Decode
-            BitStream bitSrc = new(encoded, 64);
-            int[] decoded = Decode(range, valueCount, ref bitSrc);
-
-            Assert.Equal(generated.Count, decoded.Length);
-            Assert.Equal(generated, decoded);
-        }
     }
 
     /// <summary>

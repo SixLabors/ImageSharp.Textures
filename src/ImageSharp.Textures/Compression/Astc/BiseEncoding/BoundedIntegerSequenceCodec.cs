@@ -38,16 +38,6 @@ internal static class BoundedIntegerSequenceCodec
     private const int Log2MaxRangeForBits = 8;
 
     /// <summary>
-    /// The number of bits used after each value to store the interleaved quint block.
-    /// </summary>
-    internal static readonly int[] InterleavedQuintBits = [3, 2, 2];
-
-    /// <summary>
-    /// The number of bits used after each value to store the interleaved trit block.
-    /// </summary>
-    internal static readonly int[] InterleavedTritBits = [2, 2, 1, 2, 1];
-
-    /// <summary>
     /// Flat trit encodings for BISE blocks (256 rows × 5 trits, row-major).
     /// </summary>
     /// <remarks>

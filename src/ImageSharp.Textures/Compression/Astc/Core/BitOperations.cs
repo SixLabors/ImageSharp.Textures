@@ -45,27 +45,4 @@ internal static class BitOperations
 
         return (a, b);
     }
-
-    /// <summary>
-    /// Takes two values, |a| in the range [-32, 31], and |b| in the range [0, 255],
-    /// and returns the two values in [0, 255] that will reconstruct |a| and |b| when
-    /// passed to the <see cref="TransferPrecision"/> function.
-    /// </summary>
-    public static (int A, int B) TransferPrecisionInverse(int a, int b)
-    {
-        Guard.MustBeBetweenOrEqualTo(a, -32, 31, nameof(a));
-        Guard.MustBeBetweenOrEqualTo(b, byte.MinValue, byte.MaxValue, nameof(b));
-
-        if (a < 0)
-        {
-            a += 0x40;
-        }
-
-        a <<= 1;
-        a |= b & 0x80;
-        b <<= 1;
-        b &= 0xff;
-
-        return (a, b);
-    }
 }

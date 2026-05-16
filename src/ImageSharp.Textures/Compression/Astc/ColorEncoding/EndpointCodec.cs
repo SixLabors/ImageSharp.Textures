@@ -15,8 +15,7 @@ internal static class EndpointCodec
     /// Handles both LDR and HDR endpoint modes (ASTC spec §C.2.14).
     /// </summary>
     /// <remarks>
-    /// Quantized input should be run through <see cref="Quantization.UnquantizeCEValuesBatch"/>
-    /// (or <see cref="Quantization.UnquantizeCEValuesArray"/>) first.
+    /// Quantized input should be run through <see cref="Quantization.UnquantizeCEValuesBatch"/> first.
     /// </remarks>
     public static ColorEndpointPair Decode(ReadOnlySpan<int> unquantizedValues, ColorEndpointMode mode)
     {

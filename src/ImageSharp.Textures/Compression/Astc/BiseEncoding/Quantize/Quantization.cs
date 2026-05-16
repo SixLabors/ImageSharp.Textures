@@ -110,23 +110,6 @@ internal static class Quantization
         }
     }
 
-    /// <summary>
-    /// Allocating variant of <see cref="UnquantizeCEValueFromRange"/> over an array: returns
-    /// a new array of unquantized values, leaving the input untouched. Used by the encoder
-    /// where the quantized values are still needed alongside the unquantized ones. Tolerates
-    /// non-canonical ranges (carries forward to the next-smaller canonical range).
-    /// </summary>
-    internal static int[] UnquantizeCEValuesArray(int[] values, int rangeMaxValue)
-    {
-        int[] result = new int[values.Length];
-        for (int i = 0; i < values.Length; ++i)
-        {
-            result[i] = UnquantizeCEValueFromRange(values[i], rangeMaxValue);
-        }
-
-        return result;
-    }
-
     private static SortedDictionary<int, QuantizationMap> InitEndpointMaps()
         => new()
         {
