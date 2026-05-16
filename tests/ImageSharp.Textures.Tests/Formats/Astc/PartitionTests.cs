@@ -23,7 +23,7 @@ public class PartitionTests
 
         Partition partition = Partition.GetASTCPartition(Footprint.FromFootprintType(FootprintType.Footprint10x6), 3, 557);
 
-        Assert.Equal(expected, partition.Assignment);
+        Assert.Equal(expected, partition.Assignment.ToArray());
     }
 
     [Fact]
@@ -32,6 +32,6 @@ public class PartitionTests
         Partition partition0 = Partition.GetASTCPartition(Footprint.FromFootprintType(FootprintType.Footprint6x6), 2, 0);
         Partition partition1 = Partition.GetASTCPartition(Footprint.FromFootprintType(FootprintType.Footprint6x6), 2, 1);
 
-        Assert.NotEqual(partition1.Assignment, partition0.Assignment);
+        Assert.NotEqual(partition1.Assignment.ToArray(), partition0.Assignment.ToArray());
     }
 }

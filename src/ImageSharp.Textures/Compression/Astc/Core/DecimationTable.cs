@@ -46,8 +46,8 @@ internal static class DecimationTable
     public static void InfillWeights(ReadOnlySpan<int> gridWeights, DecimationInfo decimationInfo, Span<int> result)
     {
         int texelCount = decimationInfo.TexelCount;
-        int[] weightIndices = decimationInfo.WeightIndices;
-        int[] weightFactors = decimationInfo.WeightFactors;
+        ReadOnlySpan<int> weightIndices = decimationInfo.WeightIndices;
+        ReadOnlySpan<int> weightFactors = decimationInfo.WeightFactors;
         int offset1 = texelCount, offset2 = texelCount * 2, offset3 = texelCount * 3;
 
         for (int i = 0; i < texelCount; i++)

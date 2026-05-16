@@ -115,7 +115,7 @@ internal static class LogicalBlock
 
         DecodeEndpointsFromBits(bits, in info, ref state.Endpoints);
         DecodeAndInfillWeights(bits, in info, footprint, weights, default);
-        state.PartitionAssignment = ResolvePartitionAssignment(bits, in info, footprint);
+        state.PartitionAssignment = ResolvePartitionAssignment(bits, info.PartitionCount, footprint);
         return state;
     }
 
@@ -134,7 +134,7 @@ internal static class LogicalBlock
         state.Weights = weights;
         DecodeEndpointsFromBits(bits, in info, ref state.Endpoints);
         DecodeAndInfillWeights(bits, in info, footprint, weights, secondaryWeights);
-        state.PartitionAssignment = ResolvePartitionAssignment(bits, in info, footprint);
+        state.PartitionAssignment = ResolvePartitionAssignment(bits, info.PartitionCount, footprint);
         return state;
     }
 
@@ -173,11 +173,11 @@ internal static class LogicalBlock
     /// (spec §C.2.21); single-partition blocks share an all-zero map per footprint.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static int[] ResolvePartitionAssignment(UInt128 bits, in BlockInfo info, Footprint footprint)
-        => info.PartitionCount > 1
+    private static ReadOnlySpan<int> ResolvePartitionAssignment(UInt128 bits, int partitionCount, Footprint footprint)
+        => partitionCount > 1
             ? Partition.GetASTCPartition(
                 footprint,
-                info.PartitionCount,
+                partitionCount,
                 (int)BitOperations.GetBits(bits.Low(), 13, 10)).Assignment
             : Partition.GetSinglePartition(footprint).Assignment;
 
@@ -323,7 +323,7 @@ internal static class LogicalBlock
     {
         public EndpointBuffer Endpoints;
         public Span<int> Weights;
-        public int[] PartitionAssignment;
+        public ReadOnlySpan<int> PartitionAssignment;
     }
 
     /// <summary>

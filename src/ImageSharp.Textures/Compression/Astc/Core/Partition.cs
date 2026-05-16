@@ -10,14 +10,15 @@ internal sealed class Partition
     private static readonly ConcurrentDictionary<(FootprintType, int, int), Partition> PartitionCache = new();
     private static readonly ConcurrentDictionary<FootprintType, Partition> SinglePartitionCache = new();
 
-    private Partition(int[] assignment) => this.Assignment = assignment;
+    private readonly int[] assignment;
+
+    private Partition(int[] assignment) => this.assignment = assignment;
 
     /// <summary>
     /// Gets the per-texel partition-subset map (length <see cref="Footprint.PixelCount"/>).
-    /// Cached and shared across blocks that resolve to the same partition;
-    /// <b>callers must not mutate</b>. Same convention as <see cref="DecimationInfo.WeightIndices"/>.
+    /// Cached and shared across blocks that resolve to the same partition.
     /// </summary>
-    public int[] Assignment { get; }
+    public ReadOnlySpan<int> Assignment => this.assignment;
 
     /// <summary>
     /// Returns the shared single-partition assignment for the given footprint. Every texel is
