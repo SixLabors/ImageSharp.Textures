@@ -75,7 +75,7 @@ This path still decodes BISE, unquantises, computes partition assignments, and u
 
 `AstcDecoder.DecompressImage` and `DecompressBlock` read each 128-bit block, parse its mode via `BlockModeDecoder.Decode` (`BlockDecoding/BlockModeDecoder.cs`), check the fast-path gate, and route. The parser is a single pass over spec Tables 17–24: block mode classification, weight grid dimensions, partition count, CEM (colour endpoint mode) extraction, dual-plane flag, colour value count, reserved-configuration rejection — all in one pass with no allocations. It returns a `BlockInfo` (`Core/BlockInfo.cs`) struct the caller inspects for dispatch.
 
-`BlockInfo.IsValid == false` means the block is reserved or illegal per spec; both the fast and general paths skip it (the block contributes zeros to the output, matching ARM's behaviour). `BlockInfo.HasHdrEndpoints()` is the precondition check that raises `TextureFormatException` at the LDR entry points when an HDR-mode block appears in an LDR context (see design decisions below).
+`BlockInfo.IsValid == false` means the block is reserved or illegal per spec; both the fast and general paths skip it (the block contributes zeros to the output, matching ARM's behaviour). `BlockInfo.IsHdr` is the precondition check that raises `TextureFormatException` at the LDR entry points when an HDR-mode block appears in an LDR context — it covers both HDR endpoint modes (§C.2.14) and HDR void-extent blocks (§C.2.23, dynamic-range flag set). See design decisions below.
 
 ## Design decisions
 

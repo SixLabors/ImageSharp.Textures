@@ -19,7 +19,7 @@ internal readonly struct LdrPipeline : IBlockPipeline<byte>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void PreDispatchCheck(UInt128 blockBits, in BlockInfo info)
     {
-        if (AstcDecoder.IsHdrBlock(blockBits, in info))
+        if (info.IsHdr)
         {
             throw new TextureFormatException(
                 "ASTC block uses HDR endpoint data but was passed to the LDR decoder. " +

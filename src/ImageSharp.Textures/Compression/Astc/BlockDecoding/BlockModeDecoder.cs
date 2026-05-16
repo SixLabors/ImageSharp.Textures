@@ -43,9 +43,12 @@ internal static class BlockModeDecoder
         // Void extent: bits[0:9] == 0x1FC (9 bits). See ASTC spec §C.2.23.
         if ((lowBits & 0x1FF) == 0x1FC)
         {
+            // Bit 9 is the dynamic-range flag: 1 = HDR (FP16), 0 = LDR (UNORM16).
+            bool voidExtentIsHdr = (lowBits & (1UL << 9)) != 0;
             return IsVoidExtentWellFormed(bits, lowBits)
                 ? new BlockInfo(
                     isVoidExtent: true,
+                    isHdr: voidExtentIsHdr,
                     weights: default,
                     partitionCount: 0,
                     dualPlane: default,
@@ -106,8 +109,19 @@ internal static class BlockModeDecoder
         modes[2] = cems[2];
         modes[3] = cems[3];
 
+        bool isHdr = false;
+        for (int i = 0; i < partitionCount; i++)
+        {
+            if (cems[i].IsHdr())
+            {
+                isHdr = true;
+                break;
+            }
+        }
+
         return new BlockInfo(
             isVoidExtent: false,
+            isHdr: isHdr,
             weights: new WeightGrid(gridWidth, gridHeight, weightRange, weightBitCount),
             partitionCount,
             dualPlane: new DualPlaneInfo(isDualPlane, dualPlaneChannel),
@@ -145,7 +159,7 @@ internal static class BlockModeDecoder
                 _ => default // unreachable — modeBits is 2 bits wide.
             };
 
-            // r[2:0] = { bit4, bit1, bit0 } for layout A.
+            // Layout A: R0 = bit 4, R1 = bit 0, R2 = bit 1; pack as rBits = R2*4 + R1*2 + R0.
             rBits = (uint)(((lowBits >> 4) & 1) | ((lowBits & 0x3) << 1));
             return true;
         }
@@ -192,7 +206,7 @@ internal static class BlockModeDecoder
                 return false;
         }
 
-        // r[2:0] = { bit4, bit3, bit2 } for layout B.
+        // Layout B: R0 = bit 4, R1 = bit 2, R2 = bit 3; pack as rBits = R2*4 + R1*2 + R0.
         rBits = (uint)(((lowBits >> 4) & 1) | (((lowBits >> 2) & 0x3) << 1));
         return true;
     }

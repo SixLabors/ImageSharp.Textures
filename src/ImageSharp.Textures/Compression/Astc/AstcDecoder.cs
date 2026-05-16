@@ -452,24 +452,6 @@ public static class AstcDecoder
     }
 
     /// <summary>
-    /// Returns true if the given ASTC block encodes HDR content: either the HDR void-extent
-    /// flag (bit 9 of the block mode, ASTC spec §C.2.23) or any HDR endpoint mode in its
-    /// partitions (modes 2, 3, 7, 11, 14, 15 per §C.2.14). Used by the LDR decoder to reject
-    /// HDR content before dispatch per §C.2.19.
-    /// </summary>
-    internal static bool IsHdrBlock(UInt128 blockBits, in BlockInfo info)
-    {
-        // ASTC spec §C.2.23: for void-extent blocks bit 9 of the block mode distinguishes
-        // LDR (1, UNORM16) from HDR (0, FP16).
-        if (info.IsVoidExtent)
-        {
-            return (blockBits.Low() & (1UL << 9)) != 0;
-        }
-
-        return info.HasHdrEndpoints();
-    }
-
-    /// <summary>
     /// Validates that <paramref name="width"/> and <paramref name="height"/> are positive,
     /// that width × height × <paramref name="bytesPerPixel"/> does not overflow
     /// <see cref="int.MaxValue"/>, and that <paramref name="bufferLength"/> has room for

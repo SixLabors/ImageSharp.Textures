@@ -107,9 +107,7 @@ internal static class LogicalBlock
 
         if (info.IsVoidExtent)
         {
-            // Spec §C.2.23: bit 9 of the block mode flags HDR (set → FP16, clear → UNORM16 LDR).
-            bool isHdrVoidExtent = (bits.Low() & (1UL << 9)) != 0;
-            state.Endpoints[0] = DecodeVoidExtentEndpoint(bits, isHdrVoidExtent);
+            state.Endpoints[0] = DecodeVoidExtentEndpoint(bits, info.IsHdr);
             weights.Clear();
             state.PartitionAssignment = Partition.GetSinglePartition(footprint).Assignment;
             return state;
