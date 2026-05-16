@@ -274,7 +274,7 @@ internal static class LogicalBlock
         for (int i = 0; i < pixelCount; i++)
         {
             ref readonly ColorEndpointPair endpoint = ref state.Endpoints[state.PartitionAssignment[i]];
-            writer.WritePixel(buffer, i * 4, in endpoint, state.Weights[i]);
+            writer.WritePixel(buffer, i * BlockInfo.ChannelsPerPixel, in endpoint, state.Weights[i]);
         }
     }
 
@@ -297,7 +297,7 @@ internal static class LogicalBlock
         for (int i = 0; i < pixelCount; i++)
         {
             ref readonly ColorEndpointPair endpoint = ref state.Endpoints[state.PartitionAssignment[i]];
-            writer.WritePixelDualPlane(buffer, i * 4, in endpoint, state.Weights[i], dpChannel, dualPlane.Weights[i]);
+            writer.WritePixelDualPlane(buffer, i * BlockInfo.ChannelsPerPixel, in endpoint, state.Weights[i], dpChannel, dualPlane.Weights[i]);
         }
     }
 
