@@ -30,7 +30,7 @@ public class KtxAstcDecoderFlatTests
         Assert.NotNull(flatTexture?.MipMaps);
         Assert.Single(flatTexture.MipMaps);
 
-        Image firstMipMap = flatTexture.MipMaps[0].GetImage();
+        using Image firstMipMap = flatTexture.MipMaps[0].GetImage();
         Assert.Equal(256, firstMipMap.Width);
         Assert.Equal(256, firstMipMap.Height);
         Assert.Equal(32, firstMipMap.PixelType.BitsPerPixel);

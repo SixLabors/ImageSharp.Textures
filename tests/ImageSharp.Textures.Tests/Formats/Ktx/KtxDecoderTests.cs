@@ -28,23 +28,16 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.Ktx
 
             Assert.NotNull(flatTexture?.MipMaps);
             Assert.Equal(8, flatTexture.MipMaps.Count);
-            Assert.Equal(200, flatTexture.MipMaps[0].GetImage().Height);
-            Assert.Equal(200, flatTexture.MipMaps[0].GetImage().Width);
-            Assert.Equal(100, flatTexture.MipMaps[1].GetImage().Height);
-            Assert.Equal(100, flatTexture.MipMaps[1].GetImage().Width);
-            Assert.Equal(50, flatTexture.MipMaps[2].GetImage().Height);
-            Assert.Equal(50, flatTexture.MipMaps[2].GetImage().Width);
-            Assert.Equal(25, flatTexture.MipMaps[3].GetImage().Height);
-            Assert.Equal(25, flatTexture.MipMaps[3].GetImage().Width);
-            Assert.Equal(12, flatTexture.MipMaps[4].GetImage().Height);
-            Assert.Equal(12, flatTexture.MipMaps[4].GetImage().Width);
-            Assert.Equal(6, flatTexture.MipMaps[5].GetImage().Height);
-            Assert.Equal(6, flatTexture.MipMaps[5].GetImage().Width);
-            Assert.Equal(3, flatTexture.MipMaps[6].GetImage().Height);
-            Assert.Equal(3, flatTexture.MipMaps[6].GetImage().Width);
-            Assert.Equal(1, flatTexture.MipMaps[7].GetImage().Height);
-            Assert.Equal(1, flatTexture.MipMaps[7].GetImage().Width);
-            Image firstMipMap = flatTexture.MipMaps[0].GetImage();
+
+            int[] expectedSizes = [200, 100, 50, 25, 12, 6, 3, 1];
+            for (int i = 0; i < expectedSizes.Length; i++)
+            {
+                using Image mipImage = flatTexture.MipMaps[i].GetImage();
+                Assert.Equal(expectedSizes[i], mipImage.Height);
+                Assert.Equal(expectedSizes[i], mipImage.Width);
+            }
+
+            using Image firstMipMap = flatTexture.MipMaps[0].GetImage();
             Assert.Equal(32, firstMipMap.PixelType.BitsPerPixel);
             var firstMipMapImage = firstMipMap as Image<Rgba32>;
             firstMipMapImage.CompareToReferenceOutput(provider, appendPixelTypeToFileName: false);

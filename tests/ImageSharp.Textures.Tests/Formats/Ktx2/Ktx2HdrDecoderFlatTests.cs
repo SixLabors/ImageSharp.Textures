@@ -34,7 +34,7 @@ public class Ktx2HdrDecoderFlatTests
         Assert.NotNull(flatTexture?.MipMaps);
         Assert.True(flatTexture.MipMaps.Count > 0);
 
-        Image firstMipMap = flatTexture.MipMaps[0].GetImage();
+        using Image firstMipMap = flatTexture.MipMaps[0].GetImage();
 
         Image<L16> firstMipMapImage = firstMipMap as Image<L16>;
         firstMipMapImage.CompareToReferenceOutput(provider);
@@ -51,7 +51,7 @@ public class Ktx2HdrDecoderFlatTests
         Assert.NotNull(flatTexture?.MipMaps);
         Assert.True(flatTexture.MipMaps.Count > 0);
 
-        Image firstMipMap = flatTexture.MipMaps[0].GetImage();
+        using Image firstMipMap = flatTexture.MipMaps[0].GetImage();
 
         Image<ImageSharp.PixelFormats.Rg32> firstMipMapImage = firstMipMap as Image<ImageSharp.PixelFormats.Rg32>;
         firstMipMapImage.CompareToReferenceOutput(provider);
@@ -68,7 +68,7 @@ public class Ktx2HdrDecoderFlatTests
         Assert.NotNull(flatTexture?.MipMaps);
         Assert.True(flatTexture.MipMaps.Count > 0);
 
-        Image firstMipMap = flatTexture.MipMaps[0].GetImage();
+        using Image firstMipMap = flatTexture.MipMaps[0].GetImage();
 
         Image<Rgb48> firstMipMapImage = firstMipMap as Image<Rgb48>;
         firstMipMapImage.CompareToReferenceOutput(provider);
@@ -85,7 +85,7 @@ public class Ktx2HdrDecoderFlatTests
         Assert.NotNull(flatTexture?.MipMaps);
         Assert.True(flatTexture.MipMaps.Count > 0);
 
-        Image firstMipMap = flatTexture.MipMaps[0].GetImage();
+        using Image firstMipMap = flatTexture.MipMaps[0].GetImage();
 
         Image<Rgba64> firstMipMapImage = firstMipMap as Image<Rgba64>;
         firstMipMapImage.CompareToReferenceOutput(provider);
@@ -102,7 +102,7 @@ public class Ktx2HdrDecoderFlatTests
         Assert.NotNull(flatTexture?.MipMaps);
         Assert.True(flatTexture.MipMaps.Count > 0);
 
-        Image firstMipMap = flatTexture.MipMaps[0].GetImage();
+        using Image firstMipMap = flatTexture.MipMaps[0].GetImage();
 
         Image<Fp32> firstMipMapImage = firstMipMap as Image<Fp32>;
 
@@ -121,7 +121,7 @@ public class Ktx2HdrDecoderFlatTests
         Assert.NotNull(flatTexture?.MipMaps);
         Assert.True(flatTexture.MipMaps.Count > 0);
 
-        Image firstMipMap = flatTexture.MipMaps[0].GetImage();
+        using Image firstMipMap = flatTexture.MipMaps[0].GetImage();
 
         Image<Rg32Float> firstMipMapImage = firstMipMap as Image<Rg32Float>;
 
@@ -140,7 +140,7 @@ public class Ktx2HdrDecoderFlatTests
         Assert.NotNull(flatTexture?.MipMaps);
         Assert.True(flatTexture.MipMaps.Count > 0);
 
-        Image firstMipMap = flatTexture.MipMaps[0].GetImage();
+        using Image firstMipMap = flatTexture.MipMaps[0].GetImage();
 
         Image<Rgb48Float> firstMipMapImage = firstMipMap as Image<Rgb48Float>;
 
@@ -159,7 +159,7 @@ public class Ktx2HdrDecoderFlatTests
         Assert.NotNull(flatTexture?.MipMaps);
         Assert.True(flatTexture.MipMaps.Count > 0);
 
-        Image firstMipMap = flatTexture.MipMaps[0].GetImage();
+        using Image firstMipMap = flatTexture.MipMaps[0].GetImage();
 
         Image<Rgba64Float> firstMipMapImage = firstMipMap as Image<Rgba64Float>;
 
@@ -179,7 +179,7 @@ public class Ktx2HdrDecoderFlatTests
         Assert.NotNull(flatTexture?.MipMaps);
         Assert.True(flatTexture.MipMaps.Count > 0);
 
-        Image firstMipMap = flatTexture.MipMaps[0].GetImage();
+        using Image firstMipMap = flatTexture.MipMaps[0].GetImage();
 
         Image<Rg64Float> firstMipMapImage = firstMipMap as Image<Rg64Float>;
         firstMipMapImage.CompareToReferenceOutput(ImageComparer.TolerantPercentage(0.0003f), provider);
@@ -196,7 +196,7 @@ public class Ktx2HdrDecoderFlatTests
         Assert.NotNull(flatTexture?.MipMaps);
         Assert.True(flatTexture.MipMaps.Count > 0);
 
-        Image firstMipMap = flatTexture.MipMaps[0].GetImage();
+        using Image firstMipMap = flatTexture.MipMaps[0].GetImage();
 
         Image<Rgb96Float> firstMipMapImage = firstMipMap as Image<Rgb96Float>;
         firstMipMapImage.CompareToReferenceOutput(ImageComparer.TolerantPercentage(0.0003f), provider);
@@ -213,7 +213,7 @@ public class Ktx2HdrDecoderFlatTests
         Assert.NotNull(flatTexture?.MipMaps);
         Assert.True(flatTexture.MipMaps.Count > 0);
 
-        Image firstMipMap = flatTexture.MipMaps[0].GetImage();
+        using Image firstMipMap = flatTexture.MipMaps[0].GetImage();
 
         Image<Rgba128Float> firstMipMapImage = firstMipMap as Image<Rgba128Float>;
         firstMipMapImage.CompareToReferenceOutput(ImageComparer.TolerantPercentage(0.0003f), provider);
@@ -230,7 +230,7 @@ public class Ktx2HdrDecoderFlatTests
         Assert.NotNull(flatTexture?.MipMaps);
         Assert.True(flatTexture.MipMaps.Count > 0);
 
-        Image firstMipMap = flatTexture.MipMaps[0].GetImage();
+        using Image firstMipMap = flatTexture.MipMaps[0].GetImage();
 
         Image<Rgba128Float> firstMipMapImage = firstMipMap as Image<Rgba128Float>;
         firstMipMapImage.CompareToReferenceOutput(ImageComparer.TolerantPercentage(0.0003f), provider);
@@ -247,7 +247,7 @@ public class Ktx2HdrDecoderFlatTests
         Assert.NotNull(flatTexture?.MipMaps);
         Assert.True(flatTexture.MipMaps.Count > 0);
 
-        Image firstMipMap = flatTexture.MipMaps[0].GetImage();
+        using Image firstMipMap = flatTexture.MipMaps[0].GetImage();
 
         Image<Rgba128Float> firstMipMapImage = firstMipMap as Image<Rgba128Float>;
         firstMipMapImage.CompareToReferenceOutput(ImageComparer.TolerantPercentage(0.0003f), provider);

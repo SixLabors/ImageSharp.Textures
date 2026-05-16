@@ -41,7 +41,7 @@ public class Ktx2AstcHdrDecoderFlatTests
         Assert.NotNull(flatTexture?.MipMaps);
         Assert.True(flatTexture.MipMaps.Count > 0);
 
-        Image firstMipMap = flatTexture.MipMaps[0].GetImage();
+        using Image firstMipMap = flatTexture.MipMaps[0].GetImage();
 
         Image<Rgba128Float> firstMipMapImage = firstMipMap as Image<Rgba128Float>;
         Assert.NotNull(firstMipMapImage);
