@@ -3,7 +3,6 @@
   <PropertyGroup>
     <TargetFrameworks>net8.0</TargetFrameworks>
     <DebugSymbols>True</DebugSymbols>
-    <Platforms>AnyCPU;x64;x86</Platforms>
     <AssemblyName>SixLabors.ImageSharp.Textures.Tests</AssemblyName>
     <RootNamespace>SixLabors.ImageSharp.Textures.Tests</RootNamespace>
     <IsTestProject>true</IsTestProject>
