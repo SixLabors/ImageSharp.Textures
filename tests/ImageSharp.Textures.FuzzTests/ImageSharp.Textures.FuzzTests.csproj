@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFrameworks>net8.0</TargetFrameworks>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <!-- Excluded from `dotnet test`; this is a fuzzing harness, not an xunit test project. -->
+    <IsTestProject>false</IsTestProject>
+    <AssemblyName>SixLabors.ImageSharp.Textures.FuzzTests</AssemblyName>
+    <RootNamespace>SixLabors.ImageSharp.Textures.FuzzTests</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="SharpFuzz" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\ImageSharp.Textures\ImageSharp.Textures.csproj" />
+  </ItemGroup>
+
+</Project>

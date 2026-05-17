@@ -25,6 +25,7 @@
     <InternalsVisibleTo Include="ImageSharp.Textures.Benchmarks" Key="$(SixLaborsPublicKey)" />
     <InternalsVisibleTo Include="SixLabors.ImageSharp.Textures.InteractiveTest" Key="$(SixLaborsPublicKey)" />
     <InternalsVisibleTo Include="SixLabors.ImageSharp.Textures.Tests" Key="$(SixLaborsPublicKey)" />
+    <InternalsVisibleTo Include="SixLabors.ImageSharp.Textures.FuzzTests" Key="$(SixLaborsPublicKey)" />
   </ItemGroup>
 
 </Project>
