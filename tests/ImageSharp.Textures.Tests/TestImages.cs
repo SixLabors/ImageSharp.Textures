@@ -10,7 +10,7 @@ namespace SixLabors.ImageSharp.Textures.Tests
     {
         public static class Ktx
         {
-            public const string Rgba = "rgba8888.ktx";
+            public const string Rgba32UnormMipMap = "rgba32-unorm-mipmap.ktx";
         }
 
         public static class Ktx2
