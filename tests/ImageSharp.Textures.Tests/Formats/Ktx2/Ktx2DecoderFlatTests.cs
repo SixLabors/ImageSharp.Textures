@@ -26,7 +26,8 @@ public class Ktx2DecoderFlatTests
         FlatTexture flatTexture = texture as FlatTexture;
         Assert.NotNull(flatTexture);
         Assert.Single(flatTexture.MipMaps);
-        Assert.Equal(256, flatTexture.MipMaps[0].GetImage().Width);
-        Assert.Equal(256, flatTexture.MipMaps[0].GetImage().Height);
+        using Image mipImage = flatTexture.MipMaps[0].GetImage();
+        Assert.Equal(256, mipImage.Width);
+        Assert.Equal(256, mipImage.Height);
     }
 }
