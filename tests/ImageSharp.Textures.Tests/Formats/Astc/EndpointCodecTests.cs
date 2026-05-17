@@ -89,28 +89,32 @@ public class EndpointCodecTests
                 colors);
             Quantization.UnquantizeCEValuesBatch(colors, info.Colors.Range);
 
-            // The checkerboard content is LDR but the encoder occasionally emits HDR luma
-            // endpoint modes for it. HDR endpoint decoding lands in a follow-up PR, so for
-            // now skip HDR modes and assert grayscale on LDR pairs only.
+            // The checkerboard content is LDR but the encoder happens to emit HDR luma
+            // endpoint modes for it, so the test must go through the polymorphic decoder
+            // and assert on both LDR and HDR pairs.
             int colorIndex = 0;
             for (int ep = 0; ep < info.PartitionCount; ep++)
             {
                 ColorEndpointMode mode = info.GetEndpointMode(ep);
                 int colorCount = mode.GetColorValuesCount();
+                ReadOnlySpan<int> slice = ((ReadOnlySpan<int>)colors).Slice(colorIndex, colorCount);
+                ColorEndpointPair pair = EndpointCodec.Decode(slice, mode);
                 colorIndex += colorCount;
 
-                if (mode.IsHdr())
+                if (pair.IsHdr)
                 {
-                    continue;
+                    Assert.True(pair.HdrLow.R == pair.HdrLow.G, $"block {i} low endpoint should be grayscale");
+                    Assert.True(pair.HdrLow.G == pair.HdrLow.B, $"block {i} low endpoint should be grayscale");
+                    Assert.True(pair.HdrHigh.R == pair.HdrHigh.G, $"block {i} high endpoint should be grayscale");
+                    Assert.True(pair.HdrHigh.G == pair.HdrHigh.B, $"block {i} high endpoint should be grayscale");
                 }
-
-                ReadOnlySpan<int> slice = ((ReadOnlySpan<int>)colors).Slice(colorIndex - colorCount, colorCount);
-                ColorEndpointPair pair = EndpointCodec.Decode(slice, mode);
-
-                Assert.True(pair.LdrLow.R == pair.LdrLow.G, $"block {i} low endpoint should be grayscale");
-                Assert.True(pair.LdrLow.G == pair.LdrLow.B, $"block {i} low endpoint should be grayscale");
-                Assert.True(pair.LdrHigh.R == pair.LdrHigh.G, $"block {i} high endpoint should be grayscale");
-                Assert.True(pair.LdrHigh.G == pair.LdrHigh.B, $"block {i} high endpoint should be grayscale");
+                else
+                {
+                    Assert.True(pair.LdrLow.R == pair.LdrLow.G, $"block {i} low endpoint should be grayscale");
+                    Assert.True(pair.LdrLow.G == pair.LdrLow.B, $"block {i} low endpoint should be grayscale");
+                    Assert.True(pair.LdrHigh.R == pair.LdrHigh.G, $"block {i} high endpoint should be grayscale");
+                    Assert.True(pair.LdrHigh.G == pair.LdrHigh.B, $"block {i} high endpoint should be grayscale");
+                }
             }
 
             blocksDecoded++;

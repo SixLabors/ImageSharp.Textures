@@ -12,9 +12,7 @@ internal static class EndpointCodec
 {
     /// <summary>
     /// Decodes color endpoints for the specified mode from already-unquantized values.
-    /// Handles LDR endpoint modes (ASTC spec §C.2.14). HDR endpoint modes are rejected
-    /// upstream by <see cref="BlockDecoding.LdrPipeline.IsBlockLegal"/> and will land in
-    /// a follow-up PR.
+    /// Handles both LDR and HDR endpoint modes (ASTC spec §C.2.14).
     /// </summary>
     /// <remarks>
     /// Quantized input should be run through <see cref="Quantization.UnquantizeCEValuesBatch"/> first.
@@ -23,7 +21,9 @@ internal static class EndpointCodec
     {
         if (mode.IsHdr())
         {
-            throw new NotSupportedException("HDR endpoint decoding is not yet implemented.");
+            (Rgba64 hdrLow, Rgba64 hdrHigh) = HdrEndpointDecoder.DecodeHdrModeUnquantized(unquantizedValues, mode);
+            bool alphaIsLdr = mode == ColorEndpointMode.HdrRgbDirectLdrAlpha;
+            return ColorEndpointPair.Hdr(hdrLow, hdrHigh, alphaIsLdr);
         }
 
         (Rgba32 low, Rgba32 high) = mode switch

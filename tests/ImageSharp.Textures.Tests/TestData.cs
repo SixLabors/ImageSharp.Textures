@@ -48,5 +48,15 @@ public static class TestData
         public const string Footprint_10x10 = "footprint-10x10.astc";
         public const string Footprint_12x10 = "footprint-12x10.astc";
         public const string Footprint_12x12 = "footprint-12x12.astc";
+
+        public static class Hdr
+        {
+            public const string Hdr_A_1x1 = "HdrPipeline/hdr-a-1x1.astc";
+            public const string Ldr_A_1x1 = "HdrPipeline/ldr-a-1x1.astc";
+            public const string Hdr_Tile = "HdrPipeline/hdr-tile.astc";
+            public const string Ldr_Tile = "HdrPipeline/ldr-tile.astc";
+            public const string Hdr_Mixed_256_4x4 = "HdrPipeline/mixed-256-4x4.astc";
+            public const string Hdr_Mixed_256_8x8 = "HdrPipeline/mixed-256-8x8.astc";
+        }
     }
 }

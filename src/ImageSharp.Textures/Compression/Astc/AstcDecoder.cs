@@ -268,6 +268,148 @@ public static class AstcDecoder
         DecodeSingleBlock<LdrPipeline, byte>(blockData, footprint, buffer);
     }
 
+    /// <summary>
+    /// Decompresses ASTC-compressed data to RGBA values.
+    /// </summary>
+    /// <param name="astcData">The ASTC-compressed texture data</param>
+    /// <param name="width">Image width in pixels</param>
+    /// <param name="height">Image height in pixels</param>
+    /// <param name="footprint">The ASTC block footprint (e.g., 4x4, 5x5)</param>
+    /// <returns>
+    /// Values in RGBA order. For HDR content, values may exceed 1.0.
+    /// </returns>
+    public static Span<float> DecompressHdrImage(ReadOnlySpan<byte> astcData, int width, int height, Footprint footprint)
+    {
+        Guard.MustBeGreaterThan(width, 0, nameof(width));
+        Guard.MustBeGreaterThan(height, 0, nameof(height));
+
+        long totalPixels = (long)width * height;
+        Guard.MustBeLessThanOrEqualTo(totalPixels, (long)int.MaxValue / 4, nameof(totalPixels));
+
+        int totalFloats = (int)(totalPixels * 4);
+        float[] imageBuffer = new float[totalFloats];
+        if (!DecompressHdrImage(astcData, width, height, footprint, imageBuffer))
+        {
+            return [];
+        }
+
+        return imageBuffer;
+    }
+
+    /// <summary>
+    /// Decompresses ASTC-compressed data to RGBA float values into a caller-provided buffer.
+    /// </summary>
+    /// <param name="astcData">The ASTC-compressed texture data</param>
+    /// <param name="width">Image width in pixels</param>
+    /// <param name="height">Image height in pixels</param>
+    /// <param name="footprint">The ASTC block footprint (e.g., 4x4, 5x5)</param>
+    /// <param name="imageBuffer">Output buffer. Must be at least width * height * 4 floats.</param>
+    /// <returns>
+    /// True if the input was structurally valid and decoding ran, false if it was rejected
+    /// up front. Individual malformed blocks are skipped and leave zeros in the output.
+    /// </returns>
+    public static bool DecompressHdrImage(ReadOnlySpan<byte> astcData, int width, int height, Footprint footprint, Span<float> imageBuffer)
+    {
+        ValidateImageArgs(width, height, imageBuffer.Length, BlockInfo.ChannelsPerPixel);
+
+        if (!TryGetBlockLayout(astcData, width, height, footprint, out int blocksWide, out int blocksHigh))
+        {
+            return false;
+        }
+
+        using IMemoryOwner<float> decodedBlock = MemoryAllocator.Default.Allocate<float>(footprint.PixelCount * BlockInfo.ChannelsPerPixel);
+        DecodeAllBlocks<HdrPipeline, float>(
+            astcData, width, height, footprint, blocksWide, blocksHigh, imageBuffer, decodedBlock.Memory.Span);
+        return true;
+    }
+
+    /// <summary>
+    /// Decompresses ASTC-compressed data read from a stream to RGBA float values.
+    /// </summary>
+    /// <param name="stream">The stream containing ASTC-compressed block data.</param>
+    /// <param name="width">Image width in pixels.</param>
+    /// <param name="height">Image height in pixels.</param>
+    /// <param name="footprint">The ASTC block footprint.</param>
+    /// <returns>
+    /// Values in RGBA order. For HDR content, values may exceed 1.0. The stream's read position
+    /// advances by the consumed block bytes.
+    /// </returns>
+    /// <exception cref="EndOfStreamException">
+    /// Thrown if the stream contains fewer bytes than the footprint requires.
+    /// </exception>
+    public static Span<float> DecompressHdrImage(Stream stream, int width, int height, Footprint footprint)
+    {
+        Guard.NotNull(stream);
+        Guard.MustBeGreaterThan(width, 0, nameof(width));
+        Guard.MustBeGreaterThan(height, 0, nameof(height));
+
+        long totalPixels = (long)width * height;
+        Guard.MustBeLessThanOrEqualTo(totalPixels, (long)int.MaxValue / BlockInfo.ChannelsPerPixel, nameof(totalPixels));
+
+        float[] imageBuffer = new float[(int)(totalPixels * BlockInfo.ChannelsPerPixel)];
+        return DecompressHdrImage(stream, width, height, footprint, imageBuffer)
+            ? imageBuffer
+            : [];
+    }
+
+    /// <summary>
+    /// Decompresses ASTC-compressed data read from a stream into a caller-provided HDR buffer.
+    /// </summary>
+    /// <param name="stream">The stream containing ASTC-compressed block data.</param>
+    /// <param name="width">Image width in pixels.</param>
+    /// <param name="height">Image height in pixels.</param>
+    /// <param name="footprint">The ASTC block footprint.</param>
+    /// <param name="imageBuffer">Output buffer. Must be at least <c>width * height * 4</c> floats.</param>
+    /// <returns>
+    /// True if the stream contained the expected block count and decoding ran. The stream's
+    /// read position advances by the consumed block bytes.
+    /// </returns>
+    /// <exception cref="EndOfStreamException">
+    /// Thrown if the stream contains fewer bytes than the footprint requires.
+    /// </exception>
+    public static bool DecompressHdrImage(Stream stream, int width, int height, Footprint footprint, Span<float> imageBuffer)
+    {
+        Guard.NotNull(stream);
+        ValidateImageArgs(width, height, imageBuffer.Length, BlockInfo.ChannelsPerPixel);
+
+        int expectedBytes = ComputeExpectedBlockStreamSize(width, height, footprint);
+        using IMemoryOwner<byte> blocks = MemoryAllocator.Default.Allocate<byte>(expectedBytes);
+        Span<byte> blockSpan = blocks.Memory.Span[..expectedBytes];
+        stream.ReadExactly(blockSpan);
+
+        return DecompressHdrImage((ReadOnlySpan<byte>)blockSpan, width, height, footprint, imageBuffer);
+    }
+
+    /// <summary>
+    /// Decompresses ASTC-compressed data to RGBA values.
+    /// </summary>
+    /// <param name="astcData">The ASTC-compressed texture data</param>
+    /// <param name="width">Image width in pixels</param>
+    /// <param name="height">Image height in pixels</param>
+    /// <param name="footprint">The ASTC block footprint type</param>
+    /// <returns>
+    /// Values in RGBA order. For HDR content, values may exceed 1.0.
+    /// </returns>
+    public static Span<float> DecompressHdrImage(ReadOnlySpan<byte> astcData, int width, int height, FootprintType footprint)
+    {
+        Footprint footPrint = Footprint.FromFootprintType(footprint);
+        return DecompressHdrImage(astcData, width, height, footPrint);
+    }
+
+    /// <summary>
+    /// Decompresses a single ASTC block to float RGBA values.
+    /// </summary>
+    /// <param name="blockData">The 16-byte ASTC block to decode</param>
+    /// <param name="footprint">The ASTC block footprint</param>
+    /// <param name="buffer">The buffer to write decoded values into (must be at least footprint.Width * footprint.Height * 4 elements)</param>
+    public static void DecompressHdrBlock(ReadOnlySpan<byte> blockData, Footprint footprint, Span<float> buffer)
+    {
+        Guard.MustBeSizedAtLeast(blockData, BlockInfo.SizeInBytes, nameof(blockData));
+        Guard.MustBeSizedAtLeast(buffer, footprint.PixelCount * BlockInfo.ChannelsPerPixel, nameof(buffer));
+
+        DecodeSingleBlock<HdrPipeline, float>(blockData, footprint, buffer);
+    }
+
     internal static Span<byte> DecompressImage(AstcFile file)
     {
         Guard.NotNull(file);

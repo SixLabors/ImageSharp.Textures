@@ -43,6 +43,30 @@ internal static class LogicalBlock
         WriteAllPixels<LdrPixelWriter, byte>(footprint, pixels, in state);
     }
 
+    /// <summary>
+    /// Decodes a block to its float RGBA pixels. Accepts both LDR and HDR endpoint modes.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void DecodeToFloats(UInt128 bits, in BlockInfo info, Footprint footprint, Span<float> pixels)
+    {
+        if (!info.IsValid)
+        {
+            return;
+        }
+
+        if (info.DualPlane.Enabled && !info.IsVoidExtent)
+        {
+            DecodeToFloatsDualPlane(bits, in info, footprint, pixels);
+            return;
+        }
+
+        // Up to 12×12 = 144 ints (576 bytes) for the largest 2D footprint per spec §C.2.4.
+        Span<int> weights = stackalloc int[footprint.PixelCount];
+        DecodedBlockState state = DecodeSinglePlane(bits, in info, footprint, weights);
+
+        WriteAllPixels<HdrPixelWriter, float>(footprint, pixels, in state);
+    }
+
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static void DecodeToBytesDualPlane(UInt128 bits, in BlockInfo info, Footprint footprint, Span<byte> pixels)
     {
@@ -54,6 +78,19 @@ internal static class LogicalBlock
         DualPlane dualPlane = new() { Weights = secondaryWeights, Channel = info.DualPlane.Channel };
 
         WriteAllPixelsDualPlane<LdrPixelWriter, byte>(footprint, pixels, in state, in dualPlane);
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static void DecodeToFloatsDualPlane(UInt128 bits, in BlockInfo info, Footprint footprint, Span<float> pixels)
+    {
+        // Two weight planes for dual-plane blocks (spec §C.2.20). Up to 2 × 144 = 288 ints
+        // (1152 bytes) at the largest 12×12 footprint.
+        Span<int> weights = stackalloc int[footprint.PixelCount];
+        Span<int> secondaryWeights = stackalloc int[footprint.PixelCount];
+        DecodedBlockState state = DecodeDualPlane(bits, in info, footprint, weights, secondaryWeights);
+        DualPlane dualPlane = new() { Weights = secondaryWeights, Channel = info.DualPlane.Channel };
+
+        WriteAllPixelsDualPlane<HdrPixelWriter, float>(footprint, pixels, in state, in dualPlane);
     }
 
     /// <summary>
@@ -201,22 +238,22 @@ internal static class LogicalBlock
     /// <summary>
     /// Reads the four 16-bit RGBA channels from the high half of a void-extent block
     /// (ASTC spec §C.2.23) and wraps them in a <see cref="ColorEndpointPair"/>. LDR void-extent
-    /// channels are UNORM16 (reduced to byte range for the LDR output path). HDR void-extent
-    /// blocks are rejected upstream by <see cref="LdrPipeline.IsBlockLegal"/>; the HDR path
-    /// will land in a follow-up PR.
+    /// channels are UNORM16 (reduced to byte range for the LDR output path); HDR channels are
+    /// FP16 bit patterns.
     /// </summary>
     private static ColorEndpointPair DecodeVoidExtentEndpoint(UInt128 bits, bool isHdr)
     {
-        if (isHdr)
-        {
-            throw new NotSupportedException("HDR void-extent decoding is not yet implemented.");
-        }
-
         ulong high = bits.High();
         ushort r = (ushort)(high & 0xFFFF);
         ushort g = (ushort)((high >> 16) & 0xFFFF);
         ushort b = (ushort)((high >> 32) & 0xFFFF);
         ushort a = (ushort)((high >> 48) & 0xFFFF);
+
+        if (isHdr)
+        {
+            Rgba64 hdrColor = new(r, g, b, a);
+            return ColorEndpointPair.Hdr(hdrColor, hdrColor, valuesAreLns: false);
+        }
 
         Rgba32 ldrColor = new((byte)(r >> 8), (byte)(g >> 8), (byte)(b >> 8), (byte)(a >> 8));
         return ColorEndpointPair.Ldr(ldrColor, ldrColor);
@@ -267,7 +304,7 @@ internal static class LogicalBlock
     /// <summary>
     /// Inline storage for up to 4 per-partition <see cref="ColorEndpointPair"/> values
     /// (spec §C.2.10 caps partition count at 4). Used as a stack-local buffer to hold the
-    /// decoded endpoints during a single <see cref="DecodeToBytes"/> call.
+    /// decoded endpoints during a single <see cref="DecodeToBytes"/>/<see cref="DecodeToFloats"/> call.
     /// </summary>
     [InlineArray(4)]
     private struct EndpointBuffer
