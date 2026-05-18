@@ -17,7 +17,7 @@ public class Ktx2DecoderFlatTests
 
     [Theory]
     [Description("Ensure that a single mipmap level does not result in an empty mipmap collection")]
-    [WithFile(TestTextureFormat.Ktx2, TestTextureType.Flat, TestTextureTool.ToKtx, TestImages.Ktx2.Rgba32SrgbMips)]
+    [WithFile(TestTextureFormat.Ktx2, TestTextureType.Flat, TestTextureTool.ToKtx, TestImages.Ktx2.Rgb48UnormMips)]
     public void Ktx2Decoder_LevelCountZero_DecodesBaseLevelMipMap(TestTextureProvider provider)
     {
         using Texture texture = provider.GetTexture(Ktx2Decoder);

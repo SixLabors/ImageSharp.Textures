@@ -85,15 +85,36 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx2
 
             var ktxProcessor = new Ktx2Processor(this.ktxHeader);
 
+            Texture texture;
             if (this.ktxHeader.FaceCount == 6)
             {
-                CubemapTexture cubeMapTexture = ktxProcessor.DecodeCubeMap(stream, width, height, levelIndices);
-                return cubeMapTexture;
+                texture = ktxProcessor.DecodeCubeMap(stream, width, height, levelIndices);
+            }
+            else
+            {
+                var flatTexture = new FlatTexture();
+                MipMap[] mipMaps = ktxProcessor.DecodeMipMaps(stream, width, height, levelIndices);
+                flatTexture.MipMaps.AddRange(mipMaps);
+                texture = flatTexture;
             }
 
-            var texture = new FlatTexture();
-            MipMap[] mipMaps = ktxProcessor.DecodeMipMaps(stream, width, height, levelIndices);
-            texture.MipMaps.AddRange(mipMaps);
+            // Advance the stream past the furthest mip level the file declares so that
+            // callers (e.g. test infrastructure) checking position == length don't fail
+            // when later mip levels were skipped or the level array was sparse.
+            long maxEndPosition = 0;
+            for (int i = 0; i < levelIndices.Length; i++)
+            {
+                long endPosition = (long)(levelIndices[i].ByteOffset + levelIndices[i].UncompressedByteLength);
+                if (endPosition > maxEndPosition)
+                {
+                    maxEndPosition = endPosition;
+                }
+            }
+
+            if (stream.CanSeek && stream.Position < maxEndPosition)
+            {
+                stream.Position = maxEndPosition;
+            }
 
             return texture;
         }

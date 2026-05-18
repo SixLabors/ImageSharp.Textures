@@ -19,5 +19,10 @@ namespace SixLabors.ImageSharp.Textures.Tests.Enums
         /// Cubemap
         /// </summary>
         Cubemap,
+
+        /// <summary>
+        /// Array texture (multiple layers)
+        /// </summary>
+        Array,
     }
 }
