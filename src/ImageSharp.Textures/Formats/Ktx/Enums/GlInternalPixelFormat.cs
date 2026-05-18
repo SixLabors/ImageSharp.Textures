@@ -1,162 +1,205 @@
 // Copyright (c) Six Labors.
 // Licensed under the Six Labors Split License.
 
-namespace SixLabors.ImageSharp.Textures.Formats.Ktx
+namespace SixLabors.ImageSharp.Textures.Formats.Ktx;
+
+internal enum GlInternalPixelFormat : uint
 {
-    internal enum GlInternalPixelFormat : uint
-    {
-        Luminance4 = 0x803F,
+    Luminance4 = 0x803F,
 
-        Luminance8 = 0x8040,
+    Luminance8 = 0x8040,
 
-        Luminance4Alpha4 = 0x8043,
+    Luminance4Alpha4 = 0x8043,
 
-        Luminance6Alpha2 = 0x8044,
+    Luminance6Alpha2 = 0x8044,
 
-        Luminance7Alpha8 = 0x8045,
+    Luminance7Alpha8 = 0x8045,
 
-        Rgb4 = 0x804F,
+    Rgb4 = 0x804F,
 
-        Rgb5 = 0x8050,
+    Rgb5 = 0x8050,
 
-        Rgb8 = 0x8051,
+    Rgb8 = 0x8051,
 
-        Rgb16 = 0x8054,
+    Rgb16 = 0x8054,
 
-        Rgba8 = 0x8058,
+    Rgba8 = 0x8058,
 
-        Rgb565 = 0x8D62,
+    Rgb565 = 0x8D62,
 
-        Rgb10 = 0x8052,
+    Rgb10 = 0x8052,
 
-        Rgb12 = 0x8053,
+    Rgb12 = 0x8053,
 
-        Rgba2 = 0x8055,
+    Rgba2 = 0x8055,
 
-        Rgba4 = 0x8056,
+    Rgba4 = 0x8056,
 
-        Rgba12 = 0x805A,
+    Rgba12 = 0x805A,
 
-        Rgb5A1 = 0x8057,
+    Rgb5A1 = 0x8057,
 
-        Rgb10A2 = 0x8059,
+    Rgb10A2 = 0x8059,
 
-        Rgb9E5 = 0x8C3D,
+    Rgb9E5 = 0x8C3D,
 
-        Rgba16 = 0x805B,
+    Rgba16 = 0x805B,
 
-        R8 = 0x8229,
+    R16F = 0x822D,
 
-        R8UnsignedInt = 0x8232,
+    Rg16F = 0x822F,
 
-        Rg8UnsignedInt = 0x8238,
+    R32F = 0x822E,
 
-        Rgb8UnsignedInt = 0x8D7D,
+    Rg32F = 0x8230,
 
-        RgbaUnsignedInt = 0x8D7C,
+    Rgb16F = 0x881B,
 
-        R32UnsignedInt = 0x8236,
+    Rgba16F = 0x881A,
 
-        Rg32UnsignedInt = 0x823C,
+    Rgb32F = 0x8815,
 
-        Rgb32UnsignedInt = 0x8D71,
+    Rgba32F = 0x8814,
 
-        Rgba32UnsignedInt = 0x8D70,
+    R8 = 0x8229,
 
-        R16 = 0x822A,
+    R8UnsignedInt = 0x8232,
 
-        Rg8 = 0x822B,
+    Rg8UnsignedInt = 0x8238,
 
-        Rg16 = 0x822C,
+    Rgb8UnsignedInt = 0x8D7D,
 
-        R8SNorm = 0x8F94,
+    RgbaUnsignedInt = 0x8D7C,
 
-        Rg8SNorm = 0x8F95,
+    R32UnsignedInt = 0x8236,
 
-        Rgb8SNorm = 0x8F96,
+    Rg32UnsignedInt = 0x823C,
 
-        RgbaSNorm = 0x8F97,
+    Rgb32UnsignedInt = 0x8D71,
 
-        Etc1Rgb8Oes = 0x8D64,
+    Rgba32UnsignedInt = 0x8D70,
 
-        RedRgtc1 = 0x8DBB,
+    R16 = 0x822A,
 
-        SignedRedRgtc1 = 0x8DBC,
+    Rg8 = 0x822B,
 
-        RedGreenRgtc2 = 0x8DBD,
+    Rg16 = 0x822C,
 
-        SignedRedGreenRgtc2 = 0x8DBE,
+    R8SNorm = 0x8F94,
 
-        RgbDxt1 = 0x83F0,
+    Rg8SNorm = 0x8F95,
 
-        RgbaDxt1 = 0x83F1,
+    Rgb8SNorm = 0x8F96,
 
-        RgbaDxt3 = 0x83F2,
+    RgbaSNorm = 0x8F97,
 
-        RgbaDxt5 = 0x83F3,
+    Etc1Rgb8Oes = 0x8D64,
 
-        Sr8 = 0x8FBD,
+    RedRgtc1 = 0x8DBB,
 
-        Srg8 = 0x8FBE,
+    SignedRedRgtc1 = 0x8DBC,
 
-        Srgb8 = 0x8C41,
+    RedGreenRgtc2 = 0x8DBD,
 
-        Srgb8Alpha8 = 0x8C43,
+    SignedRedGreenRgtc2 = 0x8DBE,
 
-        SrgbDxt1 = 0x8C4C,
+    RgbDxt1 = 0x83F0,
 
-        SrgbAlphaDxt1 = 0x8C4D,
+    RgbaDxt1 = 0x83F1,
 
-        SrgbAlphaDxt3 = 0x8C4E,
+    RgbaDxt3 = 0x83F2,
 
-        SrgbAlphaDxt5 = 0x8C4F,
+    RgbaDxt5 = 0x83F3,
 
-        CompressedRed11Eac = 0x9270,
+    Sr8 = 0x8FBD,
 
-        CompressedRedGreen11Eac = 0x9272,
+    Srg8 = 0x8FBE,
 
-        CompressedRedSignedRedEac = 0x9271,
+    Srgb8 = 0x8C41,
 
-        CompressedRedGreenSignedEac = 0x9273,
+    Srgb8Alpha8 = 0x8C43,
 
-        CompressedRgb8Etc2 = 0x9274,
+    SrgbDxt1 = 0x8C4C,
 
-        CompressedSrgb8Etc2 = 0x9275,
+    SrgbAlphaDxt1 = 0x8C4D,
 
-        CompressedRgb8PunchthroughAlpa1Etc2 = 0x9276,
+    SrgbAlphaDxt3 = 0x8C4E,
 
-        CompressedSrgb8PunchthroughAlpa1Etc2 = 0x9277,
+    SrgbAlphaDxt5 = 0x8C4F,
 
-        CompressedRgb8Etc2Eac = 0x9278,
+    CompressedRed11Eac = 0x9270,
 
-        CompressedSrgb8Alpha8Etc2Eac = 0x9279,
+    CompressedRedGreen11Eac = 0x9272,
 
-        CompressedRgbaAstc4x4Khr = 0x93B0,
+    CompressedRedSignedRedEac = 0x9271,
 
-        CompressedRgbaAstc5x4Khr = 0x93B1,
+    CompressedRedGreenSignedEac = 0x9273,
 
-        CompressedRgbaAstc5x5Khr = 0x93B2,
+    CompressedRgb8Etc2 = 0x9274,
 
-        CompressedRgbaAstc6x5Khr = 0x93B3,
+    CompressedSrgb8Etc2 = 0x9275,
 
-        CompressedRgbaAstc6x6Khr = 0x93B4,
+    CompressedRgb8PunchthroughAlpa1Etc2 = 0x9276,
 
-        CompressedRgbaAstc8x5Khr = 0x93B5,
+    CompressedSrgb8PunchthroughAlpa1Etc2 = 0x9277,
 
-        CompressedRgbaAstc8x6Khr = 0x93B6,
+    CompressedRgb8Etc2Eac = 0x9278,
 
-        CompressedRgbaAstc8x8Khr = 0x93B7,
+    CompressedSrgb8Alpha8Etc2Eac = 0x9279,
 
-        CompressedRgbaAstc10x5Khr = 0x93B8,
+    CompressedRgbaAstc4x4Khr = 0x93B0,
 
-        CompressedRgbaAstc10x6Khr = 0x93B9,
+    CompressedRgbaAstc5x4Khr = 0x93B1,
 
-        CompressedRgbaAstc10x8Khr = 0x93BA,
+    CompressedRgbaAstc5x5Khr = 0x93B2,
 
-        CompressedRgbaAstc10x10Khr = 0x93BB,
+    CompressedRgbaAstc6x5Khr = 0x93B3,
 
-        CompressedRgbaAstc12x10Khr = 0x93BC,
+    CompressedRgbaAstc6x6Khr = 0x93B4,
 
-        CompressedRgbaAstc12x12Khr = 0x93BD,
-    }
+    CompressedRgbaAstc8x5Khr = 0x93B5,
+
+    CompressedRgbaAstc8x6Khr = 0x93B6,
+
+    CompressedRgbaAstc8x8Khr = 0x93B7,
+
+    CompressedRgbaAstc10x5Khr = 0x93B8,
+
+    CompressedRgbaAstc10x6Khr = 0x93B9,
+
+    CompressedRgbaAstc10x8Khr = 0x93BA,
+
+    CompressedRgbaAstc10x10Khr = 0x93BB,
+
+    CompressedRgbaAstc12x10Khr = 0x93BC,
+
+    CompressedRgbaAstc12x12Khr = 0x93BD,
+
+    CompressedSrgb8Alpha8Astc4x4Khr = 0x93D0,
+
+    CompressedSrgb8Alpha8Astc5x4Khr = 0x93D1,
+
+    CompressedSrgb8Alpha8Astc5x5Khr = 0x93D2,
+
+    CompressedSrgb8Alpha8Astc6x5Khr = 0x93D3,
+
+    CompressedSrgb8Alpha8Astc6x6Khr = 0x93D4,
+
+    CompressedSrgb8Alpha8Astc8x5Khr = 0x93D5,
+
+    CompressedSrgb8Alpha8Astc8x6Khr = 0x93D6,
+
+    CompressedSrgb8Alpha8Astc8x8Khr = 0x93D7,
+
+    CompressedSrgb8Alpha8Astc10x5Khr = 0x93D8,
+
+    CompressedSrgb8Alpha8Astc10x6Khr = 0x93D9,
+
+    CompressedSrgb8Alpha8Astc10x8Khr = 0x93DA,
+
+    CompressedSrgb8Alpha8Astc10x10Khr = 0x93DB,
+
+    CompressedSrgb8Alpha8Astc12x10Khr = 0x93DC,
+
+    CompressedSrgb8Alpha8Astc12x12Khr = 0x93DD,
 }

@@ -171,9 +171,8 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         private static ulong Pack(ref Vector2 vector)
         {
             vector = Vector2.Clamp(vector, Vector2.Zero, Vector2.One);
-            return (ulong)(
-                (uint)FloatHelper.PackFloatToFloat32(vector.X)
-                | (((uint)Math.Round(vector.Y * 255F) & 255) << 32));
+            return (ulong)FloatHelper.PackFloatToFloat32(vector.X)
+                | ((ulong)((uint)Math.Round(vector.Y * 255F) & 255) << 32);
         }
     }
 }
