@@ -1,6 +1,7 @@
 // Copyright (c) Six Labors.
 // Licensed under the Six Labors Split License.
 
+using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Textures.Formats.Ktx;
 using SixLabors.ImageSharp.Textures.PixelFormats;
 using SixLabors.ImageSharp.Textures.Tests.Enums;
@@ -188,5 +189,35 @@ public class KtxHdrDecoderFlatTests
 
         Image<Rgba128Float> firstMipMapImage = firstMipMap as Image<Rgba128Float>;
         firstMipMapImage.CompareToReferenceOutput(provider);
+    }
+
+    /// <summary>
+    /// Exercises the ASTC code path where blocks use HDR endpoint modes (2/3/7/11/14/15)
+    /// but the KTX container is tagged as <c>GL_COMPRESSED_RGBA_ASTC_*_KHR</c> (the LDR
+    /// internal format). Per ASTC spec §C.2.19, §C.2.25 the LDR profile treats HDR-mode
+    /// blocks as reserved and emits the error colour (magenta) for every texel.
+    /// </summary>
+    [Theory]
+    [WithFile(TestTextureFormat.Ktx, TestTextureType.Flat, TestTextureTool.ToKtx, TestImages.Ktx.Astc.Astc4x4_HdrInUnorm)]
+    public void Decode_HdrBlocksInUnormContainer_EmitsErrorColor(TestTextureProvider provider)
+    {
+        using Texture texture = provider.GetTexture(KtxDecoder);
+        FlatTexture flat = Assert.IsType<FlatTexture>(texture);
+
+        using Image image = flat.MipMaps[0].GetImage();
+        using Image<Rgba32> rgba = image.CloneAs<Rgba32>();
+
+        // Spec §C.2.19 error colour: opaque magenta for every texel of an HDR-in-LDR block.
+        Rgba32 magenta = new(0xFF, 0x00, 0xFF, 0xFF);
+        rgba.ProcessPixelRows(accessor =>
+        {
+            for (int y = 0; y < accessor.Height; y++)
+            {
+                foreach (Rgba32 pixel in accessor.GetRowSpan(y))
+                {
+                    Assert.Equal(magenta, pixel);
+                }
+            }
+        });
     }
 }

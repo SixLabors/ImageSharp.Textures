@@ -45,6 +45,8 @@ public static class TestImages
             public const string Rgb32_Unorm_10x10 = "Flat/Astc/rgba32-unorm-10x10-valid.ktx";
             public const string Rgb32_Unorm_12x10 = "Flat/Astc/rgba32-unorm-12x10-valid.ktx";
             public const string Rgb32_Unorm_12x12 = "Flat/Astc/rgba32-unorm-12x12-valid.ktx";
+
+            public const string Astc4x4_HdrInUnorm = "Flat/Astc/Hdr/rgba32-4x4-hdr-in-unorm.ktx";
         }
 
         public static class Hdr
