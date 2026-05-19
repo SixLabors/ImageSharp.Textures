@@ -2,7 +2,8 @@
 // Licensed under the Six Labors Split License.
 
 namespace SixLabors.ImageSharp.Textures.TextureFormats.Decoding;
- struct RgbaAstcHdr12X10 : IBlock<RgbaAstcHdr12X10>
+
+public readonly struct RgbaAstcHdr12X10 : IBlock<RgbaAstcHdr12X10>
 {
     public static Size BlockSize => new(12, 10);
 
