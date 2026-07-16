@@ -221,3 +221,9 @@ artifacts/
 
 # Tests
 **/Images/ActualOutput
+
+# Fuzz harness — libFuzzer-generated artefacts, per-target publish dirs, downloaded driver cache.
+tests/ImageSharp.Textures.FuzzTests/findings/
+tests/ImageSharp.Textures.FuzzTests/publish/
+tests/ImageSharp.Textures.FuzzTests/corpus/
+tests/ImageSharp.Textures.FuzzTests/.tools/

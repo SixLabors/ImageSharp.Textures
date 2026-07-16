@@ -23,6 +23,11 @@ namespace SixLabors.ImageSharp.Textures.Tests.Enums
         /// <summary>
         /// The PVR tex tool cli.
         /// </summary>
-        PvrTexToolCli
+        PvrTexToolCli,
+
+        /// <summary>
+        /// ARM ASTC encoder (astcenc).
+        /// </summary>
+        AstcEnc,
     }
 }

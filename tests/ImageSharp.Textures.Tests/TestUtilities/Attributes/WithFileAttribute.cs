@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text.RegularExpressions;
 using SixLabors.ImageSharp.Textures.Tests.Enums;
 using SixLabors.ImageSharp.Textures.Tests.TestUtilities.TextureProviders;
 using Xunit.Sdk;
@@ -19,37 +18,55 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.Attributes
         private readonly TestTextureType textureType;
         private readonly TestTextureTool textureTool;
         private readonly string inputFile;
-        private readonly bool isRegex;
 
-        public WithFileAttribute(TestTextureFormat textureFormat, TestTextureType textureType, TestTextureTool textureTool, string inputFile, bool isRegex = false)
+        public WithFileAttribute(TestTextureFormat textureFormat, TestTextureType textureType, TestTextureTool textureTool, string inputFile)
         {
             this.textureFormat = textureFormat;
             this.textureType = textureType;
             this.textureTool = textureTool;
             this.inputFile = inputFile;
-            this.isRegex = isRegex;
         }
 
         public override IEnumerable<object[]> GetData(MethodInfo testMethod)
         {
             ArgumentNullException.ThrowIfNull(testMethod);
 
+            string outputSubfolderName = testMethod.DeclaringType?.GetCustomAttribute<GroupOutputAttribute>()?.Subfolder ?? string.Empty;
+            string testGroupName = testMethod.DeclaringType?.Name ?? string.Empty;
+
             string[] featureLevels = this.textureTool == TestTextureTool.TexConv ? new[] { "9.1", "9.2", "9.3", "10.0", "10.1", "11.0", "11.1", "12.0", "12.1" } : new[] { string.Empty };
 
             foreach (string featureLevel in featureLevels)
             {
-                string path = Path.Combine(TestEnvironment.InputImagesDirectoryFullPath, this.textureFormat.ToString());
+                string basePath = Path.Combine(TestEnvironment.InputImagesDirectoryFullPath, this.textureFormat.ToString());
 
                 if (!string.IsNullOrEmpty(featureLevel))
                 {
-                    path = Path.Combine(path, featureLevel);
+                    basePath = Path.Combine(basePath, featureLevel);
                 }
 
-                string[] files = Directory.GetFiles(path);
-                string[] filteredFiles = files.Where(f => this.isRegex ? new Regex(this.inputFile).IsMatch(Path.GetFileName(f)) : Path.GetFileName(f).Equals(this.inputFile, StringComparison.OrdinalIgnoreCase)).ToArray();
-                foreach (string file in filteredFiles)
+                if (!Directory.Exists(basePath))
                 {
-                    var testTextureProvider = new TestTextureProvider(testMethod.Name, this.textureFormat, this.textureType, this.textureTool, file, false);
+                    continue;
+                }
+
+                // First try direct path construction (handles subdirectory paths like "Flat/Astc/file.ktx2").
+                string file = Path.Combine(basePath, this.inputFile);
+                if (File.Exists(file))
+                {
+                    TestTextureProvider testTextureProvider = new(testMethod.Name, this.textureFormat, this.textureType, this.textureTool, file, false, testGroupName, outputSubfolderName);
+                    yield return new object[] { testTextureProvider };
+                    continue;
+                }
+
+                // Fall back to case-insensitive filename matching to handle
+                // cross-platform casing differences (e.g. ".DDS" vs ".dds").
+                string match = Directory.GetFiles(basePath)
+                    .FirstOrDefault(f => Path.GetFileName(f).Equals(this.inputFile, StringComparison.OrdinalIgnoreCase));
+
+                if (match is not null)
+                {
+                    TestTextureProvider testTextureProvider = new(testMethod.Name, this.textureFormat, this.textureType, this.textureTool, match, false, testGroupName, outputSubfolderName);
                     yield return new object[] { testTextureProvider };
                 }
             }

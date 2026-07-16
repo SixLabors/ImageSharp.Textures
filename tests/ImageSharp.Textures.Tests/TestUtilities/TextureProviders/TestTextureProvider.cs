@@ -1,9 +1,9 @@
 // Copyright (c) Six Labors.
 // Licensed under the Six Labors Split License.
 
+using System.Globalization;
 using System.IO;
 using System.Text;
-using System.Globalization;
 using SixLabors.ImageSharp.Textures.Formats;
 using SixLabors.ImageSharp.Textures.Tests.Enums;
 using SixLabors.ImageSharp.Textures.TextureFormats;
@@ -48,7 +48,9 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.TextureProviders
             TestTextureType textureType,
             TestTextureTool textureTool,
             string inputFile,
-            bool isRegex)
+            bool isRegex,
+            string testGroupName = "",
+            string outputSubfolderName = "")
         {
             this.MethodName = methodName;
             this.TextureFormat = textureFormat;
@@ -59,13 +61,27 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities.TextureProviders
             this.Utility = new ImagingTestCaseUtility
             {
                 SourceFileOrDescription = inputFile,
-                TestName = methodName
             };
+            this.Utility.Init(testGroupName, methodName, outputSubfolderName);
         }
 
         private void SaveMipMaps(MipMap[] mipMaps, string name)
         {
-            string path = Path.Combine(TestEnvironment.ActualOutputDirectoryFullPath, this.TextureFormat.ToString(), this.TextureType.ToString(), this.TextureTool.ToString(), this.MethodName, Path.GetFileNameWithoutExtension(this.InputFile));
+            // Include the input file's relative path under the format root in the output dir, not just its bare filename.
+            // Some test cases would otherwise collide on the same output path and either silently overwrite each other or race when run in parallel.
+            string formatRoot = Path.Combine(TestEnvironment.InputImagesDirectoryFullPath, this.TextureFormat.ToString());
+            string relativeFromFormatRoot = Path.GetRelativePath(formatRoot, this.InputFile);
+            string inputSubpath = Path.Combine(
+                Path.GetDirectoryName(relativeFromFormatRoot) ?? string.Empty,
+                Path.GetFileNameWithoutExtension(relativeFromFormatRoot));
+
+            string path = Path.Combine(
+                TestEnvironment.ActualOutputDirectoryFullPath,
+                this.TextureFormat.ToString(),
+                this.TextureType.ToString(),
+                this.TextureTool.ToString(),
+                this.MethodName,
+                inputSubpath);
 
             Directory.CreateDirectory(path);
 

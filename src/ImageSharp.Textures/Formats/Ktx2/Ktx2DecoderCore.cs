@@ -59,6 +59,11 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx2
         /// <returns>The decoded image.</returns>
         public Texture DecodeTexture(Stream stream)
         {
+            if (!stream.CanSeek)
+            {
+                throw new NotSupportedException("KTX2 decoding requires a seekable stream.");
+            }
+
             this.ReadFileHeader(stream);
 
             if (this.ktxHeader.PixelWidth == 0)
@@ -85,15 +90,36 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx2
 
             var ktxProcessor = new Ktx2Processor(this.ktxHeader);
 
+            Texture texture;
             if (this.ktxHeader.FaceCount == 6)
             {
-                CubemapTexture cubeMapTexture = ktxProcessor.DecodeCubeMap(stream, width, height, levelIndices);
-                return cubeMapTexture;
+                texture = ktxProcessor.DecodeCubeMap(stream, width, height, levelIndices);
+            }
+            else
+            {
+                var flatTexture = new FlatTexture();
+                MipMap[] mipMaps = ktxProcessor.DecodeMipMaps(stream, width, height, levelIndices);
+                flatTexture.MipMaps.AddRange(mipMaps);
+                texture = flatTexture;
             }
 
-            var texture = new FlatTexture();
-            MipMap[] mipMaps = ktxProcessor.DecodeMipMaps(stream, width, height, levelIndices);
-            texture.MipMaps.AddRange(mipMaps);
+            // Seek to the end of the file to ensure the entire stream is consumed.
+            // KTX2 files use byte offsets for mipmap data, so the stream position may not
+            // be at the end after reading. We need to find the furthest point read.
+            long maxEndPosition = 0;
+            for (int i = 0; i < levelIndices.Length; i++)
+            {
+                long endPosition = (long)(levelIndices[i].ByteOffset + levelIndices[i].UncompressedByteLength);
+                if (endPosition > maxEndPosition)
+                {
+                    maxEndPosition = endPosition;
+                }
+            }
+
+            if (stream.Position < maxEndPosition)
+            {
+                stream.Position = maxEndPosition;
+            }
 
             return texture;
         }
@@ -104,6 +130,11 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx2
         /// <param name="currentStream">The <see cref="Stream"/> containing texture data.</param>
         public ITextureInfo Identify(Stream currentStream)
         {
+            if (!currentStream.CanSeek)
+            {
+                throw new NotSupportedException("KTX2 decoding requires a seekable stream.");
+            }
+
             this.ReadFileHeader(currentStream);
 
             var textureInfo = new TextureInfo(new TextureTypeInfo((int)this.ktxHeader.PixelDepth), (int)this.ktxHeader.PixelWidth, (int)this.ktxHeader.PixelHeight);
