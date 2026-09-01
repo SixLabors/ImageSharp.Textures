@@ -33,7 +33,7 @@ internal readonly struct LdrPipeline<TMode> : IBlockPipeline<byte>
         for (int pixelY = 0; pixelY < copyHeight; pixelY++)
         {
             int dstOffset = (((dstBaseY + pixelY) * imageWidth) + dstBaseX) * BlockInfo.ChannelsPerPixel;
-            FillMagenta(imageBuffer.Slice(dstOffset, rowElements));
+            BlockImageWriter.FillErrorColor(imageBuffer.Slice(dstOffset, rowElements));
         }
     }
 
@@ -51,18 +51,4 @@ internal readonly struct LdrPipeline<TMode> : IBlockPipeline<byte>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void LogicalWrite(UInt128 blockBits, in BlockInfo info, Footprint footprint, Span<byte> decodedPixels)
         => LogicalBlock.DecodeToBytes<TMode>(blockBits, in info, footprint, decodedPixels);
-
-    /// <summary>
-    /// Spec §C.2.19 error colour: opaque magenta <c>(0xFF, 0x00, 0xFF, 0xFF)</c> as UNORM8 RGBA.
-    /// </summary>
-    private static void FillMagenta(Span<byte> buffer)
-    {
-        for (int i = 0; i < buffer.Length; i += BlockInfo.ChannelsPerPixel)
-        {
-            buffer[i] = 0xFF;
-            buffer[i + 1] = 0x00;
-            buffer[i + 2] = 0xFF;
-            buffer[i + 3] = 0xFF;
-        }
-    }
 }
