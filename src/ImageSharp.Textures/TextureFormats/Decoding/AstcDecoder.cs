@@ -7,7 +7,7 @@ using SixLabors.ImageSharp.Textures.Compression.Astc.Core;
 namespace SixLabors.ImageSharp.Textures.TextureFormats.Decoding;
 
 /// <summary>
-/// ASTC (Adaptive scalable texture compression) decoder for all valid block footprints.
+/// (U)ASTC (Adaptive scalable texture compression) decoder for all valid block footprints
 /// </summary>
 internal static class AstcDecoder
 {
@@ -62,6 +62,45 @@ internal static class AstcDecoder
         using MemoryStream source = new(blockData, 0, (int)expectedDataLength, writable: false);
         using MemoryStream destination = new(decompressedData, writable: true);
         Compression.Astc.AstcDecoder.DecompressImage(source, destination, width, height, footprint, mode);
+
+        return decompressedData;
+    }
+
+    /// <summary>
+    /// Decompresses UASTC-compressed image data to UNORM8 RGBA pixels (4 bytes per pixel). UASTC is a
+    /// constrained subset of LDR ASTC 4x4.
+    /// </summary>
+    /// <param name="blockData">The compressed block data. May be over-sized — only the bytes implied by
+    /// the image dimensions are read.</param>
+    /// <param name="width">The width of the texture, in pixels.</param>
+    /// <param name="height">The height of the texture, in pixels.</param>
+    /// <param name="mode">LDR decode mode — linear or sRGB endpoint expansion.</param>
+    /// <returns>The decompressed UNORM8 RGBA pixel data.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="blockData"/> is null.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown if the dimensions are invalid.</exception>
+    /// <exception cref="ArgumentException">Thrown if <paramref name="blockData"/> is shorter than the
+    /// length implied by the image dimensions.</exception>
+    public static byte[] DecompressUastcImage(byte[] blockData, int width, int height, LdrDecodeMode mode = LdrDecodeMode.Linear)
+    {
+        const int uastcBlockDim = 4;
+        long expectedDataLength = GetExpectedBlockStreamLength(width, height, uastcBlockDim, uastcBlockDim, AstcBlockSize);
+        long totalPixels = (long)width * height;
+
+        ValidateBlockStream(
+            blockData,
+            width,
+            height,
+            compressedBytesPerBlock: AstcBlockSize,
+            bytesPerPixel: RgbaPixelDepthBytes,
+            expectedDataLength,
+            totalPixels);
+
+        byte[] decompressedData = new byte[totalPixels * RgbaPixelDepthBytes];
+
+        // KTX/KTX2 mip-level slices may be over-sized; trim to the exact block stream the real decoder expects.
+        using MemoryStream source = new(blockData, 0, (int)expectedDataLength, writable: false);
+        using MemoryStream destination = new(decompressedData, writable: true);
+        UastcDecoder.DecompressImage(source, destination, width, height, mode);
 
         return decompressedData;
     }

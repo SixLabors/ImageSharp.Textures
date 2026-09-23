@@ -19,12 +19,22 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx2
         /// Initializes a new instance of the <see cref="Ktx2Processor" /> class.
         /// </summary>
         /// <param name="ktxHeader">The KTX header.</param>
-        public Ktx2Processor(Ktx2Header ktxHeader) => this.KtxHeader = ktxHeader;
+        /// <param name="uastcFormat">The UASTC payload variant resolved from the Data Format Descriptor</param>
+        public Ktx2Processor(Ktx2Header ktxHeader, Ktx2UastcFormat uastcFormat = Ktx2UastcFormat.None)
+        {
+            this.KtxHeader = ktxHeader;
+            this.UastcFormat = uastcFormat;
+        }
 
         /// <summary>
         /// Gets the KTX header.
         /// </summary>
         public Ktx2Header KtxHeader { get; }
+
+        /// <summary>
+        /// Gets the UASTC payload variant resolved from the Data Format Descriptor
+        /// </summary>
+        public Ktx2UastcFormat UastcFormat { get; }
 
         /// <summary>
         /// Decodes the mipmaps of a KTX2 textures.
@@ -42,6 +52,13 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx2
 
             byte[] allMipMapBytes = ReadAllMipMapBytes(stream, levelIndices);
             using MemoryStream memoryStream = new(allMipMapBytes);
+
+            if (this.UastcFormat != Ktx2UastcFormat.None)
+            {
+                return this.UastcFormat == Ktx2UastcFormat.Srgb
+                    ? AllocateMipMaps<RgbaUastcSrgb4X4>(memoryStream, width, height, levelIndices)
+                    : AllocateMipMaps<RgbaUastc4X4>(memoryStream, width, height, levelIndices);
+            }
 
             switch (this.KtxHeader.VkFormat)
             {
@@ -269,6 +286,13 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx2
         {
             DebugGuard.MustBeGreaterThan(width, 0, nameof(width));
             DebugGuard.MustBeGreaterThan(height, 0, nameof(height));
+
+            if (this.UastcFormat != Ktx2UastcFormat.None)
+            {
+                return this.UastcFormat == Ktx2UastcFormat.Srgb
+                    ? AllocateCubeMap<RgbaUastcSrgb4X4>(stream, width, height, levelIndices)
+                    : AllocateCubeMap<RgbaUastc4X4>(stream, width, height, levelIndices);
+            }
 
             switch (this.KtxHeader.VkFormat)
             {

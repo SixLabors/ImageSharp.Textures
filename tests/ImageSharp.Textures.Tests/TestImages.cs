@@ -169,5 +169,26 @@ public static class TestImages
                 public const string Rgba64_Sfloat_10x5 = "Cubemap/Hdr/rgba64-sfloat-10x5.ktx2";
             }
         }
+
+        public static class Uastc
+        {
+            // LDR UASTC (always 4x4)
+            public const string Rgba32_Unorm_4x4 = "Flat/Uastc/rgba32-unorm-4x4.ktx2";
+            public const string Rgba32_Srgb_4x4 = "Flat/Uastc/rgba32-srgb-4x4.ktx2";
+
+            public static class Hdr
+            {
+                // UASTC HDR 4x4 - stored as VK_FORMAT_ASTC_4x4_SFLOAT_BLOCK (standard ASTC HDR data)
+                public const string Rgba64_Sfloat_4x4 = "Flat/Uastc/Hdr/rgba64-sfloat-4x4.ktx2";
+
+                // UASTC HDR 6x6 intermediate - custom supercompressed format (unsupported)
+                public const string Rgba64_Sfloat_6x6i = "Flat/Uastc/Hdr/rgba64-sfloat-6x6i.ktx2";
+            }
+
+            public static class Cubemap
+            {
+                public const string Rgba32_Unorm_4x4 = "Cubemap/Uastc/rgba32-unorm-4x4.ktx2";
+            }
+        }
     }
 }

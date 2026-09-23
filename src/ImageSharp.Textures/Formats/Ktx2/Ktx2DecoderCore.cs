@@ -88,7 +88,15 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx2
                 throw new NotSupportedException("SupercompressionSchemes are not yet supported");
             }
 
-            var ktxProcessor = new Ktx2Processor(this.ktxHeader);
+            // UASTC uses VK_FORMAT_UNDEFINED; it (and its colour space) is identified by the Data Format Descriptor.
+            Ktx2DataFormatDescriptor dfd = this.ReadDataFormatDescriptor(stream);
+            Ktx2UastcFormat uastcFormat = Ktx2UastcFormat.None;
+            if (this.ktxHeader.VkFormat == Enums.VkFormat.VK_FORMAT_UNDEFINED && dfd.IsUastc)
+            {
+                uastcFormat = dfd.IsSrgbTransfer ? Ktx2UastcFormat.Srgb : Ktx2UastcFormat.Linear;
+            }
+
+            Ktx2Processor ktxProcessor = new(this.ktxHeader, uastcFormat);
 
             Texture texture;
             if (this.ktxHeader.FaceCount == 6)
@@ -155,6 +163,32 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx2
             stream.Read(ktxHeaderBuffer, 0, Ktx2Constants.KtxHeaderSize);
 
             this.ktxHeader = Ktx2Header.Parse(ktxHeaderBuffer);
+        }
+
+        /// <summary>
+        /// Reads the Data Format Descriptor basic block from the stream and parses the fields used to
+        /// distinguish formats that share a <see cref="Enums.VkFormat"/> (notably UASTC). Restores the
+        /// stream position afterwards.
+        /// </summary>
+        /// <param name="stream">The seekable stream positioned anywhere within the file.</param>
+        /// <returns>The parsed Data Format Descriptor fields.</returns>
+        private Ktx2DataFormatDescriptor ReadDataFormatDescriptor(Stream stream)
+        {
+            uint dfdByteLength = this.ktxHeader.DfdByteLength;
+            if (dfdByteLength == 0)
+            {
+                return default;
+            }
+
+            int bytesToRead = (int)Math.Min(dfdByteLength, Ktx2DataFormatDescriptor.BasicBlockHeaderSize);
+            Span<byte> dfd = stackalloc byte[Ktx2DataFormatDescriptor.BasicBlockHeaderSize];
+
+            long savedPosition = stream.Position;
+            stream.Position = this.ktxHeader.DfdByteOffset;
+            stream.ReadExactly(dfd[..bytesToRead]);
+            stream.Position = savedPosition;
+
+            return Ktx2DataFormatDescriptor.Parse(dfd[..bytesToRead]);
         }
     }
 }

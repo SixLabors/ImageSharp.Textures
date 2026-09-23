@@ -1,0 +1,6 @@
+This product includes software derived from Basis Universal
+(https://github.com/BinomialLLC/basis_universal), Copyright (c) 2016-2026
+Binomial LLC, licensed under the Apache License, Version 2.0.
+
+The files in this directory port the UASTC block-format tables and decode
+logic from the Basis Universal transcoder to C#.

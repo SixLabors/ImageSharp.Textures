@@ -295,9 +295,73 @@ internal static class LogicalBlock
     }
 
     /// <summary>
-    /// Inline storage for up to 4 per-partition <see cref="ColorEndpointPair"/> values
-    /// (spec §C.2.10 caps partition count at 4). Used as a stack-local buffer to hold the
-    /// decoded endpoints during a single <see cref="DecodeToBytes{TMode}"/>/<see cref="DecodeToFloats"/> call.
+    /// Writes a block's LDR pixels from decoded components
+    /// </summary>
+    /// <param name="footprint">The block's footprint</param>
+    /// <param name="endpoints">Per-partition colour endpoints</param>
+    /// <param name="partitionAssignment">Per-texel partition assignment</param>
+    /// <param name="weights">Per-texel weights</param>
+    /// <param name="pixels">The output pixel buffer</param>
+    public static void WriteDecodedLdr<TMode>(
+        Footprint footprint,
+        ReadOnlySpan<ColorEndpointPair> endpoints,
+        ReadOnlySpan<int> partitionAssignment,
+        Span<int> weights,
+        Span<byte> pixels)
+        where TMode : struct, ILdrColorMode
+    {
+        DecodedBlockState state = BuildState(endpoints, partitionAssignment, weights);
+        WriteAllPixels<LdrPixelWriter<TMode>, byte>(footprint, pixels, in state);
+    }
+
+    /// <summary>
+    /// Dual-plane variant of <see cref="WriteDecodedLdr{TMode}"/> (ASTC spec §C.2.20).
+    /// </summary>
+    /// <param name="footprint">The block's footprint</param>
+    /// <param name="endpoints">Per-partition colour endpoints</param>
+    /// <param name="partitionAssignment">Per-texel partition assignment</param>
+    /// <param name="weights">Per-texel weights</param>
+    /// <param name="secondaryWeights">The secondary plane's per-texel weights</param>
+    /// <param name="dualPlaneChannel">The channel whose per-texel weights are used instead of the primary plane's</param>
+    /// <param name="pixels">The output pixel buffer</param>
+    public static void WriteDecodedLdrDualPlane<TMode>(
+        Footprint footprint,
+        ReadOnlySpan<ColorEndpointPair> endpoints,
+        ReadOnlySpan<int> partitionAssignment,
+        Span<int> weights,
+        Span<int> secondaryWeights,
+        int dualPlaneChannel,
+        Span<byte> pixels)
+        where TMode : struct, ILdrColorMode
+    {
+        DecodedBlockState state = BuildState(endpoints, partitionAssignment, weights);
+        DualPlane dualPlane = new() { Weights = secondaryWeights, Channel = dualPlaneChannel };
+
+        WriteAllPixelsDualPlane<LdrPixelWriter<TMode>, byte>(footprint, pixels, in state, in dualPlane);
+    }
+
+    /// <summary>
+    /// Assembles a <see cref="DecodedBlockState"/> from externally decoded per-subset endpoints,
+    /// per-texel partition assignment, and per-texel weights.
+    /// </summary>
+    private static DecodedBlockState BuildState(
+        ReadOnlySpan<ColorEndpointPair> endpoints,
+        ReadOnlySpan<int> partitionAssignment,
+        Span<int> weights)
+    {
+        DecodedBlockState state = default;
+        for (int i = 0; i < endpoints.Length; i++)
+        {
+            state.Endpoints[i] = endpoints[i];
+        }
+
+        state.Weights = weights;
+        state.PartitionAssignment = partitionAssignment;
+        return state;
+    }
+
+    /// <summary>
+    /// Inline storage for up to 4 per-partition <see cref="ColorEndpointPair"/> values (spec §C.2.10)
     /// </summary>
     [InlineArray(BlockInfo.MaxPartitionCount)]
     private struct EndpointBuffer
@@ -308,9 +372,7 @@ internal static class LogicalBlock
     }
 
     /// <summary>
-    /// State common to single-plane and dual-plane blocks: per-partition endpoints, primary
-    /// per-texel weights, and the partition-assignment map. Stack-only — holds a stack-local
-    /// <see cref="EndpointBuffer"/> and a <see cref="Span{T}"/>.
+    /// State common to single-plane and dual-plane blocks
     /// </summary>
     private ref struct DecodedBlockState
     {
