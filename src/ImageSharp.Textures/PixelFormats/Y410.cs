@@ -66,59 +66,98 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
 
         /// <inheritdoc/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public PixelOperations<Y410> CreatePixelOperations() => new();
+        public static PixelOperations<Y410> CreatePixelOperations() => new();
+
+        /// <inheritdoc />
+        public static PixelTypeInfo GetPixelTypeInfo()
+            => PixelTypeInfo.Create<Y410>(
+                PixelComponentInfo.Create<Y410>(4, 10, 10, 10, 2),
+                PixelColorType.YCbCr | PixelColorType.Alpha,
+                PixelAlphaRepresentation.Unassociated);
+
+        /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly Vector4 ToAssociatedScaledVector4() => AlphaConversion.Premultiply(this.ToScaledVector4());
+
+        /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly Vector4 ToUnassociatedScaledVector4() => this.ToScaledVector4();
+
+        /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly Vector4 ToAssociatedVector4() => AlphaConversion.Premultiply(this.ToVector4());
+
+        /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly Vector4 ToUnassociatedVector4() => this.ToVector4();
+
+        /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Y410 FromAssociatedScaledVector4(Vector4 source) => throw new NotImplementedException();
+
+        /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Y410 FromUnassociatedScaledVector4(Vector4 source) => throw new NotImplementedException();
+
+        /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Y410 FromAssociatedVector4(Vector4 source) => throw new NotImplementedException();
+
+        /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Y410 FromUnassociatedVector4(Vector4 source) => throw new NotImplementedException();
 
         /// <inheritdoc/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override readonly int GetHashCode() => this.Yuv.GetHashCode();
 
         /// <inheritdoc/>
-        public void FromArgb32(Argb32 source) => throw new NotImplementedException();
+        public static Y410 FromArgb32(Argb32 source) => throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public void FromBgr24(Bgr24 source) => throw new NotImplementedException();
+        public static Y410 FromBgr24(Bgr24 source) => throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public void FromBgra32(Bgra32 source) => throw new NotImplementedException();
+        public static Y410 FromBgra32(Bgra32 source) => throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public void FromAbgr32(Abgr32 source) => throw new NotImplementedException();
+        public static Y410 FromAbgr32(Abgr32 source) => throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public void FromBgra5551(Bgra5551 source) => throw new NotImplementedException();
+        public static Y410 FromBgra5551(Bgra5551 source) => throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public void FromL16(L16 source) => throw new NotImplementedException();
+        public static Y410 FromL16(L16 source) => throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public void FromL8(L8 source) => throw new NotImplementedException();
+        public static Y410 FromL8(L8 source) => throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public void FromLa16(La16 source) => throw new NotImplementedException();
+        public static Y410 FromLa16(La16 source) => throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public void FromLa32(La32 source) => throw new NotImplementedException();
+        public static Y410 FromLa32(La32 source) => throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public void FromRgb24(Rgb24 source) => throw new NotImplementedException();
+        public static Y410 FromRgb24(Rgb24 source) => throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public void FromRgb48(Rgb48 source) => throw new NotImplementedException();
+        public static Y410 FromRgb48(Rgb48 source) => throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public void FromRgba32(Rgba32 source) => throw new NotImplementedException();
+        public static Y410 FromRgba32(Rgba32 source) => throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public void FromRgba64(Rgba64 source) => throw new NotImplementedException();
+        public static Y410 FromRgba64(Rgba64 source) => throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public void FromScaledVector4(Vector4 vector) => throw new NotImplementedException();
+        public static Y410 FromScaledVector4(Vector4 source) => throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public void FromVector4(Vector4 vector) => throw new NotImplementedException();
+        public static Y410 FromVector4(Vector4 source) => throw new NotImplementedException();
 
         /// <inheritdoc/>
-        public void ToRgba32(ref Rgba32 dest) => throw new NotImplementedException();
+        public readonly Rgba32 ToRgba32() => Rgba32.FromScaledVector4(this.ToScaledVector4());
 
         /// <inheritdoc/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

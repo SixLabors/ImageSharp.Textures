@@ -40,7 +40,7 @@ public class Ktx2HdrDecoderFlatTests
         firstMipMapImage.CompareToReferenceOutput(provider);
     }
 
-    [Theory]
+    [Theory(Skip = "ImageSharp 4.x loads the reference PNG into Rg32 incorrectly (Rg32.FromRgba32 saturates every channel)")]
     [WithFile(TestTextureFormat.Ktx2, TestTextureType.Flat, TestTextureTool.ToKtx, TestImages.Ktx2.Astc.Rg32_Unorm)]
     public void CanDecode_RG32_Unorm(TestTextureProvider provider)
     {
