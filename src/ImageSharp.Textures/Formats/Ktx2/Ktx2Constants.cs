@@ -17,6 +17,19 @@ namespace SixLabors.ImageSharp.Textures.Formats.Ktx2
         public const int KtxHeaderSize = 68;
 
         /// <summary>
+        /// The Khronos Data Format Descriptor colour model value identifying UASTC content
+        /// (<c>KHR_DF_MODEL_UASTC</c>). UASTC is signalled by a <c>VK_FORMAT_UNDEFINED</c> format
+        /// together with a DFD whose colour model is this value.
+        /// </summary>
+        public const byte KhrDfModelUastc = 166;
+
+        /// <summary>
+        /// The Khronos Data Format Descriptor transfer function value identifying sRGB content
+        /// (<c>KHR_DF_TRANSFER_SRGB</c>).
+        /// </summary>
+        public const byte KhrDfTransferSrgb = 2;
+
+        /// <summary>
         /// The list of mimetypes that equate to a ktx2 file.
         /// </summary>
         public static readonly IEnumerable<string> MimeTypes = new[] { "image/ktx2" };
