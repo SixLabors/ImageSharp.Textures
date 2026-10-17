@@ -49,14 +49,14 @@ namespace SixLabors.ImageSharp.Textures.TextureFormats.Decoding
                 byte b = blockData[i + 2];
                 byte g1 = blockData[i + 3];
 
-                pixel.FromRgb24(new ImageSharp.PixelFormats.Rgb24(r, g0, b));
+                pixel = ImageSharp.PixelFormats.Rgb24.FromRgb24(new ImageSharp.PixelFormats.Rgb24(r, g0, b));
                 rgb24Span[pixelIdx++] = pixel;
                 if (pixelIdx >= totalPixels)
                 {
                     break;
                 }
 
-                pixel.FromRgb24(new ImageSharp.PixelFormats.Rgb24(r, g1, b));
+                pixel = ImageSharp.PixelFormats.Rgb24.FromRgb24(new ImageSharp.PixelFormats.Rgb24(r, g1, b));
                 rgb24Span[pixelIdx++] = pixel;
             }
 

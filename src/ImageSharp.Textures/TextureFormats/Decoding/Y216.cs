@@ -57,7 +57,7 @@ namespace SixLabors.ImageSharp.Textures.TextureFormats.Decoding
                 v -= 32768;
 
                 Vector4 rgbVec = ColorSpaceConversion.YuvToRgba16Bit(y0, u, v);
-                pixel.FromVector4(rgbVec);
+                pixel = ImageSharp.PixelFormats.Rgb24.FromVector4(rgbVec);
                 rgb24Span[pixelIdx++] = pixel;
                 if (pixelIdx >= totalPixels)
                 {
@@ -65,7 +65,7 @@ namespace SixLabors.ImageSharp.Textures.TextureFormats.Decoding
                 }
 
                 rgbVec = ColorSpaceConversion.YuvToRgba16Bit(y1, u, v);
-                pixel.FromVector4(rgbVec);
+                pixel = ImageSharp.PixelFormats.Rgb24.FromVector4(rgbVec);
                 rgb24Span[pixelIdx++] = pixel;
             }
 

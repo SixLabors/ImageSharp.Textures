@@ -25,7 +25,7 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.PixelFormat
                 Assert.Equal(string.Format(CultureInfo.InvariantCulture, "Rg16({0}, {1})", x, y), testPixel.ToString());
 
                 var destPixel = new ImageSharp.PixelFormats.Rgba32(0);
-                testPixel.ToRgba32(ref destPixel);
+                destPixel = testPixel.ToRgba32();
 
                 Assert.Equal(hexValues[i], testPixel.PackedValue.ToString("X", CultureInfo.InvariantCulture));
 
@@ -35,7 +35,7 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.PixelFormat
                 Assert.Equal(255, destPixel.A);
 
                 var vector4 = testPixel.ToVector4();
-                testPixel.FromVector4(vector4);
+                testPixel = Rg16.FromVector4(vector4);
                 Assert.Equal(testPixel.ToVector4(), vector4);
             }
         }
@@ -53,7 +53,7 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.PixelFormat
                 var testPixel = new Bgr555(x, y, z);
 
                 var destPixel = new ImageSharp.PixelFormats.Rgba32(0);
-                testPixel.ToRgba32(ref destPixel);
+                destPixel = testPixel.ToRgba32();
 
                 Assert.Equal(hexValues[i], testPixel.PackedValue.ToString("X", CultureInfo.InvariantCulture));
 
@@ -63,7 +63,7 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.PixelFormat
                 Assert.Equal(255, destPixel.A);
 
                 var vector4 = testPixel.ToVector4();
-                testPixel.FromVector4(vector4);
+                testPixel = Bgr555.FromVector4(vector4);
                 Assert.Equal(testPixel.ToVector4(), vector4);
             }
         }
@@ -81,7 +81,7 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.PixelFormat
                 var testPixel = new Bgr32(x, y, z);
 
                 var destPixel = new ImageSharp.PixelFormats.Rgba32(0);
-                testPixel.ToRgba32(ref destPixel);
+                destPixel = testPixel.ToRgba32();
 
                 Assert.Equal(hexValues[i], testPixel.PackedValue.ToString("X", CultureInfo.InvariantCulture));
 
@@ -91,7 +91,7 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.PixelFormat
                 Assert.Equal(255, destPixel.A);
 
                 var vector4 = testPixel.ToVector4();
-                testPixel.FromVector4(vector4);
+                testPixel = Bgr32.FromVector4(vector4);
                 Assert.Equal(testPixel.ToVector4(), vector4);
             }
         }
@@ -109,7 +109,7 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.PixelFormat
                 var testPixel = new Rgb32(x, y, z);
 
                 var destPixel = new ImageSharp.PixelFormats.Rgba32(0);
-                testPixel.ToRgba32(ref destPixel);
+                destPixel = testPixel.ToRgba32();
 
                 Assert.Equal(hexValues[i], testPixel.PackedValue.ToString("X", CultureInfo.InvariantCulture));
 
@@ -119,7 +119,7 @@ namespace SixLabors.ImageSharp.Textures.Tests.Formats.PixelFormat
                 Assert.Equal(255, destPixel.A);
 
                 var vector4 = testPixel.ToVector4();
-                testPixel.FromVector4(vector4);
+                testPixel = Rgb32.FromVector4(vector4);
                 Assert.Equal(testPixel.ToVector4(), vector4);
             }
         }

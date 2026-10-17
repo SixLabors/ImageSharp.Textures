@@ -60,11 +60,50 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
         public static bool operator !=(Rg32 left, Rg32 right) => !left.Equals(right);
 
         /// <inheritdoc />
-        public PixelOperations<Rg32> CreatePixelOperations() => new();
+        public static PixelOperations<Rg32> CreatePixelOperations() => new();
+
+        /// <inheritdoc />
+        public static PixelTypeInfo GetPixelTypeInfo()
+            => PixelTypeInfo.Create<Rg32>(
+                PixelComponentInfo.Create<Rg32>(2, 16, 16),
+                PixelColorType.Red | PixelColorType.Green,
+                PixelAlphaRepresentation.None);
+
+        /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Vector4 ToAssociatedScaledVector4() => this.ToScaledVector4();
+
+        /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Vector4 ToUnassociatedScaledVector4() => this.ToScaledVector4();
+
+        /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Vector4 ToAssociatedVector4() => this.ToVector4();
+
+        /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Vector4 ToUnassociatedVector4() => this.ToVector4();
+
+        /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Rg32 FromAssociatedScaledVector4(Vector4 source) => FromScaledVector4(source);
+
+        /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Rg32 FromUnassociatedScaledVector4(Vector4 source) => FromScaledVector4(source);
+
+        /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Rg32 FromAssociatedVector4(Vector4 source) => FromVector4(source);
+
+        /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Rg32 FromUnassociatedVector4(Vector4 source) => FromVector4(source);
 
         /// <inheritdoc/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void FromScaledVector4(Vector4 vector) => this.FromVector4(vector);
+        public static Rg32 FromScaledVector4(Vector4 source) => FromVector4(source);
 
         /// <inheritdoc/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -72,10 +111,12 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void FromVector4(Vector4 vector)
+        public static Rg32 FromVector4(Vector4 source)
         {
-            var vector2 = new Vector2(vector.X, vector.Y);
-            this.PackedValue = (ushort)Pack(vector2);
+            Rg32 result = default;
+            var vector2 = new Vector2(source.X, source.Y);
+            result.PackedValue = (ushort)Pack(vector2);
+            return result;
         }
 
         /// <inheritdoc />
@@ -84,59 +125,59 @@ namespace SixLabors.ImageSharp.Textures.PixelFormats
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void FromArgb32(Argb32 source) => this.FromScaledVector4(source.ToScaledVector4());
+        public static Rg32 FromArgb32(Argb32 source) => FromScaledVector4(source.ToScaledVector4());
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void FromBgr24(Bgr24 source) => this.FromScaledVector4(source.ToScaledVector4());
+        public static Rg32 FromBgr24(Bgr24 source) => FromScaledVector4(source.ToScaledVector4());
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void FromBgra32(Bgra32 source) => this.FromScaledVector4(source.ToScaledVector4());
+        public static Rg32 FromBgra32(Bgra32 source) => FromScaledVector4(source.ToScaledVector4());
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void FromAbgr32(Abgr32 source) => this.FromScaledVector4(source.ToScaledVector4());
+        public static Rg32 FromAbgr32(Abgr32 source) => FromScaledVector4(source.ToScaledVector4());
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void FromBgra5551(Bgra5551 source) => this.FromScaledVector4(source.ToScaledVector4());
+        public static Rg32 FromBgra5551(Bgra5551 source) => FromScaledVector4(source.ToScaledVector4());
 
         /// <inheritdoc/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void FromL8(L8 source) => this.FromScaledVector4(source.ToScaledVector4());
+        public static Rg32 FromL8(L8 source) => FromScaledVector4(source.ToScaledVector4());
 
         /// <inheritdoc/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void FromL16(L16 source) => this.FromScaledVector4(source.ToScaledVector4());
+        public static Rg32 FromL16(L16 source) => FromScaledVector4(source.ToScaledVector4());
 
         /// <inheritdoc/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void FromLa16(La16 source) => this.FromScaledVector4(source.ToScaledVector4());
+        public static Rg32 FromLa16(La16 source) => FromScaledVector4(source.ToScaledVector4());
 
         /// <inheritdoc/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void FromLa32(La32 source) => this.FromScaledVector4(source.ToScaledVector4());
+        public static Rg32 FromLa32(La32 source) => FromScaledVector4(source.ToScaledVector4());
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void FromRgb24(Rgb24 source) => this.FromScaledVector4(source.ToScaledVector4());
+        public static Rg32 FromRgb24(Rgb24 source) => FromScaledVector4(source.ToScaledVector4());
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void FromRgba32(Rgba32 source) => this.FromScaledVector4(source.ToScaledVector4());
+        public static Rg32 FromRgba32(Rgba32 source) => FromScaledVector4(source.ToScaledVector4());
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void ToRgba32(ref Rgba32 dest) => dest.FromScaledVector4(this.ToScaledVector4());
+        public Rgba32 ToRgba32() => Rgba32.FromScaledVector4(this.ToScaledVector4());
 
         /// <inheritdoc/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void FromRgb48(Rgb48 source) => this.FromScaledVector4(source.ToScaledVector4());
+        public static Rg32 FromRgb48(Rgb48 source) => FromScaledVector4(source.ToScaledVector4());
 
         /// <inheritdoc/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void FromRgba64(Rgba64 source) => this.FromScaledVector4(source.ToScaledVector4());
+        public static Rg32 FromRgba64(Rgba64 source) => FromScaledVector4(source.ToScaledVector4());
 
         /// <summary>
         /// Expands the packed representation into a <see cref="Vector2"/>.

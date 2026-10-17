@@ -49,7 +49,7 @@ internal static class AstcReferenceDecoder
                 dimY = (uint)h,
                 dimZ = 1,
                 dataType = AstcencType.AstcencTypeU8,
-                data = outputBytes,
+                data = new[] { outputBytes },
             };
 
             // We need a mutable copy of blocks for the Span<byte> parameter
@@ -99,7 +99,7 @@ internal static class AstcReferenceDecoder
                 dimY = (uint)h,
                 dimZ = 1,
                 dataType = AstcencType.AstcencTypeU8,
-                data = outputBytes,
+                data = new[] { outputBytes },
             };
 
             byte[] blocksCopy = blocks.ToArray();
@@ -144,7 +144,7 @@ internal static class AstcReferenceDecoder
                 dimY = (uint)h,
                 dimZ = 1,
                 dataType = AstcencType.AstcencTypeF16,
-                data = outputBytes,
+                data = new[] { outputBytes },
             };
 
             byte[] blocksCopy = blocks.ToArray();
@@ -189,7 +189,7 @@ internal static class AstcReferenceDecoder
                 dimY = (uint)h,
                 dimZ = 1,
                 dataType = AstcencType.AstcencTypeU8,
-                data = pixels,
+                data = new[] { pixels },
             };
 
             int blocksWide = (w + blockX - 1) / blockX;
@@ -235,7 +235,7 @@ internal static class AstcReferenceDecoder
                 dimY = (uint)h,
                 dimZ = 1,
                 dataType = AstcencType.AstcencTypeF16,
-                data = pixelBytes,
+                data = new[] { pixelBytes },
             };
 
             int blocksWide = (w + blockX - 1) / blockX;
@@ -335,7 +335,7 @@ internal static class AstcReferenceDecoder
             dimY = (uint)h,
             dimZ = 1,
             dataType = AstcencType.AstcencTypeU8,
-            data = output,
+            data = new[] { output },
         };
         AstcencError error = Astcenc.AstcencDecompressImage(context, blocks, ref image, IdentitySwizzle, 0);
         ThrowOnError(error, "DecompressImage(LDR/Into)");
@@ -354,7 +354,7 @@ internal static class AstcReferenceDecoder
             dimY = (uint)h,
             dimZ = 1,
             dataType = AstcencType.AstcencTypeF16,
-            data = output,
+            data = new[] { output },
         };
         AstcencError error = Astcenc.AstcencDecompressImage(context, blocks, ref image, IdentitySwizzle, 0);
         ThrowOnError(error, "DecompressImage(HDR/Into)");

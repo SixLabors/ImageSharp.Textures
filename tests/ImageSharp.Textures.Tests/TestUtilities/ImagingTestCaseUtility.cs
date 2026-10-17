@@ -276,7 +276,7 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities
         {
             TPixel pixel = img[x, y];
             Rgba64 rgbaPixel = default;
-            rgbaPixel.FromScaledVector4(pixel.ToScaledVector4());
+            rgbaPixel = Rgba64.FromScaledVector4(pixel.ToScaledVector4());
             ushort change = (ushort)Math.Round(perChannelChange / 255F * 65535F);
 
             if (rgbaPixel.R + perChannelChange <= 255)
@@ -315,7 +315,7 @@ namespace SixLabors.ImageSharp.Textures.Tests.TestUtilities
                 rgbaPixel.A -= perChannelChange;
             }
 
-            pixel.FromRgba64(rgbaPixel);
+            pixel = TPixel.FromRgba64(rgbaPixel);
             img[x, y] = pixel;
         }
     }
