@@ -174,7 +174,7 @@ public static class AstcDecoder
             UInt128 blockBits = ReadBlockBits(bandBlocks, blockX);
 
             BlockInfo info = BlockModeDecoder.Decode(blockBits);
-            BlockDestination dest = ComputeBlockDestination(blockX, 0, footprint, destinationWidth, destinationHeight);
+            BlockDestination dest = BlockImageWriter.ComputeBlockDestination(blockX, 0, footprint, destinationWidth, destinationHeight);
 
             // Spec §C.2.19, §C.2.24, §C.2.25: illegal block encodings, and HDR endpoint modes
             // in the LDR profile, must produce the error colour (magenta) for every texel.
@@ -224,7 +224,7 @@ public static class AstcDecoder
             pipeline.LogicalWrite(blockBits, in info, footprint, decodedPixels);
         }
 
-        CopyBlockRect(decodedPixels, imageBuffer, footprint.Width, dest.CopyWidth, dest.CopyHeight, dest.DstBaseX, dest.DstBaseY, imageWidth);
+        BlockImageWriter.CopyBlockRect(decodedPixels, imageBuffer, footprint.Width, dest.CopyWidth, dest.CopyHeight, dest.DstBaseX, dest.DstBaseY, imageWidth);
     }
 
     /// <summary>
@@ -339,48 +339,6 @@ public static class AstcDecoder
     {
         int offset = blockIndex * BlockInfo.SizeInBytes;
         return BinaryPrimitives.ReadUInt128LittleEndian(astcData.Slice(offset, BlockInfo.SizeInBytes));
-    }
-
-    /// <summary>
-    /// Computes the destination rectangle for the block at (<paramref name="blockX"/>,
-    /// <paramref name="blockY"/>) given the image bounds, clipping the footprint extents
-    /// to fit inside the image.
-    /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static BlockDestination ComputeBlockDestination(int blockX, int blockY, Footprint footprint, int width, int height)
-    {
-        int dstBaseX = blockX * footprint.Width;
-        int dstBaseY = blockY * footprint.Height;
-        int copyWidth = Math.Min(footprint.Width, width - dstBaseX);
-        int copyHeight = Math.Min(footprint.Height, height - dstBaseY);
-        bool isFullInterior = copyWidth == footprint.Width && copyHeight == footprint.Height;
-
-        return new BlockDestination(dstBaseX, dstBaseY, copyWidth, copyHeight, isFullInterior);
-    }
-
-    /// <summary>
-    /// Copies a decoded block from its scratch buffer into the image at the block's pixel
-    /// offset, row by row, clamped to the image bounds on right/bottom edges. The
-    /// <c>channels-per-pixel</c> factor is fixed at <see cref="BlockInfo.ChannelsPerPixel"/> (RGBA).
-    /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void CopyBlockRect<T>(
-        ReadOnlySpan<T> source,
-        Span<T> destination,
-        int blockWidth,
-        int copyWidth,
-        int copyHeight,
-        int dstBaseX,
-        int dstBaseY,
-        int imageWidth)
-    {
-        int copyElements = copyWidth * BlockInfo.ChannelsPerPixel;
-        for (int pixelY = 0; pixelY < copyHeight; pixelY++)
-        {
-            int srcOffset = pixelY * blockWidth * BlockInfo.ChannelsPerPixel;
-            int dstOffset = (((dstBaseY + pixelY) * imageWidth) + dstBaseX) * BlockInfo.ChannelsPerPixel;
-            source.Slice(srcOffset, copyElements).CopyTo(destination.Slice(dstOffset, copyElements));
-        }
     }
 
     private readonly struct ByteBandSerializer : IBandSerializer<byte>
